@@ -141,6 +141,13 @@ def create_app() -> FastAPI:
         except ModuleNotFoundError:
             logger.debug("Router module %r not found — skipping (Phase 2).", module_path)
 
+    # ── Health check ──────────────────────────────────────────────────────
+    from fastapi.responses import JSONResponse  # noqa: PLC0415
+
+    @app.get("/healthz", include_in_schema=False)
+    async def healthz():
+        return JSONResponse({"status": "ok"})
+
     # ── Root redirect ─────────────────────────────────────────────────────
     @app.get("/", include_in_schema=False)
     async def root_redirect():
