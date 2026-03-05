@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
+from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
 from models.season import Season
 from models.team import Team
+from models.user import User
 from routes._auth_helpers import require_admin, require_login
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 # ---------------------------------------------------------------------------
@@ -24,13 +24,13 @@ templates = Jinja2Templates(directory="templates")
 
 @router.get("")
 @router.get("/")
-async def teams_list(request: Request, db: Session = Depends(get_db)):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
+async def teams_list(
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "teams/list.html", {"user": request.state.user, "teams": teams})
+    return templates.TemplateResponse(request, "teams/list.html", {"user": user, "teams": teams})
 
 
 # ---------------------------------------------------------------------------
@@ -39,16 +39,18 @@ async def teams_list(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/new")
-async def team_new_get(request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def team_new_get(
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     seasons = db.query(Season).order_by(Season.name).all()
-    return templates.TemplateResponse(request, "teams/form.html", {"user": request.state.user,
-            "team": None,
-            "seasons": seasons,
-            "error": None})
+    return templates.TemplateResponse(request, "teams/form.html", {
+        "user": user,
+        "team": None,
+        "seasons": seasons,
+        "error": None,
+    })
 
 
 @router.post("/new")
@@ -57,20 +59,18 @@ async def team_new_post(
     name: str = Form(...),
     description: str = Form(""),
     season_id: str = Form(""),
+    user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
     if not name.strip():
         seasons = db.query(Season).order_by(Season.name).all()
-        return templates.TemplateResponse(request, "teams/form.html", {"user": request.state.user,
-                "team": None,
-                "seasons": seasons,
-                "error": "Team name is required."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "teams/form.html", {
+            "user": user,
+            "team": None,
+            "seasons": seasons,
+            "error": "Team name is required.",
+        }, status_code=400)
 
     sid = int(season_id) if season_id.strip() else None
     team = Team(
@@ -90,20 +90,23 @@ async def team_new_post(
 
 
 @router.get("/{team_id}/edit")
-async def team_edit_get(team_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def team_edit_get(
+    team_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     team = db.get(Team, team_id)
     if team is None:
         return RedirectResponse("/teams", status_code=302)
 
     seasons = db.query(Season).order_by(Season.name).all()
-    return templates.TemplateResponse(request, "teams/form.html", {"user": request.state.user,
-            "team": team,
-            "seasons": seasons,
-            "error": None})
+    return templates.TemplateResponse(request, "teams/form.html", {
+        "user": user,
+        "team": team,
+        "seasons": seasons,
+        "error": None,
+    })
 
 
 @router.post("/{team_id}/edit")
@@ -113,24 +116,22 @@ async def team_edit_post(
     name: str = Form(...),
     description: str = Form(""),
     season_id: str = Form(""),
+    user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
     team = db.get(Team, team_id)
     if team is None:
         return RedirectResponse("/teams", status_code=302)
 
     if not name.strip():
         seasons = db.query(Season).order_by(Season.name).all()
-        return templates.TemplateResponse(request, "teams/form.html", {"user": request.state.user,
-                "team": team,
-                "seasons": seasons,
-                "error": "Team name is required."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "teams/form.html", {
+            "user": user,
+            "team": team,
+            "seasons": seasons,
+            "error": "Team name is required.",
+        }, status_code=400)
 
     team.name = name.strip()
     team.description = description.strip() or None
@@ -146,11 +147,13 @@ async def team_edit_post(
 
 
 @router.post("/{team_id}/delete")
-async def team_delete(team_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def team_delete(
+    team_id: int,
+    request: Request,
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     team = db.get(Team, team_id)
     if team:
         db.delete(team)

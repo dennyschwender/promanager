@@ -7,8 +7,8 @@ import uuid
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
+from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
@@ -17,6 +17,7 @@ from models.attendance import Attendance
 from models.event import Event
 from models.season import Season
 from models.team import Team
+from models.user import User
 from routes._auth_helpers import require_admin, require_login
 from services.attendance_service import (
     ensure_attendance_records,
@@ -26,7 +27,6 @@ from services.attendance_service import (
 from services.email_service import send_event_reminder
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def _parse_date(val: str):
@@ -69,12 +69,9 @@ async def events_list(
     request: Request,
     season_id: int | None = None,
     team_id: int | None = None,
+    user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
     today = datetime.today().date()
 
     q = db.query(Event)
@@ -90,13 +87,15 @@ async def events_list(
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return templates.TemplateResponse(request, "events/list.html", {"user": request.state.user,
-            "upcoming": upcoming,
-            "past": past,
-            "seasons": seasons,
-            "teams": teams,
-            "selected_season_id": season_id,
-            "selected_team_id": team_id})
+    return templates.TemplateResponse(request, "events/list.html", {
+        "user": user,
+        "upcoming": upcoming,
+        "past": past,
+        "seasons": seasons,
+        "teams": teams,
+        "selected_season_id": season_id,
+        "selected_team_id": team_id,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -105,18 +104,20 @@ async def events_list(
 
 
 @router.get("/new")
-async def event_new_get(request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def event_new_get(
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-            "event": None,
-            "seasons": seasons,
-            "teams": teams,
-            "error": None})
+    return templates.TemplateResponse(request, "events/form.html", {
+        "user": user,
+        "event": None,
+        "seasons": seasons,
+        "teams": teams,
+        "error": None,
+    })
 
 
 @router.post("/new")
@@ -137,23 +138,21 @@ async def event_new_post(
     is_recurring: str = Form(""),
     recurrence_rule: str = Form(""),
     recurrence_end_date: str = Form(""),
+    user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Event title is required."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": None,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Event title is required.",
+        }, status_code=400)
 
     try:
         e_date = _parse_date(event_date)
@@ -161,20 +160,22 @@ async def event_new_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Invalid date or time format."},
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": None,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Invalid date or time format.",
+        }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Event date is required."},
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": None,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Event date is required.",
+        }, status_code=400)
 
     # ── Recurrence setup ──────────────────────────────────────────────────
     recurring = bool(is_recurring.strip())
@@ -186,7 +187,7 @@ async def event_new_post(
         except ValueError:
             return templates.TemplateResponse(
                 request, "events/form.html",
-                {"user": request.state.user, "event": None,
+                {"user": user, "event": None,
                  "seasons": seasons, "teams": teams,
                  "error": "Invalid recurrence end date."},
                 status_code=400,
@@ -194,7 +195,7 @@ async def event_new_post(
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
         return templates.TemplateResponse(
             request, "events/form.html",
-            {"user": request.state.user, "event": None,
+            {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
              "error": "Please select a valid recurrence frequency."},
             status_code=400,
@@ -202,7 +203,7 @@ async def event_new_post(
     if recurring and r_end is None:
         return templates.TemplateResponse(
             request, "events/form.html",
-            {"user": request.state.user, "event": None,
+            {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
              "error": "Recurrence end date is required for recurring events."},
             status_code=400,
@@ -210,7 +211,7 @@ async def event_new_post(
     if recurring and r_end <= e_date:
         return templates.TemplateResponse(
             request, "events/form.html",
-            {"user": request.state.user, "event": None,
+            {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
              "error": "Recurrence end date must be after the event start date."},
             status_code=400,
@@ -262,20 +263,23 @@ async def event_new_post(
 
 
 @router.get("/{event_id}")
-async def event_detail(event_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
+async def event_detail(
+    event_id: int,
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
     summary = get_event_attendance_summary(db, event_id)
 
-    return templates.TemplateResponse(request, "events/detail.html", {"user": request.state.user,
-            "event": event,
-            "summary": summary})
+    return templates.TemplateResponse(request, "events/detail.html", {
+        "user": user,
+        "event": event,
+        "summary": summary,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -284,22 +288,25 @@ async def event_detail(event_id: int, request: Request, db: Session = Depends(ge
 
 
 @router.get("/{event_id}/edit")
-async def event_edit_get(event_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def event_edit_get(
+    event_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-            "event": event,
-            "seasons": seasons,
-            "teams": teams,
-            "error": None})
+    return templates.TemplateResponse(request, "events/form.html", {
+        "user": user,
+        "event": event,
+        "seasons": seasons,
+        "teams": teams,
+        "error": None,
+    })
 
 
 @router.post("/{event_id}/edit")
@@ -318,13 +325,10 @@ async def event_edit_post(
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
+    user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
@@ -333,41 +337,46 @@ async def event_edit_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": event,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Event title is required."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": event,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Event title is required.",
+        }, status_code=400)
 
     try:
         e_date = _parse_date(event_date)
         e_time = _parse_time(event_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": event,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Invalid date or time format."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": event,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Invalid date or time format.",
+        }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": event,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Event date is required."}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": event,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Event date is required.",
+        }, status_code=400)
 
     try:
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {"user": request.state.user,
-                "event": event,
-                "seasons": seasons,
-                "teams": teams,
-                "error": "Invalid time format."}, status_code=400)
+        return templates.TemplateResponse(request, "events/form.html", {
+            "user": user,
+            "event": event,
+            "seasons": seasons,
+            "teams": teams,
+            "error": "Invalid time format.",
+        }, status_code=400)
 
     event.title = title.strip()
     event.event_type = event_type
@@ -396,11 +405,13 @@ async def event_edit_post(
 
 
 @router.post("/{event_id}/delete")
-async def event_delete(event_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def event_delete(
+    event_id: int,
+    request: Request,
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     event = db.get(Event, event_id)
     if event:
         db.delete(event)
@@ -414,11 +425,13 @@ async def event_delete(event_id: int, request: Request, _csrf: None = Depends(re
 
 
 @router.post("/{event_id}/send-reminders")
-async def send_reminders(event_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def send_reminders(
+    event_id: int,
+    request: Request,
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)

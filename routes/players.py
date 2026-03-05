@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
+from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
@@ -21,7 +21,6 @@ from routes._auth_helpers import require_admin, require_login
 from services.attendance_service import get_player_attendance_history
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 # ---------------------------------------------------------------------------
@@ -159,12 +158,9 @@ def _memberships_dict(player: Player) -> dict:
 async def players_list(
     request: Request,
     team_id: int | None = None,
+    user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
     q = db.query(Player)
     if team_id is not None:
         q = (
@@ -175,7 +171,7 @@ async def players_list(
     teams = db.query(Team).order_by(Team.name).all()
 
     return templates.TemplateResponse(request, "players/list.html", {
-        "user": request.state.user,
+        "user": user,
         "players": players,
         "teams": teams,
         "selected_team_id": team_id,
@@ -188,15 +184,15 @@ async def players_list(
 
 
 @router.get("/new")
-async def player_new_get(request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_new_get(
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     return templates.TemplateResponse(request, "players/form.html", {
-        "user": request.state.user,
+        "user": user,
         "player": None,
         "teams": teams,
         "users": users,
@@ -206,11 +202,12 @@ async def player_new_get(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/new")
-async def player_new_post(request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_new_post(
+    request: Request,
+    user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     form = await request.form()
     first_name = (form.get("first_name") or "").strip()
     last_name  = (form.get("last_name")  or "").strip()
@@ -223,7 +220,7 @@ async def player_new_post(request: Request, _csrf: None = Depends(require_csrf),
 
     if not first_name or not last_name:
         return templates.TemplateResponse(request, "players/form.html", {
-            "user": request.state.user,
+            "user": user,
             "player": None,
             "teams": teams,
             "users": users,
@@ -258,11 +255,12 @@ async def player_new_post(request: Request, _csrf: None = Depends(require_csrf),
 
 
 @router.get("/{player_id}")
-async def player_detail(player_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_detail(
+    player_id: int,
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
     player = db.get(Player, player_id)
     if player is None:
         return RedirectResponse("/players", status_code=302)
@@ -270,7 +268,7 @@ async def player_detail(player_id: int, request: Request, db: Session = Depends(
     history = get_player_attendance_history(db, player_id)
 
     return templates.TemplateResponse(request, "players/detail.html", {
-        "user": request.state.user,
+        "user": user,
         "player": player,
         "history": history,
     })
@@ -282,11 +280,12 @@ async def player_detail(player_id: int, request: Request, db: Session = Depends(
 
 
 @router.get("/{player_id}/edit")
-async def player_edit_get(player_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_edit_get(
+    player_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     player = db.get(Player, player_id)
     if player is None:
         return RedirectResponse("/players", status_code=302)
@@ -294,7 +293,7 @@ async def player_edit_get(player_id: int, request: Request, db: Session = Depend
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     return templates.TemplateResponse(request, "players/form.html", {
-        "user": request.state.user,
+        "user": user,
         "player": player,
         "teams": teams,
         "users": users,
@@ -304,11 +303,13 @@ async def player_edit_get(player_id: int, request: Request, db: Session = Depend
 
 
 @router.post("/{player_id}/edit")
-async def player_edit_post(player_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_edit_post(
+    player_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     player = db.get(Player, player_id)
     if player is None:
         return RedirectResponse("/players", status_code=302)
@@ -326,7 +327,7 @@ async def player_edit_post(player_id: int, request: Request, _csrf: None = Depen
 
     if not first_name or not last_name:
         return templates.TemplateResponse(request, "players/form.html", {
-            "user": request.state.user,
+            "user": user,
             "player": player,
             "teams": teams,
             "users": users,
@@ -357,16 +358,15 @@ async def player_edit_post(player_id: int, request: Request, _csrf: None = Depen
 
 
 @router.post("/{player_id}/delete")
-async def player_delete(player_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
+async def player_delete(
+    player_id: int,
+    request: Request,
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
     player = db.get(Player, player_id)
     if player:
         db.delete(player)
         db.commit()
     return RedirectResponse("/players", status_code=302)
-
-
-

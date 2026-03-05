@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.csrf import require_csrf
 from app.database import get_db
 from app.limiter import limiter
+from app.templates import templates
+from models.user import User
 from routes._auth_helpers import require_admin
 from services.auth_service import authenticate_user, create_session_cookie, create_user, get_user_by_email, get_user_by_username
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 COOKIE_NAME = "session_user_id"
 
@@ -78,12 +78,11 @@ async def logout():
 
 
 @router.get("/register")
-async def register_get(request: Request):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
-    return templates.TemplateResponse(request, "auth/register.html", {"user": request.state.user, "error": None, "flash": None})
+async def register_get(
+    request: Request,
+    user: User = Depends(require_admin),
+):
+    return templates.TemplateResponse(request, "auth/register.html", {"user": user, "error": None, "flash": None})
 
 
 @router.post("/register")
@@ -93,34 +92,33 @@ async def register_post(
     email: str = Form(...),
     password: str = Form(...),
     role: str = Form("member"),
+    user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_admin(request)
-    if isinstance(result, Response):
-        return result
-
     # Validation
     if get_user_by_username(db, username):
-        return templates.TemplateResponse(request, "auth/register.html", {"user": request.state.user,
-                "error": f"Username '{username}' is already taken.",
-                "flash": None,
-            },
-            status_code=400)
+        return templates.TemplateResponse(request, "auth/register.html", {
+            "user": user,
+            "error": f"Username '{username}' is already taken.",
+            "flash": None,
+        }, status_code=400)
     if get_user_by_email(db, email):
-        return templates.TemplateResponse(request, "auth/register.html", {"user": request.state.user,
-                "error": f"Email '{email}' is already registered.",
-                "flash": None,
-            },
-            status_code=400)
+        return templates.TemplateResponse(request, "auth/register.html", {
+            "user": user,
+            "error": f"Email '{email}' is already registered.",
+            "flash": None,
+        }, status_code=400)
     if len(password) < 8:
-        return templates.TemplateResponse(request, "auth/register.html", {"user": request.state.user,
-                "error": "Password must be at least 8 characters.",
-                "flash": None}, 
-            status_code=400)
+        return templates.TemplateResponse(request, "auth/register.html", {
+            "user": user,
+            "error": "Password must be at least 8 characters.",
+            "flash": None,
+        }, status_code=400)
 
     create_user(db, username=username, email=email, password=password, role=role)
-    return templates.TemplateResponse(request, "auth/register.html", {"user": request.state.user,
-            "error": None,
-            "flash": f"User '{username}' created successfully.",
-        })
+    return templates.TemplateResponse(request, "auth/register.html", {
+        "user": user,
+        "error": None,
+        "flash": f"User '{username}' created successfully.",
+    })
