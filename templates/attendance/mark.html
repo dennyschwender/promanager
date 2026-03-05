@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Attendance: {{ event.title }} — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <a href="/events/{{ event.id }}">{{ event.title }}</a><span class="breadcrumb-sep"></span>
+  <span>Attendance</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Attendance — {{ event.title }}</h2>
+  <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
+</div>
+<p>{{ event.event_date }}{% if event.event_time %} at {{ event.event_time.strftime("%H:%M") }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
+
+{% if flash %}
+  <div class="alert alert-success">{{ flash }}</div>
+{% endif %}
+
+{% if user.is_admin %}
+  {% if attendances %}
+  <table>
+    <thead><tr><th>Player</th><th>Status</th><th>Note</th><th>Update</th></tr></thead>
+    <tbody>
+    {% for att in attendances %}
+      <tr>
+        <td>{{ att.player.full_name if att.player else att.player_id }}</td>
+        <td><span class="badge badge-{{ att.status }}">{{ att.status|capitalize }}</span></td>
+        <td>{{ att.note or "" }}</td>
+        <td>
+          <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <select name="status" class="select-sm">
+              {% for s in ["present","absent","maybe","unknown"] %}
+                <option value="{{ s }}" {% if att.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+              {% endfor %}
+            </select>
+            <input type="text" name="note" placeholder="Note" value="{{ att.note or "" }}" class="input-sm">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>No players linked to this event's team yet.</p>
+  {% endif %}
+{% else %}
+  {% if my_players %}
+    {% for player in my_players %}
+      {% set att = att_map.get(player.id) %}
+      <div class="attendance-card">
+        <div class="attendance-card-header">{{ player.full_name }}</div>
+        <form method="post" action="/attendance/{{ event.id }}/{{ player.id }}">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+          <div class="radio-group">
+            {% for s, label in [("present","Present ✓"),("absent","Absent ✗"),("maybe","Maybe ?"),("unknown","No response")] %}
+            <label class="radio-option">
+              <input type="radio" name="status" value="{{ s }}"
+                     {% if att and att.status == s %}checked{% elif not att and s == "unknown" %}checked{% endif %}>
+              {{ label }}
+            </label>
+            {% endfor %}
+          </div>
+          <label>Note (optional)
+            <input type="text" name="note" value="{{ att.note if att and att.note else "" }}">
+          </label>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-warning">You have no player profile linked to your account. Contact an admin.</div>
+  {% endif %}
+{% endif %}
+
+<p><a href="/events/{{ event.id }}" class="btn btn-outline btn-sm">← Back to Event</a></p>
+{% endblock %}

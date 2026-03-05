@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Login — TeamPresence{% endblock %}
+{% block content %}
+<div class="form-container-sm">
+  <h2>Sign In</h2>
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+  <form method="post" action="/auth/login">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <label for="username">Username
+      <input type="text" id="username" name="username" required autofocus>
+    </label>
+    <label for="password">Password
+      <input type="password" id="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary" style="width:100%;">Sign In</button>
+  </form>
+</div>
+{% endblock %}

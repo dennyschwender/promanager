@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <span>{{ event.title }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ event.title }}</h2>
+  <div class="action-group">
+    <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
+    {% set pt_labels = {"normal":"Normal","all":"All attendee","selection":"Selection","available":"Available","no_registration":"No registration"} %}
+    <span class="badge badge-outline">{{ pt_labels.get(event.presence_type, event.presence_type) }}</span>
+    {% if event.recurrence_group_id %}
+    <span class="badge-recurring">&#8635; Recurring</span>
+    {% endif %}
+  </div>
+</div>
+
+{% if request.query_params.get("reminders_sent") %}
+  <div class="alert alert-success">Reminders sent to {{ request.query_params.get("reminders_sent") }} player(s).</div>
+{% endif %}
+
+<dl>
+  <dt>Season</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
+  <dt>Team</dt><dd>{{ event.team.name if event.team else "—" }}</dd>
+  <dt>Date</dt>
+  <dd>
+    {{ event.event_date }}
+    {% if event.event_time or event.event_end_time %}
+      · Start: {{ event.event_time.strftime("%H:%M") if event.event_time else "—" }}
+      {% if event.event_end_time %} → {{ event.event_end_time.strftime("%H:%M") }}{% endif %}
+    {% endif %}
+  </dd>
+  {% if event.location %}
+  <dt>Event location</dt>
+  <dd>{{ event.location }} <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a></dd>
+  {% endif %}
+  {% if event.meeting_time or event.meeting_location %}
+  <dt>Meeting point</dt>
+  <dd>
+    {% if event.meeting_time %}{{ event.meeting_time.strftime("%H:%M") }}{% endif %}
+    {% if event.meeting_time and event.meeting_location %} · {% endif %}
+    {% if event.meeting_location %}{{ event.meeting_location }} <a href="https://www.openstreetmap.org/search?query={{ event.meeting_location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a>{% endif %}
+  </dd>
+  {% endif %}
+  {% if event.description %}<dt>Description</dt><dd>{{ event.description }}</dd>{% endif %}
+  <dt>Reminder sent</dt><dd>{% if event.reminder_sent %}<span class="badge badge-active">Yes</span>{% else %}No{% endif %}</dd>
+  {% if event.recurrence_group_id %}
+  {% set rule_labels = {"weekly":"Weekly","biweekly":"Bi-weekly","monthly":"Monthly"} %}
+  <dt>Recurring</dt><dd><span class="badge-recurring">&#8635; {{ rule_labels.get(event.recurrence_rule, event.recurrence_rule or "") }}</span> — editing affects only this occurrence.</dd>
+  {% endif %}
+</dl>
+
+<div class="action-group" style="margin-bottom:1.5rem;">
+  {% if event.presence_type != "no_registration" %}
+    <a href="/attendance/{{ event.id }}" class="btn btn-primary">Mark Attendance</a>
+  {% endif %}
+  {% if user.is_admin %}
+    <a href="/events/{{ event.id }}/edit" class="btn btn-outline">Edit Event</a>
+    <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-outline">Send Reminders</button>
+    </form>
+    <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
+          onsubmit="return confirm('Delete this event?')">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  {% endif %}
+</div>
+
+{% if event.presence_type != "no_registration" %}
+<h3>Attendance Summary</h3>
+<div class="attendance-summary">
+  {% for bucket, label in [("present","Present"),("absent","Absent"),("maybe","Maybe"),("unknown","Unknown")] %}
+  <div>
+    <span class="badge badge-{{ bucket }}">{{ label }} ({{ summary[bucket]|length }})</span>
+    <ul>
+      {% for player in summary[bucket] %}
+        <li>{{ player.full_name }}</li>
+      {% else %}
+        <li><em>—</em></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% block title %}{% if event %}Edit Event{% else %}New Event{% endif %} — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <span>{% if event %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+<h2>{% if event %}Edit: {{ event.title }}{% else %}New Event{% endif %}</h2>
+{% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+<form method="post" action="{% if event %}/events/{{ event.id }}/edit{% else %}/events/new{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+  <div class="form-grid-2">
+    <label>Title *
+      <input type="text" name="title" required value="{{ event.title if event else "" }}">
+    </label>
+    <label>Event Type
+      <select name="event_type">
+        {% for et in ["training","match","other"] %}
+          <option value="{{ et }}"
+            {% if event and event.event_type == et %}selected
+            {% elif not event and et == "training" %}selected{% endif %}>{{ et|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <div class="form-grid-2">
+    <label>Season
+      <select name="season_id">
+        <option value="">— None —</option>
+        {% for s in seasons %}
+          <option value="{{ s.id }}"
+            {% if event and event.season_id == s.id %}selected
+            {% elif not event and s.is_active %}selected{% endif %}>
+            {{ s.name }}{% if s.is_active %} (active){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Team
+      <select name="team_id">
+        <option value="">— None —</option>
+        {% for t in teams %}
+          <option value="{{ t.id }}" {% if event and event.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <fieldset>
+    <legend>Event date &amp; time</legend>
+    <div class="form-grid-2">
+      <label>Date *
+        <input type="date" name="event_date" required
+               value="{{ event.event_date.isoformat() if event else "" }}">
+      </label>
+      <label>Start time
+        <input type="text" name="event_time" class="time-24h"
+               placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+               value="{{ event.event_time.strftime("%H:%M") if event and event.event_time else "" }}">
+      </label>
+    </div>
+    <label>End time
+      <input type="text" name="event_end_time" class="time-24h"
+             placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+             value="{{ event.event_end_time.strftime("%H:%M") if event and event.event_end_time else "" }}">
+    </label>
+  </fieldset>
+
+  {% if not event %}
+  <fieldset id="recurrence-fieldset">
+    <legend>Recurring</legend>
+    <label class="checkbox-inline">
+      <input type="checkbox" name="is_recurring" id="id_is_recurring" value="1">
+      <span>Repeat this event</span>
+    </label>
+    <div id="recurrence-options" class="recurrence-options" style="display:none;">
+      <div class="form-grid-2">
+        <label>Frequency
+          <select name="recurrence_rule" id="id_recurrence_rule">
+            <option value="weekly">Weekly (every week)</option>
+            <option value="biweekly">Bi-weekly (every 2 weeks)</option>
+            <option value="monthly">Monthly (same day each month)</option>
+          </select>
+        </label>
+        <label>Repeat until *
+          <input type="date" name="recurrence_end_date" id="id_recurrence_end_date">
+        </label>
+      </div>
+      <p class="recurrence-hint">A separate event is created for each occurrence. Each can be edited individually afterwards.</p>
+    </div>
+  </fieldset>
+  {% elif event.recurrence_group_id %}
+  <div class="alert alert-info">
+    &#8635; This event is part of a recurring series. Changes here only affect this occurrence.
+  </div>
+  {% endif %}
+
+  <fieldset>
+    <legend>Locations</legend>
+    <label>Event location
+      <div class="location-search-wrap">
+        <div class="location-input-row">
+          <input type="text" name="location" id="id_location"
+                 placeholder="Start typing to search…"
+                 autocomplete="off"
+                 data-location-search
+                 value="{{ event.location if event and event.location else "" }}">
+          <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_location" title="View on map">📍</a>
+        </div>
+      </div>
+    </label>
+    <div class="form-grid-2">
+      <label>Meeting time
+        <input type="text" name="meeting_time" class="time-24h"
+               placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+               value="{{ event.meeting_time.strftime("%H:%M") if event and event.meeting_time else "" }}">
+      </label>
+      <label>Meeting location
+        <div class="location-search-wrap">
+          <div class="location-input-row">
+            <input type="text" name="meeting_location" id="id_meeting_location"
+                   placeholder="Start typing to search…"
+                   autocomplete="off"
+                   data-location-search
+                   value="{{ event.meeting_location if event and event.meeting_location else "" }}">
+            <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_meeting_location" title="View on map">📍</a>
+          </div>
+        </div>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Presence type</legend>
+    <div class="presence-type-group">
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="normal"
+               {{ "checked" if (event and event.presence_type == "normal") or (not event and "normal" == "normal") else "" }}>
+        <span class="presence-label"><strong>Normal</strong><br><small class="text-muted">Unknown by default — participants set their own presence/absence</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="all"
+               {{ "checked" if (event and event.presence_type == "all") or (not event and "all" == "normal") else "" }}>
+        <span class="presence-label"><strong>All attendee</strong><br><small class="text-muted">Everyone is marked present by default</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="selection"
+               {{ "checked" if (event and event.presence_type == "selection") or (not event and "selection" == "normal") else "" }}>
+        <span class="presence-label"><strong>Selection</strong><br><small class="text-muted">Only selected players can register absence; others cannot respond</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="available"
+               {{ "checked" if (event and event.presence_type == "available") or (not event and "available" == "normal") else "" }}>
+        <span class="presence-label"><strong>Available</strong><br><small class="text-muted">Participants give availability first, then admin selects attendees</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="no_registration"
+               {{ "checked" if (event and event.presence_type == "no_registration") or (not event and "no_registration" == "normal") else "" }}>
+        <span class="presence-label"><strong>No registration</strong><br><small class="text-muted">No attendance tracking for this event</small></span>
+      </label>
+    </div>
+  </fieldset>
+
+  <label>Description
+    <textarea name="description">{{ event.description if event and event.description else "" }}</textarea>
+  </label>
+
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">{% if event %}Save Changes{% else %}Create Event{% endif %}</button>
+    <a href="/events" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+  var NOMINATIM = "https://nominatim.openstreetmap.org/search";
+  var OSM_MAP   = "https://www.openstreetmap.org/search?query=";
+  var DELAY     = 420;
+
+  function debounce(fn, ms) {
+    var t;
+    return function () {
+      var args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function () { fn.apply(null, args); }, ms);
+    };
+  }
+
+  function getOrCreateList(wrap) {
+    var ul = wrap.querySelector(".location-suggestions");
+    if (!ul) {
+      ul = document.createElement("ul");
+      ul.className = "location-suggestions";
+      ul.setAttribute("role", "listbox");
+      ul.hidden = true;
+      wrap.appendChild(ul);
+    }
+    return ul;
+  }
+
+  function clearList(ul) {
+    ul.innerHTML = "";
+    ul.hidden = true;
+  }
+
+  function showMsg(ul, msg) {
+    ul.innerHTML = "";
+    var li = document.createElement("li");
+    li.className = "location-searching";
+    li.textContent = msg;
+    ul.appendChild(li);
+    ul.hidden = false;
+  }
+
+  function updateMapLink(linkEl, query) {
+    if (!query || !query.trim()) {
+      linkEl.classList.remove("has-value");
+      linkEl.setAttribute("href", "#");
+    } else {
+      linkEl.classList.add("has-value");
+      linkEl.setAttribute("href", OSM_MAP + encodeURIComponent(query.trim()));
+    }
+  }
+
+  function selectResult(input, ul, mapLink, displayName) {
+    input.value = displayName;
+    updateMapLink(mapLink, displayName);
+    clearList(ul);
+    input.focus();
+  }
+
+  function fillList(ul, results, input, mapLink) {
+    ul.innerHTML = "";
+    if (!results.length) {
+      showMsg(ul, "No results found");
+      return;
+    }
+
+    // Human-readable labels for common OSM types
+    var TYPE_LABELS = {
+      sports_centre: "Sports centre", stadium: "Stadium", sports_hall: "Sports hall",
+      pitch: "Pitch", track: "Track", swimming_pool: "Pool", ice_rink: "Ice rink",
+      gym: "Gym", park: "Park", garden: "Garden", playground: "Playground",
+      restaurant: "Restaurant", cafe: "Café", bar: "Bar", pub: "Pub",
+      fast_food: "Fast food", food_court: "Food court",
+      school: "School", university: "University", college: "College",
+      community_centre: "Community centre", social_centre: "Social centre",
+      hotel: "Hotel", hostel: "Hostel", motel: "Motel",
+      hospital: "Hospital", clinic: "Clinic",
+      library: "Library", cinema: "Cinema", theatre: "Theatre",
+      place_of_worship: "Place of worship", museum: "Museum",
+      parking: "Parking", fuel: "Fuel station",
+      supermarket: "Supermarket", marketplace: "Marketplace",
+      village: "Village", town: "Town", city: "City", suburb: "Suburb",
+      house: "Address", road: "Road"
+    };
+
+    function poiType(item) {
+      return TYPE_LABELS[item.type] || TYPE_LABELS[item["class"]] || null;
+    }
+
+    function buildValue(item) {
+      // Prefer a compact human name: POI name + city rather than full OSM string
+      var name = item.namedetails && item.namedetails["name"];
+      var addr = item.address || {};
+      var city = addr.city || addr.town || addr.village || addr.municipality || "";
+      var country = addr.country_code ? addr.country_code.toUpperCase() : "";
+      if (name && name !== item.display_name) {
+        var road = addr.road ? ", " + addr.road : "";
+        var loc  = city ? ", " + city : "";
+        return name + road + loc + (country ? ", " + country : "");
+      }
+      return item.display_name;
+    }
+
+    results.forEach(function (item, idx) {
+      var li = document.createElement("li");
+      li.className = "location-suggestion-item";
+      li.setAttribute("role", "option");
+      li.dataset.idx = idx;
+
+      var stored = buildValue(item);
+      li.dataset.value = stored;
+
+      // Main line: POI name (bold) or first 2 address segments
+      var poiName = item.namedetails && item.namedetails["name"];
+      var parts = item.display_name.split(", ");
+      var mainText = poiName || parts.slice(0, 2).join(", ");
+      var subParts = poiName
+        ? parts.filter(function (p) { return p !== poiName; }).slice(0, 3)
+        : parts.slice(2);
+      var subText = subParts.join(", ");
+
+      var mainRow = document.createElement("div");
+      mainRow.style.cssText = "display:flex;align-items:center;gap:0.4rem;";
+
+      var mainSpan = document.createElement("span");
+      mainSpan.className = "suggestion-main";
+      mainSpan.textContent = mainText;
+      mainRow.appendChild(mainSpan);
+
+      var typLabel = poiType(item);
+      if (typLabel) {
+        var chip = document.createElement("span");
+        chip.className = "suggestion-poi-chip";
+        chip.textContent = typLabel;
+        mainRow.appendChild(chip);
+      }
+
+      li.appendChild(mainRow);
+
+      if (subText) {
+        var subSpan = document.createElement("span");
+        subSpan.className = "suggestion-sub";
+        subSpan.textContent = subText;
+        li.appendChild(subSpan);
+      }
+
+      li.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        selectResult(input, ul, mapLink, stored);
+      });
+      ul.appendChild(li);
+    });
+    ul.hidden = false;
+  }
+
+  function doSearch(input, ul, mapLink) {
+    var q = input.value.trim();
+    if (q.length < 3) { clearList(ul); return; }
+    showMsg(ul, "Searching…");
+    var params = new URLSearchParams({
+      q: q, format: "json", limit: 8, addressdetails: 1,
+      namedetails: 1, extratags: 1
+    });
+    fetch(NOMINATIM + "?" + params.toString(), {
+      headers: { "Accept-Language": navigator.language || "en" }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) { fillList(ul, data, input, mapLink); })
+    .catch(function () { showMsg(ul, "Search unavailable"); });
+  }
+
+  function initInput(input) {
+    var wrap    = input.closest(".location-search-wrap");
+    if (!wrap) return;
+    var ul      = getOrCreateList(wrap);
+    var row     = input.closest(".location-input-row");
+    var mapLink = row ? row.querySelector(".location-map-link") : null;
+
+    // Set initial map-link state
+    if (mapLink) updateMapLink(mapLink, input.value);
+
+    var debouncedSearch = debounce(function () { doSearch(input, ul, mapLink); }, DELAY);
+
+    input.addEventListener("input", function () {
+      if (mapLink) updateMapLink(mapLink, input.value);
+      debouncedSearch();
+    });
+
+    input.addEventListener("keydown", function (e) {
+      var items = ul.querySelectorAll(".location-suggestion-item");
+      if (!items.length) return;
+      var active = ul.querySelector(".location-suggestion-item.active");
+      var idx = active ? parseInt(active.dataset.idx, 10) : -1;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (active) active.classList.remove("active");
+        idx = (idx + 1) % items.length;
+        items[idx].classList.add("active");
+        items[idx].scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (active) active.classList.remove("active");
+        idx = (idx - 1 + items.length) % items.length;
+        items[idx].classList.add("active");
+        items[idx].scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" && active) {
+        e.preventDefault();
+        selectResult(input, ul, mapLink, active.dataset.value);
+      } else if (e.key === "Escape") {
+        clearList(ul);
+      }
+    });
+
+    input.addEventListener("blur", function () {
+      setTimeout(function () { clearList(ul); }, 200);
+    });
+  }
+
+  document.querySelectorAll("[data-location-search]").forEach(initInput);
+
+  // 24H time auto-formatter: insert colon after 2 digits, validate range
+  document.querySelectorAll(".time-24h").forEach(function (inp) {
+    inp.addEventListener("input", function () {
+      var v = inp.value.replace(/[^0-9]/g, "");
+      if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+      inp.value = v;
+    });
+    inp.addEventListener("blur", function () {
+      var v = inp.value.trim();
+      if (!v) return;
+      var m = v.match(/^([0-2]?[0-9]):([0-5][0-9])$/);
+      if (m) {
+        var h = parseInt(m[1], 10), mn = parseInt(m[2], 10);
+        if (h > 23 || mn > 59) { inp.value = ""; inp.setCustomValidity("Enter a valid time (00:00 – 23:59)"); }
+        else { inp.value = String(h).padStart(2,"0") + ":" + String(mn).padStart(2,"0"); inp.setCustomValidity(""); }
+      } else if (v) {
+        inp.setCustomValidity("Enter time as HH:MM (e.g. 19:30)");
+      }
+    });
+    inp.addEventListener("input", function () { inp.setCustomValidity(""); });
+  });
+
+  // Recurring toggle
+  var recurChk = document.getElementById("id_is_recurring");
+  var recurOpts = document.getElementById("recurrence-options");
+  var recurEnd = document.getElementById("id_recurrence_end_date");
+  if (recurChk) {
+    recurChk.addEventListener("change", function () {
+      recurOpts.style.display = this.checked ? "" : "none";
+      if (recurEnd) recurEnd.required = this.checked;
+    });
+  }
+})();
+</script>
+{% endblock %}

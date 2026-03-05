@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{% if team %}Edit Team{% else %}New Team{% endif %} — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/teams">Teams</a><span class="breadcrumb-sep"></span>
+  <span>{% if team %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+<h2>{% if team %}Edit Team: {{ team.name }}{% else %}New Team{% endif %}</h2>
+{% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+<form method="post" action="{% if team %}/teams/{{ team.id }}/edit{% else %}/teams/new{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <label for="name">Team Name *
+    <input type="text" id="name" name="name" required value="{{ team.name if team else "" }}">
+  </label>
+  <label for="description">Description
+    <textarea id="description" name="description">{{ team.description if team and team.description else "" }}</textarea>
+  </label>
+  <label for="season_id">Season
+    <select id="season_id" name="season_id">
+      <option value="">— None —</option>
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if team and team.season_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">{% if team %}Save Changes{% else %}Create Team{% endif %}</button>
+    <a href="/teams" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+</div>
+{% endblock %}

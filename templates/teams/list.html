@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Teams — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>Teams</span></nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Teams</h2>
+  {% if user.is_admin %}<a href="/teams/new" class="btn btn-primary">+ New Team</a>{% endif %}
+</div>
+
+{% if teams %}
+<table>
+  <thead>
+    <tr><th>Name</th><th>Season</th><th>Description</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+  {% for t in teams %}
+    <tr>
+      <td><strong>{{ t.name }}</strong></td>
+      <td>{{ t.season.name if t.season else "—" }}</td>
+      <td>{{ t.description or "—" }}</td>
+      <td>
+        <div class="action-group">
+          {% if user.is_admin %}
+            <a href="/teams/{{ t.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
+            <a href="/players?team_id={{ t.id }}" class="btn btn-sm btn-outline">Players</a>
+            <form method="post" action="/teams/{{ t.id }}/delete" style="display:contents;"
+                  onsubmit="return confirm('Delete team {{ t.name }}?')">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No teams yet. {% if user.is_admin %}<a href="/teams/new">Create one</a>.{% endif %}</p>
+{% endif %}
+{% endblock %}

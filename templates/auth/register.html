@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Register User — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <span>Register User</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+<h2>Register New User</h2>
+{% if flash %}
+  <div class="alert alert-success">{{ flash }}</div>
+{% endif %}
+{% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+<form method="post" action="/auth/register">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <label for="username">Username
+    <input type="text" id="username" name="username" required>
+  </label>
+  <label for="email">Email
+    <input type="email" id="email" name="email" required>
+  </label>
+  <label for="password">Password (min 8 chars)
+    <input type="password" id="password" name="password" required minlength="8">
+  </label>
+  <label for="role">Role
+    <select id="role" name="role">
+      <option value="member">Member</option>
+      <option value="admin">Admin</option>
+    </select>
+  </label>
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">Create User</button>
+    <a href="/dashboard" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+</div>
+{% endblock %}

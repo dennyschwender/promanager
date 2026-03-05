@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{% if season %}Edit Season{% else %}New Season{% endif %} — TeamPresence{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/seasons">Seasons</a><span class="breadcrumb-sep"></span>
+  <span>{% if season %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+<h2>{% if season %}Edit Season: {{ season.name }}{% else %}New Season{% endif %}</h2>
+{% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+<form method="post" action="{% if season %}/seasons/{{ season.id }}/edit{% else %}/seasons/new{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <label for="name">Season Name *
+    <input type="text" id="name" name="name" required value="{{ season.name if season else "" }}">
+  </label>
+  <div class="form-grid-2">
+    <label for="start_date">Start Date
+      <input type="date" id="start_date" name="start_date"
+             value="{{ season.start_date.isoformat() if season and season.start_date else "" }}">
+    </label>
+    <label for="end_date">End Date
+      <input type="date" id="end_date" name="end_date"
+             value="{{ season.end_date.isoformat() if season and season.end_date else "" }}">
+    </label>
+  </div>
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">{% if season %}Save Changes{% else %}Create Season{% endif %}</button>
+    <a href="/seasons" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+</div>
+{% endblock %}

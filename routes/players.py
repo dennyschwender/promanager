@@ -1,0 +1,372 @@
+"""routes/players.py — Player CRUD."""
+
+from __future__ import annotations
+
+from datetime import date
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import RedirectResponse, Response
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+
+from app.csrf import require_csrf
+from app.database import get_db
+from models.player import Player
+from models.player_contact import PlayerContact
+from models.player_phone import PlayerPhone
+from models.player_team import PlayerTeam
+from models.team import Team
+from models.user import User
+from routes._auth_helpers import require_admin, require_login
+from services.attendance_service import get_player_attendance_history
+
+router = APIRouter()
+templates = Jinja2Templates(directory="templates")
+
+
+# ---------------------------------------------------------------------------
+# Form-parsing helpers
+# ---------------------------------------------------------------------------
+
+def _parse_team_memberships(form) -> list[tuple[int, int, dict]]:
+    """Return list of (team_id, priority, extra_fields) from form data.
+
+    extra_fields keys: role, position, shirt_number, membership_status, injured_until,
+    absent_by_default. Supports the new multi-checkbox UI or legacy single team_id.
+    """
+    raw_ids = form.getlist("team_ids")
+    if raw_ids:
+        result = []
+        for tid_str in raw_ids:
+            try:
+                tid = int(tid_str)
+            except (ValueError, TypeError):
+                continue
+            try:
+                priority = int(form.get(f"priority_{tid}", 1))
+            except (ValueError, TypeError):
+                priority = 1
+            shirt_raw = form.get(f"shirt_{tid}", "").strip()
+            injured_raw = form.get(f"injured_until_{tid}", "").strip()
+            extra = {
+                "role": (form.get(f"role_{tid}") or "player").strip(),
+                "position": (form.get(f"position_{tid}") or "").strip() or None,
+                "shirt_number": int(shirt_raw) if shirt_raw.isdigit() else None,
+                "membership_status": (form.get(f"status_{tid}") or "active").strip(),
+                "injured_until": _parse_date(injured_raw),
+                "absent_by_default": form.get(f"absent_default_{tid}") in ("on", "1", "true", "yes"),
+            }
+            result.append((tid, max(1, priority), extra))
+        return result
+
+    # Legacy single team_id (used by tests)
+    tid_str = form.get("team_id", "")
+    if tid_str and tid_str.strip():
+        return [(int(tid_str.strip()), 1, {})]
+    return []
+
+
+def _sync_memberships(
+    db: Session,
+    player: Player,
+    memberships: list[tuple[int, int, dict]],
+) -> None:
+    """Replace all PlayerTeam rows for *player* with *memberships*."""
+    db.query(PlayerTeam).filter(PlayerTeam.player_id == player.id).delete()
+    for team_id, priority, extra in memberships:
+        db.add(PlayerTeam(
+            player_id=player.id,
+            team_id=team_id,
+            priority=priority,
+            role=extra.get("role", "player") or "player",
+            position=extra.get("position"),
+            shirt_number=extra.get("shirt_number"),
+            membership_status=extra.get("membership_status", "active") or "active",
+            injured_until=extra.get("injured_until"),
+            absent_by_default=bool(extra.get("absent_by_default", False)),
+        ))
+
+
+def _parse_date(value: str) -> date | None:
+    """Parse ISO date string, returning None on failure."""
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _sync_phones(db: Session, player: Player, form) -> None:
+    """Rebuild PlayerPhone records from phone_N / phone_label_N form fields."""
+    db.query(PlayerPhone).filter(PlayerPhone.player_id == player.id).delete()
+    for i in range(1, 11):
+        number = (form.get(f"phone_{i}") or "").strip()
+        if not number:
+            continue
+        label = (form.get(f"phone_label_{i}") or "").strip() or None
+        db.add(PlayerPhone(player_id=player.id, phone=number, label=label))
+
+
+def _sync_contact(db: Session, player: Player, form) -> None:
+    """Upsert PlayerContact record from contact_* form fields."""
+    first = (form.get("contact_first_name") or "").strip()
+    last  = (form.get("contact_last_name")  or "").strip()
+    # If both names are blank, remove existing contact
+    if not first and not last:
+        db.query(PlayerContact).filter(PlayerContact.player_id == player.id).delete()
+        return
+
+    contact = (
+        db.query(PlayerContact).filter(PlayerContact.player_id == player.id).first()
+    )
+    if contact is None:
+        contact = PlayerContact(player_id=player.id)
+        db.add(contact)
+
+    contact.first_name          = first
+    contact.last_name           = last
+    contact.relationship_label  = (form.get("contact_relationship")  or "").strip() or None
+    contact.email               = (form.get("contact_email")         or "").strip() or None
+    contact.phone               = (form.get("contact_phone")         or "").strip() or None
+    contact.phone2              = (form.get("contact_phone2")        or "").strip() or None
+    contact.street              = (form.get("contact_street")        or "").strip() or None
+    contact.postcode            = (form.get("contact_postcode")      or "").strip() or None
+    contact.city                = (form.get("contact_city")          or "").strip() or None
+
+
+def _apply_personal_fields(player: Player, form) -> None:
+    """Write personal-info form values onto a Player instance."""
+    player.sex           = (form.get("sex")           or "").strip() or None
+    player.date_of_birth = _parse_date((form.get("date_of_birth") or "").strip())
+    player.street        = (form.get("street")        or "").strip() or None
+    player.postcode      = (form.get("postcode")      or "").strip() or None
+    player.city          = (form.get("city")          or "").strip() or None
+
+
+def _memberships_dict(player: Player) -> dict:
+    """Return {team_id: PlayerTeam} mapping for pre-filling the edit form."""
+    return {m.team_id: m for m in player.team_memberships}
+
+
+# ---------------------------------------------------------------------------
+# List
+# ---------------------------------------------------------------------------
+
+
+@router.get("")
+@router.get("/")
+async def players_list(
+    request: Request,
+    team_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    result = require_login(request)
+    if isinstance(result, Response):
+        return result
+
+    q = db.query(Player)
+    if team_id is not None:
+        q = (
+            q.join(PlayerTeam, Player.id == PlayerTeam.player_id)
+            .filter(PlayerTeam.team_id == team_id)
+        )
+    players = q.order_by(Player.last_name, Player.first_name).all()
+    teams = db.query(Team).order_by(Team.name).all()
+
+    return templates.TemplateResponse(request, "players/list.html", {
+        "user": request.state.user,
+        "players": players,
+        "teams": teams,
+        "selected_team_id": team_id,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Create
+# ---------------------------------------------------------------------------
+
+
+@router.get("/new")
+async def player_new_get(request: Request, db: Session = Depends(get_db)):
+    result = require_admin(request)
+    if isinstance(result, Response):
+        return result
+
+    teams = db.query(Team).order_by(Team.name).all()
+    users = db.query(User).order_by(User.username).all()
+    return templates.TemplateResponse(request, "players/form.html", {
+        "user": request.state.user,
+        "player": None,
+        "teams": teams,
+        "users": users,
+        "memberships": {},
+        "error": None,
+    })
+
+
+@router.post("/new")
+async def player_new_post(request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
+    result = require_admin(request)
+    if isinstance(result, Response):
+        return result
+
+    form = await request.form()
+    first_name = (form.get("first_name") or "").strip()
+    last_name  = (form.get("last_name")  or "").strip()
+    email      = (form.get("email")      or "").strip()
+    phone      = (form.get("phone")      or "").strip()
+    user_id_s  = (form.get("user_id")    or "").strip()
+
+    teams = db.query(Team).order_by(Team.name).all()
+    users = db.query(User).order_by(User.username).all()
+
+    if not first_name or not last_name:
+        return templates.TemplateResponse(request, "players/form.html", {
+            "user": request.state.user,
+            "player": None,
+            "teams": teams,
+            "users": users,
+            "memberships": {},
+            "error": "First name and last name are required.",
+        }, status_code=400)
+
+    player = Player(
+        first_name=first_name,
+        last_name=last_name,
+        email=email or None,
+        phone=phone or None,
+        user_id=int(user_id_s) if user_id_s else None,
+        is_active=True,
+    )
+    _apply_personal_fields(player, form)
+    db.add(player)
+    db.flush()  # get player.id
+
+    memberships = _parse_team_memberships(form)
+    _sync_memberships(db, player, memberships)
+    _sync_phones(db, player, form)
+    _sync_contact(db, player, form)
+
+    db.commit()
+    return RedirectResponse("/players", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Detail
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{player_id}")
+async def player_detail(player_id: int, request: Request, db: Session = Depends(get_db)):
+    result = require_login(request)
+    if isinstance(result, Response):
+        return result
+
+    player = db.get(Player, player_id)
+    if player is None:
+        return RedirectResponse("/players", status_code=302)
+
+    history = get_player_attendance_history(db, player_id)
+
+    return templates.TemplateResponse(request, "players/detail.html", {
+        "user": request.state.user,
+        "player": player,
+        "history": history,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Edit
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{player_id}/edit")
+async def player_edit_get(player_id: int, request: Request, db: Session = Depends(get_db)):
+    result = require_admin(request)
+    if isinstance(result, Response):
+        return result
+
+    player = db.get(Player, player_id)
+    if player is None:
+        return RedirectResponse("/players", status_code=302)
+
+    teams = db.query(Team).order_by(Team.name).all()
+    users = db.query(User).order_by(User.username).all()
+    return templates.TemplateResponse(request, "players/form.html", {
+        "user": request.state.user,
+        "player": player,
+        "teams": teams,
+        "users": users,
+        "memberships": _memberships_dict(player),
+        "error": None,
+    })
+
+
+@router.post("/{player_id}/edit")
+async def player_edit_post(player_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
+    result = require_admin(request)
+    if isinstance(result, Response):
+        return result
+
+    player = db.get(Player, player_id)
+    if player is None:
+        return RedirectResponse("/players", status_code=302)
+
+    form = await request.form()
+    first_name = (form.get("first_name") or "").strip()
+    last_name  = (form.get("last_name")  or "").strip()
+    email      = (form.get("email")      or "").strip()
+    phone      = (form.get("phone")      or "").strip()
+    user_id_s  = (form.get("user_id")    or "").strip()
+    is_active  = (form.get("is_active")  or "")
+
+    teams = db.query(Team).order_by(Team.name).all()
+    users = db.query(User).order_by(User.username).all()
+
+    if not first_name or not last_name:
+        return templates.TemplateResponse(request, "players/form.html", {
+            "user": request.state.user,
+            "player": player,
+            "teams": teams,
+            "users": users,
+            "memberships": _memberships_dict(player),
+            "error": "First name and last name are required.",
+        }, status_code=400)
+
+    player.first_name = first_name
+    player.last_name  = last_name
+    player.email      = email or None
+    player.phone      = phone or None
+    player.user_id    = int(user_id_s) if user_id_s else None
+    player.is_active  = is_active in ("on", "true", "1", "yes")
+    _apply_personal_fields(player, form)
+
+    _sync_memberships(db, player, _parse_team_memberships(form))
+    _sync_phones(db, player, form)
+    _sync_contact(db, player, form)
+
+    db.add(player)
+    db.commit()
+    return RedirectResponse(f"/players/{player_id}", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Delete
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{player_id}/delete")
+async def player_delete(player_id: int, request: Request, _csrf: None = Depends(require_csrf), db: Session = Depends(get_db)):
+    result = require_admin(request)
+    if isinstance(result, Response):
+        return result
+
+    player = db.get(Player, player_id)
+    if player:
+        db.delete(player)
+        db.commit()
+    return RedirectResponse("/players", status_code=302)
+
+
+
