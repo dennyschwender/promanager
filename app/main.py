@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime as _dt, timezone as _tz
 from typing import AsyncIterator
-from urllib.parse import quote_plus as _quote_plus
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -20,17 +17,13 @@ from starlette.responses import Response
 
 from app.config import settings
 from app.csrf import generate_csrf_token
-from app.database import SessionLocal, init_db
+import app.database as _db_mod
+from app.database import init_db
 from app.limiter import limiter
+from app.templates import templates
+from routes._auth_helpers import NotAuthenticated, NotAuthorized
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Jinja2 templates (shared with routes via import)
-# ---------------------------------------------------------------------------
-templates = Jinja2Templates(directory="templates")
-templates.env.globals["now"] = lambda: _dt.now(_tz.utc)
-templates.env.filters["urlencode"] = _quote_plus
 
 # ---------------------------------------------------------------------------
 # Session / auth helpers
@@ -53,7 +46,7 @@ def _get_user_from_cookie(request: Request):
     # Late import to avoid circular imports at module load time
     from models.user import User  # noqa: PLC0415
 
-    db = SessionLocal()
+    db = _db_mod.SessionLocal()
     try:
         user = db.get(User, user_id)
         if user is None or not user.is_active:
@@ -153,7 +146,24 @@ def create_app() -> FastAPI:
     async def root_redirect():
         return RedirectResponse(url="/dashboard", status_code=302)
 
-    # ── Exception handlers ────────────────────────────────────────────────
+    # ── Auth exception handlers ───────────────────────────────────────────
+    @app.exception_handler(NotAuthenticated)
+    async def not_authenticated_handler(request: Request, exc: NotAuthenticated) -> RedirectResponse:
+        return RedirectResponse("/auth/login", status_code=302)
+
+    @app.exception_handler(NotAuthorized)
+    async def not_authorized_handler(request: Request, exc: NotAuthorized) -> HTMLResponse:
+        try:
+            return templates.TemplateResponse(
+                request,
+                "errors/403.html",
+                {"user": request.state.user},
+                status_code=403,
+            )
+        except Exception:
+            return HTMLResponse("<h1>403 — Forbidden</h1>", status_code=403)
+
+    # ── HTTP exception handlers ───────────────────────────────────────────
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc) -> HTMLResponse:
         try:

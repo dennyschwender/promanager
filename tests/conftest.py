@@ -7,10 +7,10 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # ── Must be set BEFORE any app imports ────────────────────────────────────────
-TEST_DATABASE_URL = "sqlite:///./data/test_teamPresence.db"
-os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from app.csrf import require_csrf  # noqa: E402
 from app.database import Base, get_db  # noqa: E402
@@ -19,9 +19,11 @@ from services.auth_service import create_session_cookie, create_user  # noqa: E4
 import models  # noqa: E402, F401  — ensures all tables are registered on Base
 
 
-# ── Single test engine (file-based so AuthMiddleware can also connect) ─────────
+# ── Single shared in-memory engine (StaticPool so all connections share it) ───
 _test_engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 Base.metadata.create_all(bind=_test_engine)
 
@@ -38,7 +40,6 @@ _db_module.SessionLocal = _TestingSessionLocal  # AuthMiddleware uses this
 @pytest.fixture(scope="function")
 def db():
     """Fresh-state DB session per test — truncates all tables before each test."""
-    # Truncate in FK-safe reverse order
     with _test_engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             conn.execute(table.delete())
@@ -60,6 +61,18 @@ def client(db):
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[require_csrf] = override_csrf
+    with TestClient(app, raise_server_exceptions=False, follow_redirects=False) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def csrf_client(db):
+    """TestClient with CSRF enforcement enabled (no override)."""
+    def override_get_db():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app, raise_server_exceptions=False, follow_redirects=False) as c:
         yield c
     app.dependency_overrides.clear()

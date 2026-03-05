@@ -1,0 +1,187 @@
+"""Tests for /attendance routes and attendance_service."""
+import pytest
+from models.attendance import Attendance
+from datetime import date
+from models.event import Event
+from models.player import Player
+from models.user import User
+from services.attendance_service import (
+    get_event_attendance_summary,
+    set_attendance,
+)
+from services.auth_service import create_session_cookie, create_user
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_event(db, title="Test Event", event_date=date(2026, 3, 20)):
+    event = Event(title=title, event_type="training", event_date=event_date)
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+def _make_player(db, first="Player", last="One"):
+    player = Player(first_name=first, last_name=last, is_active=True)
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+    return player
+
+
+# ---------------------------------------------------------------------------
+# Attendance page (GET)
+# ---------------------------------------------------------------------------
+
+
+def test_mark_attendance_page(admin_client, db):
+    event = _make_event(db)
+    resp = admin_client.get(f"/attendance/{event.id}", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_mark_attendance_redirects_for_missing_event(admin_client):
+    resp = admin_client.get("/attendance/99999", follow_redirects=False)
+    assert resp.status_code == 302
+
+
+def test_attendance_requires_login(client, db):
+    event = _make_event(db, title="Auth Test Event")
+    resp = client.get(f"/attendance/{event.id}", follow_redirects=False)
+    assert resp.status_code == 302
+    assert "/auth/login" in resp.headers["location"]
+
+
+# ---------------------------------------------------------------------------
+# Set attendance (POST)
+# ---------------------------------------------------------------------------
+
+
+def test_set_attendance_present(admin_client, db):
+    event = _make_event(db, title="Present Event")
+    player = _make_player(db, "Alice", "Present")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "present", "note": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    att = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
+        .first()
+    )
+    assert att is not None
+    assert att.status == "present"
+
+
+def test_set_attendance_absent(admin_client, db):
+    event = _make_event(db, title="Absent Event")
+    player = _make_player(db, "Bob", "Absent")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "absent", "note": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    att = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
+        .first()
+    )
+    assert att is not None
+    assert att.status == "absent"
+
+
+def test_set_attendance_with_note(admin_client, db):
+    event = _make_event(db, title="Note Event")
+    player = _make_player(db, "Carol", "Note")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "maybe", "note": "Out of town"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    att = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
+        .first()
+    )
+    assert att is not None
+    assert att.status == "maybe"
+    assert att.note == "Out of town"
+
+
+# ---------------------------------------------------------------------------
+# Service-level summary
+# ---------------------------------------------------------------------------
+
+
+def test_attendance_summary(db):
+    event = _make_event(db, title="Summary Event")
+
+    p1 = _make_player(db, "Sam", "Present")
+    p2 = _make_player(db, "Terry", "Absent")
+    p3 = _make_player(db, "Jordan", "Maybe")
+
+    set_attendance(db, event.id, p1.id, "present")
+    set_attendance(db, event.id, p2.id, "absent")
+    set_attendance(db, event.id, p3.id, "maybe")
+
+    summary = get_event_attendance_summary(db, event.id)
+
+    assert len(summary["present"]) == 1
+    assert len(summary["absent"]) == 1
+    assert len(summary["maybe"]) == 1
+    assert len(summary["unknown"]) == 0
+    assert summary["present"][0].first_name == "Sam"
+
+
+# ---------------------------------------------------------------------------
+# Member authorization boundary
+# ---------------------------------------------------------------------------
+
+
+def test_member_cannot_update_another_members_player(client, db):
+    """A member may only update attendance for their own players."""
+    # Create two members
+    user_a = create_user(db, "member_a", "a@test.com", "password1", role="member")
+    user_b = create_user(db, "member_b", "b@test.com", "password2", role="member")
+
+    event = _make_event(db, title="Auth Boundary Event")
+
+    # Player owned by user_b
+    player_b = Player(first_name="Player", last_name="B", is_active=True, user_id=user_b.id)
+    db.add(player_b)
+    db.commit()
+    db.refresh(player_b)
+
+    # Authenticate as user_a
+    client.cookies.set("session_user_id", create_session_cookie(user_a.id))
+
+    resp = client.post(
+        f"/attendance/{event.id}/{player_b.id}",
+        data={"status": "present", "note": ""},
+        follow_redirects=False,
+    )
+    # Must be redirected away — not allowed to update another user's player
+    assert resp.status_code == 302
+    assert f"/attendance/{event.id}" in resp.headers["location"]
+
+    # Attendance must not have been changed to 'present'
+    att = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event.id, Attendance.player_id == player_b.id)
+        .first()
+    )
+    assert att is None or att.status != "present"
