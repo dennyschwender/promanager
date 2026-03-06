@@ -1,16 +1,14 @@
 """Tests for /attendance routes and attendance_service."""
-import pytest
-from models.attendance import Attendance
 from datetime import date
+
+from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
-from models.user import User
 from services.attendance_service import (
     get_event_attendance_summary,
     set_attendance,
 )
 from services.auth_service import create_session_cookie, create_user
-
 
 # ---------------------------------------------------------------------------
 # Helpers

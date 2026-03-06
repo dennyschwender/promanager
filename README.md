@@ -29,19 +29,21 @@ cp .env.example .env        # edit at minimum SECRET_KEY
 nano .env
 
 # 3. Start the application
-docker-compose up -d
+docker compose up -d
 ```
 
-The app will be available at **http://localhost:8000**.
+The app will be available at **http://localhost:7000**.
 
 Create the first admin account after the container starts:
 
 ```bash
-docker-compose exec web python scripts/create_admin.py \
+docker compose exec web python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password 'REPLACE_WITH_STRONG_PASSWORD'
 ```
+
+> **Important:** Replace `REPLACE_WITH_STRONG_PASSWORD` with a strong, unique password of your own choosing. Keep the single quotes so that shell special characters (e.g. `!`, `$`, spaces) in your password are handled correctly.
 
 ---
 
@@ -67,7 +69,7 @@ cp .env.example .env
 # Edit .env to set SECRET_KEY and any SMTP settings you want
 
 # Run the development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 7000
 ```
 
 The app auto-creates the SQLite database on first run via the lifespan handler.
@@ -88,8 +90,10 @@ Tests use an isolated SQLite database (`data/test_proManager.db`) and roll back 
 python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password 'REPLACE_WITH_STRONG_PASSWORD'
 ```
+
+> **Important:** Replace `REPLACE_WITH_STRONG_PASSWORD` with a strong, unique password of your own choosing. Keep the single quotes so that shell special characters (e.g. `!`, `$`, spaces) in your password are handled correctly.
 
 The script prints the new user's ID on success or an error message if the username already exists.
 

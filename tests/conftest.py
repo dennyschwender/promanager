@@ -12,12 +12,11 @@ from sqlalchemy.pool import StaticPool
 # ── Must be set BEFORE any app imports ────────────────────────────────────────
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
+import models  # noqa: E402, F401  — ensures all tables are registered on Base
 from app.csrf import require_csrf  # noqa: E402
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 from services.auth_service import create_session_cookie, create_user  # noqa: E402
-import models  # noqa: E402, F401  — ensures all tables are registered on Base
-
 
 # ── Single shared in-memory engine (StaticPool so all connections share it) ───
 _test_engine = create_engine(

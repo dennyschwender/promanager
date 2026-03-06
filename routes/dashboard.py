@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Request
-from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.templates import templates
 from models.attendance import Attendance
 from models.event import Event
 from models.season import Season

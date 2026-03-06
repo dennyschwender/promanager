@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# SQLAlchemy relationship() forward references are strings at runtime;
+# the Mapped[...] annotations are never evaluated, so F821 is a false positive.
+"models/*.py" = ["F821"]
+# Auto-generated migration files — don't enforce style rules
+"alembic/*" = ["E501", "W291", "I001"]

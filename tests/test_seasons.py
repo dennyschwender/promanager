@@ -1,7 +1,5 @@
 """Tests for /seasons routes."""
-import pytest
 from models.season import Season
-
 
 # ---------------------------------------------------------------------------
 # List

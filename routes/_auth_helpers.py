@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import Depends, Request
+from fastapi import Request
 
 from models.user import User
-
 
 # ---------------------------------------------------------------------------
 # Custom exceptions — handled in app/main.py with proper HTML responses

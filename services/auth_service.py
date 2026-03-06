@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from models.user import User
 
-
 # ---------------------------------------------------------------------------
 # Password helpers (using bcrypt directly — passlib 1.7.4 is incompatible
 # with bcrypt >= 4.x / Python 3.12+)

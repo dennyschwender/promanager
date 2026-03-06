@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.templates import templates
 from models.player import Player
 from models.season import Season
 from models.user import User

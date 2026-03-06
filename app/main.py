@@ -15,9 +15,9 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+import app.database as _db_mod
 from app.config import settings
 from app.csrf import generate_csrf_token
-import app.database as _db_mod
 from app.database import init_db
 from app.limiter import limiter
 from app.templates import templates

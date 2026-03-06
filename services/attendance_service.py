@@ -11,7 +11,6 @@ from models.event import Event
 from models.player import Player
 from models.player_team import PlayerTeam
 
-
 # ---------------------------------------------------------------------------
 # Core helpers
 # ---------------------------------------------------------------------------

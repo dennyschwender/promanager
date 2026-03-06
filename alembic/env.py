@@ -13,7 +13,6 @@ if config.config_file_name is not None:
 
 # Import models so all tables are registered on Base.metadata
 import models  # noqa: F401, E402
-
 from app.config import settings  # noqa: E402
 from app.database import Base  # noqa: E402
 

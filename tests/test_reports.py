@@ -1,12 +1,10 @@
-from datetime import date
 """Tests for /reports routes and report service helpers."""
-import pytest
-from models.attendance import Attendance
+from datetime import date
+
 from models.event import Event
 from models.player import Player
 from models.season import Season
 from services.attendance_service import get_season_attendance_stats, set_attendance
-
 
 # ---------------------------------------------------------------------------
 # Helpers
