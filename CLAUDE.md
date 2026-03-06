@@ -58,10 +58,11 @@ Tests run against an isolated in-memory SQLite database configured by the pytest
 ## Creating the first admin
 
 ```bash
+# Replace <STRONG_UNIQUE_PASSWORD> with a strong, unique password for this admin user.
 docker compose exec web python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password '<STRONG_UNIQUE_PASSWORD>'
 ```
 
 ## Key environment variables
