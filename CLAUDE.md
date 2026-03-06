@@ -61,7 +61,7 @@ Tests run against an isolated in-memory SQLite database configured by the pytest
 docker compose exec web python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password REPLACE_WITH_STRONG_PASSWORD
 ```
 
 ## Key environment variables
