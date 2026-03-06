@@ -29,15 +29,15 @@ cp .env.example .env        # edit at minimum SECRET_KEY
 nano .env
 
 # 3. Start the application
-docker-compose up -d
+docker compose up -d
 ```
 
-The app will be available at **http://localhost:8000**.
+The app will be available at **http://localhost:7000**.
 
 Create the first admin account after the container starts:
 
 ```bash
-docker-compose exec web python scripts/create_admin.py \
+docker compose exec web python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
   --password changeme123
@@ -67,7 +67,7 @@ cp .env.example .env
 # Edit .env to set SECRET_KEY and any SMTP settings you want
 
 # Run the development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 7000
 ```
 
 The app auto-creates the SQLite database on first run via the lifespan handler.
