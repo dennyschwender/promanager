@@ -53,7 +53,7 @@ docker compose up -d
 pytest -v
 ```
 
-Tests use an isolated SQLite database (`data/test_proManager.db`) and roll back each test's changes automatically.
+Tests run against an isolated in-memory SQLite database configured by the pytest fixtures, with a fresh schema and automatic rollback/isolation between tests.
 
 ## Creating the first admin
 
