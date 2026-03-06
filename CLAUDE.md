@@ -11,7 +11,7 @@ ProManager is a self-hosted player presence and absence tracker for sports teams
 - **ORM**: SQLAlchemy 2.x
 - **Database**: SQLite (default) / PostgreSQL
 - **Templates**: Jinja2
-- **Auth**: Cookie-based signed sessions via itsdangerous + passlib[bcrypt]
+- **Auth**: Cookie-based signed sessions via itsdangerous + bcrypt (direct) for password hashing
 - **Testing**: pytest + httpx TestClient
 - **Containerisation**: Docker + Docker Compose
 
