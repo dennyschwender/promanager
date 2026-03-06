@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ProManager{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Dashboard</h2>
+  {% if active_season %}<span class="badge badge-active">{{ active_season.name }}</span>{% endif %}
+</div>
+
+{% if not active_season %}
+  <div class="alert alert-warning">No active season. <a href="/seasons">Manage seasons →</a></div>
+{% endif %}
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ upcoming_count }}</div>
+    <div class="stat-label">Upcoming Events<br><small>(next 30 days)</small></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ unknown_count }}</div>
+    <div class="stat-label">Pending Responses<br><small>(upcoming events)</small></div>
+  </div>
+</div>
+
+<h3>Next 5 Events</h3>
+{% if top_events %}
+<table>
+  <thead><tr><th>Date</th><th>Title</th><th>Type</th><th>Location</th><th></th></tr></thead>
+  <tbody>
+  {% for event in top_events %}
+    <tr>
+      <td>{{ event.event_date }}</td>
+      <td><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
+      <td><span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span></td>
+      <td>{{ event.location or "—" }}</td>
+      <td><a href="/attendance/{{ event.id }}" class="btn btn-sm btn-primary">Mark Attendance</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No upcoming events. {% if user.is_admin %}<a href="/events/new">Create one</a>.{% endif %}</p>
+{% endif %}
+
+{% if user.is_admin %}
+<hr>
+<h3>Quick Actions</h3>
+<div class="quick-actions">
+  <a href="/seasons/new" class="btn btn-outline">+ New Season</a>
+  <a href="/teams/new" class="btn btn-outline">+ New Team</a>
+  <a href="/players/new" class="btn btn-outline">+ New Player</a>
+  <a href="/events/new" class="btn btn-outline">+ New Event</a>
+  <a href="/auth/register" class="btn btn-outline">+ Register User</a>
+</div>
+
+{% if all_seasons %}
+<h4>Season Reports</h4>
+<div class="quick-actions">
+  {% for s in all_seasons %}
+    <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">
+      {{ s.name }}{% if s.is_active %} <span class="badge badge-active">Active</span>{% endif %}
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

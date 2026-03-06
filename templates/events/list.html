@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Events — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>Events</span></nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Events</h2>
+  {% if user.is_admin %}<a href="/events/new" class="btn btn-primary">+ New Event</a>{% endif %}
+</div>
+
+<form method="get" action="/events" class="filter-row">
+  <label>Season
+    <select name="season_id" onchange="this.form.submit()">
+      <option value="">All Seasons</option>
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if selected_season_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Team
+    <select name="team_id" onchange="this.form.submit()">
+      <option value="">All Teams</option>
+      {% for t in teams %}
+        <option value="{{ t.id }}" {% if selected_team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+<h3>Upcoming</h3>
+{% if upcoming %}
+<table>
+  <thead><tr><th>Date</th><th>Time</th><th>Title</th><th>Type</th><th>Location</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for e in upcoming %}
+    <tr>
+      <td>{{ e.event_date }}</td>
+      <td>{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
+      <td><a href="/events/{{ e.id }}"><strong>{{ e.title }}</strong></a>
+        {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635; Recurring</span>{% endif %}
+      </td>
+      <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
+      <td>{{ e.location or '—' }}</td>
+      <td>
+        <div class="action-group">
+          <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">Attendance</a>
+          {% if user.is_admin %}
+            <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No upcoming events.</p>
+{% endif %}
+
+<h3>Past Events</h3>
+{% if past %}
+<table>
+  <thead><tr><th>Date</th><th>Title</th><th>Type</th><th>Location</th><th></th></tr></thead>
+  <tbody>
+  {% for e in past %}
+    <tr>
+      <td>{{ e.event_date }}</td>
+      <td><a href="/events/{{ e.id }}">{{ e.title }}</a>
+        {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635;</span>{% endif %}
+      </td>
+      <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
+      <td>{{ e.location or '—' }}</td>
+      <td><a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">View</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No past events.</p>
+{% endif %}
+{% endblock %}

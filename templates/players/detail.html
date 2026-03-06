@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}{{ player.full_name }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
+  <span>{{ player.full_name }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ player.full_name }}</h2>
+  {% if player.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}
+</div>
+
+{# ==================== TEAMS ==================== #}
+{% if player.team_memberships %}
+<section class="card" style="margin-bottom:1.25rem;">
+  <h3 style="margin-top:0">Teams</h3>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Team</th><th>Priority</th><th>Role</th><th>Position</th>
+        <th>Shirt #</th><th>Status</th><th>Injured until</th><th>Absent by default</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in player.team_memberships %}
+      <tr>
+        <td>{{ m.team.name if m.team else '?' }}</td>
+        <td><span class="badge-recurring" title="Priority">P{{ m.priority }}</span></td>
+        <td>{{ m.role|replace('_',' ')|capitalize if m.role else '—' }}</td>
+        <td>{{ m.position|capitalize if m.position else '—' }}</td>
+        <td>{{ m.shirt_number if m.shirt_number is not none else '—' }}</td>
+        <td>
+          {% if m.membership_status == 'injured' %}
+            <span class="badge badge-absent">Injured</span>
+          {% elif m.membership_status == 'inactive' %}
+            <span class="badge">Inactive</span>
+          {% else %}
+            <span class="badge badge-active">Active</span>
+          {% endif %}
+        </td>
+        <td>{{ m.injured_until if m.injured_until else '—' }}</td>
+        <td style="text-align:center;">
+          {% if m.absent_by_default %}
+            <span class="badge badge-absent" title="Absent by default">Yes</span>
+          {% else %}
+            <span class="muted">No</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{# ================== PERSONAL INFO ================== #}
+<section class="card" style="margin-bottom:1.25rem;">
+  <h3 style="margin-top:0">Personal Info</h3>
+  <dl class="detail-dl">
+    <dt>Sex</dt>
+    <dd>{{ player.sex|capitalize if player.sex else '—' }}</dd>
+    <dt>Date of Birth</dt>
+    <dd>{{ player.date_of_birth if player.date_of_birth else '—' }}</dd>
+    <dt>E-mail</dt>
+    <dd>
+      {% if player.email %}<a href="mailto:{{ player.email }}">{{ player.email }}</a>
+      {% else %}&mdash;{% endif %}
+    </dd>
+    <dt>Phone (primary)</dt>
+    <dd>{{ player.phone or '—' }}</dd>
+    {% if player.phones %}
+    <dt>Phone numbers</dt>
+    <dd>
+      <ul style="margin:0;padding-left:1.2em;">
+        {% for ph in player.phones %}
+          <li>{{ ph.phone }}{% if ph.label %} <small class="muted">({{ ph.label }})</small>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </dd>
+    {% endif %}
+    <dt>Address</dt>
+    <dd>
+      {% if player.street or player.city %}
+        {% if player.street %}{{ player.street }}<br>{% endif %}
+        {{ player.postcode or '' }} {{ player.city or '' }}
+      {% else %}&mdash;{% endif %}
+    </dd>
+  </dl>
+</section>
+
+{# ================== EMERGENCY CONTACT ================== #}
+{% if player.contact %}
+<section class="card" style="margin-bottom:1.25rem;">
+  <h3 style="margin-top:0">Emergency Contact</h3>
+  <dl class="detail-dl">
+    <dt>Name</dt>
+    <dd>{{ player.contact.full_name }}
+      {% if player.contact.relationship_label %}
+        <small class="muted">({{ player.contact.relationship_label }})</small>
+      {% endif %}
+    </dd>
+    {% if player.contact.email %}
+    <dt>E-mail</dt>
+    <dd><a href="mailto:{{ player.contact.email }}">{{ player.contact.email }}</a></dd>
+    {% endif %}
+    {% if player.contact.phone %}
+    <dt>Phone</dt><dd>{{ player.contact.phone }}</dd>
+    {% endif %}
+    {% if player.contact.phone2 %}
+    <dt>Phone 2</dt><dd>{{ player.contact.phone2 }}</dd>
+    {% endif %}
+    {% if player.contact.street or player.contact.city %}
+    <dt>Address</dt>
+    <dd>
+      {% if player.contact.street %}{{ player.contact.street }}<br>{% endif %}
+      {{ player.contact.postcode or '' }} {{ player.contact.city or '' }}
+    </dd>
+    {% endif %}
+  </dl>
+</section>
+{% endif %}
+
+{% if user.is_admin %}
+<div class="action-group" style="margin-bottom:1.5rem;">
+  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">Edit</a>
+  <a href="/reports/player/{{ player.id }}" class="btn btn-outline">Attendance Report</a>
+</div>
+{% endif %}
+
+<h3>Attendance History</h3>
+{% if history %}
+<table>
+  <thead>
+    <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+  {% for item in history %}
+    <tr>
+      <td>{{ item.event.event_date }}</td>
+      <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
+      <td><span class="badge badge-{{ item.event.event_type }}">{{ item.event.event_type|capitalize }}</span></td>
+      <td><span class="badge badge-{{ item.attendance.status }}">{{ item.attendance.status|capitalize }}</span></td>
+      <td>{{ item.attendance.note or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No attendance records yet.</p>
+{% endif %}
+{% endblock %}

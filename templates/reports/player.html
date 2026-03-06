@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Player Report: {{ player.full_name }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
+  <a href="/players/{{ player.id }}">{{ player.full_name }}</a><span class="breadcrumb-sep"></span>
+  <span>Report</span>
+</nav>
+{% endblock %}
+{% block content %}
+{% set present_count = history | selectattr("attendance.status", "equalto", "present") | list | length %}
+{% set absent_count  = history | selectattr("attendance.status", "equalto", "absent")  | list | length %}
+{% set total = history | length %}
+
+<div class="page-header">
+  <h2>{{ player.full_name }}</h2>
+  {% if player.team %}<span class="badge">{{ player.team.name }}</span>{% endif %}
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Events</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ present_count }}</div>
+    <div class="stat-label">Present</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ absent_count }}</div>
+    <div class="stat-label">Absent</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{% if total > 0 %}{{ (present_count / total * 100) | round(1) }}%{% else %}—{% endif %}</div>
+    <div class="stat-label">Attendance Rate</div>
+  </div>
+</div>
+
+{% if total > 0 %}
+<div class="progress-bar-wrap" style="margin-bottom:1.5rem;">
+  <progress value="{{ (present_count / total * 100) | round(0) | int }}" max="100"></progress>
+  <span>{{ (present_count / total * 100) | round(1) }}% attendance</span>
+</div>
+{% endif %}
+
+{% if history %}
+<table>
+  <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for item in history %}
+    <tr>
+      <td>{{ item.event.event_date }}</td>
+      <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
+      <td><span class="badge badge-{{ item.event.event_type }}">{{ item.event.event_type|capitalize }}</span></td>
+      <td><span class="badge badge-{{ item.attendance.status }}">{{ item.attendance.status|capitalize }}</span></td>
+      <td>{{ item.attendance.note or "" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No attendance records found.</p>
+{% endif %}
+
+<p><a href="/players/{{ player.id }}" class="btn btn-outline btn-sm">← Back to Player</a></p>
+{% endblock %}

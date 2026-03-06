@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
+from app.templates import templates
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
+from models.user import User
 from routes._auth_helpers import require_login
 from services.attendance_service import get_event_attendance_summary, set_attendance
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 # ---------------------------------------------------------------------------
@@ -25,28 +25,22 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/{event_id}")
-async def attendance_page(event_id: int, request: Request, db: Session = Depends(get_db)):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
-    user = result
+async def attendance_page(
+    event_id: int,
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
     if user.is_admin:
-        # Admins see all players
-        attendances = (
-            db.query(Attendance).filter(Attendance.event_id == event_id).all()
-        )
+        attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
         my_players: list[Player] = []
         summary = get_event_attendance_summary(db, event_id)
     else:
-        # Members see only their own linked player(s)
-        my_players = (
-            db.query(Player).filter(Player.user_id == user.id).all()
-        )
+        my_players = db.query(Player).filter(Player.user_id == user.id).all()
         player_ids = [p.id for p in my_players]
         attendances = (
             db.query(Attendance)
@@ -58,16 +52,17 @@ async def attendance_page(event_id: int, request: Request, db: Session = Depends
         )
         summary = None
 
-    # Build map player_id -> attendance for easy template lookup
     att_map = {att.player_id: att for att in attendances}
 
-    return templates.TemplateResponse(request, "attendance/mark.html", {"user": user,
-            "event": event,
-            "attendances": attendances,
-            "att_map": att_map,
-            "my_players": my_players,
-            "summary": summary,
-            "flash": request.query_params.get("flash")})
+    return templates.TemplateResponse(request, "attendance/mark.html", {
+        "user": user,
+        "event": event,
+        "attendances": attendances,
+        "att_map": att_map,
+        "my_players": my_players,
+        "summary": summary,
+        "flash": request.query_params.get("flash"),
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -82,15 +77,10 @@ async def update_attendance(
     request: Request,
     status: str = Form(...),
     note: str = Form(""),
+    user: User = Depends(require_login),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    result = require_login(request)
-    if isinstance(result, Response):
-        return result
-
-    user = result
-
     # Members may only update their own players
     if not user.is_admin:
         player = db.get(Player, player_id)
