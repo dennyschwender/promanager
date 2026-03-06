@@ -5,8 +5,8 @@ This ties the token to the user's session without any server-side state.
 """
 from __future__ import annotations
 
-import hmac
 import hashlib
+import hmac
 
 from fastapi import HTTPException, Request
 

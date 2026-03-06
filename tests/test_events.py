@@ -1,12 +1,8 @@
 """Tests for /events routes."""
-import pytest
-from unittest.mock import patch
 from datetime import date
-from models.event import Event
-from models.season import Season
-from models.team import Team
-from models.player import Player
+from unittest.mock import patch
 
+from models.event import Event
 
 # ---------------------------------------------------------------------------
 # List

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
+from app.templates import templates
 from models.season import Season
 from models.team import Team
 from models.user import User

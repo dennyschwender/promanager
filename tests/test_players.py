@@ -1,9 +1,7 @@
 """Tests for /players routes."""
-import pytest
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.team import Team
-
 
 # ---------------------------------------------------------------------------
 # List

@@ -6,11 +6,11 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from app.templates import templates
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
+from app.templates import templates
 from models.player import Player
 from models.player_contact import PlayerContact
 from models.player_phone import PlayerPhone

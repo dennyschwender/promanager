@@ -1,7 +1,5 @@
 """Tests for /auth routes."""
-import pytest
-from services.auth_service import create_user, create_session_cookie
-
+from services.auth_service import create_user
 
 # ---------------------------------------------------------------------------
 # Login page

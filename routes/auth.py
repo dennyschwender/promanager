@@ -13,7 +13,13 @@ from app.limiter import limiter
 from app.templates import templates
 from models.user import User
 from routes._auth_helpers import require_admin
-from services.auth_service import authenticate_user, create_session_cookie, create_user, get_user_by_email, get_user_by_username
+from services.auth_service import (
+    authenticate_user,
+    create_session_cookie,
+    create_user,
+    get_user_by_email,
+    get_user_by_username,
+)
 
 router = APIRouter()
 
@@ -44,7 +50,7 @@ async def login_post(
     user = authenticate_user(db, username, password)
     if user is None:
         return templates.TemplateResponse(request, "auth/login.html", {"user": None,
-                "error": "Invalid username or password."}, 
+                "error": "Invalid username or password."},
             status_code=401)
 
     cookie_val = create_session_cookie(user.id)
