@@ -40,8 +40,10 @@ Create the first admin account after the container starts:
 docker compose exec web python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password 'REPLACE_WITH_STRONG_PASSWORD'
 ```
+
+> **Important:** Replace `REPLACE_WITH_STRONG_PASSWORD` with a strong, unique password of your own choosing. Keep the single quotes so that shell special characters (e.g. `!`, `$`, spaces) in your password are handled correctly.
 
 ---
 
@@ -88,8 +90,10 @@ Tests use an isolated SQLite database (`data/test_proManager.db`) and roll back 
 python scripts/create_admin.py \
   --username admin \
   --email admin@example.com \
-  --password changeme123
+  --password 'REPLACE_WITH_STRONG_PASSWORD'
 ```
+
+> **Important:** Replace `REPLACE_WITH_STRONG_PASSWORD` with a strong, unique password of your own choosing. Keep the single quotes so that shell special characters (e.g. `!`, `$`, spaces) in your password are handled correctly.
 
 The script prints the new user's ID on success or an error message if the username already exists.
 
