@@ -25,6 +25,7 @@
           {% if user.is_admin %}
             <a href="/teams/{{ t.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
             <a href="/players?team_id={{ t.id }}" class="btn btn-sm btn-outline">Players</a>
+            <a href="/players/import?team_id={{ t.id }}" class="btn btn-sm btn-outline">Import Players</a>
             <form method="post" action="/teams/{{ t.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete team {{ t.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
