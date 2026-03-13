@@ -10,29 +10,329 @@
 {% block content %}
 <div class="form-container">
 <h2>{% if team %}Edit Team: {{ team.name }}{% else %}New Team{% endif %}</h2>
+
+{% if saved %}
+  <div class="alert alert-success">Changes saved.</div>
+{% endif %}
 {% if error %}
   <div class="alert alert-error">{{ error }}</div>
 {% endif %}
-<form method="post" action="{% if team %}/teams/{{ team.id }}/edit{% else %}/teams/new{% endif %}">
+
+<form method="post" action="{% if team %}/teams/{{ team.id }}/edit{% else %}/teams/new{% endif %}"
+      id="team-form">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <input type="hidden" name="_confirm_step" value="{% if confirm_mode %}1{% endif %}">
+  <input type="hidden" name="_schedules_json" id="schedules-json-field"
+         value="{{ _schedules_json }}">
+
+  {# ── Core team fields ── #}
   <label for="name">Team Name *
-    <input type="text" id="name" name="name" required value="{{ team.name if team else "" }}">
+    <input type="text" id="name" name="name" required
+           value="{{ team.name if team else '' }}">
   </label>
   <label for="description">Description
-    <textarea id="description" name="description">{{ team.description if team and team.description else "" }}</textarea>
+    <textarea id="description" name="description">{{ team.description if team and team.description else '' }}</textarea>
   </label>
   <label for="season_id">Season
     <select id="season_id" name="season_id">
       <option value="">— None —</option>
       {% for s in seasons %}
-        <option value="{{ s.id }}" {% if team and team.season_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+        <option value="{{ s.id }}"
+                {% if team and team.season_id == s.id %}selected{% endif %}>
+          {{ s.name }}
+        </option>
       {% endfor %}
     </select>
   </label>
+
+  {# ── Confirmation warning ── #}
+  {% if confirm_mode and flagged %}
+  <div class="alert alert-warning" style="margin-top:1.5rem;">
+    <strong>The following schedules have changes that affect generated events.</strong>
+    <p class="recurrence-hint" style="margin:.25rem 0 .75rem;">
+      Check a box to delete all future events in that series (including manually
+      edited ones) and regenerate them. Leave unchecked to save schedule fields
+      but keep existing events.
+    </p>
+    {% for item in flagged %}
+    <div style="margin-bottom:.75rem;padding:.5rem;border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);">
+      <label style="display:flex;gap:.5rem;align-items:flex-start;">
+        <input type="checkbox" name="{{ item.confirm_key }}" style="margin-top:.2rem;">
+        <span>
+          <strong>{{ item.title }}</strong>
+          {% if item.type == 'removed' %}&mdash; will be removed
+          {% else %}&mdash; schedule changed{% endif %}
+          <br>
+          <small>
+            {% if item.future_count %}
+              {{ item.future_count }} future event{{ 's' if item.future_count != 1 }} would be deleted
+            {% else %}
+              No future events to delete
+            {% endif %}
+          </small>
+        </span>
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ── Recurring Schedules (edit-only) ── #}
+  {% if team %}
+  <fieldset style="margin-top:1.5rem;">
+    <legend>Recurring Schedules</legend>
+    <p class="recurrence-hint">
+      Define recurring event patterns for this team. Events are auto-generated
+      on save. Leave <em>End Date</em> blank to use the season's end date.
+    </p>
+
+    <div id="schedule-rows">
+      {% for row in schedule_rows %}
+      <div class="schedule-row"
+           style="border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);padding:1rem;margin-bottom:.75rem;">
+        <input type="hidden" class="sched-id" value="{{ row.id }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+          <strong style="font-size:.9rem;">Schedule</strong>
+          <button type="button" class="btn btn-sm btn-danger"
+                  onclick="removeRow(this)">Remove</button>
+        </div>
+        <label>Title *
+          <input type="text" class="sched-title" required value="{{ row.title }}"
+                 oninput="this.dataset.auto=''"
+                 {% if row.id %}data-auto=""{% endif %}
+                 placeholder="Team - Training Tuesday">
+        </label>
+        <div class="form-grid-2">
+          <label>Event Type
+            <select class="sched-event-type"
+                    onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+              {% for val, lbl in [('training','Training'),('match','Match'),('other','Other')] %}
+                <option value="{{ val }}"
+                        {% if row.event_type == val %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Recurrence
+            <select class="sched-rule"
+                    onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+              {% for val, lbl in [('weekly','Weekly'),('biweekly','Biweekly'),('monthly','Monthly')] %}
+                <option value="{{ val }}"
+                        {% if row.recurrence_rule == val %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label>Start Date *
+            <input type="date" class="sched-start" required value="{{ row.start_date }}"
+                   onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+          </label>
+          <label>End Date <small>(blank = season end)</small>
+            <input type="date" class="sched-end" value="{{ row.end_date }}">
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label>Start Time
+            <input type="time" class="sched-time" value="{{ row.event_time }}">
+          </label>
+          <label>End Time
+            <input type="time" class="sched-end-time" value="{{ row.event_end_time }}">
+          </label>
+        </div>
+        <label>Location
+          <input type="text" class="sched-location" value="{{ row.location }}">
+        </label>
+        <details style="margin-top:.5rem;">
+          <summary style="cursor:pointer;font-size:.88rem;color:var(--tp-muted);">
+            Meeting details
+          </summary>
+          <div style="margin-top:.5rem;" class="form-grid-2">
+            <label>Meeting Time
+              <input type="time" class="sched-meeting-time"
+                     value="{{ row.meeting_time }}">
+            </label>
+            <label>Meeting Location
+              <input type="text" class="sched-meeting-location"
+                     value="{{ row.meeting_location }}">
+            </label>
+          </div>
+        </details>
+        <label style="margin-top:.5rem;">Presence
+          <select class="sched-presence">
+            {% for val, lbl in [('normal','Normal'),('all','All'),('selection','Selection'),('available','Available'),('no_registration','No Registration')] %}
+              <option value="{{ val }}"
+                      {% if row.presence_type == val %}selected{% endif %}>{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Description
+          <textarea class="sched-desc">{{ row.description }}</textarea>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm"
+            onclick="addScheduleRow()" style="margin-top:.25rem;">
+      + Add Schedule
+    </button>
+  </fieldset>
+  {% endif %}
+
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">{% if team %}Save Changes{% else %}Create Team{% endif %}</button>
+    <button type="submit" class="btn btn-primary">
+      {% if confirm_mode %}Confirm &amp; Save
+      {% elif team %}Save Changes
+      {% else %}Create Team{% endif %}
+    </button>
     <a href="/teams" class="btn btn-outline">Cancel</a>
   </div>
 </form>
 </div>
+
+{# ── Row template (hidden, cloned by JS) ── #}
+{% if team %}
+<template id="schedule-row-tpl">
+  <div class="schedule-row"
+       style="border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);padding:1rem;margin-bottom:.75rem;">
+    <input type="hidden" class="sched-id" value="">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+      <strong style="font-size:.9rem;">Schedule</strong>
+      <button type="button" class="btn btn-sm btn-danger"
+              onclick="removeRow(this)">Remove</button>
+    </div>
+    <label>Title *
+      <input type="text" class="sched-title" required value=""
+             oninput="this.dataset.auto=''"
+             placeholder="Team - Training Tuesday">
+    </label>
+    <div class="form-grid-2">
+      <label>Event Type
+        <select class="sched-event-type"
+                onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+          <option value="training">Training</option>
+          <option value="match">Match</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Recurrence
+        <select class="sched-rule"
+                onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Biweekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </label>
+    </div>
+    <div class="form-grid-2">
+      <label>Start Date *
+        <input type="date" class="sched-start" required value=""
+               onchange="updateDefaultTitle(this.closest('.schedule-row'))">
+      </label>
+      <label>End Date <small>(blank = season end)</small>
+        <input type="date" class="sched-end" value="">
+      </label>
+    </div>
+    <div class="form-grid-2">
+      <label>Start Time
+        <input type="time" class="sched-time" value="">
+      </label>
+      <label>End Time
+        <input type="time" class="sched-end-time" value="">
+      </label>
+    </div>
+    <label>Location
+      <input type="text" class="sched-location" value="">
+    </label>
+    <details style="margin-top:.5rem;">
+      <summary style="cursor:pointer;font-size:.88rem;color:var(--tp-muted);">
+        Meeting details
+      </summary>
+      <div style="margin-top:.5rem;" class="form-grid-2">
+        <label>Meeting Time
+          <input type="time" class="sched-meeting-time" value="">
+        </label>
+        <label>Meeting Location
+          <input type="text" class="sched-meeting-location" value="">
+        </label>
+      </div>
+    </details>
+    <label style="margin-top:.5rem;">Presence
+      <select class="sched-presence">
+        <option value="normal">Normal</option>
+        <option value="all">All</option>
+        <option value="selection">Selection</option>
+        <option value="available">Available</option>
+        <option value="no_registration">No Registration</option>
+      </select>
+    </label>
+    <label>Description
+      <textarea class="sched-desc"></textarea>
+    </label>
+  </div>
+</template>
+
+<script>
+const TEAM_NAME = {{ team.name | tojson }};
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function updateDefaultTitle(row) {
+  const titleInput = row.querySelector('.sched-title');
+  // data-auto attribute present means user has manually edited — skip auto-fill
+  if ('auto' in titleInput.dataset) return;
+  const eventType = row.querySelector('.sched-event-type').value;
+  const rule = row.querySelector('.sched-rule').value;
+  const startDate = row.querySelector('.sched-start').value;
+  const labelMap = {training: 'Training', match: 'Match', other: 'Other'};
+  let title = TEAM_NAME + ' - ' + (labelMap[eventType] || eventType);
+  if (rule === 'weekly' && startDate) {
+    // Append T00:00:00 to prevent UTC timezone offset from shifting the day
+    const d = new Date(startDate + 'T00:00:00');
+    title += ' ' + DAYS[d.getDay()];
+  }
+  titleInput.value = title;
+}
+
+function addScheduleRow() {
+  const tpl = document.getElementById('schedule-row-tpl');
+  const clone = tpl.content.cloneNode(true);
+  document.getElementById('schedule-rows').appendChild(clone);
+}
+
+function removeRow(btn) {
+  btn.closest('.schedule-row').remove();
+}
+
+// Re-index all rows to 0..N-1 and inject sched_count before submit.
+// NOTE: This handler does NOT write to _schedules_json.
+// That field is pre-populated by the server during the confirmation render.
+document.getElementById('team-form').addEventListener('submit', function() {
+  const rows = document.querySelectorAll('#schedule-rows .schedule-row');
+  rows.forEach(function(row, i) {
+    row.querySelector('.sched-id').name            = 'sched_id_'            + i;
+    row.querySelector('.sched-title').name         = 'sched_title_'         + i;
+    row.querySelector('.sched-event-type').name    = 'sched_event_type_'    + i;
+    row.querySelector('.sched-rule').name          = 'sched_rule_'          + i;
+    row.querySelector('.sched-start').name         = 'sched_start_'         + i;
+    row.querySelector('.sched-end').name           = 'sched_end_'           + i;
+    row.querySelector('.sched-time').name          = 'sched_time_'          + i;
+    row.querySelector('.sched-end-time').name      = 'sched_end_time_'      + i;
+    row.querySelector('.sched-location').name      = 'sched_location_'      + i;
+    row.querySelector('.sched-meeting-time').name  = 'sched_meeting_time_'  + i;
+    row.querySelector('.sched-meeting-location').name = 'sched_meeting_location_' + i;
+    row.querySelector('.sched-presence').name      = 'sched_presence_'      + i;
+    row.querySelector('.sched-desc').name          = 'sched_desc_'          + i;
+  });
+  let countField = document.getElementById('sched-count-field');
+  if (!countField) {
+    countField = document.createElement('input');
+    countField.type = 'hidden';
+    countField.id = 'sched-count-field';
+    countField.name = 'sched_count';
+    this.appendChild(countField);
+  }
+  countField.value = rows.length;
+});
+</script>
+{% endif %}
 {% endblock %}
