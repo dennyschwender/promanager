@@ -166,8 +166,8 @@ def test_changed_schedule_triggers_confirmation(admin_client, db):
 
     assert resp.status_code == 200
     # Check for specific confirmation-step markers
-    assert b"_confirm_step" in resp.content
-    assert b'value="1"' in resp.content  # _confirm_step hidden field set to "1"
+    assert b'name="_confirm_step"' in resp.content
+    assert b'name="_confirm_step" value="1"' in resp.content  # confirm mode active
 
 
 def test_confirmed_schedule_regenerates_events(admin_client, db):
@@ -192,7 +192,6 @@ def test_confirmed_schedule_regenerates_events(admin_client, db):
     db.add(future_ev)
     db.commit()
     db.refresh(sched)
-    old_ev_id = future_ev.id
 
     payload = sign_payload({"team_id": team.id, "rows": [{
         "id": str(sched.id),
@@ -230,7 +229,7 @@ def test_confirmed_schedule_regenerates_events(admin_client, db):
     # New events start from new start_date
     events = (db.query(Event).filter_by(team_id=team.id)
               .order_by(Event.event_date).all())
-    assert len(events) > 0
+    assert len(events) == 3  # Mar 10, 17, 24 (weekly from 2026-03-10 to 2026-03-24)
     assert events[0].event_date == date(2026, 3, 10)
     # New events must have a different recurrence_group_id (regeneration assigns new UUID)
     assert events[0].recurrence_group_id != group_id
@@ -374,9 +373,8 @@ def test_changed_schedule_unconfirmed_saves_fields_keeps_events(admin_client, db
         # confirm_schedule_{id} absent = unchecked
     }
 
-    with patch("services.schedule_service.ensure_attendance_records"):
-        resp = admin_client.post(f"/teams/{team.id}/edit", data=data,
-                                 follow_redirects=False)
+    resp = admin_client.post(f"/teams/{team.id}/edit", data=data,
+                             follow_redirects=False)
 
     assert resp.status_code == 302
     db.expire_all()
