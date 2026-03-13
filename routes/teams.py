@@ -60,13 +60,19 @@ def _parse_schedule_rows(form, count: int) -> list[dict]:
 def _parse_dt(s: str):
     if not s:
         return None
-    return datetime.strptime(s, "%Y-%m-%d").date()
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None
 
 
 def _parse_tm(s: str):
     if not s:
         return None
-    return datetime.strptime(s, "%H:%M").time()
+    try:
+        return datetime.strptime(s, "%H:%M").time()
+    except ValueError:
+        return None
 
 
 def _schedule_to_dict(s: TeamRecurringSchedule) -> dict:
@@ -204,7 +210,7 @@ async def team_edit_get(
         "seasons": seasons,
         "schedule_rows": [_schedule_to_dict(s) for s in team.recurring_schedules],
         "error": None,
-        "saved": bool(saved),
+        "saved": saved == "1",
         "confirm_mode": False,
         "flagged": [],
         "_schedules_json": "",
@@ -255,7 +261,10 @@ async def team_edit_post(
     old_season_id = team.season_id
     team.name = name.strip()
     team.description = description.strip() or None
-    team.season_id = int(season_id) if season_id.strip() else None
+    try:
+        team.season_id = int(season_id) if season_id.strip() else None
+    except ValueError:
+        team.season_id = None
     season_changed = old_season_id != team.season_id
 
     # ── CONFIRMATION POST ────────────────────────────────────────────────────
@@ -272,7 +281,13 @@ async def team_edit_post(
 
         submitted_rows = payload.get("rows", [])
         stored_map = {s.id: s for s in team.recurring_schedules}
-        submitted_ids = {int(r["id"]) for r in submitted_rows if r.get("id")}
+        submitted_ids = set()
+        for r in submitted_rows:
+            if r.get("id"):
+                try:
+                    submitted_ids.add(int(r["id"]))
+                except ValueError:
+                    pass
 
         for row in submitted_rows:
             sched_id_str = row.get("id", "")
@@ -292,7 +307,10 @@ async def team_edit_post(
                 except ValueError:
                     pass
             else:
-                sched_id = int(sched_id_str)
+                try:
+                    sched_id = int(sched_id_str)
+                except ValueError:
+                    continue
                 sched = stored_map.get(sched_id)
                 if sched is None:
                     continue
@@ -335,16 +353,27 @@ async def team_edit_post(
             db.commit()
         except Exception:
             db.rollback()
+            # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
+            # inside generate_events_for_schedule. This is an accepted limitation.
             return _render(error="An error occurred saving the schedules. Please try again.")
         return RedirectResponse(f"/teams/{team_id}/edit?saved=1", status_code=302)
 
     # ── FIRST POST ───────────────────────────────────────────────────────────
-    sched_count = int((form.get("sched_count") or "0").strip() or "0")
+    try:
+        sched_count = int((form.get("sched_count") or "0").strip() or "0")
+    except ValueError:
+        sched_count = 0
     submitted_rows = _parse_schedule_rows(form, sched_count)
 
     stored = team.recurring_schedules
     stored_map = {s.id: s for s in stored}
-    submitted_ids = {int(r["id"]) for r in submitted_rows if r["id"]}
+    submitted_ids = set()
+    for r in submitted_rows:
+        if r["id"]:
+            try:
+                submitted_ids.add(int(r["id"]))
+            except ValueError:
+                pass
 
     flagged = []
     new_rows = []
@@ -359,7 +388,10 @@ async def team_edit_post(
             row["recurrence_group_id"] = new_group_id()
             new_rows.append(row)
         else:
-            sched_id = int(sched_id_str)
+            try:
+                sched_id = int(sched_id_str)
+            except ValueError:
+                continue
             stored_sched = stored_map.get(sched_id)
             if stored_sched is None:
                 continue
@@ -430,6 +462,8 @@ async def team_edit_post(
         db.commit()
     except Exception:
         db.rollback()
+        # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
+        # inside generate_events_for_schedule. This is an accepted limitation.
         return _render(error="An error occurred saving the schedules. Please try again.")
     return RedirectResponse(f"/teams/{team_id}/edit?saved=1", status_code=302)
 
