@@ -22,3 +22,6 @@ env/
 dist/
 build/
 *.egg-info/
+
+# Git worktrees
+.worktrees/
