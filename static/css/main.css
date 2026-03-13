@@ -25,7 +25,8 @@
 .page-header h2 { margin: 0; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
-.btn {
+.btn,
+button.btn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -38,6 +39,8 @@
   border: 1px solid transparent;
   line-height: 1.4;
   white-space: nowrap;
+  width: auto;
+  margin: 0;
 }
 .btn-primary {
   background: var(--tp-primary);
@@ -57,7 +60,8 @@
   border-color: var(--tp-danger);
 }
 .btn-danger:hover { filter: brightness(1.12); color: #fff; }
-.btn-sm {
+.btn-sm,
+button.btn-sm {
   padding: 0.25rem 0.6rem;
   font-size: 0.8rem;
 }
