@@ -8,11 +8,9 @@ import pytest
 
 from services.schedule_service import (
     advance_date,
-    count_future_events,
     delete_future_events,
     generate_events_for_schedule,
     is_changed,
-    propagate_nonkey_changes,
     sign_payload,
     verify_payload,
 )

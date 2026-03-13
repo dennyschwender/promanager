@@ -53,7 +53,9 @@ def generate_events_for_schedule(
     schedule: TeamRecurringSchedule,
     team,  # models.team.Team
 ) -> list[Event]:
-    """Generate Event rows for a schedule. Does NOT commit — caller commits."""
+    """Generate Event rows for a schedule. Flushes each event before calling
+    ensure_attendance_records (which commits internally). Caller should not
+    expect a fully uncommitted state after this call."""
     end = schedule.end_date
     if end is None and team.season is not None:
         end = team.season.end_date
@@ -138,7 +140,7 @@ def propagate_nonkey_changes(
     db.query(Event).filter(
         Event.recurrence_group_id == recurrence_group_id,
         Event.event_date >= today,
-    ).update({"title": title, "description": description})
+    ).update({"title": title, "description": description}, synchronize_session="fetch")
 
 
 def _norm(v) -> str:
@@ -149,14 +151,15 @@ def _norm(v) -> str:
     str / other    -> stripped string
     None           -> ""
 
-    Note: date has isoformat() but NOT hour; time has both isoformat() and hour.
-    Checking hour first ensures time objects use %H:%M not isoformat() ("%H:%M:%S").
+    Check time before date because datetime.datetime is a subclass of
+    datetime.date and also has .hour — isinstance guards are unambiguous.
     """
+    from datetime import time as _time, date as _date
     if v is None:
         return ""
-    if hasattr(v, "hour"):  # datetime.time
+    if isinstance(v, _time):  # datetime.time (not datetime.datetime)
         return v.strftime("%H:%M")
-    if hasattr(v, "isoformat"):  # datetime.date
+    if isinstance(v, _date):  # datetime.date (also matches datetime.datetime — acceptable)
         return v.isoformat()
     return str(v).strip()
 
