@@ -319,7 +319,7 @@ table.jexcel tbody td.edition textarea {
       for (var i = 0; i < activeCols.length; i++) {
         var v = (rowVals[i] || "").trim();
         obj[activeCols[i]] = v;
-        if (v) hasValue = true;
+        if (v && activeCols[i] !== "team") hasValue = true;
       }
       if (hasValue) rows.push(obj);
     }
