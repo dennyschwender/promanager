@@ -34,6 +34,12 @@ class Team(Base):
     events: Mapped[list[Event]] = relationship(
         "Event", back_populates="team", lazy="select"
     )
+    recurring_schedules: Mapped[list["TeamRecurringSchedule"]] = relationship(  # type: ignore[name-defined]
+        "TeamRecurringSchedule",
+        back_populates="team",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
 
     def __repr__(self) -> str:
         return f"<Team id={self.id} name={self.name!r}>"

@@ -8,6 +8,7 @@ from .player_phone import PlayerPhone
 from .player_team import PlayerTeam
 from .season import Season
 from .team import Team
+from .team_recurring_schedule import TeamRecurringSchedule
 from .user import User
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "PlayerContact",
     "Event",
     "Attendance",
+    "TeamRecurringSchedule",
 ]
