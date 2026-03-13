@@ -154,7 +154,8 @@ def _norm(v) -> str:
     Check time before date because datetime.datetime is a subclass of
     datetime.date and also has .hour — isinstance guards are unambiguous.
     """
-    from datetime import time as _time, date as _date
+    from datetime import date as _date
+    from datetime import time as _time
     if v is None:
         return ""
     if isinstance(v, _time):  # datetime.time (not datetime.datetime)

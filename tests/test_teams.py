@@ -1,4 +1,7 @@
 """Tests for /teams routes."""
+from datetime import date
+from unittest.mock import patch
+
 from models.team import Team
 
 # ---------------------------------------------------------------------------
@@ -82,9 +85,6 @@ def test_delete_team(admin_client, db):
 # ---------------------------------------------------------------------------
 # Recurring schedules
 # ---------------------------------------------------------------------------
-
-from datetime import date
-from unittest.mock import patch
 
 
 def _make_team_for_sched(db, name="Eagles"):

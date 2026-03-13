@@ -15,7 +15,6 @@ from services.schedule_service import (
     verify_payload,
 )
 
-
 # ── advance_date ────────────────────────────────────────────────────────────
 
 def test_advance_date_weekly():
@@ -96,7 +95,6 @@ def test_is_changed_ignores_description(db):
 def test_generate_events_weekly(db):
     from models.team import Team
     from models.team_recurring_schedule import TeamRecurringSchedule
-    from models.event import Event
 
     team = Team(name="Eagles")
     db.add(team)

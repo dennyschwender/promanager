@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import BinaryIO
 
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from models.player import Player

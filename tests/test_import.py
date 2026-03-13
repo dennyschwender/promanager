@@ -1,14 +1,13 @@
 """Tests for services/import_service.py."""
 import io
-import csv as csv_mod
 from datetime import date
 
 import pytest
+
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.team import Team
-from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
-
+from services.import_service import parse_csv, parse_xlsx, process_rows
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
