@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import calendar
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -25,6 +24,7 @@ from services.attendance_service import (
     sync_attendance_defaults,
 )
 from services.email_service import send_event_reminder
+from services.schedule_service import advance_date as _advance_date
 
 router = APIRouter()
 
@@ -39,23 +39,6 @@ def _parse_time(val: str):
     if not val or not val.strip():
         return None
     return datetime.strptime(val.strip(), "%H:%M").time()
-
-
-def _advance_date(d, rule: str):
-    """Return the next occurrence date for *d* given *rule*.
-
-    Rules: "weekly" (+7 days), "biweekly" (+14 days), "monthly" (same day
-    next month, capped at last day of that month).
-    """
-    if rule == "weekly":
-        return d + timedelta(days=7)
-    if rule == "biweekly":
-        return d + timedelta(days=14)
-    # monthly: advance month by 1, keep same day (cap to last day of month)
-    month = d.month % 12 + 1
-    year = d.year + (1 if d.month == 12 else 0)
-    day = min(d.day, calendar.monthrange(year, month)[1])
-    return d.replace(year=year, month=month, day=day)
 
 
 # ---------------------------------------------------------------------------
