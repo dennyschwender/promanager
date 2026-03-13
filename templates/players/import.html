@@ -4,6 +4,13 @@
 {% block head_extra %}
 <link rel="stylesheet" href="/static/css/jsuites.min.css">
 <link rel="stylesheet" href="/static/css/jspreadsheet.min.css">
+<style>
+.import-tabs { margin-top: 1rem; }
+.tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--pico-muted-border-color, #e0e0e0); margin-bottom: 1rem; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: .5rem 1.25rem; font-size: .92rem; cursor: pointer; color: var(--tp-muted); font-weight: 500; }
+.tab-btn.active { border-bottom-color: var(--tp-primary); color: var(--tp-primary); }
+.tab-btn:hover { color: var(--tp-primary); }
+</style>
 {% endblock %}
 
 {% block breadcrumb %}
@@ -153,7 +160,7 @@
     data: makeInitialData(activeCols),
     columns: makeColumns(activeCols),
     minDimensions: [activeCols.length, 20],
-    allowInsertColumn: false,
+    allowInsertColumn: true,
     allowDeleteColumn: true,
     columnSorting: false,
     contextMenu: function(obj, x, y, e, items) {
@@ -169,8 +176,8 @@
         sheet.setValueFromCoords(teamIdx, r, CONTEXT_TEAM, true);
       }
     },
-    ondeletecolumn: function(el, col) {
-      activeCols.splice(col, 1);
+    ondeletecolumn: function(el, col, numCols) {
+      activeCols.splice(col, numCols || 1);
       refreshDropdown();
     },
   });
@@ -197,8 +204,8 @@
     var sel = document.getElementById("add-col-select");
     var col = sel.value;
     if (!col || activeCols.indexOf(col) !== -1) return;
+    sheet.insertColumn(1, activeCols.length - 1, 0, [{ title: col, width: 130 }]);
     activeCols.push(col);
-    sheet.insertColumn([], activeCols.length - 1, 1, [{ title: col, width: 130 }]);
     sel.value = "";
     refreshDropdown();
   });
@@ -212,12 +219,13 @@
     var td = sheet.getCellFromCoords(x, y);
     if (!td) return;
     td.style.backgroundColor = "";
+    var v = (value == null ? "" : String(value)).trim();
 
-    if ((col === "first_name" || col === "last_name") && !value.trim()) {
+    if ((col === "first_name" || col === "last_name") && !v) {
       td.style.backgroundColor = "#fde8e8";
-    } else if (col === "date_of_birth" && value.trim() && !DATE_RE.test(value.trim())) {
+    } else if (col === "date_of_birth" && v && !DATE_RE.test(v)) {
       td.style.backgroundColor = "#fde8e8";
-    } else if (col === "email" && value.trim() && !EMAIL_RE.test(value.trim())) {
+    } else if (col === "email" && v && !EMAIL_RE.test(v)) {
       td.style.backgroundColor = "#fff3cd";
     }
   }
@@ -249,12 +257,4 @@
   refreshDropdown();
 })();
 </script>
-
-<style>
-.import-tabs { margin-top: 1rem; }
-.tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--pico-muted-border-color, #e0e0e0); margin-bottom: 1rem; }
-.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: .5rem 1.25rem; font-size: .92rem; cursor: pointer; color: var(--tp-muted); font-weight: 500; }
-.tab-btn.active { border-bottom-color: var(--tp-primary); color: var(--tp-primary); }
-.tab-btn:hover { color: var(--tp-primary); }
-</style>
 {% endblock %}
