@@ -27,15 +27,9 @@
         <input type="text" name="last_name" required value="{{ player.last_name if player else '' }}">
       </label>
     </div>
-    <div class="form-grid-2">
-      <label>Contact E-mail
-        <input type="email" name="email" value="{{ player.email if player and player.email else '' }}">
-      </label>
-      <label>Primary Phone
-        <input type="text" name="phone" placeholder="+41 79 000 00 00"
-               value="{{ player.phone if player and player.phone else '' }}">
-      </label>
-    </div>
+    <label>Contact E-mail
+      <input type="email" name="email" value="{{ player.email if player and player.email else '' }}">
+    </label>
     <label>Linked User Account
       <select name="user_id">
         <option value="">&#8212; None &#8212;</option>
@@ -93,19 +87,25 @@
     {% set existing_phones = player.phones if player else [] %}
     {% set ph1 = existing_phones[0] if existing_phones|length > 0 else none %}
     {% set ph2 = existing_phones[1] if existing_phones|length > 1 else none %}
-    <div class="form-grid-2" style="align-items:end;">
-      <label>Phone
-        <input type="text" name="phone_1" placeholder="+41 79 000 00 00"
-               value="{{ ph1.phone if ph1 else '' }}">
-      </label>
-      <label>Label <small>(mobile, home, work)</small>
-        <input type="text" name="phone_label_1" placeholder="mobile"
-               value="{{ ph1.label if ph1 and ph1.label else '' }}">
-      </label>
+    <label>Phone
+      <input type="text" name="phone" placeholder="+41 79 000 00 00"
+             value="{{ player.phone if player and player.phone else '' }}">
+    </label>
+    <div id="phone-row-1" {% if not ph1 %}style="display:none;margin-top:.5rem"{% else %}style="margin-top:.5rem"{% endif %}>
+      <div class="form-grid-2" style="align-items:end;">
+        <label>Phone 2
+          <input type="text" name="phone_1" placeholder="+41 79 000 00 00"
+                 value="{{ ph1.phone if ph1 else '' }}">
+        </label>
+        <label>Label <small>(mobile, home, work)</small>
+          <input type="text" name="phone_label_1" placeholder="mobile"
+                 value="{{ ph1.label if ph1 and ph1.label else '' }}">
+        </label>
+      </div>
     </div>
     <div id="phone-row-2" {% if not ph2 %}style="display:none;margin-top:.5rem"{% else %}style="margin-top:.5rem"{% endif %}>
       <div class="form-grid-2" style="align-items:end;">
-        <label>Phone 2
+        <label>Phone 3
           <input type="text" name="phone_2" placeholder="+41 79 000 00 00"
                  value="{{ ph2.phone if ph2 else '' }}">
         </label>
@@ -115,10 +115,10 @@
         </label>
       </div>
     </div>
-    {% if not ph2 %}
     <button type="button" class="btn btn-outline btn-sm" style="margin-top:.5rem"
-            id="add-phone-btn" onclick="showSecondPhone()">+ Add second phone</button>
-    {% endif %}
+            id="add-phone-btn"
+            {% if ph1 and ph2 %}style="display:none"{% endif %}
+            onclick="addPhone()">+ Add phone number</button>
   </fieldset>
 
   {# 4. TEAMS & ROLES #}
@@ -287,11 +287,16 @@ function toggleContactSection() {
   label.textContent = hidden ? 'Hide' : 'Show';
 }
 
-function showSecondPhone() {
-  var row = document.getElementById('phone-row-2');
-  if (row) row.style.display = '';
-  var btn = document.getElementById('add-phone-btn');
-  if (btn) btn.style.display = 'none';
+function addPhone() {
+  var row1 = document.getElementById('phone-row-1');
+  var row2 = document.getElementById('phone-row-2');
+  var btn  = document.getElementById('add-phone-btn');
+  if (row1 && row1.style.display === 'none') {
+    row1.style.display = '';
+  } else if (row2 && row2.style.display === 'none') {
+    row2.style.display = '';
+    if (btn) btn.style.display = 'none';
+  }
 }
 </script>
 {% endblock %}
