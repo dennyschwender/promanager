@@ -139,6 +139,7 @@ def test_valid_date_formats_accepted(db, team):
     result = process_rows(rows, context_team_id=team.id, db=db)
     assert len(result.imported) == 3
     players = db.query(Player).filter(Player.last_name == "X").all()
+    assert len(players) == 3
     for p in players:
         if p.first_name.startswith("J"):
             assert p.date_of_birth == date(2000, 6, 15)

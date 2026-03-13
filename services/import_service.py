@@ -7,17 +7,12 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import BinaryIO
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.team import Team
-
-PLAYER_FIELDS = {
-    "first_name", "last_name", "email", "phone",
-    "sex", "date_of_birth", "street", "postcode", "city",
-}
 
 
 @dataclass
@@ -154,7 +149,6 @@ def process_rows(
                 continue
 
         # 5. Create player + membership within a savepoint
-        seen_keys.add(batch_key)
         try:
             sp = db.begin_nested()
             player = Player(
@@ -180,11 +174,12 @@ def process_rows(
                 absent_by_default=False,
             ))
             sp.commit()
-        except IntegrityError:
+        except SQLAlchemyError:
             sp.rollback()
             skip("db error")
             continue
 
+        seen_keys.add(batch_key)
         result.imported.append(player)
         if team_warning:
             result.skipped.append({"row": idx, "name": display_name, "reason": team_warning})
