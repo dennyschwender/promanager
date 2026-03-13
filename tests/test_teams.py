@@ -165,7 +165,9 @@ def test_changed_schedule_triggers_confirmation(admin_client, db):
                              follow_redirects=False)
 
     assert resp.status_code == 200
-    assert b"confirm" in resp.content.lower()
+    # Check for specific confirmation-step markers
+    assert b"_confirm_step" in resp.content
+    assert b'value="1"' in resp.content  # _confirm_step hidden field set to "1"
 
 
 def test_confirmed_schedule_regenerates_events(admin_client, db):
@@ -372,8 +374,9 @@ def test_changed_schedule_unconfirmed_saves_fields_keeps_events(admin_client, db
         # confirm_schedule_{id} absent = unchecked
     }
 
-    resp = admin_client.post(f"/teams/{team.id}/edit", data=data,
-                             follow_redirects=False)
+    with patch("services.schedule_service.ensure_attendance_records"):
+        resp = admin_client.post(f"/teams/{team.id}/edit", data=data,
+                                 follow_redirects=False)
 
     assert resp.status_code == 302
     db.expire_all()
