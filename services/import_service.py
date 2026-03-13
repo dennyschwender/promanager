@@ -47,7 +47,10 @@ def _normalise_headers(headers: list[str]) -> list[str]:
 
 def parse_csv(stream: BinaryIO) -> list[dict]:
     """Parse a CSV stream; returns list of dicts with lower-cased header keys."""
-    text = stream.read().decode("utf-8-sig")
+    try:
+        text = stream.read().decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"Cannot decode CSV file: {exc}") from exc
     reader = csv.DictReader(io.StringIO(text))
     rows = []
     for row in reader:
