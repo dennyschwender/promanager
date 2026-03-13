@@ -194,3 +194,9 @@ def test_parse_xlsx_case_insensitive_headers():
     buf.seek(0)
     rows = parse_xlsx(buf)
     assert rows[0]["first_name"] == "Bob"
+
+
+def test_parse_xlsx_corrupt_file_raises_value_error():
+    corrupt = io.BytesIO(b"not an xlsx file at all")
+    with pytest.raises(ValueError, match="Cannot read XLSX file"):
+        parse_xlsx(corrupt)

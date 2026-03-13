@@ -61,9 +61,15 @@ def parse_csv(stream: BinaryIO) -> list[dict]:
 
 
 def parse_xlsx(stream: BinaryIO) -> list[dict]:
-    """Parse an XLSX stream; returns list of dicts with lower-cased header keys."""
+    """Parse an XLSX stream; returns list of dicts with lower-cased header keys.
+
+    Raises ValueError if the stream is not a valid XLSX file.
+    """
     import openpyxl
-    wb = openpyxl.load_workbook(stream, read_only=True, data_only=True)
+    try:
+        wb = openpyxl.load_workbook(stream, read_only=True, data_only=True)
+    except Exception as exc:
+        raise ValueError(f"Cannot read XLSX file: {exc}") from exc
     ws = wb.active
     rows_iter = ws.iter_rows(values_only=True)
     try:
@@ -148,6 +154,7 @@ def process_rows(
                 continue
 
         # 5. Create player + membership within a savepoint
+        seen_keys.add(batch_key)
         try:
             sp = db.begin_nested()
             player = Player(
@@ -178,7 +185,6 @@ def process_rows(
             skip("db error")
             continue
 
-        seen_keys.add(batch_key)
         result.imported.append(player)
         if team_warning:
             result.skipped.append({"row": idx, "name": display_name, "reason": team_warning})
