@@ -10,6 +10,79 @@
 .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: .5rem 1.25rem; font-size: .92rem; cursor: pointer; color: var(--tp-muted); font-weight: 500; }
 .tab-btn.active { border-bottom-color: var(--tp-primary); color: var(--tp-primary); }
 .tab-btn:hover { color: var(--tp-primary); }
+
+/* ── Jspreadsheet theme (uses PicoCSS v1 vars: no --pico- prefix) ── */
+.jexcel_container {
+  border: 1px solid var(--muted-border-color, #e0e0e0);
+  border-radius: var(--tp-radius, 0.35rem);
+  overflow: hidden;
+  font-family: inherit;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+table.jexcel thead td,
+table.jexcel thead th {
+  background: var(--card-sectionning-background-color, #f4f6f8) !important;
+  color: var(--color, #495057) !important;
+  font-weight: 600;
+  border-bottom: 2px solid var(--muted-border-color, #d0d5dd) !important;
+  border-right: 1px solid var(--muted-border-color, #d0d5dd) !important;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+}
+table.jexcel thead td.selected,
+table.jexcel thead th.selected {
+  background: rgba(26,107,196,.3) !important;
+  color: var(--tp-primary, #1a6bc4) !important;
+}
+table.jexcel tbody td {
+  background: var(--card-background-color, #fff) !important;
+  color: var(--color, inherit) !important;
+  border-right: 1px solid var(--muted-border-color, #e9ecef) !important;
+  border-bottom: 1px solid var(--muted-border-color, #e9ecef) !important;
+  padding: 5px 8px;
+}
+table.jexcel tbody tr td:first-child {
+  background: var(--card-sectionning-background-color, #f4f6f8) !important;
+  color: var(--muted-color, #6c757d) !important;
+  border-right: 2px solid var(--muted-border-color, #d0d5dd) !important;
+  font-size: 0.75rem;
+  text-align: center;
+}
+table.jexcel tbody tr:hover td {
+  filter: brightness(1.06);
+}
+table.jexcel tbody td.selected,
+table.jexcel tbody td.highlight {
+  background: rgba(26,107,196,.2) !important;
+  outline: 1px solid var(--tp-primary, #1a6bc4);
+}
+table.jexcel tbody td.edition { outline: 2px solid var(--tp-primary, #1a6bc4) !important; }
+table.jexcel tbody td.edition input,
+table.jexcel tbody td.edition textarea {
+  background: var(--card-background-color, #fff) !important;
+  color: var(--color, #000) !important;
+}
+.jexcel_contextmenu {
+  background: var(--card-background-color, #fff) !important;
+  border: 1px solid var(--muted-border-color, #e0e0e0) !important;
+  border-radius: var(--tp-radius, 0.35rem) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25) !important;
+  font-family: inherit !important;
+  font-size: 0.88rem;
+  min-width: 150px;
+  overflow: hidden;
+}
+.jexcel_contextmenu a {
+  display: block;
+  padding: 0.45rem 0.9rem !important;
+  color: var(--color, #212529) !important;
+  text-decoration: none !important;
+}
+.jexcel_contextmenu a:hover {
+  background: rgba(26,107,196,.12) !important;
+  color: var(--tp-primary, #1a6bc4) !important;
+}
 </style>
 {% endblock %}
 
@@ -73,7 +146,7 @@
   <!-- Tab 1: Paste -->
   <div class="tab-panel" id="tab-paste">
     <p class="text-muted" style="margin:.75rem 0;">
-      Paste rows copied from Excel, or type directly. Right-click a column header to remove it.
+      Paste rows copied from Excel, or type directly. Right-click any cell to remove that column.
       Use the dropdown to add more columns.
     </p>
 
@@ -164,9 +237,14 @@
     allowDeleteColumn: true,
     columnSorting: false,
     contextMenu: function(obj, x, y, e, items) {
-      return items.filter(function(i) {
-        return i && i.title && i.title.toLowerCase().indexOf("delete col") !== -1;
-      });
+      e.preventDefault();
+      if (x !== null && x !== undefined && x !== '') {
+        return [{
+          title: 'Delete column',
+          onclick: function() { obj.deleteColumn(parseInt(x)); }
+        }];
+      }
+      return [];
     },
     onchange: validateCell,
     oninsertrow: function(el, rowNumber, numOfRows) {

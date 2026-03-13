@@ -7,6 +7,7 @@
 <div class="page-header">
   <h2>Players</h2>
   {% if user.is_admin %}<a href="/players/new" class="btn btn-primary">+ New Player</a>{% endif %}
+  {% if user.is_admin and selected_team_id %}<a href="/players/import?team_id={{ selected_team_id }}" class="btn btn-outline">Import Players</a>{% endif %}
 </div>
 
 <form method="get" action="/players" class="filter-row">
