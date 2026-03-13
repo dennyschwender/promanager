@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import io
+import json
 from datetime import date
 
 from fastapi import APIRouter, Depends, Request
@@ -19,6 +21,7 @@ from models.team import Team
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
 from services.attendance_service import get_player_attendance_history
+from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
 router = APIRouter()
 
@@ -247,6 +250,107 @@ async def player_new_post(
 
     db.commit()
     return RedirectResponse("/players", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Bulk import
+# ---------------------------------------------------------------------------
+
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+
+IMPORT_COLUMNS = [
+    "first_name", "last_name", "email", "phone",
+    "sex", "date_of_birth", "street", "postcode", "city", "team",
+]
+
+
+@router.get("/import")
+async def player_import_get(
+    request: Request,
+    team_id: int,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    context_team = db.get(Team, team_id)
+    if context_team is None:
+        return RedirectResponse("/teams", status_code=302)
+    return templates.TemplateResponse(request, "players/import.html", {
+        "user": user,
+        "context_team": context_team,
+        "columns": IMPORT_COLUMNS,
+        "result": None,
+        "error": None,
+    })
+
+
+@router.post("/import")
+async def player_import_post(
+    request: Request,
+    team_id: int,
+    user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    form = await request.form()
+    context_team = db.get(Team, team_id)
+    if context_team is None:
+        return RedirectResponse("/teams", status_code=302)
+
+    import_source = (form.get("import_source") or "").strip()
+    error: str | None = None
+    result: ImportResult | None = None
+
+    def _render(status: int = 200):
+        return templates.TemplateResponse(request, "players/import.html", {
+            "user": user,
+            "context_team": context_team,
+            "columns": IMPORT_COLUMNS,
+            "result": result,
+            "error": error,
+        }, status_code=status)
+
+    if import_source == "paste":
+        rows_json = (form.get("rows_json") or "").strip()
+        try:
+            rows = json.loads(rows_json)
+            if not isinstance(rows, list):
+                raise ValueError("expected list")
+        except (json.JSONDecodeError, ValueError):
+            error = "Invalid data submitted. Please try again."
+            return _render(400)
+        result = process_rows(rows, context_team_id=team_id, db=db)
+
+    elif import_source == "file":
+        upload = form.get("import_file")
+        if upload is None or not upload.filename:
+            error = "No file selected."
+            return _render(400)
+
+        content = await upload.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            error = "File too large. Maximum size is 5 MB."
+            return _render(400)
+
+        filename = upload.filename.lower()
+        try:
+            if filename.endswith(".csv"):
+                rows = parse_csv(io.BytesIO(content))
+            elif filename.endswith(".xlsx"):
+                rows = parse_xlsx(io.BytesIO(content))
+            else:
+                error = "Unsupported file type. Please upload a .csv or .xlsx file."
+                return _render(400)
+        except ValueError as exc:
+            error = f"Could not read the file: {exc}"
+            return _render(400)
+
+        result = process_rows(rows, context_team_id=team_id, db=db)
+
+    else:
+        error = "Invalid submission."
+        return _render(400)
+
+    return _render()
 
 
 # ---------------------------------------------------------------------------
