@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ProManager{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/pico.min.css">
+  <link rel="stylesheet" href="/static/css/flatpickr.min.css">
   <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body>
@@ -63,6 +64,15 @@
 </footer>
 
 {% block scripts %}{% endblock %}
+<script src="/static/js/flatpickr.min.js"></script>
+<script>
+  flatpickr("input[type=date]", {
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+    allowInput: true
+  });
+</script>
 </body>
 </html>
 
