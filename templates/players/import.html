@@ -162,12 +162,37 @@
       });
     },
     onchange: validateCell,
+    oninsertrow: function(el, rowNumber, numOfRows) {
+      var teamIdx = activeCols.indexOf("team");
+      if (teamIdx === -1) return;
+      for (var r = rowNumber; r < rowNumber + numOfRows; r++) {
+        sheet.setValueFromCoords(teamIdx, r, CONTEXT_TEAM, true);
+      }
+    },
     ondeletecolumn: function(el, col) {
       activeCols.splice(col, 1);
+      refreshDropdown();
     },
   });
 
   // ── Add column ────────────────────────────────────────────────────────────
+  function refreshDropdown() {
+    var sel = document.getElementById("add-col-select");
+    while (sel.firstChild) { sel.removeChild(sel.firstChild); }
+    var placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "— Add column —";
+    sel.appendChild(placeholder);
+    ALL_COLS.forEach(function(col) {
+      if (activeCols.indexOf(col) === -1) {
+        var opt = document.createElement("option");
+        opt.value = col;
+        opt.textContent = col;
+        sel.appendChild(opt);
+      }
+    });
+  }
+
   document.getElementById("add-col-btn").addEventListener("click", function() {
     var sel = document.getElementById("add-col-select");
     var col = sel.value;
@@ -175,6 +200,7 @@
     activeCols.push(col);
     sheet.insertColumn([], activeCols.length - 1, 1, [{ title: col, width: 130 }]);
     sel.value = "";
+    refreshDropdown();
   });
 
   // ── Live validation ───────────────────────────────────────────────────────
@@ -218,6 +244,9 @@
     }
     document.getElementById("rows-json-input").value = JSON.stringify(rows);
   });
+
+  // Set initial dropdown state: exclude already-active DEFAULT_COLS
+  refreshDropdown();
 })();
 </script>
 
