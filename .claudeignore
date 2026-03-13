@@ -1,0 +1,37 @@
+# Dependency folders (The biggest token wasters)
+node_modules/
+bower_components/
+.venv/
+venv/
+env/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Version control & IDEs
+.git/
+.svn/
+.hg/
+.idea/
+.vscode/
+
+# Media and large assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.pdf
+*.zip
+*.gz
+
+# Logs and lockfiles
+*.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
