@@ -2,7 +2,7 @@
 .env
 
 # Database files
-data/*.db
+data/
 
 # Python cache
 __pycache__/
