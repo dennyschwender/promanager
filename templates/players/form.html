@@ -267,16 +267,25 @@
 </div>
 
 <script>
+function setDisabled(el, disabled) {
+  if (!el) return;
+  el.disabled = disabled;
+  if (el._flatpickr) el._flatpickr.altInput.disabled = disabled;
+}
+
 function toggleTeamRow(checkbox, teamId) {
-  ['prio_', 'role_', 'position_', 'shirt_', 'status_', 'injured_until_', 'absent_default_'].forEach(function(prefix) {
+  ['prio_', 'role_', 'position_', 'shirt_', 'status_', 'absent_default_'].forEach(function(prefix) {
     var el = document.getElementById(prefix + teamId);
     if (el) el.disabled = !checkbox.checked;
   });
+  // injured_until: only enable when team is checked AND status is 'injured'
+  var statusEl = document.getElementById('status_' + teamId);
+  var isInjured = checkbox.checked && statusEl && statusEl.value === 'injured';
+  setDisabled(document.getElementById('injured_until_' + teamId), !isInjured);
 }
 
 function toggleInjuredUntil(select, teamId) {
-  var el = document.getElementById('injured_until_' + teamId);
-  if (el) el.disabled = (select.value !== 'injured');
+  setDisabled(document.getElementById('injured_until_' + teamId), select.value !== 'injured');
 }
 
 function toggleContactSection() {
