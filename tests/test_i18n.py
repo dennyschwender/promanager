@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import os
-import pytest
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -14,6 +14,7 @@ def _make_t(debug: bool = False):
     os.environ["DEBUG"] = "true" if debug else "false"
     # Force reload so settings picks up env var
     import importlib
+
     import app.config as _cfg
     importlib.reload(_cfg)
     import app.i18n as _i18n
@@ -86,6 +87,7 @@ def test_t_missing_key_falls_back_to_en_in_production():
 def test_t_missing_key_returns_bare_key_when_en_also_missing():
     """When key is absent from both locale and 'en', return the bare key."""
     import importlib
+
     import app.i18n as _i18n
     os.environ["DEBUG"] = "false"
     importlib.reload(_i18n)

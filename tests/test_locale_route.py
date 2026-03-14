@@ -1,8 +1,6 @@
 """Tests for POST /set-locale."""
 from __future__ import annotations
 
-from services.auth_service import create_user, create_session_cookie
-
 
 def test_set_locale_sets_cookie(client):
     resp = client.post(

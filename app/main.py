@@ -15,11 +15,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from app.config import settings
-from app.middleware.locale import LocaleMiddleware
 from app.csrf import generate_csrf_token
 from app.database import init_db
 from app.limiter import limiter
-from app.session import COOKIE_NAME, get_user_from_cookie as _get_user_from_cookie
+from app.middleware.locale import LocaleMiddleware
+from app.session import COOKIE_NAME
+from app.session import get_user_from_cookie as _get_user_from_cookie
 from app.templates import render
 from routes._auth_helpers import NotAuthenticated, NotAuthorized
 
@@ -41,9 +42,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         # Embed unread notification count for the bell badge
         request.state.unread_count = 0
         if request.state.user is not None:
+            from app import database as _db_mod  # noqa: PLC0415
             from models.notification import Notification  # noqa: PLC0415
             from models.player import Player  # noqa: PLC0415
-            from app import database as _db_mod  # noqa: PLC0415
             db = _db_mod.SessionLocal()
             try:
                 # Find player(s) linked to this user
@@ -149,10 +150,11 @@ def create_app() -> FastAPI:
     app.include_router(_locale_router)
 
     # ── Profile page ──────────────────────────────────────────────────────
-    from routes._auth_helpers import require_login as _require_login  # noqa: PLC0415
-    from app.database import get_db as _get_db  # noqa: PLC0415
     from fastapi import Depends as _Depends  # noqa: PLC0415
     from sqlalchemy.orm import Session as _Session  # noqa: PLC0415
+
+    from app.database import get_db as _get_db  # noqa: PLC0415
+    from routes._auth_helpers import require_login as _require_login  # noqa: PLC0415
 
     @app.get("/profile", include_in_schema=False)
     async def profile_page(
@@ -161,8 +163,8 @@ def create_app() -> FastAPI:
         db: _Session = _Depends(_get_db),
     ):
         from models.notification_preference import NotificationPreference  # noqa: PLC0415
-        from models.web_push_subscription import WebPushSubscription  # noqa: PLC0415
         from models.player import Player as _Player  # noqa: PLC0415
+        from models.web_push_subscription import WebPushSubscription  # noqa: PLC0415
 
         current_player = (
             db.query(_Player)

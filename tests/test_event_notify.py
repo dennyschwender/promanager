@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import datetime
+
 import pytest
+
 from models.event import Event
 from models.notification import Notification
 from models.player import Player

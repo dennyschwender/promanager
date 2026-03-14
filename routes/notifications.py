@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from typing import AsyncGenerator
 
@@ -21,7 +20,7 @@ from models.player import Player
 from models.web_push_subscription import WebPushSubscription
 from routes._auth_helpers import require_login
 from services.channels.inapp_channel import register_connection, unregister_connection
-from services.notification_service import create_default_preferences, get_preference
+from services.notification_service import create_default_preferences
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/notifications", tags=["notifications"])

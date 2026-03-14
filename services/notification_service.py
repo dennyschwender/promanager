@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Sequence
 
 from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
@@ -100,8 +99,8 @@ def _dispatch(
     Never receives a request-scoped session — those are closed before
     background tasks run.
     """
-    from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
     import app.database as _db_mod  # noqa: PLC0415
+    from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
     _webpush_channel = WebPushChannel()
 
     db = _db_mod.SessionLocal()

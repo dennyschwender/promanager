@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import pytest
+
 from models.notification import Notification
-from models.notification_preference import NotificationPreference, CHANNELS
+from models.notification_preference import NotificationPreference
 from models.player import Player
 from services.auth_service import create_session_cookie, create_user
 from services.notification_service import create_default_preferences

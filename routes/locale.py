@@ -1,10 +1,9 @@
 """routes/locale.py — Language preference endpoint."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from fastapi import Depends
 
 from app.database import get_db
 from app.i18n import SUPPORTED_LOCALES

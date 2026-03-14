@@ -1,21 +1,22 @@
 """Tests for services/notification_service.py."""
 from __future__ import annotations
 
-import pytest
-from models.notification import Notification
-from models.notification_preference import NotificationPreference, CHANNELS
-from models.player import Player
-from models.team import Team
-from models.event import Event
-from models.season import Season
-from models.attendance import Attendance
 import datetime
+
+import pytest
+
+from models.attendance import Attendance
+from models.event import Event
+from models.notification import Notification
+from models.notification_preference import CHANNELS, NotificationPreference
+from models.player import Player
+from models.season import Season
+from models.team import Team
 from services.notification_service import (
     create_default_preferences,
     get_preference,
     send_notifications,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

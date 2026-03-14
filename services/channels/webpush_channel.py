@@ -27,7 +27,7 @@ class WebPushChannel:
             return False
 
         try:
-            from pywebpush import webpush, WebPushException  # noqa: PLC0415
+            from pywebpush import WebPushException, webpush  # noqa: PLC0415, F401
         except ImportError:
             logger.warning("pywebpush not installed — Web Push unavailable")
             return False
