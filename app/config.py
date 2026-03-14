@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     # Set to true when serving over HTTPS (marks session cookie Secure)
     COOKIE_SECURE: bool = False
 
+    # ── i18n ──────────────────────────────────────────────────────────────────
+    # Set DEBUG=true in .env to raise KeyError on missing translation keys
+    DEBUG: bool = False
+
     # ── Web Push (VAPID) ──────────────────────────────────────────────────
     # Generate with: python scripts/generate_vapid.py
     VAPID_PUBLIC_KEY: str = ""
