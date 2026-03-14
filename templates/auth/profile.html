@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}My Profile — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <span>Profile</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('auth.profile_title') }}</h2>
+</div>
+
+<dl>
+  <dt>{{ t('auth.username') }}</dt><dd>{{ user.username }}</dd>
+  <dt>{{ t('auth.email') }}</dt><dd>{{ user.email }}</dd>
+  <dt>{{ t('auth.role') }}</dt><dd>{{ user.role|capitalize }}</dd>
+</dl>
+
+<!-- ── Notification Preferences ─────────────────────────────────────────── -->
+{% if current_player %}
+<section style="margin-top:2rem;">
+  <h3>{{ t('auth.notification_preferences') }}</h3>
+  <form method="post" action="/notifications/preferences">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    {% for channel, label in [("email","Email"), ("inapp","In-app inbox"), ("webpush","Browser push")] %}
+      {% set pref_enabled = player_prefs.get(channel, true) %}
+      <label style="display:flex;align-items:center;gap:.5rem;">
+        <input type="checkbox" name="{{ channel }}" value="on" {% if pref_enabled %}checked{% endif %}>
+        {{ label }}
+      </label>
+    {% endfor %}
+    <button type="submit" class="btn btn-sm btn-outline" style="margin-top:.5rem;">{{ t('auth.save_preferences') }}</button>
+  </form>
+
+  <!-- Web Push subscription -->
+  <div style="margin-top:1.5rem;">
+    <h4 style="font-size:1rem;">{{ t('auth.web_push_title') }}</h4>
+    {% if vapid_public_key %}
+      <p id="push-status" class="text-muted" style="font-size:.88rem;">
+        {% if push_device_count > 0 %}{{ t('auth.push_active', count=push_device_count) }}{% else %}{{ t('auth.push_not_enabled') }}{% endif %}
+      </p>
+      <meta name="csrf-token" content="{{ request.state.csrf_token }}">
+      <button type="button" class="btn btn-sm btn-outline" id="enable-push-btn">
+        {{ t('auth.push_enable') }}
+      </button>
+      {% if push_device_count > 0 %}
+        <form method="post" action="/notifications/webpush/unsubscribe-all" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+          <button type="submit" class="btn btn-sm btn-danger">{{ t('auth.push_remove_all') }}</button>
+        </form>
+      {% endif %}
+      <script>
+      (function () {
+        const VAPID_PUBLIC_KEY = {{ vapid_public_key | tojson }};
+        const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+
+        function urlBase64ToUint8Array(base64String) {
+          const padding = '='.repeat((4 - base64String.length % 4) % 4);
+          const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const rawData = atob(base64);
+          return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        }
+
+        document.getElementById("enable-push-btn").addEventListener("click", async () => {
+          if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+            alert("Web Push is not supported in this browser.");
+            return;
+          }
+          const perm = await Notification.requestPermission();
+          if (perm !== "granted") {
+            alert("Permission denied.");
+            return;
+          }
+          const reg = await navigator.serviceWorker.register("/static/js/sw.js");
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+          });
+          const key = sub.getKey("p256dh");
+          const auth = sub.getKey("auth");
+          const body = new FormData();
+          body.append("csrf_token", CSRF_TOKEN);
+          body.append("endpoint", sub.endpoint);
+          body.append("p256dh", btoa(String.fromCharCode(...new Uint8Array(key))));
+          body.append("auth", btoa(String.fromCharCode(...new Uint8Array(auth))));
+          const resp = await fetch("/notifications/webpush/subscribe", {
+            method: "POST", body,
+          });
+          if (resp.ok) {
+            document.getElementById("push-status").textContent = {{ t('auth.push_enabled')|tojson }};
+          } else {
+            alert("Failed to subscribe. Please try again.");
+          }
+        });
+      })();
+      </script>
+    {% else %}
+      <p class="text-muted" style="font-size:.88rem;">{{ t('auth.push_not_configured') }}</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- ── Language Preference ──────────────────────────────────────────────── -->
+<section style="margin-top:2rem;">
+  <h3>{{ t('auth.language_preference') }}</h3>
+  <form method="post" action="/set-locale">
+    <input type="hidden" name="next" value="/profile">
+    <select name="locale">
+      <option value="en" {% if current_locale == 'en' %}selected{% endif %}>English</option>
+      <option value="it" {% if current_locale == 'it' %}selected{% endif %}>Italiano</option>
+      <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>Français</option>
+      <option value="de" {% if current_locale == 'de' %}selected{% endif %}>Deutsch</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-outline" style="margin-left:.5rem;">{{ t('common.save') }}</button>
+  </form>
+</section>
+{% endblock %}

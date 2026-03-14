@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Notifications — ProManager{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <span>Notifications</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+  <h2>{{ t('notifications.title') }}</h2>
+  {% set unread_count = notifications | selectattr("is_read", "equalto", false) | list | length %}
+  {% if unread_count > 0 %}
+    <form method="post" action="/notifications/read-all">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-sm btn-outline">{{ t('notifications.mark_read') }}</button>
+    </form>
+  {% endif %}
+</div>
+
+{% if not notifications %}
+  <p class="text-muted">{{ t('notifications.no_notifications') }}</p>
+{% else %}
+  <ul class="notification-list">
+    {% for n in notifications %}
+      <li class="notification-item{% if not n.is_read %} unread{% endif %}">
+        <form method="post" action="/notifications/{{ n.id }}/read" style="display:none;" id="read-form-{{ n.id }}">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+        </form>
+        <a href="{% if n.event_id %}/events/{{ n.event_id }}{% else %}/notifications{% endif %}"
+           onclick="document.getElementById('read-form-{{ n.id }}').submit(); return true;"
+           class="notification-link">
+          <span class="notif-tag notif-tag--{{ n.tag }}">{{ n.tag | title }}</span>
+          <span class="notif-title">{{ n.title }}</span>
+          <span class="notif-body">{{ n.body | truncate(100) }}</span>
+          <span class="notif-time">{{ n.created_at.strftime("%d %b %Y %H:%M") }}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<style>
+.notification-list { list-style: none; padding: 0; margin: 0; }
+.notification-item { border-bottom: 1px solid var(--pico-muted-border-color, #e0e0e0); }
+.notification-item.unread { background: var(--pico-primary-background, #eef4ff); }
+.notification-link { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: .15rem .5rem; padding: .75rem .5rem; text-decoration: none; color: inherit; }
+.notif-tag { grid-row: 1; grid-column: 1; font-size: .72rem; font-weight: 700; padding: .1rem .4rem; border-radius: 3px; background: var(--pico-secondary-background, #eee); align-self: center; white-space: nowrap; }
+.notif-tag--announcement { background: #dbeafe; color: #1e40af; }
+.notif-tag--direct { background: #dcfce7; color: #166534; }
+.notif-title { grid-row: 1; grid-column: 2; font-weight: 600; }
+.notif-body { grid-row: 2; grid-column: 2; font-size: .88rem; color: var(--pico-muted-color, #666); }
+.notif-time { grid-row: 2; grid-column: 1; font-size: .75rem; color: var(--pico-muted-color, #999); white-space: nowrap; }
+</style>
+{% endblock %}

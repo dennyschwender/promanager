@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Teams — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>Teams</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('teams.title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>Teams</h2>
-  {% if user.is_admin %}<a href="/teams/new" class="btn btn-primary">+ New Team</a>{% endif %}
+  <h2>{{ t('teams.title') }}</h2>
+  {% if user.is_admin %}<a href="/teams/new" class="btn btn-primary">{{ t('teams.new') }}</a>{% endif %}
 </div>
 
 {% if teams %}
 <table>
   <thead>
-    <tr><th>Name</th><th>Season</th><th>Description</th><th>Actions</th></tr>
+    <tr><th>{{ t('teams.name') }}</th><th>{{ t('teams.season') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for t in teams %}
@@ -23,8 +23,8 @@
       <td>
         <div class="action-group">
           {% if user.is_admin %}
-            <a href="/teams/{{ t.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
-            <a href="/players?team_id={{ t.id }}" class="btn btn-sm btn-outline">Players</a>
+            <a href="/teams/{{ t.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
+            <a href="/players?team_id={{ t.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
             <a href="/players/import?team_id={{ t.id }}" class="btn btn-sm btn-outline">Import Players</a>
             <form method="post" action="/teams/{{ t.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete team {{ t.name }}?')">
@@ -39,6 +39,6 @@
   </tbody>
 </table>
 {% else %}
-  <p>No teams yet. {% if user.is_admin %}<a href="/teams/new">Create one</a>.{% endif %}</p>
+  <p>{{ t('teams.no_teams') }} {% if user.is_admin %}<a href="/teams/new">Create one</a>.{% endif %}</p>
 {% endif %}
 {% endblock %}

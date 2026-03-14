@@ -3,7 +3,7 @@
 {% block breadcrumb %}
 <nav class="breadcrumb">
   <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <a href="/events">{{ t('events.title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ event.title }}</span>
 </nav>
 {% endblock %}
@@ -23,11 +23,16 @@
 {% if request.query_params.get("reminders_sent") %}
   <div class="alert alert-success">Reminders sent to {{ request.query_params.get("reminders_sent") }} player(s).</div>
 {% endif %}
+{% if request.query_params.get("notified") %}
+  <div class="alert alert-success">
+    Notification queued for {{ request.query_params.get("notified") }} player(s).
+  </div>
+{% endif %}
 
 <dl>
   <dt>Season</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
   <dt>Team</dt><dd>{{ event.team.name if event.team else "—" }}</dd>
-  <dt>Date</dt>
+  <dt>{{ t('events.date') }}</dt>
   <dd>
     {{ event.event_date }}
     {% if event.event_time or event.event_end_time %}
@@ -36,7 +41,7 @@
     {% endif %}
   </dd>
   {% if event.location %}
-  <dt>Event location</dt>
+  <dt>{{ t('events.location') }}</dt>
   <dd>{{ event.location }} <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a></dd>
   {% endif %}
   {% if event.meeting_time or event.meeting_location %}
@@ -57,26 +62,29 @@
 
 <div class="action-group" style="margin-bottom:1.5rem;">
   {% if event.presence_type != "no_registration" %}
-    <a href="/attendance/{{ event.id }}" class="btn btn-primary">Mark Attendance</a>
+    <a href="/attendance/{{ event.id }}" class="btn btn-primary">{{ t('events.attendance') }}</a>
   {% endif %}
   {% if user.is_admin %}
-    <a href="/events/{{ event.id }}/edit" class="btn btn-outline">Edit Event</a>
+    <a href="/events/{{ event.id }}/edit" class="btn btn-outline">{{ t('events.edit') }}</a>
+    <a href="/events/{{ event.id }}/notify" class="btn btn-sm btn-outline">{{ t('events.notify_players') }}</a>
     <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-outline">Send Reminders</button>
+      <button type="submit" class="btn btn-outline">{{ t('events.send_reminders') }}</button>
     </form>
     <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
-          onsubmit="return confirm('Delete this event?')">
+          onsubmit="return confirm('{{ t('events.confirm_delete') }}')">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-danger">Delete</button>
+      <button type="submit" class="btn btn-danger">{{ t('events.delete') }}</button>
     </form>
   {% endif %}
 </div>
 
+<p><a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a></p>
+
 {% if event.presence_type != "no_registration" %}
-<h3>Attendance Summary</h3>
+<h3>{{ t('events.attendance_summary') }}</h3>
 <div class="attendance-summary">
-  {% for bucket, label in [("present","Present"),("absent","Absent"),("maybe","Maybe"),("unknown","Unknown")] %}
+  {% for bucket, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe","Maybe"),("unknown", t('attendance.status_unknown'))] %}
   <div>
     <span class="badge badge-{{ bucket }}">{{ label }} ({{ summary[bucket]|length }})</span>
     <ul>

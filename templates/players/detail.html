@@ -127,7 +127,7 @@
 
 {% if user.is_admin %}
 <div class="action-group" style="margin-bottom:1.5rem;">
-  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">Edit</a>
+  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players.edit') }}</a>
   <a href="/reports/player/{{ player.id }}" class="btn btn-outline">Attendance Report</a>
 </div>
 {% endif %}

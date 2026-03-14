@@ -10,7 +10,7 @@ from app.config import settings
 from app.csrf import require_csrf
 from app.database import get_db
 from app.limiter import limiter
-from app.templates import templates
+from app.templates import render
 from models.user import User
 from routes._auth_helpers import require_admin
 from services.auth_service import (
@@ -35,7 +35,7 @@ COOKIE_NAME = "session_user_id"
 async def login_get(request: Request):
     if request.state.user:
         return RedirectResponse("/dashboard", status_code=302)
-    return templates.TemplateResponse(request, "auth/login.html", {"user": request.state.user, "error": None})
+    return render(request, "auth/login.html", {"user": request.state.user, "error": None})
 
 
 @router.post("/login")
@@ -49,7 +49,7 @@ async def login_post(
 ):
     user = authenticate_user(db, username, password)
     if user is None:
-        return templates.TemplateResponse(request, "auth/login.html", {"user": None,
+        return render(request, "auth/login.html", {"user": None,
                 "error": "Invalid username or password."},
             status_code=401)
 
@@ -88,7 +88,7 @@ async def register_get(
     request: Request,
     user: User = Depends(require_admin),
 ):
-    return templates.TemplateResponse(request, "auth/register.html", {"user": user, "error": None, "flash": None})
+    return render(request, "auth/register.html", {"user": user, "error": None, "flash": None})
 
 
 @router.post("/register")
@@ -104,26 +104,26 @@ async def register_post(
 ):
     # Validation
     if get_user_by_username(db, username):
-        return templates.TemplateResponse(request, "auth/register.html", {
+        return render(request, "auth/register.html", {
             "user": user,
             "error": f"Username '{username}' is already taken.",
             "flash": None,
         }, status_code=400)
     if get_user_by_email(db, email):
-        return templates.TemplateResponse(request, "auth/register.html", {
+        return render(request, "auth/register.html", {
             "user": user,
             "error": f"Email '{email}' is already registered.",
             "flash": None,
         }, status_code=400)
     if len(password) < 8:
-        return templates.TemplateResponse(request, "auth/register.html", {
+        return render(request, "auth/register.html", {
             "user": user,
             "error": "Password must be at least 8 characters.",
             "flash": None,
         }, status_code=400)
 
     create_user(db, username=username, email=email, password=password, role=role)
-    return templates.TemplateResponse(request, "auth/register.html", {
+    return render(request, "auth/register.html", {
         "user": user,
         "error": None,
         "flash": f"User '{username}' created successfully.",

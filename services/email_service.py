@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.config import settings
+from app.i18n import t as _t
 
 logger = logging.getLogger(__name__)
 
@@ -73,32 +74,24 @@ def send_event_reminder(
     event_date,
     event_time,
     event_location: str,
+    locale: str = "en",
 ) -> bool:
     """Send an event reminder to a player."""
     time_str = event_time.strftime("%H:%M") if event_time else ""
     date_str = event_date.strftime("%Y-%m-%d") if event_date else str(event_date)
     when = f"{date_str} {time_str}".strip()
+    location = event_location or "TBD"
 
-    subject = f"Reminder: {event_title} on {date_str}"
-    body_text = (
-        f"Hi {player_name},\n\n"
-        f"This is a reminder for the upcoming event:\n\n"
-        f"  Event:    {event_title}\n"
-        f"  When:     {when}\n"
-        f"  Location: {event_location or 'TBD'}\n\n"
-        f"Please make sure to update your attendance status.\n\n"
-        f"Best regards,\n{settings.APP_NAME}"
+    subject = _t("email.reminder_subject", locale, event_name=event_title, date=date_str)
+    body_text = _t(
+        "email.reminder_body", locale,
+        name=player_name, event_name=event_title,
+        when=when, location=location, app_name=settings.APP_NAME,
     )
-    body_html = (
-        f"<p>Hi <strong>{player_name}</strong>,</p>"
-        f"<p>This is a reminder for the upcoming event:</p>"
-        f"<table>"
-        f"<tr><td><strong>Event</strong></td><td>{event_title}</td></tr>"
-        f"<tr><td><strong>When</strong></td><td>{when}</td></tr>"
-        f"<tr><td><strong>Location</strong></td><td>{event_location or 'TBD'}</td></tr>"
-        f"</table>"
-        f"<p>Please update your attendance status.</p>"
-        f"<p>Best regards,<br>{settings.APP_NAME}</p>"
+    body_html = _t(
+        "email.reminder_body_html", locale,
+        name=player_name, event_name=event_title,
+        when=when, location=location, app_name=settings.APP_NAME,
     )
     return send_email(player_email, subject, body_html, body_text)
 
@@ -109,22 +102,20 @@ def send_attendance_request(
     event_title: str,
     event_date,
     attendance_url: str,
+    locale: str = "en",
 ) -> bool:
     """Send an attendance request (RSVP) to a player."""
     date_str = event_date.strftime("%Y-%m-%d") if event_date else str(event_date)
-    subject = f"Please confirm attendance: {event_title} on {date_str}"
-    body_text = (
-        f"Hi {player_name},\n\n"
-        f"Please confirm your attendance for:\n\n"
-        f"  Event: {event_title}\n"
-        f"  Date:  {date_str}\n\n"
-        f"Update your status here: {attendance_url}\n\n"
-        f"Best regards,\n{settings.APP_NAME}"
+
+    subject = _t("email.attendance_subject", locale, event_name=event_title, date=date_str)
+    body_text = _t(
+        "email.attendance_body", locale,
+        name=player_name, event_name=event_title,
+        date=date_str, url=attendance_url, app_name=settings.APP_NAME,
     )
-    body_html = (
-        f"<p>Hi <strong>{player_name}</strong>,</p>"
-        f"<p>Please confirm your attendance for <strong>{event_title}</strong> on {date_str}.</p>"
-        f"<p><a href=\"{attendance_url}\">Click here to update your attendance status</a></p>"
-        f"<p>Best regards,<br>{settings.APP_NAME}</p>"
+    body_html = _t(
+        "email.attendance_body_html", locale,
+        name=player_name, event_name=event_title,
+        date=date_str, url=attendance_url, app_name=settings.APP_NAME,
     )
     return send_email(player_email, subject, body_html, body_text)

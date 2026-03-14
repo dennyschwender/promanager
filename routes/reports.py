@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.player import Player
 from models.season import Season
 from models.user import User
@@ -59,7 +59,7 @@ async def report_season(
     stats = get_season_attendance_stats(db, season_id)
     all_seasons = db.query(Season).order_by(Season.name).all()
 
-    return templates.TemplateResponse(request, "reports/season.html", {
+    return render(request, "reports/season.html", {
         "user": user,
         "season": season,
         "stats": stats,
@@ -89,7 +89,7 @@ async def report_player(
 
     history = get_player_attendance_history(db, player_id)
 
-    return templates.TemplateResponse(request, "reports/player.html", {
+    return render(request, "reports/player.html", {
         "user": user,
         "player": player,
         "history": history,

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.season import Season
@@ -64,7 +64,7 @@ async def dashboard(
         all_teams = db.query(Team).order_by(Team.name).all()
         all_seasons = db.query(Season).order_by(Season.name).all()
 
-    return templates.TemplateResponse(request, "dashboard/index.html", {
+    return render(request, "dashboard/index.html", {
         "user": user,
         "active_season": active_season,
         "upcoming_count": upcoming_count,

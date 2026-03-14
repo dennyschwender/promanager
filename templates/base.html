@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="{{ current_locale }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,15 @@
   <link rel="stylesheet" href="/static/css/flatpickr.min.css">
   <link rel="stylesheet" href="/static/css/main.css">
   {% block head_extra %}{% endblock %}
+  <style>
+  .notif-bell { position: relative; text-decoration: none; font-size: 1.1rem; }
+  .notif-badge {
+    position: absolute; top: -6px; right: -8px;
+    background: #ef4444; color: #fff;
+    font-size: .65rem; font-weight: 700; line-height: 1;
+    padding: 2px 4px; border-radius: 10px; white-space: nowrap;
+  }
+  </style>
 </head>
 <body>
 
@@ -18,29 +27,49 @@
   <ul>
     {% if user %}
       {% set path = request.url.path %}
-      <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">Dashboard</a></li>
-      <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">Events</a></li>
-      <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">Players</a></li>
-      <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">Teams</a></li>
+      <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
+      <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
+      <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
+      <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
       {% if user.is_admin %}
-        <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">Seasons</a></li>
-        <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">Reports</a></li>
+        <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
+        <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
       {% endif %}
+      <li>
+        <a href="/notifications" class="notif-bell" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}">
+          🔔
+          {% if request.state.unread_count > 0 %}
+            <span class="notif-badge">{{ request.state.unread_count }}</span>
+          {% endif %}
+        </a>
+      </li>
       <li>
         <details role="list" style="list-style:none;">
           <summary aria-haspopup="listbox" role="link">{{ user.username }}</summary>
           <ul role="listbox">
             {% if user.is_admin %}
-              <li><a href="/auth/register">Register User</a></li>
+              <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
               <li><hr style="margin:.25rem 0;"></li>
             {% endif %}
-            <li><a href="/auth/logout">Sign Out</a></li>
+            <li><a href="/profile">{{ t('nav.profile') }}</a></li>
+            <li><a href="/auth/logout">{{ t('nav.sign_out') }}</a></li>
           </ul>
         </details>
       </li>
     {% else %}
-      <li><a href="/auth/login" role="button" class="outline">Login</a></li>
+      <li><a href="/auth/login" role="button" class="outline">{{ t('nav.login') }}</a></li>
     {% endif %}
+    <li>
+      <form method="post" action="/set-locale" style="display:inline;margin:0;">
+        <input type="hidden" name="next" value="{{ request.url.path }}">
+        <select name="locale" onchange="this.form.submit()" style="margin:0;padding:.2rem .4rem;font-size:.85rem;width:auto;">
+          <option value="en" {% if current_locale == 'en' %}selected{% endif %}>EN</option>
+          <option value="it" {% if current_locale == 'it' %}selected{% endif %}>IT</option>
+          <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>FR</option>
+          <option value="de" {% if current_locale == 'de' %}selected{% endif %}>DE</option>
+        </select>
+      </form>
+    </li>
   </ul>
 </nav>
 
@@ -54,10 +83,10 @@
     <span>⬡ ProManager</span>
     {% if user %}
     <span>
-      <a href="/dashboard">Dashboard</a> ·
-      <a href="/events">Events</a> ·
-      <a href="/players">Players</a>
-      {% if user.is_admin %} · <a href="/seasons">Seasons</a>{% endif %}
+      <a href="/dashboard">{{ t('nav.dashboard') }}</a> ·
+      <a href="/events">{{ t('nav.events') }}</a> ·
+      <a href="/players">{{ t('nav.players') }}</a>
+      {% if user.is_admin %} · <a href="/seasons">{{ t('nav.seasons') }}</a>{% endif %}
     </span>
     {% endif %}
     <span>© {{ now().year if now is defined else '2026' }}</span>
@@ -65,6 +94,50 @@
 </footer>
 
 {% block scripts %}{% endblock %}
+{% if user %}
+<script>
+(function () {
+  const evtSource = new EventSource("/notifications/stream");
+  evtSource.onmessage = function (e) {
+    try {
+      const data = JSON.parse(e.data);
+      const badge = document.querySelector(".notif-badge");
+      const bell = document.querySelector(".notif-bell");
+      if (data.unread_count > 0) {
+        if (!badge) {
+          const span = document.createElement("span");
+          span.className = "notif-badge";
+          bell.appendChild(span);
+        }
+        document.querySelector(".notif-badge").textContent = data.unread_count;
+        showToast({{ t('notifications.new_notification')|tojson }});
+      } else if (badge) {
+        badge.remove();
+      }
+    } catch (_) {}
+  };
+
+  function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "notif-toast";
+    toast.textContent = msg;
+    toast.onclick = () => window.location.href = "/notifications";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+  }
+})();
+</script>
+<style>
+.notif-toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+  background: #1e293b; color: #fff; padding: .75rem 1.25rem;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  cursor: pointer; font-size: .92rem; max-width: 320px;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { transform: translateY(2rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+{% endif %}
 <script src="/static/js/flatpickr.min.js"></script>
 <script>
   flatpickr("input[type=date]", {

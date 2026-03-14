@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
@@ -54,7 +54,7 @@ async def attendance_page(
 
     att_map = {att.player_id: att for att in attendances}
 
-    return templates.TemplateResponse(request, "attendance/mark.html", {
+    return render(request, "attendance/mark.html", {
         "user": user,
         "event": event,
         "attendances": attendances,

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Notify Players — {{ event.title }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <a href="/events/{{ event.id }}">{{ event.title }}</a><span class="breadcrumb-sep"></span>
+  <span>Notify</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('notify.title') }} — {{ event.title }}</h2>
+  <p class="text-muted">{{ event.event_date }} {% if event.event_time %}at {{ event.event_time }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
+</div>
+
+<form method="post" action="/events/{{ event.id }}/notify" id="notify-form">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+  <!-- Template picker -->
+  <label>
+    Template
+    <select id="template-select" name="template_key">
+      <option value="">— Start from template —</option>
+      {% for tpl in templates %}
+        <option value="{{ tpl.key }}"
+          data-title="{{ tpl.title_tpl }}"
+          data-body="{{ tpl.body_tpl }}"
+          data-tag="{{ tpl.tag }}"
+          data-tag-locked="{{ tpl.tag_locked | lower }}">
+          {{ tpl.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <!-- Title -->
+  <label>
+    Title <span style="color:red">*</span>
+    <input type="text" name="title" id="notify-title" required maxlength="256">
+  </label>
+
+  <!-- Body -->
+  <label>
+    Message <span style="color:red">*</span>
+    <textarea name="body" id="notify-body" rows="5" required></textarea>
+  </label>
+
+  <!-- Tag -->
+  <fieldset>
+    <legend>Type</legend>
+    <label><input type="radio" name="tag" value="direct" checked id="tag-direct"> Direct (targeted)</label>
+    <label><input type="radio" name="tag" value="announcement" id="tag-announcement"> Team Announcement</label>
+  </fieldset>
+
+  <!-- Recipients -->
+  <fieldset>
+    <legend>Recipients <span id="recipient-preview" class="text-muted" style="font-size:.88rem;font-weight:normal;"></span></legend>
+    <label><input type="checkbox" name="recipients" value="all" id="chk-all" checked> All players</label>
+    <label><input type="checkbox" name="recipients" value="present"> Present</label>
+    <label><input type="checkbox" name="recipients" value="absent"> Absent</label>
+    <label><input type="checkbox" name="recipients" value="maybe"> Maybe</label>
+    <label><input type="checkbox" name="recipients" value="unknown"> Unknown</label>
+  </fieldset>
+
+  <!-- Channels -->
+  <fieldset>
+    <legend>Channels</legend>
+    <label><input type="checkbox" name="channels" value="email" checked> Email</label>
+    <label><input type="checkbox" name="channels" value="inapp" checked> In-app</label>
+    <label><input type="checkbox" name="channels" value="webpush" checked> Web Push</label>
+  </fieldset>
+
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">{{ t('notify.send') }}</button>
+    <a href="/events/{{ event.id }}" class="btn btn-outline">{{ t('notify.back') }}</a>
+  </div>
+</form>
+
+<script>
+(function () {
+  const STATUS_COUNTS = {{ status_counts | tojson }};
+  const TOTAL = Object.values(STATUS_COUNTS).reduce((a, b) => a + b, 0);
+
+  const eventCtx = {
+    event: {{ event.title | tojson }},
+    date:  {{ event.event_date | string | tojson }},
+    time:  {{ (event.event_time | string if event.event_time else "") | tojson }},
+    location: {{ (event.location or "") | tojson }},
+  };
+
+  function fillPlaceholders(tpl) {
+    return tpl.replace(/\{(\w+)\}/g, (_, k) => eventCtx[k] || "{" + k + "}");
+  }
+
+  document.getElementById("template-select").addEventListener("change", function () {
+    const opt = this.selectedOptions[0];
+    if (!opt.value) return;
+    document.getElementById("notify-title").value = fillPlaceholders(opt.dataset.title || "");
+    document.getElementById("notify-body").value  = fillPlaceholders(opt.dataset.body  || "");
+    const locked = opt.dataset.tagLocked === "true";
+    document.getElementById("tag-direct").disabled = locked;
+    document.getElementById("tag-announcement").disabled = locked;
+    const tagVal = opt.dataset.tag || "direct";
+    document.querySelector(`input[name="tag"][value="${tagVal}"]`).checked = true;
+  });
+
+  const allChk = document.getElementById("chk-all");
+  const recipientChks = document.querySelectorAll("input[name='recipients']");
+  const preview = document.getElementById("recipient-preview");
+
+  function updatePreview() {
+    if (allChk.checked) {
+      preview.textContent = `— ${TOTAL} player(s)`;
+      return;
+    }
+    let count = 0;
+    recipientChks.forEach(chk => {
+      if (chk !== allChk && chk.checked) count += STATUS_COUNTS[chk.value] || 0;
+    });
+    preview.textContent = `— ${count} player(s)`;
+  }
+
+  allChk.addEventListener("change", function () {
+    if (this.checked) {
+      recipientChks.forEach(chk => { if (chk !== allChk) chk.checked = false; });
+    }
+    updatePreview();
+  });
+  recipientChks.forEach(chk => {
+    if (chk !== allChk) chk.addEventListener("change", function () {
+      if (this.checked) allChk.checked = false;
+      updatePreview();
+    });
+  });
+  updatePreview();
+})();
+</script>
+{% endblock %}

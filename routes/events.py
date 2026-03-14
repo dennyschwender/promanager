@@ -5,13 +5,14 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.season import Season
@@ -24,6 +25,8 @@ from services.attendance_service import (
     sync_attendance_defaults,
 )
 from services.email_service import send_event_reminder
+from services.notification_service import send_notifications
+from services.notification_templates import TEMPLATES
 from services.schedule_service import advance_date as _advance_date
 
 router = APIRouter()
@@ -70,7 +73,7 @@ async def events_list(
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return templates.TemplateResponse(request, "events/list.html", {
+    return render(request, "events/list.html", {
         "user": user,
         "upcoming": upcoming,
         "past": past,
@@ -94,7 +97,7 @@ async def event_new_get(
 ):
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {
+    return render(request, "events/form.html", {
         "user": user,
         "event": None,
         "seasons": seasons,
@@ -129,7 +132,7 @@ async def event_new_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -143,7 +146,7 @@ async def event_new_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -152,7 +155,7 @@ async def event_new_post(
         }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -168,7 +171,7 @@ async def event_new_post(
         try:
             r_end = _parse_date(recurrence_end_date)
         except ValueError:
-            return templates.TemplateResponse(
+            return render(
                 request, "events/form.html",
                 {"user": user, "event": None,
                  "seasons": seasons, "teams": teams,
@@ -176,7 +179,7 @@ async def event_new_post(
                 status_code=400,
             )
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -184,7 +187,7 @@ async def event_new_post(
             status_code=400,
         )
     if recurring and r_end is None:
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -192,7 +195,7 @@ async def event_new_post(
             status_code=400,
         )
     if recurring and r_end <= e_date:
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -241,6 +244,85 @@ async def event_new_post(
 
 
 # ---------------------------------------------------------------------------
+# Notify
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{event_id}/notify")
+async def notify_get(
+    event_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    event = db.get(Event, event_id)
+    if event is None:
+        return RedirectResponse("/events", status_code=302)
+
+    counts_q = (
+        db.query(Attendance.status, func.count(Attendance.id))
+        .filter(Attendance.event_id == event_id)
+        .group_by(Attendance.status)
+        .all()
+    )
+    status_counts = dict(counts_q)
+
+    return render(
+        request,
+        "events/notify.html",
+        {
+            "user": user,
+            "event": event,
+            "templates": TEMPLATES,
+            "status_counts": status_counts,
+        },
+    )
+
+
+@router.post("/{event_id}/notify")
+async def notify_post(
+    event_id: int,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    event = db.get(Event, event_id)
+    if event is None:
+        return RedirectResponse("/events", status_code=302)
+
+    form = await request.form()
+    title = (form.get("title") or "").strip()
+    body = (form.get("body") or "").strip()
+    tag = (form.get("tag") or "direct").strip()
+    recipients_raw = form.getlist("recipients")
+    channels_raw = form.getlist("channels")
+
+    recipient_statuses = None if "all" in recipients_raw else recipients_raw or None
+    admin_channels = channels_raw if channels_raw else ["inapp"]
+
+    if not title or not body:
+        return RedirectResponse(f"/events/{event_id}/notify", status_code=302)
+
+    result = send_notifications(
+        event=event,
+        title=title,
+        body=body,
+        tag=tag,
+        recipient_statuses=recipient_statuses,
+        admin_channels=admin_channels,
+        db=db,
+        background_tasks=background_tasks,
+    )
+
+    return RedirectResponse(
+        f"/events/{event_id}?notified={result['queued']}",
+        status_code=302,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Detail
 # ---------------------------------------------------------------------------
 
@@ -258,7 +340,7 @@ async def event_detail(
 
     summary = get_event_attendance_summary(db, event_id)
 
-    return templates.TemplateResponse(request, "events/detail.html", {
+    return render(request, "events/detail.html", {
         "user": user,
         "event": event,
         "summary": summary,
@@ -283,7 +365,7 @@ async def event_edit_get(
 
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {
+    return render(request, "events/form.html", {
         "user": user,
         "event": event,
         "seasons": seasons,
@@ -320,7 +402,7 @@ async def event_edit_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -332,7 +414,7 @@ async def event_edit_post(
         e_date = _parse_date(event_date)
         e_time = _parse_time(event_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -341,7 +423,7 @@ async def event_edit_post(
         }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -353,7 +435,7 @@ async def event_edit_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,

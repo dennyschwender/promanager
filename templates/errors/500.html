@@ -2,8 +2,8 @@
 {% block title %}500 — Server Error{% endblock %}
 {% block content %}
 <article>
-  <h2>500 — Internal Server Error</h2>
-  <p>Something went wrong on our end. Please try again later.</p>
-  <a href="/dashboard" role="button">Go to Dashboard</a>
+  <h2>{{ t('errors.500_title') }}</h2>
+  <p>{{ t('errors.500_body') }}</p>
+  <a href="/dashboard" role="button">{{ t('errors.back_home') }}</a>
 </article>
 {% endblock %}

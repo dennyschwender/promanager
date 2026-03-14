@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-container">
-<h2>{% if season %}Edit Season: {{ season.name }}{% else %}New Season{% endif %}</h2>
+<h2>{% if season %}{{ t('seasons.edit_title') }}: {{ season.name }}{% else %}{{ t('seasons.new_title') }}{% endif %}</h2>
 {% if error %}
   <div class="alert alert-error">{{ error }}</div>
 {% endif %}
@@ -29,8 +29,8 @@
     </label>
   </div>
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">{% if season %}Save Changes{% else %}Create Season{% endif %}</button>
-    <a href="/seasons" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ t('seasons.save') }}</button>
+    <a href="/seasons" class="btn btn-outline">{{ t('seasons.back') }}</a>
   </div>
 </form>
 </div>

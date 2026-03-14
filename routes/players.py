@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.player import Player
 from models.player_contact import PlayerContact
 from models.player_phone import PlayerPhone
@@ -173,7 +173,7 @@ async def players_list(
     players = q.order_by(Player.last_name, Player.first_name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return templates.TemplateResponse(request, "players/list.html", {
+    return render(request, "players/list.html", {
         "user": user,
         "players": players,
         "teams": teams,
@@ -194,7 +194,7 @@ async def player_new_get(
 ):
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
-    return templates.TemplateResponse(request, "players/form.html", {
+    return render(request, "players/form.html", {
         "user": user,
         "player": None,
         "teams": teams,
@@ -222,7 +222,7 @@ async def player_new_post(
     users = db.query(User).order_by(User.username).all()
 
     if not first_name or not last_name:
-        return templates.TemplateResponse(request, "players/form.html", {
+        return render(request, "players/form.html", {
             "user": user,
             "player": None,
             "teams": teams,
@@ -274,7 +274,7 @@ async def player_import_get(
     context_team = db.get(Team, team_id)
     if context_team is None:
         return RedirectResponse("/teams", status_code=302)
-    return templates.TemplateResponse(request, "players/import.html", {
+    return render(request, "players/import.html", {
         "user": user,
         "context_team": context_team,
         "columns": IMPORT_COLUMNS,
@@ -301,7 +301,7 @@ async def player_import_post(
     result: ImportResult | None = None
 
     def _render(status: int = 200):
-        return templates.TemplateResponse(request, "players/import.html", {
+        return render(request, "players/import.html", {
             "user": user,
             "context_team": context_team,
             "columns": IMPORT_COLUMNS,
@@ -371,7 +371,7 @@ async def player_detail(
 
     history = get_player_attendance_history(db, player_id)
 
-    return templates.TemplateResponse(request, "players/detail.html", {
+    return render(request, "players/detail.html", {
         "user": user,
         "player": player,
         "history": history,
@@ -396,7 +396,7 @@ async def player_edit_get(
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
-    return templates.TemplateResponse(request, "players/form.html", {
+    return render(request, "players/form.html", {
         "user": user,
         "player": player,
         "teams": teams,
@@ -430,7 +430,7 @@ async def player_edit_post(
     users = db.query(User).order_by(User.username).all()
 
     if not first_name or not last_name:
-        return templates.TemplateResponse(request, "players/form.html", {
+        return render(request, "players/form.html", {
             "user": user,
             "player": player,
             "teams": teams,
