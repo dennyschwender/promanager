@@ -59,7 +59,7 @@ def test_t_unsupported_locale_falls_back_to_en():
     assert t("nav.dashboard", "xx") == t("nav.dashboard", "en")
 
 
-def test_t_missing_key_raises_in_debug(tmp_path, monkeypatch):
+def test_t_missing_key_raises_in_debug():
     t = _make_t(debug=True)
     with pytest.raises(KeyError):
         t("nav.nonexistent_key_xyz", "en")
@@ -73,10 +73,14 @@ def test_t_missing_key_falls_back_to_en_in_production():
     importlib.reload(_cfg)
     import app.i18n as _i18n
     importlib.reload(_i18n)
-    # Mutate the live _translations AFTER reload so reload doesn't undo it
+    original = _i18n._translations["it"].get("nav", {}).get("dashboard")
     _i18n._translations["it"].setdefault("nav", {}).pop("dashboard", None)
-    result = _i18n.t("nav.dashboard", "it")
-    assert result == "Dashboard"  # fell back to en value
+    try:
+        result = _i18n.t("nav.dashboard", "it")
+        assert result == "Dashboard"  # fell back to en value
+    finally:
+        if original is not None:
+            _i18n._translations["it"].setdefault("nav", {})["dashboard"] = original
 
 
 def test_t_missing_key_returns_bare_key_when_en_also_missing():
@@ -85,11 +89,18 @@ def test_t_missing_key_returns_bare_key_when_en_also_missing():
     import app.i18n as _i18n
     os.environ["DEBUG"] = "false"
     importlib.reload(_i18n)
-    # Remove key from both it and en
+    original_it = _i18n._translations["it"].get("nav", {}).get("dashboard")
+    original_en = _i18n._translations["en"].get("nav", {}).get("dashboard")
     _i18n._translations["it"].setdefault("nav", {}).pop("dashboard", None)
     _i18n._translations["en"].setdefault("nav", {}).pop("dashboard", None)
-    result = _i18n.t("nav.dashboard", "it")
-    assert result == "nav.dashboard"
+    try:
+        result = _i18n.t("nav.dashboard", "it")
+        assert result == "nav.dashboard"
+    finally:
+        if original_it is not None:
+            _i18n._translations["it"].setdefault("nav", {})["dashboard"] = original_it
+        if original_en is not None:
+            _i18n._translations["en"].setdefault("nav", {})["dashboard"] = original_en
 
 
 # ---------------------------------------------------------------------------
