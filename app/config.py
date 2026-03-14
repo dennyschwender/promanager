@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # Set to true when serving over HTTPS (marks session cookie Secure)
     COOKIE_SECURE: bool = False
 
+    # ── Web Push (VAPID) ──────────────────────────────────────────────────
+    # Generate with: python scripts/generate_vapid.py
+    VAPID_PUBLIC_KEY: str = ""
+    VAPID_PRIVATE_KEY: str = ""
+    # Must be a mailto: or https: URI — required by the Web Push protocol
+    VAPID_SUBJECT: str = "mailto:admin@promanager.local"
+
     @field_validator("SMTP_PORT")
     @classmethod
     def smtp_port_range(cls, v: int) -> int:
