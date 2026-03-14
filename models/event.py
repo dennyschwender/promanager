@@ -75,6 +75,12 @@ class Event(Base):
     attendances: Mapped[list[Attendance]] = relationship(
         "Attendance", back_populates="event", lazy="select", cascade="all, delete-orphan"
     )
+    notifications: Mapped[list[Notification]] = relationship(
+        "Notification",
+        back_populates="event",
+        cascade="save-update, merge",  # NOT delete-orphan — DB uses ondelete="SET NULL"
+        lazy="select",
+    )
 
     def __repr__(self) -> str:
         return (

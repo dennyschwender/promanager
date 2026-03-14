@@ -69,6 +69,24 @@ class Player(Base):
     attendances: Mapped[list[Attendance]] = relationship(
         "Attendance", back_populates="player", lazy="select"
     )
+    notifications: Mapped[list[Notification]] = relationship(
+        "Notification",
+        back_populates="player",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    notification_preferences: Mapped[list[NotificationPreference]] = relationship(
+        "NotificationPreference",
+        back_populates="player",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    web_push_subscriptions: Mapped[list[WebPushSubscription]] = relationship(
+        "WebPushSubscription",
+        back_populates="player",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
 
     # ── Helpers ────────────────────────────────────────────────────────────
     @property

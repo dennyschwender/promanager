@@ -2,6 +2,8 @@
 
 from .attendance import Attendance
 from .event import Event
+from .notification import Notification
+from .notification_preference import NotificationPreference
 from .player import Player
 from .player_contact import PlayerContact
 from .player_phone import PlayerPhone
@@ -10,6 +12,7 @@ from .season import Season
 from .team import Team
 from .team_recurring_schedule import TeamRecurringSchedule
 from .user import User
+from .web_push_subscription import WebPushSubscription
 
 __all__ = [
     "User",
@@ -22,4 +25,7 @@ __all__ = [
     "Event",
     "Attendance",
     "TeamRecurringSchedule",
+    "Notification",
+    "NotificationPreference",
+    "WebPushSubscription",
 ]
