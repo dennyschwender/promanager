@@ -14,7 +14,7 @@ router = APIRouter(tags=["locale"])
 
 def _safe_next(next_url: str) -> str:
     """Return next_url only if it is a safe relative path."""
-    if next_url and next_url.startswith("/") and "://" not in next_url:
+    if next_url and next_url.startswith("/") and not next_url.startswith("//") and "://" not in next_url:
         return next_url
     return "/dashboard"
 

@@ -160,7 +160,8 @@
     "title": "Notifications",
     "no_notifications": "Aucune notification.",
     "mark_read": "Tout marquer comme lu",
-    "inbox": "Boîte de réception"
+    "inbox": "Boîte de réception",
+    "new_notification": "Vous avez une nouvelle notification"
   },
   "common": {
     "save": "Enregistrer",

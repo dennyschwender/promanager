@@ -160,7 +160,8 @@
     "title": "Notifiche",
     "no_notifications": "Nessuna notifica.",
     "mark_read": "Segna tutto come letto",
-    "inbox": "Posta in arrivo"
+    "inbox": "Posta in arrivo",
+    "new_notification": "Hai una nuova notifica"
   },
   "common": {
     "save": "Salva",

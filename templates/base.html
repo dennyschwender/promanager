@@ -110,7 +110,7 @@
           bell.appendChild(span);
         }
         document.querySelector(".notif-badge").textContent = data.unread_count;
-        showToast("You have a new notification");
+        showToast({{ t('notifications.new_notification')|tojson }});
       } else if (badge) {
         badge.remove();
       }

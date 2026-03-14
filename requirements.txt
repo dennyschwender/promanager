@@ -11,4 +11,4 @@ itsdangerous==2.2.0
 pywebpush~=2.0
 openpyxl>=3.1.0
 slowapi==0.1.9
-python-i18n>=0.3.9
+python-i18n[yaml]>=0.3.9

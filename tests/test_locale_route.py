@@ -44,6 +44,16 @@ def test_set_locale_rejects_external_next(client):
     assert resp.headers["location"] == "/dashboard"
 
 
+def test_set_locale_rejects_protocol_relative_next(client):
+    resp = client.post(
+        "/set-locale",
+        data={"locale": "it", "next": "//evil.com"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert resp.headers["location"] == "/dashboard"
+
+
 def test_set_locale_updates_user_db(admin_client, admin_user, db):
     resp = admin_client.post(
         "/set-locale",

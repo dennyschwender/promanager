@@ -160,7 +160,8 @@
     "title": "Benachrichtigungen",
     "no_notifications": "Keine Benachrichtigungen.",
     "mark_read": "Alle als gelesen markieren",
-    "inbox": "Posteingang"
+    "inbox": "Posteingang",
+    "new_notification": "Sie haben eine neue Benachrichtigung"
   },
   "common": {
     "save": "Speichern",

@@ -160,7 +160,8 @@
     "title": "Notifications",
     "no_notifications": "No notifications.",
     "mark_read": "Mark all as read",
-    "inbox": "Inbox"
+    "inbox": "Inbox",
+    "new_notification": "You have a new notification"
   },
   "common": {
     "save": "Save",
