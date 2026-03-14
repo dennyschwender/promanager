@@ -9,52 +9,20 @@ from typing import AsyncIterator
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-import app.database as _db_mod
 from app.config import settings
 from app.csrf import generate_csrf_token
 from app.database import init_db
 from app.limiter import limiter
+from app.session import COOKIE_NAME, get_user_from_cookie as _get_user_from_cookie
 from app.templates import templates
 from routes._auth_helpers import NotAuthenticated, NotAuthorized
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Session / auth helpers
-# ---------------------------------------------------------------------------
-COOKIE_NAME = "session_user_id"
-_signer = TimestampSigner(settings.SECRET_KEY)
-
-
-def _get_user_from_cookie(request: Request):
-    """Return the User ORM object for the signed session cookie, or None."""
-    token = request.cookies.get(COOKIE_NAME)
-    if not token:
-        return None
-    try:
-        raw: bytes = _signer.unsign(token, max_age=60 * 60 * 24 * 7)  # 7 days
-        user_id = int(raw.decode())
-    except (BadSignature, SignatureExpired, ValueError):
-        return None
-
-    # Late import to avoid circular imports at module load time
-    from models.user import User  # noqa: PLC0415
-
-    db = _db_mod.SessionLocal()
-    try:
-        user = db.get(User, user_id)
-        if user is None or not user.is_active:
-            return None
-        return user
-    finally:
-        db.close()
-
 
 # ---------------------------------------------------------------------------
 # Middleware — inject request.state.user
