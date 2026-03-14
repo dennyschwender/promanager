@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from app.config import settings
+from app.middleware.locale import LocaleMiddleware
 from app.csrf import generate_csrf_token
 from app.database import init_db
 from app.limiter import limiter
@@ -111,7 +112,8 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # ── Middleware ────────────────────────────────────────────────────────
-    app.add_middleware(AuthMiddleware)
+    app.add_middleware(LocaleMiddleware)   # added first → executes second (inner)
+    app.add_middleware(AuthMiddleware)     # added second → executes first (outer)
 
     # ── Routers ───────────────────────────────────────────────────────────
     # Phase 2 will create these modules; we guard with try/except so the app
