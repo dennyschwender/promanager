@@ -5,8 +5,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
@@ -24,6 +25,8 @@ from services.attendance_service import (
     sync_attendance_defaults,
 )
 from services.email_service import send_event_reminder
+from services.notification_service import send_notifications
+from services.notification_templates import TEMPLATES
 from services.schedule_service import advance_date as _advance_date
 
 router = APIRouter()
@@ -238,6 +241,85 @@ async def event_new_post(
 
     db.commit()
     return RedirectResponse(f"/events/{first_event.id}", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Notify
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{event_id}/notify")
+async def notify_get(
+    event_id: int,
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    event = db.get(Event, event_id)
+    if event is None:
+        return RedirectResponse("/events", status_code=302)
+
+    counts_q = (
+        db.query(Attendance.status, func.count(Attendance.id))
+        .filter(Attendance.event_id == event_id)
+        .group_by(Attendance.status)
+        .all()
+    )
+    status_counts = dict(counts_q)
+
+    return templates.TemplateResponse(
+        request,
+        "events/notify.html",
+        {
+            "user": user,
+            "event": event,
+            "templates": TEMPLATES,
+            "status_counts": status_counts,
+        },
+    )
+
+
+@router.post("/{event_id}/notify")
+async def notify_post(
+    event_id: int,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    event = db.get(Event, event_id)
+    if event is None:
+        return RedirectResponse("/events", status_code=302)
+
+    form = await request.form()
+    title = (form.get("title") or "").strip()
+    body = (form.get("body") or "").strip()
+    tag = (form.get("tag") or "direct").strip()
+    recipients_raw = form.getlist("recipients")
+    channels_raw = form.getlist("channels")
+
+    recipient_statuses = None if "all" in recipients_raw else recipients_raw or None
+    admin_channels = channels_raw if channels_raw else ["inapp"]
+
+    if not title or not body:
+        return RedirectResponse(f"/events/{event_id}/notify", status_code=302)
+
+    result = send_notifications(
+        event=event,
+        title=title,
+        body=body,
+        tag=tag,
+        recipient_statuses=recipient_statuses,
+        admin_channels=admin_channels,
+        db=db,
+        background_tasks=background_tasks,
+    )
+
+    return RedirectResponse(
+        f"/events/{event_id}?notified={result['queued']}",
+        status_code=302,
+    )
 
 
 # ---------------------------------------------------------------------------
