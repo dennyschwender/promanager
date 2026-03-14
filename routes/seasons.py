@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.season import Season
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
@@ -37,7 +37,7 @@ async def seasons_list(
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
-    return templates.TemplateResponse(request, "seasons/list.html", {"user": user, "seasons": seasons})
+    return render(request, "seasons/list.html", {"user": user, "seasons": seasons})
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ async def seasons_list(
 
 @router.get("/new")
 async def season_new_get(request: Request, user: User = Depends(require_admin)):
-    return templates.TemplateResponse(request, "seasons/form.html", {
+    return render(request, "seasons/form.html", {
         "user": user, "season": None, "error": None,
     })
 
@@ -63,7 +63,7 @@ async def season_new_post(
     db: Session = Depends(get_db),
 ):
     if not name.strip():
-        return templates.TemplateResponse(request, "seasons/form.html", {
+        return render(request, "seasons/form.html", {
             "user": user, "season": None, "error": "Season name is required.",
         }, status_code=400)
 
@@ -71,7 +71,7 @@ async def season_new_post(
         s_date = _parse_date(start_date)
         e_date = _parse_date(end_date)
     except ValueError:
-        return templates.TemplateResponse(request, "seasons/form.html", {
+        return render(request, "seasons/form.html", {
             "user": user, "season": None, "error": "Invalid date format. Use YYYY-MM-DD.",
         }, status_code=400)
 
@@ -97,7 +97,7 @@ async def season_edit_get(
     season = db.get(Season, season_id)
     if season is None:
         return RedirectResponse("/seasons", status_code=302)
-    return templates.TemplateResponse(request, "seasons/form.html", {
+    return render(request, "seasons/form.html", {
         "user": user, "season": season, "error": None,
     })
 
@@ -118,7 +118,7 @@ async def season_edit_post(
         return RedirectResponse("/seasons", status_code=302)
 
     if not name.strip():
-        return templates.TemplateResponse(request, "seasons/form.html", {
+        return render(request, "seasons/form.html", {
             "user": user, "season": season, "error": "Season name is required.",
         }, status_code=400)
 
@@ -126,7 +126,7 @@ async def season_edit_post(
         s_date = _parse_date(start_date)
         e_date = _parse_date(end_date)
     except ValueError:
-        return templates.TemplateResponse(request, "seasons/form.html", {
+        return render(request, "seasons/form.html", {
             "user": user, "season": season, "error": "Invalid date format. Use YYYY-MM-DD.",
         }, status_code=400)
 

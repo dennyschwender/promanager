@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.season import Season
@@ -73,7 +73,7 @@ async def events_list(
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return templates.TemplateResponse(request, "events/list.html", {
+    return render(request, "events/list.html", {
         "user": user,
         "upcoming": upcoming,
         "past": past,
@@ -97,7 +97,7 @@ async def event_new_get(
 ):
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {
+    return render(request, "events/form.html", {
         "user": user,
         "event": None,
         "seasons": seasons,
@@ -132,7 +132,7 @@ async def event_new_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -146,7 +146,7 @@ async def event_new_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -155,7 +155,7 @@ async def event_new_post(
         }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": None,
             "seasons": seasons,
@@ -171,7 +171,7 @@ async def event_new_post(
         try:
             r_end = _parse_date(recurrence_end_date)
         except ValueError:
-            return templates.TemplateResponse(
+            return render(
                 request, "events/form.html",
                 {"user": user, "event": None,
                  "seasons": seasons, "teams": teams,
@@ -179,7 +179,7 @@ async def event_new_post(
                 status_code=400,
             )
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -187,7 +187,7 @@ async def event_new_post(
             status_code=400,
         )
     if recurring and r_end is None:
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -195,7 +195,7 @@ async def event_new_post(
             status_code=400,
         )
     if recurring and r_end <= e_date:
-        return templates.TemplateResponse(
+        return render(
             request, "events/form.html",
             {"user": user, "event": None,
              "seasons": seasons, "teams": teams,
@@ -267,7 +267,7 @@ async def notify_get(
     )
     status_counts = dict(counts_q)
 
-    return templates.TemplateResponse(
+    return render(
         request,
         "events/notify.html",
         {
@@ -340,7 +340,7 @@ async def event_detail(
 
     summary = get_event_attendance_summary(db, event_id)
 
-    return templates.TemplateResponse(request, "events/detail.html", {
+    return render(request, "events/detail.html", {
         "user": user,
         "event": event,
         "summary": summary,
@@ -365,7 +365,7 @@ async def event_edit_get(
 
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "events/form.html", {
+    return render(request, "events/form.html", {
         "user": user,
         "event": event,
         "seasons": seasons,
@@ -402,7 +402,7 @@ async def event_edit_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -414,7 +414,7 @@ async def event_edit_post(
         e_date = _parse_date(event_date)
         e_time = _parse_time(event_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -423,7 +423,7 @@ async def event_edit_post(
         }, status_code=400)
 
     if e_date is None:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,
@@ -435,7 +435,7 @@ async def event_edit_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return templates.TemplateResponse(request, "events/form.html", {
+        return render(request, "events/form.html", {
             "user": user,
             "event": event,
             "seasons": seasons,

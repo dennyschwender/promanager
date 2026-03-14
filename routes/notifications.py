@@ -14,7 +14,7 @@ from app.config import settings
 from app.csrf import require_csrf
 from app.database import get_db
 from app.session import get_user_from_cookie
-from app.templates import templates
+from app.templates import render
 from models.notification import Notification
 from models.notification_preference import CHANNELS, NotificationPreference
 from models.player import Player
@@ -105,7 +105,7 @@ async def inbox(
             .order_by(Notification.created_at.desc())
             .all()
         )
-    return templates.TemplateResponse(
+    return render(
         request,
         "notifications/inbox.html",
         {"user": user, "notifications": notifications},

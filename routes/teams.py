@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
 from app.database import get_db
-from app.templates import templates
+from app.templates import render
 from models.season import Season
 from models.team import Team
 from models.team_recurring_schedule import TeamRecurringSchedule
@@ -122,7 +122,7 @@ async def teams_list(
     db: Session = Depends(get_db),
 ):
     teams = db.query(Team).order_by(Team.name).all()
-    return templates.TemplateResponse(request, "teams/list.html", {"user": user, "teams": teams})
+    return render(request, "teams/list.html", {"user": user, "teams": teams})
 
 
 # ---------------------------------------------------------------------------
@@ -137,7 +137,7 @@ async def team_new_get(
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
-    return templates.TemplateResponse(request, "teams/form.html", {
+    return render(request, "teams/form.html", {
         "user": user,
         "team": None,
         "seasons": seasons,
@@ -162,7 +162,7 @@ async def team_new_post(
 ):
     if not name.strip():
         seasons = db.query(Season).order_by(Season.name).all()
-        return templates.TemplateResponse(request, "teams/form.html", {
+        return render(request, "teams/form.html", {
             "user": user,
             "team": None,
             "seasons": seasons,
@@ -204,7 +204,7 @@ async def team_edit_get(
         return RedirectResponse("/teams", status_code=302)
 
     seasons = db.query(Season).order_by(Season.name).all()
-    return templates.TemplateResponse(request, "teams/form.html", {
+    return render(request, "teams/form.html", {
         "user": user,
         "team": team,
         "seasons": seasons,
@@ -238,7 +238,7 @@ async def team_edit_post(
 
     def _render(error=None, confirm_mode=False, flagged=None,
                 schedule_rows=None, schedules_json="", saved=False):
-        return templates.TemplateResponse(request, "teams/form.html", {
+        return render(request, "teams/form.html", {
             "user": user,
             "team": team,
             "seasons": seasons,

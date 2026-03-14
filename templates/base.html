@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="{{ current_locale }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,16 +27,16 @@
   <ul>
     {% if user %}
       {% set path = request.url.path %}
-      <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">Dashboard</a></li>
-      <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">Events</a></li>
-      <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">Players</a></li>
-      <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">Teams</a></li>
+      <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
+      <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
+      <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
+      <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
       {% if user.is_admin %}
-        <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">Seasons</a></li>
-        <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">Reports</a></li>
+        <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
+        <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
       {% endif %}
       <li>
-        <a href="/notifications" class="notif-bell" title="Notifications" aria-label="Notifications">
+        <a href="/notifications" class="notif-bell" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}">
           🔔
           {% if request.state.unread_count > 0 %}
             <span class="notif-badge">{{ request.state.unread_count }}</span>
@@ -48,17 +48,28 @@
           <summary aria-haspopup="listbox" role="link">{{ user.username }}</summary>
           <ul role="listbox">
             {% if user.is_admin %}
-              <li><a href="/auth/register">Register User</a></li>
+              <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
               <li><hr style="margin:.25rem 0;"></li>
             {% endif %}
-            <li><a href="/profile">Profile</a></li>
-            <li><a href="/auth/logout">Sign Out</a></li>
+            <li><a href="/profile">{{ t('nav.profile') }}</a></li>
+            <li><a href="/auth/logout">{{ t('nav.sign_out') }}</a></li>
           </ul>
         </details>
       </li>
     {% else %}
-      <li><a href="/auth/login" role="button" class="outline">Login</a></li>
+      <li><a href="/auth/login" role="button" class="outline">{{ t('nav.login') }}</a></li>
     {% endif %}
+    <li>
+      <form method="post" action="/set-locale" style="display:inline;margin:0;">
+        <input type="hidden" name="next" value="{{ request.url.path }}">
+        <select name="locale" onchange="this.form.submit()" style="margin:0;padding:.2rem .4rem;font-size:.85rem;width:auto;">
+          <option value="en" {% if current_locale == 'en' %}selected{% endif %}>EN</option>
+          <option value="it" {% if current_locale == 'it' %}selected{% endif %}>IT</option>
+          <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>FR</option>
+          <option value="de" {% if current_locale == 'de' %}selected{% endif %}>DE</option>
+        </select>
+      </form>
+    </li>
   </ul>
 </nav>
 
@@ -72,10 +83,10 @@
     <span>⬡ ProManager</span>
     {% if user %}
     <span>
-      <a href="/dashboard">Dashboard</a> ·
-      <a href="/events">Events</a> ·
-      <a href="/players">Players</a>
-      {% if user.is_admin %} · <a href="/seasons">Seasons</a>{% endif %}
+      <a href="/dashboard">{{ t('nav.dashboard') }}</a> ·
+      <a href="/events">{{ t('nav.events') }}</a> ·
+      <a href="/players">{{ t('nav.players') }}</a>
+      {% if user.is_admin %} · <a href="/seasons">{{ t('nav.seasons') }}</a>{% endif %}
     </span>
     {% endif %}
     <span>© {{ now().year if now is defined else '2026' }}</span>

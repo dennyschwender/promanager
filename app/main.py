@@ -20,7 +20,7 @@ from app.csrf import generate_csrf_token
 from app.database import init_db
 from app.limiter import limiter
 from app.session import COOKIE_NAME, get_user_from_cookie as _get_user_from_cookie
-from app.templates import templates
+from app.templates import render
 from routes._auth_helpers import NotAuthenticated, NotAuthorized
 
 logger = logging.getLogger(__name__)
@@ -179,7 +179,7 @@ def create_app() -> FastAPI:
             push_device_count = db.query(WebPushSubscription).filter(
                 WebPushSubscription.player_id == current_player.id
             ).count()
-        return templates.TemplateResponse(
+        return render(
             request,
             "auth/profile.html",
             {
@@ -211,7 +211,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(NotAuthorized)
     async def not_authorized_handler(request: Request, exc: NotAuthorized) -> HTMLResponse:
         try:
-            return templates.TemplateResponse(
+            return render(
                 request,
                 "errors/403.html",
                 {"user": request.state.user},
@@ -224,7 +224,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(404)
     async def not_found_handler(request: Request, exc) -> HTMLResponse:
         try:
-            return templates.TemplateResponse(
+            return render(
                 request,
                 "errors/404.html",
                 {"user": request.state.user},
@@ -237,7 +237,7 @@ def create_app() -> FastAPI:
     async def server_error_handler(request: Request, exc) -> HTMLResponse:
         logger.exception("Internal server error: %s", exc)
         try:
-            return templates.TemplateResponse(
+            return render(
                 request,
                 "errors/500.html",
                 {"user": request.state.user},
