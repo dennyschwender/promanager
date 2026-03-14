@@ -32,7 +32,8 @@
     "push_remove_all": "Remove all devices",
     "push_not_configured": "Web Push is not configured on this server.",
     "push_active": "Active on %{count} device(s).",
-    "push_not_enabled": "Not enabled on this device."
+    "push_not_enabled": "Not enabled on this device.",
+    "push_enabled": "Enabled on this device."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -88,7 +88,7 @@
             method: "POST", body,
           });
           if (resp.ok) {
-            document.getElementById("push-status").textContent = "Enabled on this device.";
+            document.getElementById("push-status").textContent = {{ t('auth.push_enabled')|tojson }};
           } else {
             alert("Failed to subscribe. Please try again.");
           }
