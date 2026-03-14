@@ -26,7 +26,13 @@
     "save_preferences": "Save preferences",
     "notification_preferences": "Notification Preferences",
     "language_preference": "Language",
-    "register_submit": "Register"
+    "register_submit": "Register",
+    "web_push_title": "Browser Notifications (Web Push)",
+    "push_enable": "Enable on this device",
+    "push_remove_all": "Remove all devices",
+    "push_not_configured": "Web Push is not configured on this server.",
+    "push_active": "Active on %{count} device(s).",
+    "push_not_enabled": "Not enabled on this device."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -70,7 +76,9 @@
     "confirm_delete": "Delete this event?",
     "new_title": "New Event",
     "edit_title": "Edit Event",
-    "save": "Save Event"
+    "save": "Save Event",
+    "attendance_summary": "Attendance Summary",
+    "send_reminders": "Send Reminders"
   },
   "attendance": {
     "title": "Mark Attendance",
@@ -81,7 +89,12 @@
     "player": "Player",
     "status": "Status",
     "notes": "Notes",
-    "back": "Back to Event"
+    "back": "Back to Event",
+    "no_players": "No players linked to this event's team yet.",
+    "no_profile": "You have no player profile linked to your account. Contact an admin.",
+    "notes_placeholder": "Note",
+    "attendance_summary": "Attendance Summary",
+    "send_reminders": "Send Reminders"
   },
   "players": {
     "title": "Players",
@@ -161,7 +174,8 @@
     "new_season": "+ New Season",
     "new_team": "+ New Team",
     "new_player": "+ New Player",
-    "new_event": "+ New Event"
+    "new_event": "+ New Event",
+    "register_user": "Register User"
   },
   "errors": {
     "404_title": "Page Not Found",

@@ -33,11 +33,11 @@
           <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <select name="status" class="select-sm">
-              {% for s in ["present","absent","maybe","unknown"] %}
-                <option value="{{ s }}" {% if att.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+              {% for s, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe","Maybe"),("unknown", t('attendance.status_unknown'))] %}
+                <option value="{{ s }}" {% if att.status == s %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
-            <input type="text" name="note" placeholder="Note" value="{{ att.note or "" }}" class="input-sm">
+            <input type="text" name="note" placeholder="{{ t('attendance.notes_placeholder') }}" value="{{ att.note or "" }}" class="input-sm">
             <button type="submit" class="btn btn-sm btn-primary">{{ t('attendance.save') }}</button>
           </form>
         </td>
@@ -46,7 +46,7 @@
     </tbody>
   </table>
   {% else %}
-    <p>No players linked to this event's team yet.</p>
+    <p>{{ t('attendance.no_players') }}</p>
   {% endif %}
 {% else %}
   {% if my_players %}
@@ -57,7 +57,7 @@
         <form method="post" action="/attendance/{{ event.id }}/{{ player.id }}">
           <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
           <div class="radio-group">
-            {% for s, label in [("present","Present ✓"),("absent","Absent ✗"),("maybe","Maybe ?"),("unknown","No response")] %}
+            {% for s, label in [("present", t('attendance.status_attend') ~ " ✓"),("absent", t('attendance.status_absent') ~ " ✗"),("maybe","Maybe ?"),("unknown", t('attendance.status_unknown'))] %}
             <label class="radio-option">
               <input type="radio" name="status" value="{{ s }}"
                      {% if att and att.status == s %}checked{% elif not att and s == "unknown" %}checked{% endif %}>
@@ -73,7 +73,7 @@
       </div>
     {% endfor %}
   {% else %}
-    <div class="alert alert-warning">You have no player profile linked to your account. Contact an admin.</div>
+    <div class="alert alert-warning">{{ t('attendance.no_profile') }}</div>
   {% endif %}
 {% endif %}
 

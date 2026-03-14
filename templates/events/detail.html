@@ -69,7 +69,7 @@
     <a href="/events/{{ event.id }}/notify" class="btn btn-sm btn-outline">{{ t('events.notify_players') }}</a>
     <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-outline">Send Reminders</button>
+      <button type="submit" class="btn btn-outline">{{ t('events.send_reminders') }}</button>
     </form>
     <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
           onsubmit="return confirm('{{ t('events.confirm_delete') }}')">
@@ -82,9 +82,9 @@
 <p><a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a></p>
 
 {% if event.presence_type != "no_registration" %}
-<h3>Attendance Summary</h3>
+<h3>{{ t('events.attendance_summary') }}</h3>
 <div class="attendance-summary">
-  {% for bucket, label in [("present","Present"),("absent","Absent"),("maybe","Maybe"),("unknown","Unknown")] %}
+  {% for bucket, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe","Maybe"),("unknown", t('attendance.status_unknown'))] %}
   <div>
     <span class="badge badge-{{ bucket }}">{{ label }} ({{ summary[bucket]|length }})</span>
     <ul>

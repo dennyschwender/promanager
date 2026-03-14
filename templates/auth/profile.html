@@ -35,19 +35,19 @@
 
   <!-- Web Push subscription -->
   <div style="margin-top:1.5rem;">
-    <h4 style="font-size:1rem;">Browser Notifications (Web Push)</h4>
+    <h4 style="font-size:1rem;">{{ t('auth.web_push_title') }}</h4>
     {% if vapid_public_key %}
       <p id="push-status" class="text-muted" style="font-size:.88rem;">
-        {% if push_device_count > 0 %}Active on {{ push_device_count }} device(s).{% else %}Not enabled on this device.{% endif %}
+        {% if push_device_count > 0 %}{{ t('auth.push_active', count=push_device_count) }}{% else %}{{ t('auth.push_not_enabled') }}{% endif %}
       </p>
       <meta name="csrf-token" content="{{ request.state.csrf_token }}">
       <button type="button" class="btn btn-sm btn-outline" id="enable-push-btn">
-        Enable on this device
+        {{ t('auth.push_enable') }}
       </button>
       {% if push_device_count > 0 %}
         <form method="post" action="/notifications/webpush/unsubscribe-all" style="display:inline;">
           <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-          <button type="submit" class="btn btn-sm btn-danger">Remove all devices</button>
+          <button type="submit" class="btn btn-sm btn-danger">{{ t('auth.push_remove_all') }}</button>
         </form>
       {% endif %}
       <script>
@@ -96,7 +96,7 @@
       })();
       </script>
     {% else %}
-      <p class="text-muted" style="font-size:.88rem;">Web Push is not configured on this server.</p>
+      <p class="text-muted" style="font-size:.88rem;">{{ t('auth.push_not_configured') }}</p>
     {% endif %}
   </div>
 </section>
