@@ -37,6 +37,32 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request.state.csrf_token = generate_csrf_token(
             request.cookies.get(COOKIE_NAME, "")
         )
+        # Embed unread notification count for the bell badge
+        request.state.unread_count = 0
+        if request.state.user is not None:
+            from models.notification import Notification  # noqa: PLC0415
+            from models.player import Player  # noqa: PLC0415
+            from app import database as _db_mod  # noqa: PLC0415
+            db = _db_mod.SessionLocal()
+            try:
+                # Find player(s) linked to this user
+                player_ids = [
+                    pid for (pid,) in db.query(Player.id).filter(
+                        Player.user_id == request.state.user.id,
+                        Player.is_active.is_(True),
+                    ).all()
+                ]
+                if player_ids:
+                    request.state.unread_count = (
+                        db.query(Notification)
+                        .filter(
+                            Notification.player_id.in_(player_ids),
+                            Notification.is_read.is_(False),
+                        )
+                        .count()
+                    )
+            finally:
+                db.close()
         response = await call_next(request)
         return response
 
