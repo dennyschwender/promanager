@@ -144,6 +144,10 @@ def create_app() -> FastAPI:
     except ModuleNotFoundError:
         logger.debug("Notifications router not found — skipping.")
 
+    # ── Locale switcher ───────────────────────────────────────────────────
+    from routes.locale import router as _locale_router  # noqa: PLC0415
+    app.include_router(_locale_router)
+
     # ── Profile page ──────────────────────────────────────────────────────
     from routes._auth_helpers import require_login as _require_login  # noqa: PLC0415
     from app.database import get_db as _get_db  # noqa: PLC0415
