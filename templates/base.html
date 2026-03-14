@@ -8,6 +8,15 @@
   <link rel="stylesheet" href="/static/css/flatpickr.min.css">
   <link rel="stylesheet" href="/static/css/main.css">
   {% block head_extra %}{% endblock %}
+  <style>
+  .notif-bell { position: relative; text-decoration: none; font-size: 1.1rem; }
+  .notif-badge {
+    position: absolute; top: -6px; right: -8px;
+    background: #ef4444; color: #fff;
+    font-size: .65rem; font-weight: 700; line-height: 1;
+    padding: 2px 4px; border-radius: 10px; white-space: nowrap;
+  }
+  </style>
 </head>
 <body>
 
@@ -26,6 +35,14 @@
         <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">Seasons</a></li>
         <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">Reports</a></li>
       {% endif %}
+      <li>
+        <a href="/notifications" class="notif-bell" title="Notifications" aria-label="Notifications">
+          🔔
+          {% if request.state.unread_count > 0 %}
+            <span class="notif-badge">{{ request.state.unread_count }}</span>
+          {% endif %}
+        </a>
+      </li>
       <li>
         <details role="list" style="list-style:none;">
           <summary aria-haspopup="listbox" role="link">{{ user.username }}</summary>
@@ -65,6 +82,50 @@
 </footer>
 
 {% block scripts %}{% endblock %}
+{% if user %}
+<script>
+(function () {
+  const evtSource = new EventSource("/notifications/stream");
+  evtSource.onmessage = function (e) {
+    try {
+      const data = JSON.parse(e.data);
+      const badge = document.querySelector(".notif-badge");
+      const bell = document.querySelector(".notif-bell");
+      if (data.unread_count > 0) {
+        if (!badge) {
+          const span = document.createElement("span");
+          span.className = "notif-badge";
+          bell.appendChild(span);
+        }
+        document.querySelector(".notif-badge").textContent = data.unread_count;
+        showToast("You have a new notification");
+      } else if (badge) {
+        badge.remove();
+      }
+    } catch (_) {}
+  };
+
+  function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "notif-toast";
+    toast.textContent = msg;
+    toast.onclick = () => window.location.href = "/notifications";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+  }
+})();
+</script>
+<style>
+.notif-toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+  background: #1e293b; color: #fff; padding: .75rem 1.25rem;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  cursor: pointer; font-size: .92rem; max-width: 320px;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { transform: translateY(2rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+{% endif %}
 <script src="/static/js/flatpickr.min.js"></script>
 <script>
   flatpickr("input[type=date]", {
