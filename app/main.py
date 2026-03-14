@@ -135,6 +135,13 @@ def create_app() -> FastAPI:
         except ModuleNotFoundError:
             logger.debug("Router module %r not found — skipping (Phase 2).", module_path)
 
+    # ── Notifications router ──────────────────────────────────────────────
+    try:
+        from routes import notifications as _notifications_mod  # noqa: PLC0415
+        app.include_router(_notifications_mod.router)
+    except ModuleNotFoundError:
+        logger.debug("Notifications router not found — skipping.")
+
     # ── Health check ──────────────────────────────────────────────────────
     from fastapi.responses import JSONResponse  # noqa: PLC0415
 
