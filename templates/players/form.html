@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-container">
-<h2>{% if player %}Edit: {{ player.full_name }}{% else %}New Player{% endif %}</h2>
+<h2>{% if player %}{{ t('players.edit_title') }}: {{ player.full_name }}{% else %}{{ t('players.new_title') }}{% endif %}</h2>
 {% if error %}
   <div class="alert alert-error">{{ error }}</div>
 {% endif %}
@@ -258,9 +258,7 @@
   </fieldset>
 
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">
-      {% if player %}Save Changes{% else %}Create Player{% endif %}
-    </button>
+    <button type="submit" class="btn btn-primary">{{ t('players.save') }}</button>
     <a href="/players" class="btn btn-outline">Cancel</a>
   </div>
 </form>

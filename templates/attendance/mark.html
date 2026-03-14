@@ -10,7 +10,7 @@
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>Attendance — {{ event.title }}</h2>
+  <h2>{{ t('attendance.title') }} — {{ event.title }}</h2>
   <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
 </div>
 <p>{{ event.event_date }}{% if event.event_time %} at {{ event.event_time.strftime("%H:%M") }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
@@ -22,7 +22,7 @@
 {% if user.is_admin %}
   {% if attendances %}
   <table>
-    <thead><tr><th>Player</th><th>Status</th><th>Note</th><th>Update</th></tr></thead>
+    <thead><tr><th>{{ t('attendance.player') }}</th><th>{{ t('attendance.status') }}</th><th>{{ t('attendance.notes') }}</th><th>Update</th></tr></thead>
     <tbody>
     {% for att in attendances %}
       <tr>
@@ -38,7 +38,7 @@
               {% endfor %}
             </select>
             <input type="text" name="note" placeholder="Note" value="{{ att.note or "" }}" class="input-sm">
-            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            <button type="submit" class="btn btn-sm btn-primary">{{ t('attendance.save') }}</button>
           </form>
         </td>
       </tr>
@@ -68,7 +68,7 @@
           <label>Note (optional)
             <input type="text" name="note" value="{{ att.note if att and att.note else "" }}">
           </label>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary">{{ t('attendance.save') }}</button>
         </form>
       </div>
     {% endfor %}
@@ -77,5 +77,5 @@
   {% endif %}
 {% endif %}
 
-<p><a href="/events/{{ event.id }}" class="btn btn-outline btn-sm">← Back to Event</a></p>
+<p><a href="/events/{{ event.id }}" class="btn btn-outline btn-sm">← {{ t('attendance.back') }}</a></p>
 {% endblock %}

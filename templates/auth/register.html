@@ -8,7 +8,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-container">
-<h2>Register New User</h2>
+<h2>{{ t('auth.register_title') }}</h2>
 {% if flash %}
   <div class="alert alert-success">{{ flash }}</div>
 {% endif %}
@@ -17,10 +17,10 @@
 {% endif %}
 <form method="post" action="/auth/register">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-  <label for="username">Username
+  <label for="username">{{ t('auth.username') }}
     <input type="text" id="username" name="username" required>
   </label>
-  <label for="email">Email
+  <label for="email">{{ t('auth.email') }}
     <input type="email" id="email" name="email" required>
   </label>
   <label for="password">Password (min 8 chars)
@@ -33,7 +33,7 @@
     </select>
   </label>
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">Create User</button>
+    <button type="submit" class="btn btn-primary">{{ t('auth.register_submit') }}</button>
     <a href="/dashboard" class="btn btn-outline">Cancel</a>
   </div>
 </form>

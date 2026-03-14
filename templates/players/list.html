@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Players — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>Players</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('players.title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>Players</h2>
-  {% if user.is_admin %}<a href="/players/new" class="btn btn-primary">+ New Player</a>{% endif %}
-  {% if user.is_admin and selected_team_id %}<a href="/players/import?team_id={{ selected_team_id }}" class="btn btn-outline">Import Players</a>{% endif %}
+  <h2>{{ t('players.title') }}</h2>
+  {% if user.is_admin %}<a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>{% endif %}
+  {% if user.is_admin and selected_team_id %}<a href="/players/import?team_id={{ selected_team_id }}" class="btn btn-outline">{{ t('players.import') }}</a>{% endif %}
 </div>
 
 <form method="get" action="/players" class="filter-row">
@@ -25,7 +25,7 @@
 {% if players %}
 <table>
   <thead>
-    <tr><th>Name</th><th>Team</th><th>Email</th><th>Status</th><th>Actions</th></tr>
+    <tr><th>{{ t('players.name') }}</th><th>{{ t('players.team') }}</th><th>{{ t('players.email') }}</th><th>{{ t('players.active') }}</th><th>{{ t('players.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for p in players %}
@@ -43,7 +43,7 @@
       <td>
         <div class="action-group">
           {% if user.is_admin %}
-            <a href="/players/{{ p.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
+            <a href="/players/{{ p.id }}/edit" class="btn btn-sm btn-outline">{{ t('players.edit') }}</a>
             <form method="post" action="/players/{{ p.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete {{ p.full_name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
@@ -56,6 +56,6 @@
   </tbody>
 </table>
 {% else %}
-  <p>No players found.</p>
+  <p>{{ t('players.no_players') }}</p>
 {% endif %}
 {% endblock %}

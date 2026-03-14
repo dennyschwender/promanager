@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Seasons — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>Seasons</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('seasons.title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>Seasons</h2>
-  {% if user.is_admin %}<a href="/seasons/new" class="btn btn-primary">+ New Season</a>{% endif %}
+  <h2>{{ t('seasons.title') }}</h2>
+  {% if user.is_admin %}<a href="/seasons/new" class="btn btn-primary">{{ t('seasons.new') }}</a>{% endif %}
 </div>
 
 {% if seasons %}
 <table>
   <thead>
-    <tr><th>Name</th><th>Start</th><th>End</th><th>Active</th><th>Actions</th></tr>
+    <tr><th>{{ t('seasons.name') }}</th><th>Start</th><th>End</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for s in seasons %}
@@ -24,7 +24,7 @@
       <td>
         <div class="action-group">
           {% if user.is_admin %}
-            <a href="/seasons/{{ s.id }}/edit" class="btn btn-sm btn-outline">Edit</a>
+            <a href="/seasons/{{ s.id }}/edit" class="btn btn-sm btn-outline">{{ t('seasons.edit') }}</a>
             {% if not s.is_active %}
               <form method="post" action="/seasons/{{ s.id }}/activate" style="display:contents;">
                 <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
@@ -45,6 +45,6 @@
   </tbody>
 </table>
 {% else %}
-  <p>No seasons yet.</p>
+  <p>{{ t('seasons.no_seasons') }}</p>
 {% endif %}
 {% endblock %}

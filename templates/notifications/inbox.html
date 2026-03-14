@@ -10,18 +10,18 @@
 
 {% block content %}
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
-  <h2>Notifications</h2>
+  <h2>{{ t('notifications.title') }}</h2>
   {% set unread_count = notifications | selectattr("is_read", "equalto", false) | list | length %}
   {% if unread_count > 0 %}
     <form method="post" action="/notifications/read-all">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-sm btn-outline">Mark all as read</button>
+      <button type="submit" class="btn btn-sm btn-outline">{{ t('notifications.mark_read') }}</button>
     </form>
   {% endif %}
 </div>
 
 {% if not notifications %}
-  <p class="text-muted">No notifications yet.</p>
+  <p class="text-muted">{{ t('notifications.no_notifications') }}</p>
 {% else %}
   <ul class="notification-list">
     {% for n in notifications %}

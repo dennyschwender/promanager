@@ -8,19 +8,19 @@
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>My Profile</h2>
+  <h2>{{ t('auth.profile_title') }}</h2>
 </div>
 
 <dl>
-  <dt>Username</dt><dd>{{ user.username }}</dd>
-  <dt>Email</dt><dd>{{ user.email }}</dd>
-  <dt>Role</dt><dd>{{ user.role|capitalize }}</dd>
+  <dt>{{ t('auth.username') }}</dt><dd>{{ user.username }}</dd>
+  <dt>{{ t('auth.email') }}</dt><dd>{{ user.email }}</dd>
+  <dt>{{ t('auth.role') }}</dt><dd>{{ user.role|capitalize }}</dd>
 </dl>
 
 <!-- ── Notification Preferences ─────────────────────────────────────────── -->
 {% if current_player %}
 <section style="margin-top:2rem;">
-  <h3>Notification Preferences</h3>
+  <h3>{{ t('auth.notification_preferences') }}</h3>
   <form method="post" action="/notifications/preferences">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
     {% for channel, label in [("email","Email"), ("inapp","In-app inbox"), ("webpush","Browser push")] %}
@@ -30,7 +30,7 @@
         {{ label }}
       </label>
     {% endfor %}
-    <button type="submit" class="btn btn-sm btn-outline" style="margin-top:.5rem;">Save preferences</button>
+    <button type="submit" class="btn btn-sm btn-outline" style="margin-top:.5rem;">{{ t('auth.save_preferences') }}</button>
   </form>
 
   <!-- Web Push subscription -->
@@ -101,4 +101,19 @@
   </div>
 </section>
 {% endif %}
+
+<!-- ── Language Preference ──────────────────────────────────────────────── -->
+<section style="margin-top:2rem;">
+  <h3>{{ t('auth.language_preference') }}</h3>
+  <form method="post" action="/set-locale">
+    <input type="hidden" name="next" value="/profile">
+    <select name="locale">
+      <option value="en" {% if current_locale == 'en' %}selected{% endif %}>English</option>
+      <option value="it" {% if current_locale == 'it' %}selected{% endif %}>Italiano</option>
+      <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>Français</option>
+      <option value="de" {% if current_locale == 'de' %}selected{% endif %}>Deutsch</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-outline" style="margin-left:.5rem;">{{ t('common.save') }}</button>
+  </form>
+</section>
 {% endblock %}

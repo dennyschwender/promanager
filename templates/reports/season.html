@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>Season Report: {{ season.name }}</h2>
+  <h2>{{ t('reports.season_title') }}: {{ season.name }}</h2>
   {% if season.is_active %}<span class="badge badge-active">Active</span>{% endif %}
 </div>
 
@@ -28,13 +28,13 @@
 <table>
   <thead>
     <tr>
-      <th>Player</th>
-      <th>Present</th>
-      <th>Absent</th>
+      <th>{{ t('reports.player') }}</th>
+      <th>{{ t('reports.attended') }}</th>
+      <th>{{ t('reports.absent') }}</th>
       <th>Maybe</th>
-      <th>Unknown</th>
-      <th>Total</th>
-      <th>Attendance %</th>
+      <th>{{ t('reports.unknown') }}</th>
+      <th>{{ t('reports.total') }}</th>
+      <th>{{ t('reports.attendance_rate') }}</th>
     </tr>
   </thead>
   <tbody>

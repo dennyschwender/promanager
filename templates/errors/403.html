@@ -2,8 +2,8 @@
 {% block title %}403 — Forbidden{% endblock %}
 {% block content %}
 <article>
-  <h2>403 — Forbidden</h2>
-  <p>You do not have permission to access this page.</p>
-  <a href="/dashboard" role="button">Go to Dashboard</a>
+  <h2>{{ t('errors.403_title') }}</h2>
+  <p>{{ t('errors.403_body') }}</p>
+  <a href="/dashboard" role="button">{{ t('errors.back_home') }}</a>
 </article>
 {% endblock %}

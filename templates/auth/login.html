@@ -2,19 +2,19 @@
 {% block title %}Login — ProManager{% endblock %}
 {% block content %}
 <div class="form-container-sm">
-  <h2>Sign In</h2>
+  <h2>{{ t('auth.login_title') }}</h2>
   {% if error %}
     <div class="alert alert-error">{{ error }}</div>
   {% endif %}
   <form method="post" action="/auth/login">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-    <label for="username">Username
+    <label for="username">{{ t('auth.username') }}
       <input type="text" id="username" name="username" required autofocus>
     </label>
-    <label for="password">Password
+    <label for="password">{{ t('auth.password') }}
       <input type="password" id="password" name="password" required>
     </label>
-    <button type="submit" class="btn btn-primary" style="width:100%;">Sign In</button>
+    <button type="submit" class="btn btn-primary" style="width:100%;">{{ t('auth.submit') }}</button>
   </form>
 </div>
 {% endblock %}

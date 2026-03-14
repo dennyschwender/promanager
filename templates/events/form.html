@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-container">
-<h2>{% if event %}Edit: {{ event.title }}{% else %}New Event{% endif %}</h2>
+<h2>{% if event %}{{ t('events.edit_title') }}: {{ event.title }}{% else %}{{ t('events.new_title') }}{% endif %}</h2>
 {% if error %}
   <div class="alert alert-error">{{ error }}</div>
 {% endif %}
@@ -174,7 +174,7 @@
   </label>
 
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">{% if event %}Save Changes{% else %}Create Event{% endif %}</button>
+    <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
     <a href="/events" class="btn btn-outline">Cancel</a>
   </div>
 </form>

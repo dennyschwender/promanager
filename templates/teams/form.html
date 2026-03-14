@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-container">
-<h2>{% if team %}Edit Team: {{ team.name }}{% else %}New Team{% endif %}</h2>
+<h2>{% if team %}{{ t('teams.edit_title') }}: {{ team.name }}{% else %}{{ t('teams.new_title') }}{% endif %}</h2>
 
 {% if saved %}
   <div class="alert alert-success">Changes saved.</div>
@@ -182,10 +182,9 @@
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">
       {% if confirm_mode %}Confirm &amp; Save
-      {% elif team %}Save Changes
-      {% else %}Create Team{% endif %}
+      {% else %}{{ t('teams.save') }}{% endif %}
     </button>
-    <a href="/teams" class="btn btn-outline">Cancel</a>
+    <a href="/teams" class="btn btn-outline">{{ t('teams.back') }}</a>
   </div>
 </form>
 </div>

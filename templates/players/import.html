@@ -96,7 +96,7 @@ table.jexcel tbody td.edition textarea {
 
 {% block content %}
 <div class="page-header">
-  <h2>Import Players into {{ context_team.name }}</h2>
+  <h2>{{ t('players.import_title') }} — {{ context_team.name }}</h2>
 </div>
 
 {% if error %}
@@ -165,7 +165,7 @@ table.jexcel tbody td.edition textarea {
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="import_source" value="paste">
       <input type="hidden" name="rows_json" id="rows-json-input">
-      <button type="submit" class="btn btn-primary" id="paste-submit-btn">Import</button>
+      <button type="submit" class="btn btn-primary" id="paste-submit-btn">{{ t('players.import_submit') }}</button>
       <a href="/teams" class="btn btn-outline" style="margin-left:.5rem;">Cancel</a>
     </form>
   </div>
@@ -187,7 +187,7 @@ table.jexcel tbody td.edition textarea {
         <input type="file" name="import_file" accept=".csv,.xlsx" required>
       </label>
       <div class="form-footer">
-        <button type="submit" class="btn btn-primary">Import</button>
+        <button type="submit" class="btn btn-primary">{{ t('players.import_submit') }}</button>
         <a href="/teams" class="btn btn-outline">Cancel</a>
       </div>
     </form>

@@ -21,19 +21,19 @@
 <div class="stat-grid">
   <div class="stat-card">
     <div class="stat-value">{{ total }}</div>
-    <div class="stat-label">Total Events</div>
+    <div class="stat-label">{{ t('reports.total') }}</div>
   </div>
   <div class="stat-card">
     <div class="stat-value">{{ present_count }}</div>
-    <div class="stat-label">Present</div>
+    <div class="stat-label">{{ t('reports.attended') }}</div>
   </div>
   <div class="stat-card">
     <div class="stat-value">{{ absent_count }}</div>
-    <div class="stat-label">Absent</div>
+    <div class="stat-label">{{ t('reports.absent') }}</div>
   </div>
   <div class="stat-card">
     <div class="stat-value">{% if total > 0 %}{{ (present_count / total * 100) | round(1) }}%{% else %}—{% endif %}</div>
-    <div class="stat-label">Attendance Rate</div>
+    <div class="stat-label">{{ t('reports.attendance_rate') }}</div>
   </div>
 </div>
 
@@ -63,5 +63,5 @@
   <p>No attendance records found.</p>
 {% endif %}
 
-<p><a href="/players/{{ player.id }}" class="btn btn-outline btn-sm">← Back to Player</a></p>
+<p><a href="/players/{{ player.id }}" class="btn btn-outline btn-sm">← {{ t('reports.back') }}</a></p>
 {% endblock %}

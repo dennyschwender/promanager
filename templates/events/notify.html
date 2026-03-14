@@ -12,7 +12,7 @@
 
 {% block content %}
 <div class="page-header">
-  <h2>Notify Players — {{ event.title }}</h2>
+  <h2>{{ t('notify.title') }} — {{ event.title }}</h2>
   <p class="text-muted">{{ event.event_date }} {% if event.event_time %}at {{ event.event_time }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
 </div>
 
@@ -74,8 +74,8 @@
   </fieldset>
 
   <div class="form-footer">
-    <button type="submit" class="btn btn-primary">Send Notification</button>
-    <a href="/events/{{ event.id }}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ t('notify.send') }}</button>
+    <a href="/events/{{ event.id }}" class="btn btn-outline">{{ t('notify.back') }}</a>
   </div>
 </form>
 
