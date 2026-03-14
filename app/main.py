@@ -142,6 +142,49 @@ def create_app() -> FastAPI:
     except ModuleNotFoundError:
         logger.debug("Notifications router not found — skipping.")
 
+    # ── Profile page ──────────────────────────────────────────────────────
+    from routes._auth_helpers import require_login as _require_login  # noqa: PLC0415
+    from app.database import get_db as _get_db  # noqa: PLC0415
+    from fastapi import Depends as _Depends  # noqa: PLC0415
+    from sqlalchemy.orm import Session as _Session  # noqa: PLC0415
+
+    @app.get("/profile", include_in_schema=False)
+    async def profile_page(
+        request: Request,
+        user=_Depends(_require_login),
+        db: _Session = _Depends(_get_db),
+    ):
+        from models.notification_preference import NotificationPreference  # noqa: PLC0415
+        from models.web_push_subscription import WebPushSubscription  # noqa: PLC0415
+        from models.player import Player as _Player  # noqa: PLC0415
+
+        current_player = (
+            db.query(_Player)
+            .filter(_Player.user_id == user.id, _Player.is_active.is_(True))
+            .first()
+        )
+        player_prefs: dict = {}
+        push_device_count = 0
+        if current_player:
+            prefs = db.query(NotificationPreference).filter(
+                NotificationPreference.player_id == current_player.id
+            ).all()
+            player_prefs = {p.channel: p.enabled for p in prefs}
+            push_device_count = db.query(WebPushSubscription).filter(
+                WebPushSubscription.player_id == current_player.id
+            ).count()
+        return templates.TemplateResponse(
+            request,
+            "auth/profile.html",
+            {
+                "user": user,
+                "current_player": current_player,
+                "player_prefs": player_prefs,
+                "push_device_count": push_device_count,
+                "vapid_public_key": settings.VAPID_PUBLIC_KEY or None,
+            },
+        )
+
     # ── Health check ──────────────────────────────────────────────────────
     from fastapi.responses import JSONResponse  # noqa: PLC0415
 

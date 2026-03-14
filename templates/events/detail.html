@@ -23,6 +23,11 @@
 {% if request.query_params.get("reminders_sent") %}
   <div class="alert alert-success">Reminders sent to {{ request.query_params.get("reminders_sent") }} player(s).</div>
 {% endif %}
+{% if request.query_params.get("notified") %}
+  <div class="alert alert-success">
+    Notification queued for {{ request.query_params.get("notified") }} player(s).
+  </div>
+{% endif %}
 
 <dl>
   <dt>Season</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
@@ -61,6 +66,7 @@
   {% endif %}
   {% if user.is_admin %}
     <a href="/events/{{ event.id }}/edit" class="btn btn-outline">Edit Event</a>
+    <a href="/events/{{ event.id }}/notify" class="btn btn-sm btn-outline">Notify Players</a>
     <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <button type="submit" class="btn btn-outline">Send Reminders</button>
