@@ -79,6 +79,19 @@ def test_t_missing_key_falls_back_to_en_in_production():
     assert result == "Dashboard"  # fell back to en value
 
 
+def test_t_missing_key_returns_bare_key_when_en_also_missing():
+    """When key is absent from both locale and 'en', return the bare key."""
+    import importlib
+    import app.i18n as _i18n
+    os.environ["DEBUG"] = "false"
+    importlib.reload(_i18n)
+    # Remove key from both it and en
+    _i18n._translations["it"].setdefault("nav", {}).pop("dashboard", None)
+    _i18n._translations["en"].setdefault("nav", {}).pop("dashboard", None)
+    result = _i18n.t("nav.dashboard", "it")
+    assert result == "nav.dashboard"
+
+
 # ---------------------------------------------------------------------------
 # Variable interpolation
 # ---------------------------------------------------------------------------
