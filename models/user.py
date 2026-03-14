@@ -37,6 +37,9 @@ class User(Base):
     # Optional hashed API token for machine-to-machine auth
     api_token_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
+    # Preferred UI locale — one of: en, it, fr, de
+    locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
+
     # ── Relationships ──────────────────────────────────────────────────────
     players: Mapped[list[Player]] = relationship(
         "Player", back_populates="user", lazy="select"

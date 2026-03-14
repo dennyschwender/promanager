@@ -130,3 +130,9 @@ def test_invalid_locale_cookie_falls_back_to_en(client):
     client.cookies.set("locale", "zz")
     resp = client.get("/auth/login", follow_redirects=False)
     assert resp.status_code == 200
+
+
+def test_user_has_locale_field(db, admin_user):
+    """User model must have a locale field defaulting to 'en'."""
+    assert hasattr(admin_user, "locale")
+    assert admin_user.locale == "en"
