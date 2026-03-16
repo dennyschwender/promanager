@@ -305,3 +305,159 @@ def test_bulk_assign_requires_admin(client, db):
         headers={"X-CSRF-Token": "test"},
     )
     assert resp.status_code in (302, 403)
+
+
+# ---------------------------------------------------------------------------
+# Bulk update
+# ---------------------------------------------------------------------------
+
+def test_bulk_update_player_fields(admin_client, db):
+    p = _make_player(db, "Alice", "Old")
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={"players": [{"id": p.id, "email": "alice@new.com", "is_active": False}]},
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert p.id in data["saved"]
+    assert data["errors"] == []
+    db.refresh(p)
+    assert p.email == "alice@new.com"
+    assert p.is_active is False
+
+
+def test_bulk_update_player_team_fields(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p = _make_player(db, "Bob", "B")
+    db.add(PlayerTeam(player_id=p.id, team_id=team.id, season_id=season.id, shirt_number=None))
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            "team_id": team.id,
+            "players": [{"id": p.id, "shirt_number": 7}],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert p.id in data["saved"]
+    pt = db.get(PlayerTeam, (p.id, team.id, season.id))
+    assert pt.shirt_number == 7
+
+
+def test_bulk_update_creates_player_team_if_missing(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p = _make_player(db, "Carol", "C")
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            "team_id": team.id,
+            "players": [{"id": p.id, "position": "goalie"}],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    pt = db.get(PlayerTeam, (p.id, team.id, season.id))
+    assert pt is not None
+    assert pt.position == "goalie"
+
+
+def test_bulk_update_shirt_number_conflict(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p1 = _make_player(db, "Dan", "D")
+    p2 = _make_player(db, "Eve", "E")
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=season.id, shirt_number=9))
+    db.add(PlayerTeam(player_id=p2.id, team_id=team.id, season_id=season.id, shirt_number=None))
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            "team_id": team.id,
+            "players": [{"id": p2.id, "shirt_number": 9}],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert p2.id in [e["id"] for e in data["errors"]]
+    assert data["saved"] == []
+
+
+def test_bulk_update_shirt_number_self_conflict_ok(admin_client, db):
+    """Submitting the unchanged shirt number for its owner must not conflict."""
+    season = _make_season(db)
+    team = _make_team(db)
+    p = _make_player(db, "Fred", "F")
+    db.add(PlayerTeam(player_id=p.id, team_id=team.id, season_id=season.id, shirt_number=5))
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            "team_id": team.id,
+            "players": [{"id": p.id, "shirt_number": 5, "position": "goalie"}],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert p.id in data["saved"]
+
+
+def test_bulk_update_playerteam_fields_without_team_returns_400(admin_client, db):
+    season = _make_season(db)
+    p = _make_player(db, "Gail", "G")
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            # team_id intentionally omitted
+            "players": [{"id": p.id, "shirt_number": 3}],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 400
+
+
+def test_bulk_update_partial_success(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p1 = _make_player(db, "Han", "H")
+    p2 = _make_player(db, "Ida", "I")
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=season.id, shirt_number=1))
+    db.add(PlayerTeam(player_id=p2.id, team_id=team.id, season_id=season.id, shirt_number=None))
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-update",
+        json={
+            "season_id": season.id,
+            "team_id": team.id,
+            "players": [
+                {"id": p1.id, "email": "han@ok.com"},   # succeeds
+                {"id": p2.id, "shirt_number": 1},       # conflicts with p1
+            ],
+        },
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert p1.id in data["saved"]
+    assert p2.id in [e["id"] for e in data["errors"]]

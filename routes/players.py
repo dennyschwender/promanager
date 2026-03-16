@@ -6,7 +6,7 @@ import io
 import json
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: F401 (used in bulk-update)
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -208,6 +208,124 @@ async def player_bulk_assign(
             errors.append({"id": pid, "message": str(exc)})
     db.commit()
     return {"assigned": assigned, "skipped": skipped, "errors": errors}
+
+
+# ── Allowed fields per model ───────────────────────────────────────────────
+# All of these exist as mapped columns on Player (verified against models/player.py).
+_PLAYER_FIELDS = frozenset({
+    "email", "phone", "is_active", "date_of_birth",
+    "sex", "street", "postcode", "city",
+})
+_PT_FIELDS = frozenset({
+    "shirt_number", "position", "injured_until",
+    "absent_by_default", "priority",
+})
+
+
+class PlayerDiff(BaseModel):
+    id: int
+    model_config = {"extra": "allow"}
+
+
+class BulkUpdateRequest(BaseModel):
+    players: list[PlayerDiff]
+    season_id: int | None = None
+    team_id: int | None = None
+
+
+@router.post("/bulk-update")
+async def player_bulk_update(
+    body: BulkUpdateRequest,
+    _user=Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    saved: list[int] = []
+    errors: list[dict] = []
+
+    # Reject early if PlayerTeam fields are present but team_id is missing
+    pt_keys_present = any(
+        bool(_PT_FIELDS & set((diff.model_extra or {}).keys()))
+        for diff in body.players
+    )
+    if pt_keys_present and body.team_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="team_id is required when updating PlayerTeam fields.",
+        )
+
+    for diff in body.players:
+        extra = diff.model_extra or {}
+        player_changes = {k: v for k, v in extra.items() if k in _PLAYER_FIELDS}
+        pt_changes = {k: v for k, v in extra.items() if k in _PT_FIELDS}
+
+        # ── Shirt number uniqueness check (exclude self) ──────────────────
+        if "shirt_number" in pt_changes and pt_changes["shirt_number"] is not None:
+            conflict = (
+                db.query(PlayerTeam)
+                .filter(
+                    PlayerTeam.team_id == body.team_id,
+                    PlayerTeam.season_id == body.season_id,
+                    PlayerTeam.shirt_number == pt_changes["shirt_number"],
+                    PlayerTeam.player_id != diff.id,
+                )
+                .first()
+            )
+            if conflict:
+                errors.append({
+                    "id": diff.id,
+                    "message": (
+                        f"Shirt number {pt_changes['shirt_number']} "
+                        "already taken in this team/season."
+                    ),
+                })
+                continue
+
+        try:
+            sp = db.begin_nested()  # savepoint — isolates this row from others
+
+            player = db.get(Player, diff.id)
+            if player is None:
+                sp.rollback()
+                errors.append({"id": diff.id, "message": "Player not found."})
+                continue
+
+            # Apply Player-level fields
+            for field, value in player_changes.items():
+                if field == "date_of_birth" and isinstance(value, str) and value:
+                    try:
+                        value = date.fromisoformat(value)
+                    except ValueError:
+                        value = None
+                setattr(player, field, value)
+
+            # Apply PlayerTeam fields (upsert)
+            if pt_changes:
+                pt = db.get(PlayerTeam, (diff.id, body.team_id, body.season_id))
+                if pt is None:
+                    pt = PlayerTeam(
+                        player_id=diff.id,
+                        team_id=body.team_id,
+                        season_id=body.season_id,
+                    )
+                    db.add(pt)
+                for field, value in pt_changes.items():
+                    if field == "injured_until" and isinstance(value, str) and value:
+                        try:
+                            value = date.fromisoformat(value)
+                        except ValueError:
+                            value = None
+                    setattr(pt, field, value)
+
+            sp.commit()
+            saved.append(diff.id)
+
+        except Exception as exc:
+            sp.rollback()
+            errors.append({"id": diff.id, "message": str(exc)})
+
+    db.commit()
+    return {"saved": saved, "errors": errors}
 
 
 # ---------------------------------------------------------------------------
