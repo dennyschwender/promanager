@@ -15,18 +15,18 @@
     <tr><th>{{ t('teams.name') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
   </thead>
   <tbody>
-  {% for t in teams %}
+  {% for team in teams %}
     <tr>
-      <td><strong>{{ t.name }}</strong></td>
-      <td>{{ t.description or "—" }}</td>
+      <td><strong>{{ team.name }}</strong></td>
+      <td>{{ team.description or "—" }}</td>
       <td>
         <div class="action-group">
           {% if user.is_admin %}
-            <a href="/teams/{{ t.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
-            <a href="/players?team_id={{ t.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
-            <a href="/players/import?team_id={{ t.id }}" class="btn btn-sm btn-outline">Import Players</a>
-            <form method="post" action="/teams/{{ t.id }}/delete" style="display:contents;"
-                  onsubmit="return confirm('Delete team {{ t.name }}?')">
+            <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
+            <a href="/players?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
+            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">Import Players</a>
+            <form method="post" action="/teams/{{ team.id }}/delete" style="display:contents;"
+                  onsubmit="return confirm('Delete team {{ team.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
