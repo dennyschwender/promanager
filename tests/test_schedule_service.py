@@ -1,4 +1,5 @@
 """Unit tests for services/schedule_service.py."""
+
 from __future__ import annotations
 
 from datetime import date, time
@@ -16,6 +17,7 @@ from services.schedule_service import (
 )
 
 # ── advance_date ────────────────────────────────────────────────────────────
+
 
 def test_advance_date_weekly():
     assert advance_date(date(2026, 3, 10), "weekly") == date(2026, 3, 17)
@@ -39,19 +41,31 @@ def test_advance_date_monthly_december_to_january():
 
 # ── is_changed ──────────────────────────────────────────────────────────────
 
+
 def test_is_changed_returns_false_when_identical(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
+
     sched = TeamRecurringSchedule(
-        team_id=1, title="T", event_type="training", recurrence_rule="weekly",
-        start_date=date(2026, 3, 10), end_date=date(2026, 6, 30),
-        event_time=time(18, 0), presence_type="normal",
+        team_id=1,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 10),
+        end_date=date(2026, 6, 30),
+        event_time=time(18, 0),
+        presence_type="normal",
         recurrence_group_id="test-uuid",
     )
     submitted = {
-        "start_date": "2026-03-10", "end_date": "2026-06-30",
-        "recurrence_rule": "weekly", "event_type": "training",
-        "event_time": "18:00", "event_end_time": "",
-        "location": "", "meeting_time": "", "meeting_location": "",
+        "start_date": "2026-03-10",
+        "end_date": "2026-06-30",
+        "recurrence_rule": "weekly",
+        "event_type": "training",
+        "event_time": "18:00",
+        "event_end_time": "",
+        "location": "",
+        "meeting_time": "",
+        "meeting_location": "",
         "presence_type": "normal",
     }
     assert is_changed(sched, submitted) is False
@@ -59,15 +73,27 @@ def test_is_changed_returns_false_when_identical(db):
 
 def test_is_changed_detects_time_change(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
+
     sched = TeamRecurringSchedule(
-        team_id=1, title="T", event_type="training", recurrence_rule="weekly",
-        start_date=date(2026, 3, 10), event_time=time(18, 0),
-        presence_type="normal", recurrence_group_id="uuid1",
+        team_id=1,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 10),
+        event_time=time(18, 0),
+        presence_type="normal",
+        recurrence_group_id="uuid1",
     )
     submitted = {
-        "start_date": "2026-03-10", "end_date": "", "recurrence_rule": "weekly",
-        "event_type": "training", "event_time": "19:00", "event_end_time": "",
-        "location": "", "meeting_time": "", "meeting_location": "",
+        "start_date": "2026-03-10",
+        "end_date": "",
+        "recurrence_rule": "weekly",
+        "event_type": "training",
+        "event_time": "19:00",
+        "event_end_time": "",
+        "location": "",
+        "meeting_time": "",
+        "meeting_location": "",
         "presence_type": "normal",
     }
     assert is_changed(sched, submitted) is True
@@ -75,15 +101,27 @@ def test_is_changed_detects_time_change(db):
 
 def test_is_changed_ignores_description(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
+
     sched = TeamRecurringSchedule(
-        team_id=1, title="T", event_type="training", recurrence_rule="weekly",
-        start_date=date(2026, 3, 10), presence_type="normal",
-        description="old desc", recurrence_group_id="uuid2",
+        team_id=1,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 10),
+        presence_type="normal",
+        description="old desc",
+        recurrence_group_id="uuid2",
     )
     submitted = {
-        "start_date": "2026-03-10", "end_date": "", "recurrence_rule": "weekly",
-        "event_type": "training", "event_time": "", "event_end_time": "",
-        "location": "", "meeting_time": "", "meeting_location": "",
+        "start_date": "2026-03-10",
+        "end_date": "",
+        "recurrence_rule": "weekly",
+        "event_type": "training",
+        "event_time": "",
+        "event_end_time": "",
+        "location": "",
+        "meeting_time": "",
+        "meeting_location": "",
         "presence_type": "normal",
         "description": "new desc",  # changed, but not a key field
     }
@@ -91,6 +129,7 @@ def test_is_changed_ignores_description(db):
 
 
 # ── generate_events_for_schedule ────────────────────────────────────────────
+
 
 def test_generate_events_weekly(db):
     from models.team import Team
@@ -102,10 +141,14 @@ def test_generate_events_weekly(db):
     db.refresh(team)
 
     sched = TeamRecurringSchedule(
-        team_id=team.id, title="Eagles - Training Tuesday",
-        event_type="training", recurrence_rule="weekly",
-        start_date=date(2026, 3, 3), end_date=date(2026, 3, 24),
-        presence_type="normal", recurrence_group_id="gen-uuid-1",
+        team_id=team.id,
+        title="Eagles - Training Tuesday",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 3),
+        end_date=date(2026, 3, 24),
+        presence_type="normal",
+        recurrence_group_id="gen-uuid-1",
     )
     db.add(sched)
     db.commit()
@@ -130,10 +173,14 @@ def test_generate_events_uses_season_end_date(db):
     db.refresh(team)
 
     sched = TeamRecurringSchedule(
-        team_id=team.id, title="T", event_type="training",
-        recurrence_rule="weekly", start_date=date(2026, 3, 3),
+        team_id=team.id,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 3),
         end_date=date(2026, 3, 17),  # explicit end date required
-        presence_type="normal", recurrence_group_id="gen-uuid-2",
+        presence_type="normal",
+        recurrence_group_id="gen-uuid-2",
     )
     db.add(sched)
     db.commit()
@@ -154,9 +201,14 @@ def test_generate_events_raises_without_end_date(db):
     db.refresh(team)
 
     sched = TeamRecurringSchedule(
-        team_id=team.id, title="T", event_type="training",
-        recurrence_rule="weekly", start_date=date(2026, 3, 3),
-        end_date=None, presence_type="normal", recurrence_group_id="gen-uuid-3",
+        team_id=team.id,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 3, 3),
+        end_date=None,
+        presence_type="normal",
+        recurrence_group_id="gen-uuid-3",
     )
     db.add(sched)
     db.commit()
@@ -175,9 +227,13 @@ def test_generate_events_raises_start_after_end(db):
     db.refresh(team)
 
     sched = TeamRecurringSchedule(
-        team_id=team.id, title="T", event_type="training",
-        recurrence_rule="weekly", start_date=date(2026, 4, 1),
-        end_date=date(2026, 3, 1), presence_type="normal",
+        team_id=team.id,
+        title="T",
+        event_type="training",
+        recurrence_rule="weekly",
+        start_date=date(2026, 4, 1),
+        end_date=date(2026, 3, 1),
+        presence_type="normal",
         recurrence_group_id="gen-uuid-4",
     )
     db.add(sched)
@@ -189,16 +245,19 @@ def test_generate_events_raises_start_after_end(db):
 
 # ── delete_future_events ────────────────────────────────────────────────────
 
+
 def test_past_events_not_deleted(db):
     from models.event import Event
 
     past_ev = Event(
-        title="Old", event_type="training",
+        title="Old",
+        event_type="training",
         event_date=date(2026, 1, 1),
         recurrence_group_id="del-uuid-1",
     )
     future_ev = Event(
-        title="Future", event_type="training",
+        title="Future",
+        event_type="training",
         event_date=date(2099, 1, 1),
         recurrence_group_id="del-uuid-1",
     )
@@ -215,6 +274,7 @@ def test_past_events_not_deleted(db):
 
 
 # ── sign_payload / verify_payload ───────────────────────────────────────────
+
 
 def test_sign_and_verify_roundtrip():
     data = {"schedules": [{"id": 1, "title": "Training"}]}

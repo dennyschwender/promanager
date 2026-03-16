@@ -1,4 +1,5 @@
 """Tests for /reports routes and report service helpers."""
+
 from datetime import date
 
 from models.event import Event

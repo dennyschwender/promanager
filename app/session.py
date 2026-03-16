@@ -1,4 +1,5 @@
 """app/session.py — Session cookie helpers shared across the app."""
+
 from __future__ import annotations
 
 from fastapi import Request

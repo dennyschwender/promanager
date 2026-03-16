@@ -38,21 +38,23 @@ def _parse_schedule_rows(form, count: int) -> list[dict]:
     """Parse sched_* form fields into a list of raw string dicts."""
     rows = []
     for i in range(count):
-        rows.append({
-            "id": (form.get(f"sched_id_{i}") or "").strip(),
-            "title": (form.get(f"sched_title_{i}") or "").strip(),
-            "event_type": (form.get(f"sched_event_type_{i}") or "training").strip(),
-            "recurrence_rule": (form.get(f"sched_rule_{i}") or "weekly").strip(),
-            "start_date": (form.get(f"sched_start_{i}") or "").strip(),
-            "end_date": (form.get(f"sched_end_{i}") or "").strip(),
-            "event_time": (form.get(f"sched_time_{i}") or "").strip(),
-            "event_end_time": (form.get(f"sched_end_time_{i}") or "").strip(),
-            "location": (form.get(f"sched_location_{i}") or "").strip(),
-            "meeting_time": (form.get(f"sched_meeting_time_{i}") or "").strip(),
-            "meeting_location": (form.get(f"sched_meeting_location_{i}") or "").strip(),
-            "presence_type": (form.get(f"sched_presence_{i}") or "normal").strip(),
-            "description": (form.get(f"sched_desc_{i}") or "").strip(),
-        })
+        rows.append(
+            {
+                "id": (form.get(f"sched_id_{i}") or "").strip(),
+                "title": (form.get(f"sched_title_{i}") or "").strip(),
+                "event_type": (form.get(f"sched_event_type_{i}") or "training").strip(),
+                "recurrence_rule": (form.get(f"sched_rule_{i}") or "weekly").strip(),
+                "start_date": (form.get(f"sched_start_{i}") or "").strip(),
+                "end_date": (form.get(f"sched_end_{i}") or "").strip(),
+                "event_time": (form.get(f"sched_time_{i}") or "").strip(),
+                "event_end_time": (form.get(f"sched_end_time_{i}") or "").strip(),
+                "location": (form.get(f"sched_location_{i}") or "").strip(),
+                "meeting_time": (form.get(f"sched_meeting_time_{i}") or "").strip(),
+                "meeting_location": (form.get(f"sched_meeting_location_{i}") or "").strip(),
+                "presence_type": (form.get(f"sched_presence_{i}") or "normal").strip(),
+                "description": (form.get(f"sched_desc_{i}") or "").strip(),
+            }
+        )
     return rows
 
 
@@ -135,16 +137,20 @@ async def team_new_get(
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return render(request, "teams/form.html", {
-        "user": user,
-        "team": None,
-        "error": None,
-        "schedule_rows": [],
-        "saved": False,
-        "confirm_mode": False,
-        "flagged": [],
-        "_schedules_json": "",
-    })
+    return render(
+        request,
+        "teams/form.html",
+        {
+            "user": user,
+            "team": None,
+            "error": None,
+            "schedule_rows": [],
+            "saved": False,
+            "confirm_mode": False,
+            "flagged": [],
+            "_schedules_json": "",
+        },
+    )
 
 
 @router.post("/new")
@@ -157,16 +163,21 @@ async def team_new_post(
     db: Session = Depends(get_db),
 ):
     if not name.strip():
-        return render(request, "teams/form.html", {
-            "user": user,
-            "team": None,
-            "error": "Team name is required.",
-            "schedule_rows": [],
-            "saved": False,
-            "confirm_mode": False,
-            "flagged": [],
-            "_schedules_json": "",
-        }, status_code=400)
+        return render(
+            request,
+            "teams/form.html",
+            {
+                "user": user,
+                "team": None,
+                "error": "Team name is required.",
+                "schedule_rows": [],
+                "saved": False,
+                "confirm_mode": False,
+                "flagged": [],
+                "_schedules_json": "",
+            },
+            status_code=400,
+        )
 
     team = Team(
         name=name.strip(),
@@ -195,16 +206,20 @@ async def team_edit_get(
     if team is None:
         return RedirectResponse("/teams", status_code=302)
 
-    return render(request, "teams/form.html", {
-        "user": user,
-        "team": team,
-        "schedule_rows": [_schedule_to_dict(s) for s in team.recurring_schedules],
-        "error": None,
-        "saved": saved == "1",
-        "confirm_mode": False,
-        "flagged": [],
-        "_schedules_json": "",
-    })
+    return render(
+        request,
+        "teams/form.html",
+        {
+            "user": user,
+            "team": team,
+            "schedule_rows": [_schedule_to_dict(s) for s in team.recurring_schedules],
+            "error": None,
+            "saved": saved == "1",
+            "confirm_mode": False,
+            "flagged": [],
+            "_schedules_json": "",
+        },
+    )
 
 
 @router.post("/{team_id}/edit")
@@ -224,22 +239,25 @@ async def team_edit_post(
 
     form = await request.form()
 
-    def _render(error=None, confirm_mode=False, flagged=None,
-                schedule_rows=None, schedules_json="", saved=False):
-        return render(request, "teams/form.html", {
-            "user": user,
-            "team": team,
-            "schedule_rows": (
-                schedule_rows
-                if schedule_rows is not None
-                else [_schedule_to_dict(s) for s in team.recurring_schedules]
-            ),
-            "error": error,
-            "saved": saved,
-            "confirm_mode": confirm_mode,
-            "flagged": flagged or [],
-            "_schedules_json": schedules_json,
-        })
+    def _render(error=None, confirm_mode=False, flagged=None, schedule_rows=None, schedules_json="", saved=False):
+        return render(
+            request,
+            "teams/form.html",
+            {
+                "user": user,
+                "team": team,
+                "schedule_rows": (
+                    schedule_rows
+                    if schedule_rows is not None
+                    else [_schedule_to_dict(s) for s in team.recurring_schedules]
+                ),
+                "error": error,
+                "saved": saved,
+                "confirm_mode": confirm_mode,
+                "flagged": flagged or [],
+                "_schedules_json": schedules_json,
+            },
+        )
 
     if not name.strip():
         return _render(error="Team name is required.")
@@ -315,8 +333,10 @@ async def team_edit_post(
                         # Unchanged schedule: propagate non-key fields (title, description)
                         # in-place to future events, per spec.
                         propagate_nonkey_changes(
-                            db, sched.recurrence_group_id,
-                            sched.title, sched.description,
+                            db,
+                            sched.recurrence_group_id,
+                            sched.title,
+                            sched.description,
                         )
                     # else: changed-but-unchecked — save fields, do NOT touch events
 
@@ -378,28 +398,32 @@ async def team_edit_post(
                 continue
             if is_changed(stored_sched, row):
                 future_count = count_future_events(db, stored_sched.recurrence_group_id)
-                flagged.append({
-                    "type": "changed",
-                    "sched_id": sched_id,
-                    "title": row["title"],
-                    "future_count": future_count,
-                    "confirm_key": f"confirm_schedule_{sched_id}",
-                    "row": row,
-                })
+                flagged.append(
+                    {
+                        "type": "changed",
+                        "sched_id": sched_id,
+                        "title": row["title"],
+                        "future_count": future_count,
+                        "confirm_key": f"confirm_schedule_{sched_id}",
+                        "row": row,
+                    }
+                )
             else:
                 unchanged_rows.append((stored_sched, row))
 
     for sched_id, sched in stored_map.items():
         if sched_id not in submitted_ids:
             future_count = count_future_events(db, sched.recurrence_group_id)
-            flagged.append({
-                "type": "removed",
-                "sched_id": sched_id,
-                "title": sched.title,
-                "future_count": future_count,
-                "confirm_key": f"confirm_schedule_{sched_id}",
-                "row": _schedule_to_dict(sched),
-            })
+            flagged.append(
+                {
+                    "type": "removed",
+                    "sched_id": sched_id,
+                    "title": sched.title,
+                    "future_count": future_count,
+                    "confirm_key": f"confirm_schedule_{sched_id}",
+                    "row": _schedule_to_dict(sched),
+                }
+            )
 
     if flagged:
         # Bind team_id into the payload to prevent cross-team replay attacks.
@@ -431,8 +455,10 @@ async def team_edit_post(
     for stored_sched, row in unchanged_rows:
         _apply_row_to_schedule(stored_sched, row)
         propagate_nonkey_changes(
-            db, stored_sched.recurrence_group_id,
-            stored_sched.title, stored_sched.description,
+            db,
+            stored_sched.recurrence_group_id,
+            stored_sched.title,
+            stored_sched.description,
         )
         db.add(stored_sched)
 

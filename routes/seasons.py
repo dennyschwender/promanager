@@ -48,9 +48,15 @@ async def seasons_list(
 
 @router.get("/new")
 async def season_new_get(request: Request, user: User = Depends(require_admin)):
-    return render(request, "seasons/form.html", {
-        "user": user, "season": None, "error": None,
-    })
+    return render(
+        request,
+        "seasons/form.html",
+        {
+            "user": user,
+            "season": None,
+            "error": None,
+        },
+    )
 
 
 @router.post("/new")
@@ -64,17 +70,31 @@ async def season_new_post(
     db: Session = Depends(get_db),
 ):
     if not name.strip():
-        return render(request, "seasons/form.html", {
-            "user": user, "season": None, "error": "Season name is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "seasons/form.html",
+            {
+                "user": user,
+                "season": None,
+                "error": "Season name is required.",
+            },
+            status_code=400,
+        )
 
     try:
         s_date = _parse_date(start_date)
         e_date = _parse_date(end_date)
     except ValueError:
-        return render(request, "seasons/form.html", {
-            "user": user, "season": None, "error": "Invalid date format. Use YYYY-MM-DD.",
-        }, status_code=400)
+        return render(
+            request,
+            "seasons/form.html",
+            {
+                "user": user,
+                "season": None,
+                "error": "Invalid date format. Use YYYY-MM-DD.",
+            },
+            status_code=400,
+        )
 
     season = Season(name=name.strip(), start_date=s_date, end_date=e_date)
     db.add(season)
@@ -98,9 +118,15 @@ async def season_edit_get(
     season = db.get(Season, season_id)
     if season is None:
         return RedirectResponse("/seasons", status_code=302)
-    return render(request, "seasons/form.html", {
-        "user": user, "season": season, "error": None,
-    })
+    return render(
+        request,
+        "seasons/form.html",
+        {
+            "user": user,
+            "season": season,
+            "error": None,
+        },
+    )
 
 
 @router.post("/{season_id}/edit")
@@ -119,17 +145,31 @@ async def season_edit_post(
         return RedirectResponse("/seasons", status_code=302)
 
     if not name.strip():
-        return render(request, "seasons/form.html", {
-            "user": user, "season": season, "error": "Season name is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "seasons/form.html",
+            {
+                "user": user,
+                "season": season,
+                "error": "Season name is required.",
+            },
+            status_code=400,
+        )
 
     try:
         s_date = _parse_date(start_date)
         e_date = _parse_date(end_date)
     except ValueError:
-        return render(request, "seasons/form.html", {
-            "user": user, "season": season, "error": "Invalid date format. Use YYYY-MM-DD.",
-        }, status_code=400)
+        return render(
+            request,
+            "seasons/form.html",
+            {
+                "user": user,
+                "season": season,
+                "error": "Invalid date format. Use YYYY-MM-DD.",
+            },
+            status_code=400,
+        )
 
     season.name = name.strip()
     season.start_date = s_date
@@ -196,11 +236,16 @@ async def season_copy_roster(
     db: Session = Depends(get_db),
 ):
     if source_season_id == season_id:
-        return render(request, "seasons/list.html", {
-            "user": _user,
-            "seasons": db.query(Season).order_by(Season.name).all(),
-            "error": "Source and target season must be different.",
-        }, status_code=400)
+        return render(
+            request,
+            "seasons/list.html",
+            {
+                "user": _user,
+                "seasons": db.query(Season).order_by(Season.name).all(),
+                "error": "Source and target season must be different.",
+            },
+            status_code=400,
+        )
 
     target = db.get(Season, season_id)
     source = db.get(Season, source_season_id)
@@ -208,34 +253,31 @@ async def season_copy_roster(
         return RedirectResponse("/seasons", status_code=302)
 
     # Fetch all memberships from source season
-    source_memberships = (
-        db.query(PlayerTeam)
-        .filter(PlayerTeam.season_id == source_season_id)
-        .all()
-    )
+    source_memberships = db.query(PlayerTeam).filter(PlayerTeam.season_id == source_season_id).all()
 
     # Find existing (player_id, team_id) pairs in target to skip duplicates
     existing = {
-        (pt.player_id, pt.team_id)
-        for pt in db.query(PlayerTeam).filter(PlayerTeam.season_id == season_id).all()
+        (pt.player_id, pt.team_id) for pt in db.query(PlayerTeam).filter(PlayerTeam.season_id == season_id).all()
     }
 
     copied = 0
     for src in source_memberships:
         if (src.player_id, src.team_id) in existing:
             continue
-        db.add(PlayerTeam(
-            player_id=src.player_id,
-            team_id=src.team_id,
-            season_id=season_id,
-            priority=src.priority,
-            role=src.role,
-            position=src.position,
-            shirt_number=src.shirt_number,
-            membership_status=src.membership_status,
-            injured_until=None,        # stale from prior season — reset
-            absent_by_default=False,   # stale from prior season — reset
-        ))
+        db.add(
+            PlayerTeam(
+                player_id=src.player_id,
+                team_id=src.team_id,
+                season_id=season_id,
+                priority=src.priority,
+                role=src.role,
+                position=src.position,
+                shirt_number=src.shirt_number,
+                membership_status=src.membership_status,
+                injured_until=None,  # stale from prior season — reset
+                absent_by_default=False,  # stale from prior season — reset
+            )
+        )
         copied += 1
 
     db.commit()

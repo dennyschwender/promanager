@@ -3,6 +3,7 @@
 The token is an HMAC-SHA256 of the session cookie value keyed by SECRET_KEY.
 This ties the token to the user's session without any server-side state.
 """
+
 from __future__ import annotations
 
 import hashlib

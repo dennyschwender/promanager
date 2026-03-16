@@ -1,4 +1,5 @@
 """Tests for /seasons routes."""
+
 from models.season import Season
 
 # ---------------------------------------------------------------------------
@@ -103,9 +104,9 @@ def test_delete_season(admin_client, db):
 
 def test_copy_roster(admin_client, db):
     """Copy-roster duplicates PlayerTeam rows from source to target season."""
-    from models.team import Team
     from models.player import Player
     from models.player_team import PlayerTeam
+    from models.team import Team
 
     s1 = Season(name="2024/25", is_active=False)
     s2 = Season(name="2025/26", is_active=True)
@@ -117,10 +118,17 @@ def test_copy_roster(admin_client, db):
     db.add(player)
     db.flush()
 
-    db.add(PlayerTeam(
-        player_id=player.id, team_id=team.id, season_id=s1.id,
-        priority=1, role="player", injured_until=None, absent_by_default=False,
-    ))
+    db.add(
+        PlayerTeam(
+            player_id=player.id,
+            team_id=team.id,
+            season_id=s1.id,
+            priority=1,
+            role="player",
+            injured_until=None,
+            absent_by_default=False,
+        )
+    )
     db.commit()
 
     resp = admin_client.post(
@@ -130,10 +138,14 @@ def test_copy_roster(admin_client, db):
     )
     assert resp.status_code == 302
 
-    copied = db.query(PlayerTeam).filter(
-        PlayerTeam.player_id == player.id,
-        PlayerTeam.season_id == s2.id,
-    ).first()
+    copied = (
+        db.query(PlayerTeam)
+        .filter(
+            PlayerTeam.player_id == player.id,
+            PlayerTeam.season_id == s2.id,
+        )
+        .first()
+    )
     assert copied is not None
     assert copied.priority == 1
     assert copied.role == "player"
@@ -142,9 +154,10 @@ def test_copy_roster(admin_client, db):
 def test_copy_roster_resets_injury_fields(admin_client, db):
     """Copy-roster resets injured_until and absent_by_default on copied rows."""
     from datetime import date
-    from models.team import Team
+
     from models.player import Player
     from models.player_team import PlayerTeam
+    from models.team import Team
 
     s1 = Season(name="2024/25", is_active=False)
     s2 = Season(name="2025/26", is_active=True)
@@ -156,10 +169,16 @@ def test_copy_roster_resets_injury_fields(admin_client, db):
     db.add(player)
     db.flush()
 
-    db.add(PlayerTeam(
-        player_id=player.id, team_id=team.id, season_id=s1.id,
-        priority=1, injured_until=date(2025, 3, 1), absent_by_default=True,
-    ))
+    db.add(
+        PlayerTeam(
+            player_id=player.id,
+            team_id=team.id,
+            season_id=s1.id,
+            priority=1,
+            injured_until=date(2025, 3, 1),
+            absent_by_default=True,
+        )
+    )
     db.commit()
 
     admin_client.post(
@@ -168,18 +187,16 @@ def test_copy_roster_resets_injury_fields(admin_client, db):
         follow_redirects=False,
     )
 
-    copied = db.query(PlayerTeam).filter(
-        PlayerTeam.season_id == s2.id
-    ).first()
+    copied = db.query(PlayerTeam).filter(PlayerTeam.season_id == s2.id).first()
     assert copied.injured_until is None
     assert copied.absent_by_default is False
 
 
 def test_copy_roster_skips_duplicates(admin_client, db):
     """Copy-roster is idempotent — running twice doesn't duplicate rows."""
-    from models.team import Team
     from models.player import Player
     from models.player_team import PlayerTeam
+    from models.team import Team
 
     s1 = Season(name="2024/25", is_active=False)
     s2 = Season(name="2025/26", is_active=True)
@@ -193,8 +210,12 @@ def test_copy_roster_skips_duplicates(admin_client, db):
     db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=s1.id, priority=1))
     db.commit()
 
-    resp1 = admin_client.post(f"/seasons/{s2.id}/copy-roster", data={"source_season_id": str(s1.id)}, follow_redirects=False)
-    resp2 = admin_client.post(f"/seasons/{s2.id}/copy-roster", data={"source_season_id": str(s1.id)}, follow_redirects=False)
+    resp1 = admin_client.post(
+        f"/seasons/{s2.id}/copy-roster", data={"source_season_id": str(s1.id)}, follow_redirects=False
+    )
+    resp2 = admin_client.post(
+        f"/seasons/{s2.id}/copy-roster", data={"source_season_id": str(s1.id)}, follow_redirects=False
+    )
     assert resp1.status_code == 302
     assert resp2.status_code == 302
 

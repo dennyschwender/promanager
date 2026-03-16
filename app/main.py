@@ -36,23 +36,25 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         request.state.user = _get_user_from_cookie(request)
-        request.state.csrf_token = generate_csrf_token(
-            request.cookies.get(COOKIE_NAME, "")
-        )
+        request.state.csrf_token = generate_csrf_token(request.cookies.get(COOKIE_NAME, ""))
         # Embed unread notification count for the bell badge
         request.state.unread_count = 0
         if request.state.user is not None:
             from app import database as _db_mod  # noqa: PLC0415
             from models.notification import Notification  # noqa: PLC0415
             from models.player import Player  # noqa: PLC0415
+
             db = _db_mod.SessionLocal()
             try:
                 # Find player(s) linked to this user
                 player_ids = [
-                    pid for (pid,) in db.query(Player.id).filter(
+                    pid
+                    for (pid,) in db.query(Player.id)
+                    .filter(
                         Player.user_id == request.state.user.id,
                         Player.is_active.is_(True),
-                    ).all()
+                    )
+                    .all()
                 ]
                 if player_ids:
                     request.state.unread_count = (
@@ -83,7 +85,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if settings.SECRET_KEY in _weak_keys:
         logger.warning(
             "SECRET_KEY is set to the default insecure value. "
-            "Generate a new one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            'Generate a new one with: python -c "import secrets; print(secrets.token_hex(32))"'
         )
     logger.info("Starting up — initialising database …")
     init_db()
@@ -113,8 +115,8 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # ── Middleware ────────────────────────────────────────────────────────
-    app.add_middleware(LocaleMiddleware)   # added first → executes second (inner)
-    app.add_middleware(AuthMiddleware)     # added second → executes first (outer)
+    app.add_middleware(LocaleMiddleware)  # added first → executes second (inner)
+    app.add_middleware(AuthMiddleware)  # added second → executes first (outer)
 
     # ── Routers ───────────────────────────────────────────────────────────
     # Phase 2 will create these modules; we guard with try/except so the app
@@ -141,12 +143,14 @@ def create_app() -> FastAPI:
     # ── Notifications router ──────────────────────────────────────────────
     try:
         from routes import notifications as _notifications_mod  # noqa: PLC0415
+
         app.include_router(_notifications_mod.router)
     except ModuleNotFoundError:
         logger.debug("Notifications router not found — skipping.")
 
     # ── Locale switcher ───────────────────────────────────────────────────
     from routes.locale import router as _locale_router  # noqa: PLC0415
+
     app.include_router(_locale_router)
 
     # ── Profile page ──────────────────────────────────────────────────────
@@ -166,21 +170,15 @@ def create_app() -> FastAPI:
         from models.player import Player as _Player  # noqa: PLC0415
         from models.web_push_subscription import WebPushSubscription  # noqa: PLC0415
 
-        current_player = (
-            db.query(_Player)
-            .filter(_Player.user_id == user.id, _Player.is_active.is_(True))
-            .first()
-        )
+        current_player = db.query(_Player).filter(_Player.user_id == user.id, _Player.is_active.is_(True)).first()
         player_prefs: dict = {}
         push_device_count = 0
         if current_player:
-            prefs = db.query(NotificationPreference).filter(
-                NotificationPreference.player_id == current_player.id
-            ).all()
+            prefs = db.query(NotificationPreference).filter(NotificationPreference.player_id == current_player.id).all()
             player_prefs = {p.channel: p.enabled for p in prefs}
-            push_device_count = db.query(WebPushSubscription).filter(
-                WebPushSubscription.player_id == current_player.id
-            ).count()
+            push_device_count = (
+                db.query(WebPushSubscription).filter(WebPushSubscription.player_id == current_player.id).count()
+            )
         return render(
             request,
             "auth/profile.html",

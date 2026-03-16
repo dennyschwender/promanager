@@ -1,4 +1,5 @@
 """models/notification_preference.py — Per-player, per-channel opt-in."""
+
 from __future__ import annotations
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
@@ -20,6 +21,4 @@ class NotificationPreference(Base):
     channel: Mapped[str] = mapped_column(String(32), nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    player: Mapped[Player] = relationship(
-        "Player", back_populates="notification_preferences"
-    )
+    player: Mapped[Player] = relationship("Player", back_populates="notification_preferences")

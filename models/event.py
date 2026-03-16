@@ -21,9 +21,7 @@ class Event(Base):
     title: Mapped[str] = mapped_column(String(256), nullable=False)
 
     # "match" | "training" | "other"
-    event_type: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="training"
-    )
+    event_type: Mapped[str] = mapped_column(String(32), nullable=False, default="training")
 
     event_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     event_time: Mapped[time | None] = mapped_column(Time, nullable=True)
@@ -32,9 +30,7 @@ class Event(Base):
     meeting_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     meeting_location: Mapped[str | None] = mapped_column(String(256), nullable=True)
     # "normal" | "all" | "selection" | "available" | "no_registration"
-    presence_type: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="normal"
-    )
+    presence_type: Mapped[str] = mapped_column(String(32), nullable=False, default="normal")
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     season_id: Mapped[int | None] = mapped_column(
@@ -52,26 +48,16 @@ class Event(Base):
 
     # ── Recurrence ──────────────────────────────────────────────────────────
     # Shared UUID string for events belonging to the same recurring series.
-    recurrence_group_id: Mapped[str | None] = mapped_column(
-        String(36), nullable=True, index=True
-    )
+    recurrence_group_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     # "weekly" | "biweekly" | "monthly" — set on every event in the series.
-    recurrence_rule: Mapped[str | None] = mapped_column(
-        String(32), nullable=True
-    )
+    recurrence_rule: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     reminder_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     # ── Relationships ──────────────────────────────────────────────────────
-    season: Mapped[Season | None] = relationship(
-        "Season", back_populates="events", lazy="select"
-    )
-    team: Mapped[Team | None] = relationship(
-        "Team", back_populates="events", lazy="select"
-    )
+    season: Mapped[Season | None] = relationship("Season", back_populates="events", lazy="select")
+    team: Mapped[Team | None] = relationship("Team", back_populates="events", lazy="select")
     attendances: Mapped[list[Attendance]] = relationship(
         "Attendance", back_populates="event", lazy="select", cascade="all, delete-orphan"
     )
@@ -83,6 +69,4 @@ class Event(Base):
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<Event id={self.id} title={self.title!r} date={self.event_date}>"
-        )
+        return f"<Event id={self.id} title={self.title!r} date={self.event_date}>"

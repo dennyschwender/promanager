@@ -1,4 +1,5 @@
 """Tests for routes/notifications.py."""
+
 from __future__ import annotations
 
 import pytest
@@ -14,8 +15,11 @@ from services.notification_service import create_default_preferences
 def player_with_user(db):
     user = create_user(db, "puser", "p@test.com", "pass", role="member")
     player = Player(
-        first_name="Test", last_name="Player", email="p@test.com",
-        user_id=user.id, is_active=True,
+        first_name="Test",
+        last_name="Player",
+        email="p@test.com",
+        user_id=user.id,
+        is_active=True,
     )
     db.add(player)
     db.commit()
@@ -75,9 +79,7 @@ def test_mark_read_all(db, player_client):
 
     r = c.post("/notifications/read-all")
     assert r.status_code in (200, 302)
-    unread = db.query(Notification).filter(
-        Notification.player_id == player.id, Notification.is_read.is_(False)
-    ).count()
+    unread = db.query(Notification).filter(Notification.player_id == player.id, Notification.is_read.is_(False)).count()
     assert unread == 0
 
 
@@ -110,8 +112,12 @@ def test_notification_preferences_update(db, player_client):
         data={"email": "off", "inapp": "on", "webpush": "off"},
     )
     assert r.status_code in (200, 302)
-    email_pref = db.query(NotificationPreference).filter(
-        NotificationPreference.player_id == player.id,
-        NotificationPreference.channel == "email",
-    ).one()
+    email_pref = (
+        db.query(NotificationPreference)
+        .filter(
+            NotificationPreference.player_id == player.id,
+            NotificationPreference.channel == "email",
+        )
+        .one()
+    )
     assert email_pref.enabled is False

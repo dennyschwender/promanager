@@ -1,4 +1,5 @@
 """Tests for services/import_service.py."""
+
 import io
 from datetime import date
 
@@ -11,6 +12,7 @@ from models.team import Team
 from services.import_service import parse_csv, parse_xlsx, process_rows
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture()
 def season(db):
@@ -40,6 +42,7 @@ def other_team(db, season):
 
 
 # ── process_rows ──────────────────────────────────────────────────────────────
+
 
 def test_valid_rows_imported(db, team, season):
     rows = [{"first_name": "Alice", "last_name": "Smith"}]
@@ -156,6 +159,7 @@ def test_valid_date_formats_accepted(db, team, season):
 
 # ── parse_csv ─────────────────────────────────────────────────────────────────
 
+
 def test_parse_csv_basic():
     content = b"first_name,last_name,email\nAlice,Smith,alice@test.com\n"
     rows = parse_csv(io.BytesIO(content))
@@ -178,8 +182,10 @@ def test_parse_csv_case_insensitive_headers():
 
 # ── parse_xlsx ────────────────────────────────────────────────────────────────
 
+
 def test_parse_xlsx_basic():
     import openpyxl
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.append(["first_name", "last_name", "email"])
@@ -195,6 +201,7 @@ def test_parse_xlsx_basic():
 
 def test_parse_xlsx_case_insensitive_headers():
     import openpyxl
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.append(["First_Name", "Last_Name"])

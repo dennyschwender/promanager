@@ -1,4 +1,5 @@
 """Shared pytest fixtures."""
+
 from __future__ import annotations
 
 import os
@@ -30,9 +31,7 @@ Base.metadata.create_all(bind=_test_engine)
 # ── Patch the app-level SessionLocal once for the whole session ────────────────
 import app.database as _db_module  # noqa: E402
 
-_TestingSessionLocal = sessionmaker(
-    bind=_test_engine, autocommit=False, autoflush=False
-)
+_TestingSessionLocal = sessionmaker(bind=_test_engine, autocommit=False, autoflush=False)
 _db_module.SessionLocal = _TestingSessionLocal  # AuthMiddleware uses this
 
 
@@ -68,6 +67,7 @@ def client(db):
 @pytest.fixture(scope="function")
 def csrf_client(db):
     """TestClient with CSRF enforcement enabled (no override)."""
+
     def override_get_db():
         yield db
 

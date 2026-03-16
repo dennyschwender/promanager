@@ -6,6 +6,7 @@ in every rendered template.
 
 Use render() to get t() and current_locale automatically injected.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

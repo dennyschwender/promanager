@@ -16,9 +16,7 @@ def _utcnow() -> datetime:
 
 class Attendance(Base):
     __tablename__ = "attendances"
-    __table_args__ = (
-        UniqueConstraint("event_id", "player_id", name="uq_attendance_event_player"),
-    )
+    __table_args__ = (UniqueConstraint("event_id", "player_id", name="uq_attendance_event_player"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
@@ -47,15 +45,8 @@ class Attendance(Base):
     )
 
     # ── Relationships ──────────────────────────────────────────────────────
-    event: Mapped[Event] = relationship(
-        "Event", back_populates="attendances", lazy="select"
-    )
-    player: Mapped[Player] = relationship(
-        "Player", back_populates="attendances", lazy="select"
-    )
+    event: Mapped[Event] = relationship("Event", back_populates="attendances", lazy="select")
+    player: Mapped[Player] = relationship("Player", back_populates="attendances", lazy="select")
 
     def __repr__(self) -> str:
-        return (
-            f"<Attendance id={self.id} event_id={self.event_id} "
-            f"player_id={self.player_id} status={self.status!r}>"
-        )
+        return f"<Attendance id={self.id} event_id={self.event_id} player_id={self.player_id} status={self.status!r}>"

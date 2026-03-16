@@ -22,9 +22,7 @@ class Team(Base):
         cascade="all, delete-orphan",
         lazy="select",
     )
-    events: Mapped[list[Event]] = relationship(
-        "Event", back_populates="team", lazy="select"
-    )
+    events: Mapped[list[Event]] = relationship("Event", back_populates="team", lazy="select")
     recurring_schedules: Mapped[list["TeamRecurringSchedule"]] = relationship(  # type: ignore[name-defined]
         "TeamRecurringSchedule",
         back_populates="team",

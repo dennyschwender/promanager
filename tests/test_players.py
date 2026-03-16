@@ -1,4 +1,5 @@
 """Tests for /players routes."""
+
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.team import Team
@@ -151,10 +152,10 @@ def test_players_filter_by_team(admin_client, db):
 
 def test_players_list_filters_by_active_season(admin_client, db):
     """Player list defaults to active season — only shows players in that season."""
-    from models.season import Season
-    from models.team import Team
     from models.player import Player
     from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
 
     s1 = Season(name="2024/25", is_active=False)
     s2 = Season(name="2025/26", is_active=True)
@@ -179,9 +180,9 @@ def test_players_list_filters_by_active_season(admin_client, db):
 
 def test_sync_memberships_only_touches_target_season(db):
     """Editing a player in season A must not delete their season B membership."""
+    from models.player_team import PlayerTeam
     from models.season import Season
     from models.team import Team
-    from models.player_team import PlayerTeam
     from routes.players import _sync_memberships
 
     s1 = Season(name="2024/25", is_active=False)
@@ -207,10 +208,10 @@ def test_sync_memberships_only_touches_target_season(db):
 
 
 def test_player_team_has_season_id(db):
-    from models.season import Season
-    from models.team import Team
     from models.player import Player
     from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
 
     season = Season(name="2025/26", is_active=True)
     team = Team(name="U21")

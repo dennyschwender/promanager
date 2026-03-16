@@ -18,21 +18,15 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    username: Mapped[str] = mapped_column(
-        String(64), unique=True, nullable=False, index=True
-    )
-    email: Mapped[str] = mapped_column(
-        String(128), unique=True, nullable=False, index=True
-    )
+    username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(256), nullable=False)
 
     # "admin" | "member"
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="member")
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     # Optional hashed API token for machine-to-machine auth
     api_token_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
@@ -41,9 +35,7 @@ class User(Base):
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
 
     # ── Relationships ──────────────────────────────────────────────────────
-    players: Mapped[list[Player]] = relationship(
-        "Player", back_populates="user", lazy="select"
-    )
+    players: Mapped[list[Player]] = relationship("Player", back_populates="user", lazy="select")
 
     # ── Helpers ────────────────────────────────────────────────────────────
     @property

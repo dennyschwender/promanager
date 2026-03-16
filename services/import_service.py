@@ -1,4 +1,5 @@
 """services/import_service.py — Bulk player import logic."""
+
 from __future__ import annotations
 
 import csv
@@ -64,6 +65,7 @@ def parse_xlsx(stream: BinaryIO) -> list[dict]:
     Raises ValueError if the stream is not a valid XLSX file.
     """
     import openpyxl
+
     try:
         wb = openpyxl.load_workbook(stream, read_only=True, data_only=True)
     except Exception as exc:
@@ -76,11 +78,13 @@ def parse_xlsx(stream: BinaryIO) -> list[dict]:
         return []
     result = []
     for row in rows_iter:
-        result.append({
-            headers[i]: str(cell).strip() if cell is not None else ""
-            for i, cell in enumerate(row)
-            if i < len(headers)
-        })
+        result.append(
+            {
+                headers[i]: str(cell).strip() if cell is not None else ""
+                for i, cell in enumerate(row)
+                if i < len(headers)
+            }
+        )
     return result
 
 
@@ -122,10 +126,14 @@ def process_rows(
         if email:
             existing = db.query(Player).filter(Player.email.ilike(email)).first()
         else:
-            existing = db.query(Player).filter(
-                Player.first_name.ilike(first_name),
-                Player.last_name.ilike(last_name),
-            ).first()
+            existing = (
+                db.query(Player)
+                .filter(
+                    Player.first_name.ilike(first_name),
+                    Player.last_name.ilike(last_name),
+                )
+                .first()
+            )
 
         if existing:
             skip("duplicate")
@@ -170,15 +178,17 @@ def process_rows(
             )
             db.add(player)
             db.flush()
-            db.add(PlayerTeam(
-                player_id=player.id,
-                team_id=resolved_team_id,
-                season_id=resolved_season_id,
-                priority=1,
-                role="player",
-                membership_status="active",
-                absent_by_default=False,
-            ))
+            db.add(
+                PlayerTeam(
+                    player_id=player.id,
+                    team_id=resolved_team_id,
+                    season_id=resolved_season_id,
+                    priority=1,
+                    role="player",
+                    membership_status="active",
+                    absent_by_default=False,
+                )
+            )
             sp.commit()
         except SQLAlchemyError:
             sp.rollback()

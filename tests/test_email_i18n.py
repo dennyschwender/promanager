@@ -1,4 +1,5 @@
 """Tests for locale-aware email service."""
+
 from __future__ import annotations
 
 

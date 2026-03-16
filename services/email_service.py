@@ -84,14 +84,22 @@ def send_event_reminder(
 
     subject = _t("email.reminder_subject", locale, event_name=event_title, date=date_str)
     body_text = _t(
-        "email.reminder_body", locale,
-        name=player_name, event_name=event_title,
-        when=when, location=location, app_name=settings.APP_NAME,
+        "email.reminder_body",
+        locale,
+        name=player_name,
+        event_name=event_title,
+        when=when,
+        location=location,
+        app_name=settings.APP_NAME,
     )
     body_html = _t(
-        "email.reminder_body_html", locale,
-        name=player_name, event_name=event_title,
-        when=when, location=location, app_name=settings.APP_NAME,
+        "email.reminder_body_html",
+        locale,
+        name=player_name,
+        event_name=event_title,
+        when=when,
+        location=location,
+        app_name=settings.APP_NAME,
     )
     return send_email(player_email, subject, body_html, body_text)
 
@@ -109,13 +117,21 @@ def send_attendance_request(
 
     subject = _t("email.attendance_subject", locale, event_name=event_title, date=date_str)
     body_text = _t(
-        "email.attendance_body", locale,
-        name=player_name, event_name=event_title,
-        date=date_str, url=attendance_url, app_name=settings.APP_NAME,
+        "email.attendance_body",
+        locale,
+        name=player_name,
+        event_name=event_title,
+        date=date_str,
+        url=attendance_url,
+        app_name=settings.APP_NAME,
     )
     body_html = _t(
-        "email.attendance_body_html", locale,
-        name=player_name, event_name=event_title,
-        date=date_str, url=attendance_url, app_name=settings.APP_NAME,
+        "email.attendance_body_html",
+        locale,
+        name=player_name,
+        event_name=event_title,
+        date=date_str,
+        url=attendance_url,
+        app_name=settings.APP_NAME,
     )
     return send_email(player_email, subject, body_html, body_text)

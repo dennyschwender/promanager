@@ -59,12 +59,16 @@ async def report_season(
     stats = get_season_attendance_stats(db, season_id)
     all_seasons = db.query(Season).order_by(Season.name).all()
 
-    return render(request, "reports/season.html", {
-        "user": user,
-        "season": season,
-        "stats": stats,
-        "all_seasons": all_seasons,
-    })
+    return render(
+        request,
+        "reports/season.html",
+        {
+            "user": user,
+            "season": season,
+            "stats": stats,
+            "all_seasons": all_seasons,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -89,8 +93,12 @@ async def report_player(
 
     history = get_player_attendance_history(db, player_id)
 
-    return render(request, "reports/player.html", {
-        "user": user,
-        "player": player,
-        "history": history,
-    })
+    return render(
+        request,
+        "reports/player.html",
+        {
+            "user": user,
+            "player": player,
+            "history": history,
+        },
+    )

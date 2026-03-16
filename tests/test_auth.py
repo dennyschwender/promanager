@@ -1,4 +1,5 @@
 """Tests for /auth routes."""
+
 from services.auth_service import create_user
 
 # ---------------------------------------------------------------------------

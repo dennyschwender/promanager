@@ -27,7 +27,7 @@ def _db_path_from_url(url: str) -> str:
     # sqlite:///./data/proManager.db  → ./data/proManager.db
     # sqlite:////abs/path/db.sqlite     → /abs/path/db.sqlite
     if url.startswith("sqlite:///"):
-        return url[len("sqlite:///"):]
+        return url[len("sqlite:///") :]
     raise ValueError(f"Unsupported DATABASE_URL scheme for backup: {url!r}")
 
 
@@ -36,8 +36,7 @@ def main() -> None:
     parser.add_argument(
         "--dest",
         default=None,
-        help="Directory to write the backup file into. "
-             "Defaults to data/backups/ relative to the project root.",
+        help="Directory to write the backup file into. Defaults to data/backups/ relative to the project root.",
     )
     args = parser.parse_args()
 

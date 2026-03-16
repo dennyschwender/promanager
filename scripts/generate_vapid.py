@@ -5,6 +5,7 @@ Run once and add the output to your .env file:
 
     python scripts/generate_vapid.py
 """
+
 import base64
 
 from cryptography.hazmat.primitives.serialization import (
@@ -19,9 +20,7 @@ vapid = Vapid()
 vapid.generate_keys()
 
 raw_pub = vapid.public_key.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
-raw_priv = vapid.private_key.private_bytes(
-    Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()
-)
+raw_priv = vapid.private_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption())
 
 public_key = base64.urlsafe_b64encode(raw_pub).rstrip(b"=").decode()
 # Store private key as PEM (base64-encoded for easy .env storage)

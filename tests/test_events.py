@@ -1,4 +1,5 @@
 """Tests for /events routes."""
+
 from datetime import date
 from unittest.mock import patch
 

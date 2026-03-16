@@ -73,15 +73,19 @@ async def events_list(
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return render(request, "events/list.html", {
-        "user": user,
-        "upcoming": upcoming,
-        "past": past,
-        "seasons": seasons,
-        "teams": teams,
-        "selected_season_id": season_id,
-        "selected_team_id": team_id,
-    })
+    return render(
+        request,
+        "events/list.html",
+        {
+            "user": user,
+            "upcoming": upcoming,
+            "past": past,
+            "seasons": seasons,
+            "teams": teams,
+            "selected_season_id": season_id,
+            "selected_team_id": team_id,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -97,13 +101,17 @@ async def event_new_get(
 ):
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return render(request, "events/form.html", {
-        "user": user,
-        "event": None,
-        "seasons": seasons,
-        "teams": teams,
-        "error": None,
-    })
+    return render(
+        request,
+        "events/form.html",
+        {
+            "user": user,
+            "event": None,
+            "seasons": seasons,
+            "teams": teams,
+            "error": None,
+        },
+    )
 
 
 @router.post("/new")
@@ -132,13 +140,18 @@ async def event_new_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": None,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Event title is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Event title is required.",
+            },
+            status_code=400,
+        )
 
     try:
         e_date = _parse_date(event_date)
@@ -146,22 +159,32 @@ async def event_new_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": None,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Invalid date or time format.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Invalid date or time format.",
+            },
+            status_code=400,
+        )
 
     if e_date is None:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": None,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Event date is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Event date is required.",
+            },
+            status_code=400,
+        )
 
     # ── Recurrence setup ──────────────────────────────────────────────────
     recurring = bool(is_recurring.strip())
@@ -172,34 +195,54 @@ async def event_new_post(
             r_end = _parse_date(recurrence_end_date)
         except ValueError:
             return render(
-                request, "events/form.html",
-                {"user": user, "event": None,
-                 "seasons": seasons, "teams": teams,
-                 "error": "Invalid recurrence end date."},
+                request,
+                "events/form.html",
+                {
+                    "user": user,
+                    "event": None,
+                    "seasons": seasons,
+                    "teams": teams,
+                    "error": "Invalid recurrence end date.",
+                },
                 status_code=400,
             )
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
         return render(
-            request, "events/form.html",
-            {"user": user, "event": None,
-             "seasons": seasons, "teams": teams,
-             "error": "Please select a valid recurrence frequency."},
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Please select a valid recurrence frequency.",
+            },
             status_code=400,
         )
     if recurring and r_end is None:
         return render(
-            request, "events/form.html",
-            {"user": user, "event": None,
-             "seasons": seasons, "teams": teams,
-             "error": "Recurrence end date is required for recurring events."},
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Recurrence end date is required for recurring events.",
+            },
             status_code=400,
         )
     if recurring and r_end <= e_date:
         return render(
-            request, "events/form.html",
-            {"user": user, "event": None,
-             "seasons": seasons, "teams": teams,
-             "error": "Recurrence end date must be after the event start date."},
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Recurrence end date must be after the event start date.",
+            },
             status_code=400,
         )
 
@@ -340,11 +383,15 @@ async def event_detail(
 
     summary = get_event_attendance_summary(db, event_id)
 
-    return render(request, "events/detail.html", {
-        "user": user,
-        "event": event,
-        "summary": summary,
-    })
+    return render(
+        request,
+        "events/detail.html",
+        {
+            "user": user,
+            "event": event,
+            "summary": summary,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -365,13 +412,17 @@ async def event_edit_get(
 
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
-    return render(request, "events/form.html", {
-        "user": user,
-        "event": event,
-        "seasons": seasons,
-        "teams": teams,
-        "error": None,
-    })
+    return render(
+        request,
+        "events/form.html",
+        {
+            "user": user,
+            "event": event,
+            "seasons": seasons,
+            "teams": teams,
+            "error": None,
+        },
+    )
 
 
 @router.post("/{event_id}/edit")
@@ -402,46 +453,66 @@ async def event_edit_post(
     teams = db.query(Team).order_by(Team.name).all()
 
     if not title.strip():
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": event,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Event title is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": event,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Event title is required.",
+            },
+            status_code=400,
+        )
 
     try:
         e_date = _parse_date(event_date)
         e_time = _parse_time(event_time)
     except ValueError:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": event,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Invalid date or time format.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": event,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Invalid date or time format.",
+            },
+            status_code=400,
+        )
 
     if e_date is None:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": event,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Event date is required.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": event,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Event date is required.",
+            },
+            status_code=400,
+        )
 
     try:
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": event,
-            "seasons": seasons,
-            "teams": teams,
-            "error": "Invalid time format.",
-        }, status_code=400)
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": event,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "Invalid time format.",
+            },
+            status_code=400,
+        )
 
     event.title = title.strip()
     event.event_type = event_type
@@ -502,11 +573,7 @@ async def send_reminders(
         return RedirectResponse("/events", status_code=302)
 
     # Find all attendances with status 'unknown' that have a player email
-    attendances = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event_id, Attendance.status == "unknown")
-        .all()
-    )
+    attendances = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.status == "unknown").all()
 
     sent = 0
     for att in attendances:

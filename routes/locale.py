@@ -1,4 +1,5 @@
 """routes/locale.py — Language preference endpoint."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -27,6 +28,7 @@ async def set_locale(
 ):
     if locale not in SUPPORTED_LOCALES:
         from fastapi.responses import JSONResponse
+
         return JSONResponse({"detail": "Unsupported locale"}, status_code=400)
 
     redirect_to = _safe_next(next)

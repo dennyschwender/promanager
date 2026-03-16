@@ -1,4 +1,5 @@
 """Tests for GET/POST /events/{id}/notify."""
+
 from __future__ import annotations
 
 import datetime
@@ -22,15 +23,23 @@ def setup(db):
     team = Team(name="Eagles")
     db.add(team)
     db.flush()
-    player = Player(first_name="Alice", last_name="Smith",
-                    email="alice@test.com", is_active=True)
+    player = Player(first_name="Alice", last_name="Smith", email="alice@test.com", is_active=True)
     db.add(player)
     db.flush()
-    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id,
-                      priority=1, role="player",
-                      membership_status="active", absent_by_default=False))
-    event = Event(title="Match", event_type="match", event_date=datetime.date(2026, 4, 1),
-                  season_id=season.id, team_id=team.id)
+    db.add(
+        PlayerTeam(
+            player_id=player.id,
+            team_id=team.id,
+            season_id=season.id,
+            priority=1,
+            role="player",
+            membership_status="active",
+            absent_by_default=False,
+        )
+    )
+    event = Event(
+        title="Match", event_type="match", event_date=datetime.date(2026, 4, 1), season_id=season.id, team_id=team.id
+    )
     db.add(event)
     db.commit()
     create_default_preferences(player.id, db)
@@ -60,9 +69,7 @@ def test_notify_post_creates_notification(db, admin_client, setup):
         },
     )
     assert r.status_code in (200, 302)
-    notifs = db.query(Notification).filter(
-        Notification.player_id == setup["player"].id
-    ).all()
+    notifs = db.query(Notification).filter(Notification.player_id == setup["player"].id).all()
     assert len(notifs) == 1
     assert notifs[0].title == "Test Notification"
 
@@ -70,7 +77,6 @@ def test_notify_post_creates_notification(db, admin_client, setup):
 def test_notify_post_member_forbidden(member_client, setup):
     r = member_client.post(
         f"/events/{setup['event'].id}/notify",
-        data={"title": "X", "body": "Y", "tag": "direct",
-              "recipients": ["all"], "channels": ["inapp"]},
+        data={"title": "X", "body": "Y", "tag": "direct", "recipients": ["all"], "channels": ["inapp"]},
     )
     assert r.status_code in (302, 403)

@@ -1,4 +1,5 @@
 """services/channels/webpush_channel.py — Web Push notification channel."""
+
 from __future__ import annotations
 
 import json
@@ -32,11 +33,7 @@ class WebPushChannel:
             logger.warning("pywebpush not installed — Web Push unavailable")
             return False
 
-        subscriptions = (
-            db.query(WebPushSubscription)
-            .filter(WebPushSubscription.player_id == player.id)
-            .all()
-        )
+        subscriptions = db.query(WebPushSubscription).filter(WebPushSubscription.player_id == player.id).all()
         if not subscriptions:
             return False
 
@@ -59,18 +56,12 @@ class WebPushChannel:
                 )
                 sent = True
             except Exception as exc:
-                is_gone = hasattr(exc, "response") and getattr(
-                    exc.response, "status_code", None
-                ) == 410
+                is_gone = hasattr(exc, "response") and getattr(exc.response, "status_code", None) == 410
                 if is_gone:
-                    logger.info(
-                        "WebPushChannel: removing expired subscription %s", sub.id
-                    )
+                    logger.info("WebPushChannel: removing expired subscription %s", sub.id)
                     to_delete.append(sub)
                 else:
-                    logger.warning(
-                        "WebPushChannel: push failed for sub %s: %s", sub.id, exc
-                    )
+                    logger.warning("WebPushChannel: push failed for sub %s: %s", sub.id, exc)
 
         for sub in to_delete:
             db.delete(sub)

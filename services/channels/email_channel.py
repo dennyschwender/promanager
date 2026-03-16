@@ -1,4 +1,5 @@
 """services/channels/email_channel.py — Email notification channel."""
+
 from __future__ import annotations
 
 import logging
@@ -19,13 +20,8 @@ class EmailChannel:
             return False
         subject = notification.title
         body_text = notification.body
-        body_html = (
-            f"<p>{notification.body.replace(chr(10), '<br>')}</p>"
-            f"<p><small>Tag: {notification.tag}</small></p>"
-        )
+        body_html = f"<p>{notification.body.replace(chr(10), '<br>')}</p><p><small>Tag: {notification.tag}</small></p>"
         ok = send_email(player.email, subject, body_html, body_text)
         if not ok:
-            logger.warning(
-                "EmailChannel: failed to send to player %s (%s)", player.id, player.email
-            )
+            logger.warning("EmailChannel: failed to send to player %s (%s)", player.id, player.email)
         return ok

@@ -1,4 +1,5 @@
 """services/notification_service.py — Notification dispatch orchestration."""
+
 from __future__ import annotations
 
 import logging
@@ -20,6 +21,7 @@ _inapp_channel = InAppChannel()
 
 
 # ── Preference helpers ────────────────────────────────────────────────────────
+
 
 def create_default_preferences(player_id: int, db: Session) -> None:
     """Create enabled preferences for all channels if they don't exist."""
@@ -52,10 +54,12 @@ def get_preference(player_id: int, channel: str, db: Session) -> bool:
 
 # ── Recipient resolution ──────────────────────────────────────────────────────
 
+
 def _resolve_players(event, recipient_statuses: list[str] | None, db: Session) -> list[Player]:
     """Return the list of players to notify."""
     if event.team_id is not None:
         from models.player_team import PlayerTeam  # noqa: PLC0415
+
         base_q = (
             db.query(Player)
             .join(PlayerTeam, PlayerTeam.player_id == Player.id)
@@ -85,6 +89,7 @@ def _resolve_players(event, recipient_statuses: list[str] | None, db: Session) -
 
 # ── Core dispatch ─────────────────────────────────────────────────────────────
 
+
 def _dispatch(
     player_ids: list[int],
     event_id: int | None,
@@ -101,6 +106,7 @@ def _dispatch(
     """
     import app.database as _db_mod  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
+
     _webpush_channel = WebPushChannel()
 
     db = _db_mod.SessionLocal()
@@ -177,9 +183,7 @@ def send_notifications(
     event_id = event.id if event else None
 
     if background_tasks is not None:
-        background_tasks.add_task(
-            _dispatch, player_ids, event_id, title, body, tag, admin_channels
-        )
+        background_tasks.add_task(_dispatch, player_ids, event_id, title, body, tag, admin_channels)
         return {"queued": len(player_ids)}
     else:
         count = _dispatch(player_ids, event_id, title, body, tag, admin_channels)

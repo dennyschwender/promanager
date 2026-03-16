@@ -54,15 +54,19 @@ async def attendance_page(
 
     att_map = {att.player_id: att for att in attendances}
 
-    return render(request, "attendance/mark.html", {
-        "user": user,
-        "event": event,
-        "attendances": attendances,
-        "att_map": att_map,
-        "my_players": my_players,
-        "summary": summary,
-        "flash": request.query_params.get("flash"),
-    })
+    return render(
+        request,
+        "attendance/mark.html",
+        {
+            "user": user,
+            "event": event,
+            "attendances": attendances,
+            "att_map": att_map,
+            "my_players": my_players,
+            "summary": summary,
+            "flash": request.query_params.get("flash"),
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

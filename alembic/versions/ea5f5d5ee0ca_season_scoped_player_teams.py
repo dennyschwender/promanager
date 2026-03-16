@@ -7,27 +7,25 @@ Create Date: 2026-03-16 19:43:23.609790
 IMPORTANT: This migration is IRREVERSIBLE. The season_id column on teams is permanently removed.
 downgrade() raises NotImplementedError. Back up your database before running.
 """
+
 from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = 'ea5f5d5ee0ca'
-down_revision = 'a1b2c3d4e5f6'
+revision = "ea5f5d5ee0ca"
+down_revision = "a1b2c3d4e5f6"
 branch_labels = None
 depends_on = None
 
 
 def _get_active_season_id(conn) -> int:
     """Return the id of the single active season. Raises RuntimeError if 0 or 2+."""
-    result = conn.execute(
-        sa.text("SELECT id FROM seasons WHERE is_active = 1")
-    ).fetchall()
+    result = conn.execute(sa.text("SELECT id FROM seasons WHERE is_active = 1")).fetchall()
     if len(result) == 0:
         raise RuntimeError(
-            "Migration aborted: no active season found. "
-            "Activate exactly one season before running this migration."
+            "Migration aborted: no active season found. Activate exactly one season before running this migration."
         )
     if len(result) > 1:
         raise RuntimeError(
@@ -61,9 +59,7 @@ def upgrade() -> None:
         batch_op.drop_constraint("uq_player_team", type_="unique")
         batch_op.alter_column("season_id", nullable=False)
         # Explicitly set the new composite PK to include season_id
-        batch_op.create_primary_key(
-            "pk_player_teams", ["player_id", "team_id", "season_id"]
-        )
+        batch_op.create_primary_key("pk_player_teams", ["player_id", "team_id", "season_id"])
         batch_op.create_foreign_key(
             "fk_player_teams_season_id",
             "seasons",

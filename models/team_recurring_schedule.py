@@ -18,11 +18,10 @@ class TeamRecurringSchedule(Base):
         Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True
     )
     title: Mapped[str] = mapped_column(String(256), nullable=False)
-    event_type: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="training"
-    )
+    event_type: Mapped[str] = mapped_column(String(32), nullable=False, default="training")
     recurrence_rule: Mapped[str] = mapped_column(
-        String(32), nullable=False  # weekly | biweekly | monthly
+        String(32),
+        nullable=False,  # weekly | biweekly | monthly
     )
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -31,14 +30,10 @@ class TeamRecurringSchedule(Base):
     location: Mapped[str | None] = mapped_column(String(256), nullable=True)
     meeting_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     meeting_location: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    presence_type: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="normal"
-    )
+    presence_type: Mapped[str] = mapped_column(String(32), nullable=False, default="normal")
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # UUID string linking this schedule to the events it generated
-    recurrence_group_id: Mapped[str] = mapped_column(
-        String(36), nullable=False, unique=True, index=True
-    )
+    recurrence_group_id: Mapped[str] = mapped_column(String(36), nullable=False, unique=True, index=True)
 
     team: Mapped["Team"] = relationship(  # type: ignore[name-defined]
         "Team", back_populates="recurring_schedules"

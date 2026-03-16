@@ -58,9 +58,7 @@ def generate_events_for_schedule(
     expect a fully uncommitted state after this call."""
     end = schedule.end_date
     if end is None:
-        raise ValueError(
-            "Set an end date on the schedule."
-        )
+        raise ValueError("Set an end date on the schedule.")
     if schedule.start_date > end:
         raise ValueError("Start date must be on or before end date.")
 
@@ -152,6 +150,7 @@ def _norm(v) -> str:
     """
     from datetime import date as _date
     from datetime import time as _time
+
     if v is None:
         return ""
     if isinstance(v, _time):  # datetime.time (not datetime.datetime)
@@ -182,9 +181,7 @@ def sign_payload(data: dict) -> str:
     Returns a string of the form ``{json}.{hex_signature}``.
     """
     payload = json.dumps(data, default=str, sort_keys=True)
-    sig = hmac.new(
-        settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256
-    ).hexdigest()
+    sig = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}.{sig}"
 
 
@@ -197,9 +194,7 @@ def verify_payload(token: str) -> dict:
         payload, sig = token.rsplit(".", 1)
     except ValueError:
         raise ValueError("Invalid payload format.")
-    expected = hmac.new(
-        settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(sig, expected):
         raise ValueError("Payload signature invalid.")
     return json.loads(payload)

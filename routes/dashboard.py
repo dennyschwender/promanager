@@ -64,12 +64,16 @@ async def dashboard(
         all_teams = db.query(Team).order_by(Team.name).all()
         all_seasons = db.query(Season).order_by(Season.name).all()
 
-    return render(request, "dashboard/index.html", {
-        "user": user,
-        "active_season": active_season,
-        "upcoming_count": upcoming_count,
-        "unknown_count": unknown_count,
-        "top_events": top_events,
-        "all_teams": all_teams,
-        "all_seasons": all_seasons,
-    })
+    return render(
+        request,
+        "dashboard/index.html",
+        {
+            "user": user,
+            "active_season": active_season,
+            "upcoming_count": upcoming_count,
+            "unknown_count": unknown_count,
+            "top_events": top_events,
+            "all_teams": all_teams,
+            "all_seasons": all_seasons,
+        },
+    )

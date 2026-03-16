@@ -6,18 +6,19 @@ lookups (e.g. gettext / fluent) without changing callers.
 
 Placeholders: {event}, {date}, {time}, {location}, {new_location}, {new_time}
 """
+
 from __future__ import annotations
 
 from typing import TypedDict
 
 
 class NotificationTemplate(TypedDict):
-    key: str          # machine identifier
-    name: str         # human-readable name shown in the dropdown
-    tag: str          # "direct" | "announcement"
+    key: str  # machine identifier
+    name: str  # human-readable name shown in the dropdown
+    tag: str  # "direct" | "announcement"
     tag_locked: bool  # if True, admin cannot change the tag
-    title_tpl: str    # title template with {placeholder} syntax
-    body_tpl: str     # body template with {placeholder} syntax
+    title_tpl: str  # title template with {placeholder} syntax
+    body_tpl: str  # body template with {placeholder} syntax
 
 
 TEMPLATES: list[NotificationTemplate] = [
@@ -27,10 +28,7 @@ TEMPLATES: list[NotificationTemplate] = [
         "tag": "direct",
         "tag_locked": True,
         "title_tpl": "Reminder: {event} on {date}",
-        "body_tpl": (
-            "Don't forget: {event} is on {date} at {time} at {location}. "
-            "Please confirm your attendance."
-        ),
+        "body_tpl": ("Don't forget: {event} is on {date} at {time} at {location}. Please confirm your attendance."),
     },
     {
         "key": "cancellation",
@@ -69,7 +67,7 @@ TEMPLATES: list[NotificationTemplate] = [
         "name": "General Announcement",
         "tag": "announcement",
         "tag_locked": False,  # admin can switch to direct
-        "title_tpl": "",      # free text — admin fills in
+        "title_tpl": "",  # free text — admin fills in
         "body_tpl": "",
     },
     {
@@ -109,5 +107,6 @@ def render_template(key: str, context: dict[str, str]) -> tuple[str, str]:
 
 class _SafeDict(dict):
     """Return the key wrapped in braces for missing keys."""
+
     def __missing__(self, key: str) -> str:
         return "{" + key + "}"

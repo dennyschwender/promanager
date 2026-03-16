@@ -16,9 +16,7 @@ class Player(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     first_name: Mapped[str] = mapped_column(String(64), nullable=False)
     last_name: Mapped[str] = mapped_column(String(64), nullable=False)
-    email: Mapped[str | None] = mapped_column(
-        String(128), nullable=True, index=True
-    )
+    email: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     # Legacy single phone kept for backward-compat; use phones for multi-number
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -59,12 +57,8 @@ class Player(Base):
         uselist=False,
         lazy="select",
     )
-    user: Mapped[User | None] = relationship(
-        "User", back_populates="players", lazy="select"
-    )
-    attendances: Mapped[list[Attendance]] = relationship(
-        "Attendance", back_populates="player", lazy="select"
-    )
+    user: Mapped[User | None] = relationship("User", back_populates="players", lazy="select")
+    attendances: Mapped[list[Attendance]] = relationship("Attendance", back_populates="player", lazy="select")
     notifications: Mapped[list[Notification]] = relationship(
         "Notification",
         back_populates="player",

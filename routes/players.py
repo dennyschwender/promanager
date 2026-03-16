@@ -31,6 +31,7 @@ router = APIRouter()
 # Form-parsing helpers
 # ---------------------------------------------------------------------------
 
+
 def _parse_team_memberships(form) -> list[tuple[int, int, dict]]:
     """Return list of (team_id, priority, extra_fields) from form data.
 
@@ -83,18 +84,20 @@ def _sync_memberships(
         PlayerTeam.season_id == season_id,
     ).delete()
     for team_id, priority, extra in memberships:
-        db.add(PlayerTeam(
-            player_id=player.id,
-            team_id=team_id,
-            season_id=season_id,
-            priority=priority,
-            role=extra.get("role", "player") or "player",
-            position=extra.get("position"),
-            shirt_number=extra.get("shirt_number"),
-            membership_status=extra.get("membership_status", "active") or "active",
-            injured_until=extra.get("injured_until"),
-            absent_by_default=bool(extra.get("absent_by_default", False)),
-        ))
+        db.add(
+            PlayerTeam(
+                player_id=player.id,
+                team_id=team_id,
+                season_id=season_id,
+                priority=priority,
+                role=extra.get("role", "player") or "player",
+                position=extra.get("position"),
+                shirt_number=extra.get("shirt_number"),
+                membership_status=extra.get("membership_status", "active") or "active",
+                injured_until=extra.get("injured_until"),
+                absent_by_default=bool(extra.get("absent_by_default", False)),
+            )
+        )
 
 
 def _parse_date(value: str) -> date | None:
@@ -121,37 +124,35 @@ def _sync_phones(db: Session, player: Player, form) -> None:
 def _sync_contact(db: Session, player: Player, form) -> None:
     """Upsert PlayerContact record from contact_* form fields."""
     first = (form.get("contact_first_name") or "").strip()
-    last  = (form.get("contact_last_name")  or "").strip()
+    last = (form.get("contact_last_name") or "").strip()
     # If both names are blank, remove existing contact
     if not first and not last:
         db.query(PlayerContact).filter(PlayerContact.player_id == player.id).delete()
         return
 
-    contact = (
-        db.query(PlayerContact).filter(PlayerContact.player_id == player.id).first()
-    )
+    contact = db.query(PlayerContact).filter(PlayerContact.player_id == player.id).first()
     if contact is None:
         contact = PlayerContact(player_id=player.id)
         db.add(contact)
 
-    contact.first_name          = first
-    contact.last_name           = last
-    contact.relationship_label  = (form.get("contact_relationship")  or "").strip() or None
-    contact.email               = (form.get("contact_email")         or "").strip() or None
-    contact.phone               = (form.get("contact_phone")         or "").strip() or None
-    contact.phone2              = (form.get("contact_phone2")        or "").strip() or None
-    contact.street              = (form.get("contact_street")        or "").strip() or None
-    contact.postcode            = (form.get("contact_postcode")      or "").strip() or None
-    contact.city                = (form.get("contact_city")          or "").strip() or None
+    contact.first_name = first
+    contact.last_name = last
+    contact.relationship_label = (form.get("contact_relationship") or "").strip() or None
+    contact.email = (form.get("contact_email") or "").strip() or None
+    contact.phone = (form.get("contact_phone") or "").strip() or None
+    contact.phone2 = (form.get("contact_phone2") or "").strip() or None
+    contact.street = (form.get("contact_street") or "").strip() or None
+    contact.postcode = (form.get("contact_postcode") or "").strip() or None
+    contact.city = (form.get("contact_city") or "").strip() or None
 
 
 def _apply_personal_fields(player: Player, form) -> None:
     """Write personal-info form values onto a Player instance."""
-    player.sex           = (form.get("sex")           or "").strip() or None
+    player.sex = (form.get("sex") or "").strip() or None
     player.date_of_birth = _parse_date((form.get("date_of_birth") or "").strip())
-    player.street        = (form.get("street")        or "").strip() or None
-    player.postcode      = (form.get("postcode")      or "").strip() or None
-    player.city          = (form.get("city")          or "").strip() or None
+    player.street = (form.get("street") or "").strip() or None
+    player.postcode = (form.get("postcode") or "").strip() or None
+    player.city = (form.get("city") or "").strip() or None
 
 
 def _active_season_id(db: Session) -> int | None:
@@ -163,11 +164,7 @@ def _memberships_dict(player: Player, season_id: int | None) -> dict:
     """Return {team_id: PlayerTeam} for pre-filling the edit form, scoped to season."""
     if season_id is None:
         return {}
-    return {
-        m.team_id: m
-        for m in player.team_memberships
-        if m.season_id == season_id
-    }
+    return {m.team_id: m for m in player.team_memberships if m.season_id == season_id}
 
 
 # ---------------------------------------------------------------------------
@@ -189,26 +186,26 @@ async def players_list(
 
     q = db.query(Player)
     if team_id is not None and selected_season_id is not None:
-        q = (
-            q.join(PlayerTeam, Player.id == PlayerTeam.player_id)
-            .filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == selected_season_id)
+        q = q.join(PlayerTeam, Player.id == PlayerTeam.player_id).filter(
+            PlayerTeam.team_id == team_id, PlayerTeam.season_id == selected_season_id
         )
     elif team_id is not None:
-        q = (
-            q.join(PlayerTeam, Player.id == PlayerTeam.player_id)
-            .filter(PlayerTeam.team_id == team_id)
-        )
+        q = q.join(PlayerTeam, Player.id == PlayerTeam.player_id).filter(PlayerTeam.team_id == team_id)
     players = q.order_by(Player.last_name, Player.first_name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
-    return render(request, "players/list.html", {
-        "user": user,
-        "players": players,
-        "teams": teams,
-        "seasons": seasons,
-        "selected_team_id": team_id,
-        "selected_season_id": selected_season_id,
-    })
+    return render(
+        request,
+        "players/list.html",
+        {
+            "user": user,
+            "players": players,
+            "teams": teams,
+            "seasons": seasons,
+            "selected_team_id": team_id,
+            "selected_season_id": selected_season_id,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -227,16 +224,20 @@ async def player_new_get(
     users = db.query(User).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.name).all()
     selected_season_id = season_id or _active_season_id(db)
-    return render(request, "players/form.html", {
-        "user": user,
-        "player": None,
-        "teams": teams,
-        "users": users,
-        "seasons": seasons,
-        "selected_season_id": selected_season_id,
-        "memberships": {},
-        "error": None,
-    })
+    return render(
+        request,
+        "players/form.html",
+        {
+            "user": user,
+            "player": None,
+            "teams": teams,
+            "users": users,
+            "seasons": seasons,
+            "selected_season_id": selected_season_id,
+            "memberships": {},
+            "error": None,
+        },
+    )
 
 
 @router.post("/new")
@@ -248,10 +249,10 @@ async def player_new_post(
 ):
     form = await request.form()
     first_name = (form.get("first_name") or "").strip()
-    last_name  = (form.get("last_name")  or "").strip()
-    email      = (form.get("email")      or "").strip()
-    phone      = (form.get("phone")      or "").strip()
-    user_id_s  = (form.get("user_id")    or "").strip()
+    last_name = (form.get("last_name") or "").strip()
+    email = (form.get("email") or "").strip()
+    phone = (form.get("phone") or "").strip()
+    user_id_s = (form.get("user_id") or "").strip()
     season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
@@ -260,16 +261,21 @@ async def player_new_post(
     selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
 
     if not first_name or not last_name:
-        return render(request, "players/form.html", {
-            "user": user,
-            "player": None,
-            "teams": teams,
-            "users": users,
-            "seasons": seasons,
-            "selected_season_id": selected_season_id,
-            "memberships": {},
-            "error": "First name and last name are required.",
-        }, status_code=400)
+        return render(
+            request,
+            "players/form.html",
+            {
+                "user": user,
+                "player": None,
+                "teams": teams,
+                "users": users,
+                "seasons": seasons,
+                "selected_season_id": selected_season_id,
+                "memberships": {},
+                "error": "First name and last name are required.",
+            },
+            status_code=400,
+        )
 
     player = Player(
         first_name=first_name,
@@ -300,8 +306,16 @@ async def player_new_post(
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
 
 IMPORT_COLUMNS = [
-    "first_name", "last_name", "email", "phone",
-    "sex", "date_of_birth", "street", "postcode", "city", "team",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "sex",
+    "date_of_birth",
+    "street",
+    "postcode",
+    "city",
+    "team",
 ]
 
 
@@ -315,13 +329,17 @@ async def player_import_get(
     context_team = db.get(Team, team_id)
     if context_team is None:
         return RedirectResponse("/teams", status_code=302)
-    return render(request, "players/import.html", {
-        "user": user,
-        "context_team": context_team,
-        "columns": IMPORT_COLUMNS,
-        "result": None,
-        "error": None,
-    })
+    return render(
+        request,
+        "players/import.html",
+        {
+            "user": user,
+            "context_team": context_team,
+            "columns": IMPORT_COLUMNS,
+            "result": None,
+            "error": None,
+        },
+    )
 
 
 @router.post("/import")
@@ -342,13 +360,18 @@ async def player_import_post(
     result: ImportResult | None = None
 
     def _render(status: int = 200):
-        return render(request, "players/import.html", {
-            "user": user,
-            "context_team": context_team,
-            "columns": IMPORT_COLUMNS,
-            "result": result,
-            "error": error,
-        }, status_code=status)
+        return render(
+            request,
+            "players/import.html",
+            {
+                "user": user,
+                "context_team": context_team,
+                "columns": IMPORT_COLUMNS,
+                "result": result,
+                "error": error,
+            },
+            status_code=status,
+        )
 
     if import_source == "paste":
         rows_json = (form.get("rows_json") or "").strip()
@@ -412,11 +435,15 @@ async def player_detail(
 
     history = get_player_attendance_history(db, player_id)
 
-    return render(request, "players/detail.html", {
-        "user": user,
-        "player": player,
-        "history": history,
-    })
+    return render(
+        request,
+        "players/detail.html",
+        {
+            "user": user,
+            "player": player,
+            "history": history,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -441,16 +468,20 @@ async def player_edit_get(
     seasons = db.query(Season).order_by(Season.name).all()
     selected_season_id = season_id or _active_season_id(db)
     memberships = _memberships_dict(player, selected_season_id)
-    return render(request, "players/form.html", {
-        "user": user,
-        "player": player,
-        "teams": teams,
-        "users": users,
-        "seasons": seasons,
-        "selected_season_id": selected_season_id,
-        "memberships": memberships,
-        "error": None,
-    })
+    return render(
+        request,
+        "players/form.html",
+        {
+            "user": user,
+            "player": player,
+            "teams": teams,
+            "users": users,
+            "seasons": seasons,
+            "selected_season_id": selected_season_id,
+            "memberships": memberships,
+            "error": None,
+        },
+    )
 
 
 @router.post("/{player_id}/edit")
@@ -467,11 +498,11 @@ async def player_edit_post(
 
     form = await request.form()
     first_name = (form.get("first_name") or "").strip()
-    last_name  = (form.get("last_name")  or "").strip()
-    email      = (form.get("email")      or "").strip()
-    phone      = (form.get("phone")      or "").strip()
-    user_id_s  = (form.get("user_id")    or "").strip()
-    is_active  = (form.get("is_active")  or "")
+    last_name = (form.get("last_name") or "").strip()
+    email = (form.get("email") or "").strip()
+    phone = (form.get("phone") or "").strip()
+    user_id_s = (form.get("user_id") or "").strip()
+    is_active = form.get("is_active") or ""
     season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
@@ -480,23 +511,28 @@ async def player_edit_post(
     selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
 
     if not first_name or not last_name:
-        return render(request, "players/form.html", {
-            "user": user,
-            "player": player,
-            "teams": teams,
-            "users": users,
-            "seasons": seasons,
-            "selected_season_id": selected_season_id,
-            "memberships": _memberships_dict(player, selected_season_id),
-            "error": "First name and last name are required.",
-        }, status_code=400)
+        return render(
+            request,
+            "players/form.html",
+            {
+                "user": user,
+                "player": player,
+                "teams": teams,
+                "users": users,
+                "seasons": seasons,
+                "selected_season_id": selected_season_id,
+                "memberships": _memberships_dict(player, selected_season_id),
+                "error": "First name and last name are required.",
+            },
+            status_code=400,
+        )
 
     player.first_name = first_name
-    player.last_name  = last_name
-    player.email      = email or None
-    player.phone      = phone or None
-    player.user_id    = int(user_id_s) if user_id_s else None
-    player.is_active  = is_active in ("on", "true", "1", "yes")
+    player.last_name = last_name
+    player.email = email or None
+    player.phone = phone or None
+    player.user_id = int(user_id_s) if user_id_s else None
+    player.is_active = is_active in ("on", "true", "1", "yes")
     _apply_personal_fields(player, form)
 
     if selected_season_id is not None:

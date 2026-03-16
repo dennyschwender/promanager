@@ -49,9 +49,9 @@ async def login_post(
 ):
     user = authenticate_user(db, username, password)
     if user is None:
-        return render(request, "auth/login.html", {"user": None,
-                "error": "Invalid username or password."},
-            status_code=401)
+        return render(
+            request, "auth/login.html", {"user": None, "error": "Invalid username or password."}, status_code=401
+        )
 
     cookie_val = create_session_cookie(user.id)
     response = RedirectResponse("/dashboard", status_code=302)
@@ -104,27 +104,46 @@ async def register_post(
 ):
     # Validation
     if get_user_by_username(db, username):
-        return render(request, "auth/register.html", {
-            "user": user,
-            "error": f"Username '{username}' is already taken.",
-            "flash": None,
-        }, status_code=400)
+        return render(
+            request,
+            "auth/register.html",
+            {
+                "user": user,
+                "error": f"Username '{username}' is already taken.",
+                "flash": None,
+            },
+            status_code=400,
+        )
     if get_user_by_email(db, email):
-        return render(request, "auth/register.html", {
-            "user": user,
-            "error": f"Email '{email}' is already registered.",
-            "flash": None,
-        }, status_code=400)
+        return render(
+            request,
+            "auth/register.html",
+            {
+                "user": user,
+                "error": f"Email '{email}' is already registered.",
+                "flash": None,
+            },
+            status_code=400,
+        )
     if len(password) < 8:
-        return render(request, "auth/register.html", {
-            "user": user,
-            "error": "Password must be at least 8 characters.",
-            "flash": None,
-        }, status_code=400)
+        return render(
+            request,
+            "auth/register.html",
+            {
+                "user": user,
+                "error": "Password must be at least 8 characters.",
+                "flash": None,
+            },
+            status_code=400,
+        )
 
     create_user(db, username=username, email=email, password=password, role=role)
-    return render(request, "auth/register.html", {
-        "user": user,
-        "error": None,
-        "flash": f"User '{username}' created successfully.",
-    })
+    return render(
+        request,
+        "auth/register.html",
+        {
+            "user": user,
+            "error": None,
+            "flash": f"User '{username}' created successfully.",
+        },
+    )

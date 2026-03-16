@@ -4,6 +4,7 @@ Revision ID: abc1add0sched
 Revises: 7d6728f4bc65
 Create Date: 2026-03-13 12:00:00.000000
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -39,12 +40,8 @@ def upgrade() -> None:
         sa.UniqueConstraint("recurrence_group_id"),
     )
     with op.batch_alter_table("team_recurring_schedules", schema=None) as batch_op:
-        batch_op.create_index(
-            batch_op.f("ix_team_recurring_schedules_id"), ["id"], unique=False
-        )
-        batch_op.create_index(
-            batch_op.f("ix_team_recurring_schedules_team_id"), ["team_id"], unique=False
-        )
+        batch_op.create_index(batch_op.f("ix_team_recurring_schedules_id"), ["id"], unique=False)
+        batch_op.create_index(batch_op.f("ix_team_recurring_schedules_team_id"), ["team_id"], unique=False)
         batch_op.create_index(
             batch_op.f("ix_team_recurring_schedules_recurrence_group_id"),
             ["recurrence_group_id"],

@@ -6,6 +6,7 @@ Each connected browser tab has its own asyncio.Queue.
 Constraint: in-process only — does not work with multiple Uvicorn workers.
 ProManager must run with --workers 1 (enforced by SQLite anyway).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -25,8 +26,7 @@ def register_connection(player_id: int) -> asyncio.Queue:
     """Create and register a new SSE queue for *player_id*. Call on connect."""
     q: asyncio.Queue = asyncio.Queue()
     _connections.setdefault(player_id, []).append(q)
-    logger.debug("SSE: registered connection for player %s (%d total)",
-                 player_id, len(_connections[player_id]))
+    logger.debug("SSE: registered connection for player %s (%d total)", player_id, len(_connections[player_id]))
     return q
 
 

@@ -18,11 +18,7 @@ from models.player_team import PlayerTeam
 
 def get_or_create_attendance(db: Session, event_id: int, player_id: int) -> Attendance:
     """Return the existing Attendance row or create it with status 'unknown'."""
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event_id, Attendance.player_id == player_id)
-        .first()
-    )
+    att = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.player_id == player_id).first()
     if att is None:
         att = Attendance(event_id=event_id, player_id=player_id, status="unknown")
         db.add(att)
@@ -56,9 +52,7 @@ def set_attendance(
 
 def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     """Return dict keyed by status, each value a list of Player objects."""
-    attendances = (
-        db.query(Attendance).filter(Attendance.event_id == event_id).all()
-    )
+    attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
     summary: dict[str, list[Player]] = {
         "present": [],
         "absent": [],
@@ -87,9 +81,7 @@ def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
         return []
 
     # Collect all attendances for those events
-    attendances = (
-        db.query(Attendance).filter(Attendance.event_id.in_(event_ids)).all()
-    )
+    attendances = db.query(Attendance).filter(Attendance.event_id.in_(event_ids)).all()
 
     # Group by player
     player_map: dict[int, dict] = {}
@@ -116,11 +108,7 @@ def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
 
 def get_player_attendance_history(db: Session, player_id: int) -> list[dict]:
     """Return list of {event, attendance} dicts sorted by event_date desc."""
-    attendances = (
-        db.query(Attendance)
-        .filter(Attendance.player_id == player_id)
-        .all()
-    )
+    attendances = db.query(Attendance).filter(Attendance.player_id == player_id).all()
     results = []
     for att in attendances:
         if att.event:
@@ -156,9 +144,7 @@ def _has_higher_prio_conflict(db: Session, player: Player, event: Event) -> bool
 
     # Query 1: player's own membership in this team for this season
     my_pt = (
-        db.query(PlayerTeam)
-        .filter_by(player_id=player.id, team_id=event.team_id, season_id=event.season_id)
-        .first()
+        db.query(PlayerTeam).filter_by(player_id=player.id, team_id=event.team_id, season_id=event.season_id).first()
     )
     if my_pt is None:
         return False
@@ -203,9 +189,10 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
         return
     if event.season_id is None:
         import logging
+
         logging.getLogger(__name__).warning(
-            "ensure_attendance_records called with event.season_id=None "
-            "(event_id=%s). No attendance records created.", event.id
+            "ensure_attendance_records called with event.season_id=None (event_id=%s). No attendance records created.",
+            event.id,
         )
         return
 
@@ -218,33 +205,21 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
         )
         .all()
     )
-    players = [
-        m.player for m in memberships
-        if m.player is not None and m.player.is_active
-    ]
+    players = [m.player for m in memberships if m.player is not None and m.player.is_active]
 
-    existing_player_ids = {
-        att.player_id
-        for att in db.query(Attendance)
-        .filter(Attendance.event_id == event.id)
-        .all()
-    }
+    existing_player_ids = {att.player_id for att in db.query(Attendance).filter(Attendance.event_id == event.id).all()}
 
     default = _default_status(event)
     new_records = []
     for player in players:
         if player.id not in existing_player_ids:
             status = default
-            mem = next(
-                (m for m in memberships if m.player_id == player.id), None
-            )
+            mem = next((m for m in memberships if m.player_id == player.id), None)
             if status != "absent" and mem is not None and mem.absent_by_default:
                 status = "absent"
             if status != "absent" and _has_higher_prio_conflict(db, player, event):
                 status = "absent"
-            new_records.append(
-                Attendance(event_id=event.id, player_id=player.id, status=status)
-            )
+            new_records.append(Attendance(event_id=event.id, player_id=player.id, status=status))
 
     if new_records:
         db.add_all(new_records)
@@ -269,7 +244,7 @@ def sync_attendance_defaults(db: Session, event: Event) -> None:
         db.query(Attendance)
         .filter(
             Attendance.event_id == event.id,
-            Attendance.status == "unknown",   # only touch truly unset records
+            Attendance.status == "unknown",  # only touch truly unset records
         )
         .all()
     )

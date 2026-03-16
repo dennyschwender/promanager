@@ -15,12 +15,8 @@ class PlayerTeam(Base):
     __tablename__ = "player_teams"
     # No separate UniqueConstraint needed — composite PK already enforces uniqueness.
 
-    player_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("players.id", ondelete="CASCADE"), primary_key=True
-    )
-    team_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True
-    )
+    player_id: Mapped[int] = mapped_column(Integer, ForeignKey("players.id", ondelete="CASCADE"), primary_key=True)
+    team_id: Mapped[int] = mapped_column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True)
     season_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("seasons.id", ondelete="CASCADE"), primary_key=True, index=True
     )
@@ -36,14 +32,10 @@ class PlayerTeam(Base):
 
     # ── Membership status ──────────────────────────────────────────
     # "active" | "inactive" | "injured"
-    membership_status: Mapped[str] = mapped_column(
-        String(16), nullable=False, default="active"
-    )
+    membership_status: Mapped[str] = mapped_column(String(16), nullable=False, default="active")
     injured_until: Mapped[date | None] = mapped_column(Date, nullable=True)
     # When True the player is absent by default for this team's events in this season.
-    absent_by_default: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False
-    )
+    absent_by_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # ── Relationships ──────────────────────────────────────────────────────
     player: Mapped[Player] = relationship("Player", back_populates="team_memberships")

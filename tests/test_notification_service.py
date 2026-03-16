@@ -1,4 +1,5 @@
 """Tests for services/notification_service.py."""
+
 from __future__ import annotations
 
 import datetime
@@ -19,6 +20,7 @@ from services.notification_service import (
 )
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture()
 def season(db):
@@ -41,14 +43,21 @@ def team(db, season):
 @pytest.fixture()
 def player(db, season, team):
     from models.player_team import PlayerTeam
-    p = Player(first_name="Alice", last_name="Smith", email="alice@test.com",
-               is_active=True)
+
+    p = Player(first_name="Alice", last_name="Smith", email="alice@test.com", is_active=True)
     db.add(p)
     db.flush()
-    db.add(PlayerTeam(
-        player_id=p.id, team_id=team.id, season_id=season.id, priority=1,
-        role="player", membership_status="active", absent_by_default=False,
-    ))
+    db.add(
+        PlayerTeam(
+            player_id=p.id,
+            team_id=team.id,
+            season_id=season.id,
+            priority=1,
+            role="player",
+            membership_status="active",
+            absent_by_default=False,
+        )
+    )
     db.commit()
     db.refresh(p)
     return p
@@ -56,8 +65,9 @@ def player(db, season, team):
 
 @pytest.fixture()
 def event(db, season, team):
-    e = Event(title="Match", event_type="match", event_date=datetime.date(2026, 4, 1),
-              season_id=season.id, team_id=team.id)
+    e = Event(
+        title="Match", event_type="match", event_date=datetime.date(2026, 4, 1), season_id=season.id, team_id=team.id
+    )
     db.add(e)
     db.commit()
     db.refresh(e)
@@ -66,11 +76,10 @@ def event(db, season, team):
 
 # ── create_default_preferences ────────────────────────────────────────────────
 
+
 def test_create_default_preferences_creates_all_channels(db, player):
     create_default_preferences(player.id, db)
-    prefs = db.query(NotificationPreference).filter(
-        NotificationPreference.player_id == player.id
-    ).all()
+    prefs = db.query(NotificationPreference).filter(NotificationPreference.player_id == player.id).all()
     assert {p.channel for p in prefs} == set(CHANNELS)
     assert all(p.enabled for p in prefs)
 
@@ -78,13 +87,12 @@ def test_create_default_preferences_creates_all_channels(db, player):
 def test_create_default_preferences_idempotent(db, player):
     create_default_preferences(player.id, db)
     create_default_preferences(player.id, db)  # second call must not raise
-    prefs = db.query(NotificationPreference).filter(
-        NotificationPreference.player_id == player.id
-    ).all()
+    prefs = db.query(NotificationPreference).filter(NotificationPreference.player_id == player.id).all()
     assert len(prefs) == len(CHANNELS)
 
 
 # ── get_preference ─────────────────────────────────────────────────────────────
+
 
 def test_get_preference_returns_true_when_enabled(db, player):
     create_default_preferences(player.id, db)
@@ -98,16 +106,21 @@ def test_get_preference_returns_true_when_missing(db, player):
 
 def test_get_preference_returns_false_when_disabled(db, player):
     create_default_preferences(player.id, db)
-    pref = db.query(NotificationPreference).filter(
-        NotificationPreference.player_id == player.id,
-        NotificationPreference.channel == "email",
-    ).one()
+    pref = (
+        db.query(NotificationPreference)
+        .filter(
+            NotificationPreference.player_id == player.id,
+            NotificationPreference.channel == "email",
+        )
+        .one()
+    )
     pref.enabled = False
     db.commit()
     assert get_preference(player.id, "email", db) is False
 
 
 # ── send_notifications ────────────────────────────────────────────────────────
+
 
 def test_send_creates_notification_rows(db, player, event):
     create_default_preferences(player.id, db)
@@ -133,10 +146,14 @@ def test_send_creates_notification_rows(db, player, event):
 def test_send_skips_disabled_channel(db, player, event):
     create_default_preferences(player.id, db)
     # Disable inapp for player
-    pref = db.query(NotificationPreference).filter(
-        NotificationPreference.player_id == player.id,
-        NotificationPreference.channel == "inapp",
-    ).one()
+    pref = (
+        db.query(NotificationPreference)
+        .filter(
+            NotificationPreference.player_id == player.id,
+            NotificationPreference.channel == "inapp",
+        )
+        .one()
+    )
     pref.enabled = False
     db.commit()
 

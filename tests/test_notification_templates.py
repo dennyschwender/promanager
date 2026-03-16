@@ -1,4 +1,5 @@
 """Tests for services/notification_templates.py."""
+
 from services.notification_templates import TEMPLATES, TEMPLATES_BY_KEY, render_template
 
 

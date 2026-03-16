@@ -13,11 +13,7 @@ from app.config import settings
 # check_same_thread=False is required for SQLite when used with FastAPI
 # because SQLite connections are not thread-safe by default, but SQLAlchemy
 # handles concurrency correctly at the ORM level.
-_connect_args: dict = (
-    {"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {}
-)
+_connect_args: dict = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(
     settings.DATABASE_URL,

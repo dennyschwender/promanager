@@ -1,4 +1,5 @@
 """Tests for /attendance routes and attendance_service."""
+
 from datetime import date
 
 from models.attendance import Attendance
@@ -70,11 +71,7 @@ def test_set_attendance_present(admin_client, db):
     )
     assert resp.status_code == 302
 
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
-        .first()
-    )
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "present"
 
@@ -90,11 +87,7 @@ def test_set_attendance_absent(admin_client, db):
     )
     assert resp.status_code == 302
 
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
-        .first()
-    )
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "absent"
 
@@ -110,11 +103,7 @@ def test_set_attendance_with_note(admin_client, db):
     )
     assert resp.status_code == 302
 
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event.id, Attendance.player_id == player.id)
-        .first()
-    )
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "maybe"
     assert att.note == "Out of town"
@@ -177,20 +166,17 @@ def test_member_cannot_update_another_members_player(client, db):
     assert f"/attendance/{event.id}" in resp.headers["location"]
 
     # Attendance must not have been changed to 'present'
-    att = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event.id, Attendance.player_id == player_b.id)
-        .first()
-    )
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player_b.id).first()
     assert att is None or att.status != "present"
 
 
 def test_ensure_attendance_only_includes_season_players(db):
     """ensure_attendance_records only creates rows for players in event's (team, season)."""
     from datetime import date
+
+    from models.player_team import PlayerTeam
     from models.season import Season
     from models.team import Team
-    from models.player_team import PlayerTeam
     from services.attendance_service import ensure_attendance_records
 
     s1 = Season(name="2024/25", is_active=False)
@@ -206,9 +192,11 @@ def test_ensure_attendance_only_includes_season_players(db):
     db.commit()
 
     event = Event(
-        title="S2 Match", event_type="match",
+        title="S2 Match",
+        event_type="match",
         event_date=date(2026, 1, 10),
-        team_id=team.id, season_id=s2.id,
+        team_id=team.id,
+        season_id=s2.id,
     )
     db.add(event)
     db.commit()
@@ -217,14 +205,16 @@ def test_ensure_attendance_only_includes_season_players(db):
     ensure_attendance_records(db, event)
 
     from models.attendance import Attendance
+
     att_player_ids = {a.player_id for a in db.query(Attendance).filter(Attendance.event_id == event.id).all()}
-    assert p2.id in att_player_ids      # in s2 — should be included
+    assert p2.id in att_player_ids  # in s2 — should be included
     assert p1.id not in att_player_ids  # in s1 — should NOT be included
 
 
 def test_ensure_attendance_no_season_creates_no_records(db):
     """ensure_attendance_records with event.season_id=None creates no attendance rows."""
     from datetime import date
+
     from models.team import Team
     from services.attendance_service import ensure_attendance_records
 
@@ -232,13 +222,15 @@ def test_ensure_attendance_no_season_creates_no_records(db):
     db.add(team)
     db.flush()
 
-    player = _make_player(db, "NoSeason", "Player")
+    _make_player(db, "NoSeason", "Player")
     db.commit()
 
     event = Event(
-        title="No Season Event", event_type="training",
+        title="No Season Event",
+        event_type="training",
         event_date=date(2026, 2, 1),
-        team_id=team.id, season_id=None,
+        team_id=team.id,
+        season_id=None,
     )
     db.add(event)
     db.commit()
@@ -247,5 +239,6 @@ def test_ensure_attendance_no_season_creates_no_records(db):
     ensure_attendance_records(db, event)
 
     from models.attendance import Attendance
+
     count = db.query(Attendance).filter(Attendance.event_id == event.id).count()
     assert count == 0

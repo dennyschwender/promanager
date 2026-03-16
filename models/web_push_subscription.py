@@ -1,4 +1,5 @@
 """models/web_push_subscription.py — Browser push subscription per device."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -23,10 +24,6 @@ class WebPushSubscription(Base):
     endpoint: Mapped[str] = mapped_column(String(512), nullable=False)
     p256dh_key: Mapped[str] = mapped_column(String(256), nullable=False)
     auth_key: Mapped[str] = mapped_column(String(64), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
-    player: Mapped[Player] = relationship(
-        "Player", back_populates="web_push_subscriptions"
-    )
+    player: Mapped[Player] = relationship("Player", back_populates="web_push_subscriptions")

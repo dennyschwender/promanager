@@ -1,4 +1,5 @@
 """Tests for app/i18n.py translation loader."""
+
 from __future__ import annotations
 
 import os
@@ -9,6 +10,7 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_t(debug: bool = False):
     """Import a fresh t() with the given DEBUG setting."""
     os.environ["DEBUG"] = "true" if debug else "false"
@@ -16,16 +18,20 @@ def _make_t(debug: bool = False):
     import importlib
 
     import app.config as _cfg
+
     importlib.reload(_cfg)
     import app.i18n as _i18n
+
     importlib.reload(_i18n)
     from app.i18n import t
+
     return t
 
 
 # ---------------------------------------------------------------------------
 # Basic lookup
 # ---------------------------------------------------------------------------
+
 
 def test_t_returns_english_string():
     t = _make_t()
@@ -55,6 +61,7 @@ def test_t_returns_german_string():
 # Fallback behaviour
 # ---------------------------------------------------------------------------
 
+
 def test_t_unsupported_locale_falls_back_to_en():
     t = _make_t()
     assert t("nav.dashboard", "xx") == t("nav.dashboard", "en")
@@ -69,10 +76,13 @@ def test_t_missing_key_raises_in_debug():
 def test_t_missing_key_falls_back_to_en_in_production():
     """A key missing in a locale but present in 'en' should return the 'en' value."""
     import importlib
+
     os.environ["DEBUG"] = "false"
     import app.config as _cfg
+
     importlib.reload(_cfg)
     import app.i18n as _i18n
+
     importlib.reload(_i18n)
     original = _i18n._translations["it"].get("nav", {}).get("dashboard")
     _i18n._translations["it"].setdefault("nav", {}).pop("dashboard", None)
@@ -89,6 +99,7 @@ def test_t_missing_key_returns_bare_key_when_en_also_missing():
     import importlib
 
     import app.i18n as _i18n
+
     os.environ["DEBUG"] = "false"
     importlib.reload(_i18n)
     original_it = _i18n._translations["it"].get("nav", {}).get("dashboard")
@@ -109,6 +120,7 @@ def test_t_missing_key_returns_bare_key_when_en_also_missing():
 # Variable interpolation
 # ---------------------------------------------------------------------------
 
+
 def test_t_interpolates_variables():
     t = _make_t()
     result = t("email.reminder_subject", "en", event_name="Training", date="2026-03-20")
@@ -119,6 +131,7 @@ def test_t_interpolates_variables():
 # ---------------------------------------------------------------------------
 # LocaleMiddleware integration
 # ---------------------------------------------------------------------------
+
 
 def test_locale_cookie_sets_request_locale(client):
     """A locale cookie should cause templates to render in that locale."""

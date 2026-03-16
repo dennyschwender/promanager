@@ -11,6 +11,7 @@ Registration order in app/main.py (LIFO — last added runs first):
   app.add_middleware(LocaleMiddleware)  # added first → runs second
   app.add_middleware(AuthMiddleware)   # added second → runs first
 """
+
 from __future__ import annotations
 
 from starlette.middleware.base import BaseHTTPMiddleware

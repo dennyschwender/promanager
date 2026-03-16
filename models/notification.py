@@ -1,4 +1,5 @@
 """models/notification.py — Per-player notification record."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -28,9 +29,7 @@ class Notification(Base):
     # "direct" | "announcement"
     tag: Mapped[str] = mapped_column(String(32), nullable=False, default="direct")
     is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     player: Mapped[Player] = relationship("Player", back_populates="notifications")
     event: Mapped[Event | None] = relationship("Event", back_populates="notifications")

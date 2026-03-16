@@ -1,4 +1,5 @@
 """routes/notifications.py — In-app inbox, SSE stream, Web Push management."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,13 +29,10 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _get_linked_players(user, db: Session) -> list[Player]:
     """Return all active Player rows linked to *user*."""
-    return (
-        db.query(Player)
-        .filter(Player.user_id == user.id, Player.is_active.is_(True))
-        .all()
-    )
+    return db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True)).all()
 
 
 def _player_ids_for_user(user, db: Session) -> list[int]:
@@ -43,6 +41,7 @@ def _player_ids_for_user(user, db: Session) -> list[int]:
 
 # ── VAPID public key ──────────────────────────────────────────────────────────
 
+
 @router.get("/vapid-public-key")
 async def vapid_public_key():
     """Return the VAPID public key for the browser push subscription flow."""
@@ -50,6 +49,7 @@ async def vapid_public_key():
 
 
 # ── SSE stream ────────────────────────────────────────────────────────────────
+
 
 @router.get("/stream")
 async def notification_stream(request: Request, db: Session = Depends(get_db)):
@@ -60,12 +60,14 @@ async def notification_stream(request: Request, db: Session = Depends(get_db)):
 
     player_ids = _player_ids_for_user(user, db)
     if not player_ids:
+
         async def keepalive() -> AsyncGenerator[str, None]:
             while True:
                 if await request.is_disconnected():
                     break
                 yield ": keepalive\n\n"
                 await asyncio.sleep(30)
+
         return StreamingResponse(keepalive(), media_type="text/event-stream")
 
     player_id = player_ids[0]
@@ -88,6 +90,7 @@ async def notification_stream(request: Request, db: Session = Depends(get_db)):
 
 
 # ── Inbox ─────────────────────────────────────────────────────────────────────
+
 
 @router.get("")
 async def inbox(
@@ -112,6 +115,7 @@ async def inbox(
 
 
 # ── Mark read ─────────────────────────────────────────────────────────────────
+
 
 @router.post("/{notification_id}/read")
 async def mark_read(
@@ -150,6 +154,7 @@ async def mark_read_all(
 
 # ── Notification preferences ──────────────────────────────────────────────────
 
+
 @router.post("/preferences")
 async def update_preferences(
     request: Request,
@@ -179,6 +184,7 @@ async def update_preferences(
 
 # ── Web Push subscribe / unsubscribe ──────────────────────────────────────────
 
+
 @router.post("/webpush/subscribe")
 async def webpush_subscribe(
     request: Request,
@@ -203,12 +209,14 @@ async def webpush_subscribe(
             .first()
         )
         if existing is None:
-            db.add(WebPushSubscription(
-                player_id=player_id,
-                endpoint=endpoint,
-                p256dh_key=p256dh,
-                auth_key=auth,
-            ))
+            db.add(
+                WebPushSubscription(
+                    player_id=player_id,
+                    endpoint=endpoint,
+                    p256dh_key=p256dh,
+                    auth_key=auth,
+                )
+            )
     db.commit()
     return JSONResponse({"status": "ok"})
 
@@ -222,9 +230,9 @@ async def webpush_unsubscribe_all(
 ):
     player_ids = _player_ids_for_user(user, db)
     if player_ids:
-        db.query(WebPushSubscription).filter(
-            WebPushSubscription.player_id.in_(player_ids)
-        ).delete(synchronize_session="fetch")
+        db.query(WebPushSubscription).filter(WebPushSubscription.player_id.in_(player_ids)).delete(
+            synchronize_session="fetch"
+        )
         db.commit()
     return RedirectResponse("/profile", status_code=302)
 
@@ -252,11 +260,13 @@ async def webpush_resubscribe(
             .first()
         )
         if existing is None:
-            db.add(WebPushSubscription(
-                player_id=player_id,
-                endpoint=endpoint,
-                p256dh_key=p256dh,
-                auth_key=auth,
-            ))
+            db.add(
+                WebPushSubscription(
+                    player_id=player_id,
+                    endpoint=endpoint,
+                    p256dh_key=p256dh,
+                    auth_key=auth,
+                )
+            )
     db.commit()
     return JSONResponse({"status": "ok"})
