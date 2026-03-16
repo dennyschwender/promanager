@@ -6,8 +6,9 @@ import io
 import json
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: F401 (used in bulk-update)
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf, require_csrf_header
@@ -21,7 +22,6 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
-from pydantic import BaseModel
 from services.attendance_service import get_player_attendance_history
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
