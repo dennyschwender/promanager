@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 
-os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient

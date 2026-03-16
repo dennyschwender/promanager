@@ -36,7 +36,12 @@ def verify_csrf_token(token: str, session_cookie: str = "") -> bool:
 
 
 async def require_csrf(request: Request) -> None:
-    """FastAPI dependency: raise 403 if the CSRF token in the form body is invalid."""
+    """FastAPI dependency: raise 403 if the CSRF token in the form body is invalid.
+
+    Only use on form-encoded (multipart/form) endpoints.
+    For JSON POST endpoints use `require_csrf_header` instead — this function
+    calls request.form() which will corrupt a JSON body.
+    """
     form = await request.form()
     token = str(form.get("csrf_token", ""))
     session_cookie = request.cookies.get(COOKIE_NAME, "")
