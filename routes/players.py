@@ -6,11 +6,11 @@ import io
 import json
 from datetime import date
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.csrf import require_csrf
+from app.csrf import require_csrf, require_csrf_header
 from app.database import get_db
 from app.templates import render
 from models.player import Player
@@ -21,6 +21,7 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
+from pydantic import BaseModel
 from services.attendance_service import get_player_attendance_history
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
@@ -165,6 +166,48 @@ def _memberships_dict(player: Player, season_id: int | None) -> dict:
     if season_id is None:
         return {}
     return {m.team_id: m for m in player.team_memberships if m.season_id == season_id}
+
+
+# ---------------------------------------------------------------------------
+# Bulk assign
+# ---------------------------------------------------------------------------
+
+
+class BulkAssignRequest(BaseModel):
+    player_ids: list[int]
+    team_id: int
+    season_id: int
+
+
+@router.post("/bulk-assign")
+async def player_bulk_assign(
+    body: BulkAssignRequest,
+    _user=Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    assigned = 0
+    skipped = 0
+    errors = []
+    for pid in body.player_ids:
+        existing = db.get(PlayerTeam, (pid, body.team_id, body.season_id))
+        if existing:
+            skipped += 1
+            continue
+        try:
+            sp = db.begin_nested()  # savepoint — failure here won't roll back prior rows
+            db.add(PlayerTeam(
+                player_id=pid,
+                team_id=body.team_id,
+                season_id=body.season_id,
+            ))
+            sp.commit()
+            assigned += 1
+        except Exception as exc:
+            sp.rollback()
+            errors.append({"id": pid, "message": str(exc)})
+    db.commit()
+    return {"assigned": assigned, "skipped": skipped, "errors": errors}
 
 
 # ---------------------------------------------------------------------------

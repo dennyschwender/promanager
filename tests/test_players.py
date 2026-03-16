@@ -2,6 +2,7 @@
 
 from models.player import Player
 from models.player_team import PlayerTeam
+from models.season import Season
 from models.team import Team
 
 # ---------------------------------------------------------------------------
@@ -227,3 +228,80 @@ def test_player_team_has_season_id(db):
     assert pt.season_id == season.id
     assert pt.season is not None
     assert pt.season.name == "2025/26"
+
+
+# ---------------------------------------------------------------------------
+# Helpers (used by bulk-assign and bulk-update tests)
+# ---------------------------------------------------------------------------
+
+def _make_season(db, name="2025/26", is_active=True):
+    s = Season(name=name, is_active=is_active)
+    db.add(s)
+    db.flush()
+    return s
+
+
+def _make_team(db, name="U21"):
+    t = Team(name=name)
+    db.add(t)
+    db.flush()
+    return t
+
+
+def _make_player(db, first="Alice", last="Smith"):
+    p = Player(first_name=first, last_name=last, is_active=True)
+    db.add(p)
+    db.flush()
+    return p
+
+
+# ---------------------------------------------------------------------------
+# Bulk assign
+# ---------------------------------------------------------------------------
+
+def test_bulk_assign_creates_player_teams(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p1 = _make_player(db, "Alice", "A")
+    p2 = _make_player(db, "Bob", "B")
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-assign",
+        json={"player_ids": [p1.id, p2.id], "team_id": team.id, "season_id": season.id},
+        headers={"X-CSRF-Token": "test"},  # overridden in fixture
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["assigned"] == 2
+    assert data["skipped"] == 0
+    assert data["errors"] == []
+    rows = db.query(PlayerTeam).filter(PlayerTeam.team_id == team.id).all()
+    assert len(rows) == 2
+
+
+def test_bulk_assign_skips_existing(admin_client, db):
+    season = _make_season(db)
+    team = _make_team(db)
+    p1 = _make_player(db, "Alice", "A")
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=season.id))
+    db.commit()
+
+    resp = admin_client.post(
+        "/players/bulk-assign",
+        json={"player_ids": [p1.id], "team_id": team.id, "season_id": season.id},
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["assigned"] == 0
+    assert data["skipped"] == 1
+
+
+def test_bulk_assign_requires_admin(client, db):
+    resp = client.post(
+        "/players/bulk-assign",
+        json={"player_ids": [1], "team_id": 1, "season_id": 1},
+        headers={"X-CSRF-Token": "test"},
+    )
+    assert resp.status_code in (302, 403)
