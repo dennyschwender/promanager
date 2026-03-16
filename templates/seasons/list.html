@@ -32,6 +32,17 @@
               </form>
             {% endif %}
             <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">Report</a>
+            <form method="post" action="/seasons/{{ s.id }}/copy-roster" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+              <select name="source_season_id">
+                {% for other in seasons %}
+                  {% if other.id != s.id %}
+                    <option value="{{ other.id }}">{{ other.name }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline">{{ t("seasons.copy_roster") }}</button>
+            </form>
             <form method="post" action="/seasons/{{ s.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete season {{ s.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">

@@ -143,7 +143,8 @@
     "new_title": "New Season",
     "edit_title": "Edit Season",
     "save": "Save Season",
-    "back": "Back to Seasons"
+    "back": "Back to Seasons",
+    "copy_roster": "Copy roster from"
   },
   "reports": {
     "season_title": "Season Report",

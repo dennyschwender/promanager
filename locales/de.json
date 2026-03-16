@@ -143,7 +143,8 @@
     "new_title": "Neue Saison",
     "edit_title": "Saison bearbeiten",
     "save": "Saison speichern",
-    "back": "Zurück zu Saisons"
+    "back": "Zurück zu Saisons",
+    "copy_roster": "Kader kopieren von"
   },
   "reports": {
     "season_title": "Saisonbericht",
