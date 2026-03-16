@@ -20,9 +20,6 @@ class Season(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # ── Relationships ──────────────────────────────────────────────────────
-    teams: Mapped[list[Team]] = relationship(
-        "Team", back_populates="season", lazy="select"
-    )
     events: Mapped[list[Event]] = relationship(
         "Event", back_populates="season", lazy="select"
     )

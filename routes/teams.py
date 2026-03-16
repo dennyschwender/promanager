@@ -174,11 +174,9 @@ async def team_new_post(
             "_schedules_json": "",
         }, status_code=400)
 
-    sid = int(season_id) if season_id.strip() else None
     team = Team(
         name=name.strip(),
         description=description.strip() or None,
-        season_id=sid,
     )
     db.add(team)
     db.commit()
@@ -258,14 +256,8 @@ async def team_edit_post(
         return _render(error="Team name is required.")
 
     # Apply core team fields
-    old_season_id = team.season_id
     team.name = name.strip()
     team.description = description.strip() or None
-    try:
-        team.season_id = int(season_id) if season_id.strip() else None
-    except ValueError:
-        team.season_id = None
-    season_changed = old_season_id != team.season_id
 
     # ── CONFIRMATION POST ────────────────────────────────────────────────────
     if confirm_step == "1":
@@ -395,9 +387,7 @@ async def team_edit_post(
             stored_sched = stored_map.get(sched_id)
             if stored_sched is None:
                 continue
-            if is_changed(stored_sched, row) or (
-                season_changed and stored_sched.end_date is None
-            ):
+            if is_changed(stored_sched, row):
                 future_count = count_future_events(db, stored_sched.recurrence_group_id)
                 flagged.append({
                     "type": "changed",

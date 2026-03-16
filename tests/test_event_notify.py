@@ -19,7 +19,7 @@ def setup(db):
     season = Season(name="2026", is_active=True)
     db.add(season)
     db.flush()
-    team = Team(name="Eagles", season_id=season.id)
+    team = Team(name="Eagles")
     db.add(team)
     db.flush()
     player = Player(first_name="Alice", last_name="Smith",

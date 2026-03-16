@@ -57,12 +57,9 @@ def generate_events_for_schedule(
     ensure_attendance_records (which commits internally). Caller should not
     expect a fully uncommitted state after this call."""
     end = schedule.end_date
-    if end is None and team.season is not None:
-        end = team.season.end_date
     if end is None:
         raise ValueError(
-            "Set an end date on the schedule or assign the team to a season "
-            "with an end date."
+            "Set an end date on the schedule."
         )
     if schedule.start_date > end:
         raise ValueError("Start date must be on or before end date.")
@@ -83,7 +80,6 @@ def generate_events_for_schedule(
             meeting_location=schedule.meeting_location,
             presence_type=schedule.presence_type,
             description=schedule.description,
-            season_id=team.season_id,
             team_id=team.id,
             recurrence_group_id=schedule.recurrence_group_id,
             recurrence_rule=schedule.recurrence_rule,

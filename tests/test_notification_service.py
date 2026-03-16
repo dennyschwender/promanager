@@ -31,7 +31,7 @@ def season(db):
 
 @pytest.fixture()
 def team(db, season):
-    t = Team(name="Eagles", season_id=season.id)
+    t = Team(name="Eagles")
     db.add(t)
     db.commit()
     db.refresh(t)

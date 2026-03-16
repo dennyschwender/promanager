@@ -88,6 +88,7 @@ def process_rows(
     rows: list[dict],
     context_team_id: int,
     db: Session,
+    context_season_id: int | None = None,
 ) -> ImportResult:
     """Process import rows best-effort (per-row independent commits via savepoints)."""
     result = ImportResult()
@@ -96,7 +97,6 @@ def process_rows(
     all_teams = {t.name.lower(): t for t in db.query(Team).all()}
     context_team = db.get(Team, context_team_id)
     ctx_name = context_team.name if context_team else str(context_team_id)
-    context_season_id = context_team.season_id if context_team else None
 
     for idx, raw in enumerate(rows, start=1):
         row = {k: (v.strip() if isinstance(v, str) else v) for k, v in raw.items()}
@@ -140,7 +140,6 @@ def process_rows(
             matched = all_teams.get(team_name.lower())
             if matched:
                 resolved_team_id = matched.id
-                resolved_season_id = matched.season_id
             else:
                 team_warning = f"team not found: {team_name}, assigned to {ctx_name}"
 

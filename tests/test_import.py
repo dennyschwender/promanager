@@ -23,7 +23,7 @@ def season(db):
 
 @pytest.fixture()
 def team(db, season):
-    t = Team(name="Eagles", season_id=season.id)
+    t = Team(name="Eagles")
     db.add(t)
     db.commit()
     db.refresh(t)
@@ -32,7 +32,7 @@ def team(db, season):
 
 @pytest.fixture()
 def other_team(db, season):
-    t = Team(name="Hawks", season_id=season.id)
+    t = Team(name="Hawks")
     db.add(t)
     db.commit()
     db.refresh(t)
@@ -41,9 +41,9 @@ def other_team(db, season):
 
 # ── process_rows ──────────────────────────────────────────────────────────────
 
-def test_valid_rows_imported(db, team):
+def test_valid_rows_imported(db, team, season):
     rows = [{"first_name": "Alice", "last_name": "Smith"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
     assert len(result.skipped) == 0
     player = db.query(Player).filter(Player.first_name == "Alice").first()
@@ -58,94 +58,94 @@ def test_valid_rows_imported(db, team):
     assert membership.absent_by_default is False
 
 
-def test_missing_first_name_skipped(db, team):
+def test_missing_first_name_skipped(db, team, season):
     rows = [{"first_name": "", "last_name": "Smith"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 0
     assert result.skipped[0]["reason"] == "missing required field"
 
 
-def test_missing_last_name_skipped(db, team):
+def test_missing_last_name_skipped(db, team, season):
     rows = [{"first_name": "Alice", "last_name": "  "}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 0
     assert result.skipped[0]["reason"] == "missing required field"
 
 
-def test_duplicate_by_email_skipped(db, team):
+def test_duplicate_by_email_skipped(db, team, season):
     existing = Player(first_name="Bob", last_name="Old", email="bob@test.com", is_active=True)
     db.add(existing)
     db.commit()
     rows = [{"first_name": "Bob", "last_name": "New", "email": "bob@test.com"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 0
     assert result.skipped[0]["reason"] == "duplicate"
 
 
-def test_duplicate_by_name_skipped(db, team):
+def test_duplicate_by_name_skipped(db, team, season):
     existing = Player(first_name="Carol", last_name="Jones", is_active=True)
     db.add(existing)
     db.commit()
     rows = [{"first_name": "Carol", "last_name": "Jones"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 0
     assert result.skipped[0]["reason"] == "duplicate"
 
 
-def test_duplicate_within_batch_skipped(db, team):
+def test_duplicate_within_batch_skipped(db, team, season):
     rows = [
         {"first_name": "Dan", "last_name": "X", "email": "dan@test.com"},
         {"first_name": "Dan", "last_name": "Y", "email": "dan@test.com"},
     ]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
     assert result.skipped[0]["reason"] == "duplicate (in batch)"
 
 
-def test_unknown_team_falls_back_to_context(db, team):
+def test_unknown_team_falls_back_to_context(db, team, season):
     rows = [{"first_name": "Eve", "last_name": "X", "team": "Nonexistent"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
     assert any("team not found" in s["reason"] for s in result.skipped)
     membership = db.query(PlayerTeam).join(Player).filter(Player.first_name == "Eve").first()
     assert membership.team_id == team.id
 
 
-def test_blank_team_column_uses_context(db, team):
+def test_blank_team_column_uses_context(db, team, season):
     rows = [{"first_name": "Frank", "last_name": "X", "team": ""}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
     assert len(result.skipped) == 0
 
 
-def test_named_team_column_resolved(db, team, other_team):
+def test_named_team_column_resolved(db, team, other_team, season):
     rows = [{"first_name": "Grace", "last_name": "X", "team": "hawks"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
     membership = db.query(PlayerTeam).join(Player).filter(Player.first_name == "Grace").first()
     assert membership.team_id == other_team.id
 
 
-def test_unknown_columns_ignored(db, team):
+def test_unknown_columns_ignored(db, team, season):
     rows = [{"first_name": "Hank", "last_name": "X", "favourite_colour": "blue"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
 
 
-def test_invalid_date_of_birth_skipped(db, team):
+def test_invalid_date_of_birth_skipped(db, team, season):
     rows = [{"first_name": "Iris", "last_name": "X", "date_of_birth": "not-a-date"}]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 0
     assert result.skipped[0]["reason"] == "invalid date_of_birth"
 
 
-def test_valid_date_formats_accepted(db, team):
+def test_valid_date_formats_accepted(db, team, season):
     rows = [
         {"first_name": "J1", "last_name": "X", "date_of_birth": "2000-06-15"},
         {"first_name": "J2", "last_name": "X", "date_of_birth": "15/06/2000"},
         {"first_name": "J3", "last_name": "X", "date_of_birth": "15.06.2000"},
     ]
-    result = process_rows(rows, context_team_id=team.id, db=db)
+    result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 3
     players = db.query(Player).filter(Player.last_name == "X").all()
     assert len(players) == 3

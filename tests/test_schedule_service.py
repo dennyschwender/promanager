@@ -120,16 +120,11 @@ def test_generate_events_weekly(db):
 
 
 def test_generate_events_uses_season_end_date(db):
-    from models.season import Season
+    """Teams are no longer linked to seasons; schedule must have its own end_date."""
     from models.team import Team
     from models.team_recurring_schedule import TeamRecurringSchedule
 
-    season = Season(name="S1", end_date=date(2026, 3, 17), is_active=True)
-    db.add(season)
-    db.commit()
-    db.refresh(season)
-
-    team = Team(name="Lions", season_id=season.id)
+    team = Team(name="Lions")
     db.add(team)
     db.commit()
     db.refresh(team)
@@ -137,7 +132,7 @@ def test_generate_events_uses_season_end_date(db):
     sched = TeamRecurringSchedule(
         team_id=team.id, title="T", event_type="training",
         recurrence_rule="weekly", start_date=date(2026, 3, 3),
-        end_date=None,  # falls back to season end 2026-03-17
+        end_date=date(2026, 3, 17),  # explicit end date required
         presence_type="normal", recurrence_group_id="gen-uuid-2",
     )
     db.add(sched)

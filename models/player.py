@@ -41,7 +41,7 @@ class Player(Base):
     # ── Relationships ──────────────────────────────────────────────────────
     # team_id kept for backward-compat; use team_memberships for multi-team
     team: Mapped[Team | None] = relationship(
-        "Team", back_populates="players", lazy="select"
+        "Team", lazy="select"
     )
     team_memberships: Mapped[list[PlayerTeam]] = relationship(
         "PlayerTeam",

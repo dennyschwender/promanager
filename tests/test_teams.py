@@ -321,6 +321,15 @@ def test_removed_schedule_with_confirm_deletes_events(admin_client, db):
     assert db.query(Event).filter_by(id=ev_id).first() is None
 
 
+def test_team_has_no_season_id(db):
+    from models.team import Team
+    team = Team(name="U21")
+    db.add(team)
+    db.commit()
+    db.refresh(team)
+    assert not hasattr(team, "season_id") or team.__class__.__table__.columns.get("season_id") is None
+
+
 def test_changed_schedule_unconfirmed_saves_fields_keeps_events(admin_client, db):
     """Changed schedule with checkbox unchecked: fields updated, events untouched."""
     from models.event import Event
