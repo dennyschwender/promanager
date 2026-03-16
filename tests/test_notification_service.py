@@ -39,14 +39,14 @@ def team(db, season):
 
 
 @pytest.fixture()
-def player(db, team):
+def player(db, season, team):
     from models.player_team import PlayerTeam
     p = Player(first_name="Alice", last_name="Smith", email="alice@test.com",
                is_active=True)
     db.add(p)
     db.flush()
     db.add(PlayerTeam(
-        player_id=p.id, team_id=team.id, priority=1,
+        player_id=p.id, team_id=team.id, season_id=season.id, priority=1,
         role="player", membership_status="active", absent_by_default=False,
     ))
     db.commit()

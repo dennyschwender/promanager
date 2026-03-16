@@ -96,6 +96,7 @@ def process_rows(
     all_teams = {t.name.lower(): t for t in db.query(Team).all()}
     context_team = db.get(Team, context_team_id)
     ctx_name = context_team.name if context_team else str(context_team_id)
+    context_season_id = context_team.season_id if context_team else None
 
     for idx, raw in enumerate(rows, start=1):
         row = {k: (v.strip() if isinstance(v, str) else v) for k, v in raw.items()}
@@ -133,11 +134,13 @@ def process_rows(
         # 3. Team resolution
         team_name = row.get("team", "").strip()
         resolved_team_id = context_team_id
+        resolved_season_id = context_season_id
         team_warning: str | None = None
         if team_name:
             matched = all_teams.get(team_name.lower())
             if matched:
                 resolved_team_id = matched.id
+                resolved_season_id = matched.season_id
             else:
                 team_warning = f"team not found: {team_name}, assigned to {ctx_name}"
 
@@ -171,6 +174,7 @@ def process_rows(
             db.add(PlayerTeam(
                 player_id=player.id,
                 team_id=resolved_team_id,
+                season_id=resolved_season_id,
                 priority=1,
                 role="player",
                 membership_status="active",

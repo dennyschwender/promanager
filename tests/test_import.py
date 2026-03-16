@@ -6,14 +6,24 @@ import pytest
 
 from models.player import Player
 from models.player_team import PlayerTeam
+from models.season import Season
 from models.team import Team
 from services.import_service import parse_csv, parse_xlsx, process_rows
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture()
-def team(db):
-    t = Team(name="Eagles")
+def season(db):
+    s = Season(name="2024/25", is_active=True)
+    db.add(s)
+    db.commit()
+    db.refresh(s)
+    return s
+
+
+@pytest.fixture()
+def team(db, season):
+    t = Team(name="Eagles", season_id=season.id)
     db.add(t)
     db.commit()
     db.refresh(t)
@@ -21,8 +31,8 @@ def team(db):
 
 
 @pytest.fixture()
-def other_team(db):
-    t = Team(name="Hawks")
+def other_team(db, season):
+    t = Team(name="Hawks", season_id=season.id)
     db.add(t)
     db.commit()
     db.refresh(t)

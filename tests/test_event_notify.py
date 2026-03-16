@@ -26,7 +26,7 @@ def setup(db):
                     email="alice@test.com", is_active=True)
     db.add(player)
     db.flush()
-    db.add(PlayerTeam(player_id=player.id, team_id=team.id,
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id,
                       priority=1, role="player",
                       membership_status="active", absent_by_default=False))
     event = Event(title="Match", event_type="match", event_date=datetime.date(2026, 4, 1),
