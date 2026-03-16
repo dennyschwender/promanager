@@ -255,6 +255,7 @@ table.jexcel tbody td.edition textarea {
     minDimensions: [activeCols.length, 20],
     allowInsertColumn: true,
     allowDeleteColumn: true,
+    columnDrag: true,
     columnSorting: false,
     contextMenu: function(obj, x, y, e, items) {
       e.preventDefault();
@@ -267,6 +268,7 @@ table.jexcel tbody td.edition textarea {
       return [];
     },
     onchange: validateCell,
+    onpaste: function() { setTimeout(validateAll, 0); },
     oninsertrow: function(el, rowNumber, numOfRows) {
       var teamIdx = activeCols.indexOf("team");
       if (teamIdx === -1) return;
@@ -276,6 +278,11 @@ table.jexcel tbody td.edition textarea {
     },
     ondeletecolumn: function(el, col, numCols) {
       activeCols.splice(col, numCols || 1);
+      refreshDropdown();
+    },
+    onmovecolumn: function(el, from, to) {
+      var moved = activeCols.splice(from, 1)[0];
+      activeCols.splice(to, 0, moved);
       refreshDropdown();
     },
   });
@@ -325,6 +332,15 @@ table.jexcel tbody td.edition textarea {
       td.style.backgroundColor = "#fde8e8";
     } else if (col === "email" && v && !EMAIL_RE.test(v)) {
       td.style.backgroundColor = "#fff3cd";
+    }
+  }
+
+  function validateAll() {
+    var data = sheet.getData();
+    for (var r = 0; r < data.length; r++) {
+      for (var c = 0; c < activeCols.length; c++) {
+        validateCell(null, null, c, r, data[r][c]);
+      }
     }
   }
 
