@@ -10,7 +10,7 @@
   {% if user.is_admin and selected_team_id %}<a href="/players/import?team_id={{ selected_team_id }}" class="btn btn-outline">{{ t('players.import') }}</a>{% endif %}
 </div>
 
-<form method="get" action="/players" class="filter-row">
+<form method="get" action="/players" class="filter-row" id="player-filter-form">
   <label>
     {{ t('players.season_label') }}
     <select name="season_id" onchange="this.form.submit()">
@@ -34,6 +34,13 @@
     </select>
   </label>
 </form>
+<script>
+  document.getElementById('player-filter-form').addEventListener('submit', function() {
+    this.querySelectorAll('select').forEach(function(sel) {
+      if (!sel.value) sel.disabled = true;
+    });
+  });
+</script>
 
 {% if players %}
 <table>
