@@ -101,7 +101,7 @@ button.btn-sm {
 
 /* ── Breadcrumb ──────────────────────────────────────────── */
 .breadcrumb {
-  display: flex;
+  display: inline-flex;
   gap: 0.3rem;
   align-items: center;
   font-size: 0.82rem;
