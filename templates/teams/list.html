@@ -27,7 +27,8 @@
             <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">Import</a>
             {% if seasons|length > 1 %}
             <button type="button" class="btn btn-sm btn-outline"
-                    onclick="openCopyDialog({{ team.id }}, {{ team.name | tojson }})">
+                    data-team-id="{{ team.id }}" data-team-name="{{ team.name | e }}"
+                    onclick="openCopyDialog(this)">
               Copy roster
             </button>
             {% endif %}
@@ -77,9 +78,9 @@
 </dialog>
 
 <script>
-  function openCopyDialog(teamId, teamName) {
-    document.getElementById('dialog-team-name').textContent = teamName;
-    document.getElementById('copy-roster-form').action = '/teams/' + teamId + '/copy-roster';
+  function openCopyDialog(btn) {
+    document.getElementById('dialog-team-name').textContent = btn.dataset.teamName;
+    document.getElementById('copy-roster-form').action = '/teams/' + btn.dataset.teamId + '/copy-roster';
     document.getElementById('copy-roster-dialog').showModal();
   }
 </script>
