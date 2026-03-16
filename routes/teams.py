@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.csrf import require_csrf
 from app.database import get_db
 from app.templates import render
-from models.season import Season
 from models.team import Team
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
@@ -136,11 +135,9 @@ async def team_new_get(
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    seasons = db.query(Season).order_by(Season.name).all()
     return render(request, "teams/form.html", {
         "user": user,
         "team": None,
-        "seasons": seasons,
         "error": None,
         "schedule_rows": [],
         "saved": False,
@@ -155,17 +152,14 @@ async def team_new_post(
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
-    season_id: str = Form(""),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     if not name.strip():
-        seasons = db.query(Season).order_by(Season.name).all()
         return render(request, "teams/form.html", {
             "user": user,
             "team": None,
-            "seasons": seasons,
             "error": "Team name is required.",
             "schedule_rows": [],
             "saved": False,
@@ -201,11 +195,9 @@ async def team_edit_get(
     if team is None:
         return RedirectResponse("/teams", status_code=302)
 
-    seasons = db.query(Season).order_by(Season.name).all()
     return render(request, "teams/form.html", {
         "user": user,
         "team": team,
-        "seasons": seasons,
         "schedule_rows": [_schedule_to_dict(s) for s in team.recurring_schedules],
         "error": None,
         "saved": saved == "1",
@@ -221,7 +213,6 @@ async def team_edit_post(
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
-    season_id: str = Form(""),
     confirm_step: str = Form("", alias="_confirm_step"),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
@@ -231,7 +222,6 @@ async def team_edit_post(
     if team is None:
         return RedirectResponse("/teams", status_code=302)
 
-    seasons = db.query(Season).order_by(Season.name).all()
     form = await request.form()
 
     def _render(error=None, confirm_mode=False, flagged=None,
@@ -239,7 +229,6 @@ async def team_edit_post(
         return render(request, "teams/form.html", {
             "user": user,
             "team": team,
-            "seasons": seasons,
             "schedule_rows": (
                 schedule_rows
                 if schedule_rows is not None

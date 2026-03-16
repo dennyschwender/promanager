@@ -321,6 +321,20 @@ def test_removed_schedule_with_confirm_deletes_events(admin_client, db):
     assert db.query(Event).filter_by(id=ev_id).first() is None
 
 
+def test_create_team_does_not_accept_season_id(admin_client, db):
+    """After refactor, teams have no season_id field."""
+    from models.team import Team
+    resp = admin_client.post(
+        "/teams/new",
+        data={"name": "NoSeasonTeam", "description": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    team = db.query(Team).filter(Team.name == "NoSeasonTeam").first()
+    assert team is not None
+    assert not hasattr(team, "season_id")
+
+
 def test_team_has_no_season_id(db):
     from models.team import Team
     team = Team(name="U21")
