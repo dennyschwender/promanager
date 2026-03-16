@@ -45,3 +45,18 @@ async def require_csrf(request: Request) -> None:
             status_code=403,
             detail="CSRF token invalid or missing. Please go back and try again.",
         )
+
+
+async def require_csrf_header(request: Request) -> None:
+    """FastAPI dependency: validate CSRF token from X-CSRF-Token header.
+
+    Use this (not require_csrf) for JSON POST endpoints — it never reads
+    request.form(), which would corrupt the JSON body.
+    """
+    token = request.headers.get("X-CSRF-Token", "")
+    session_cookie = request.cookies.get(COOKIE_NAME, "")
+    if not verify_csrf_token(token, session_cookie):
+        raise HTTPException(
+            status_code=403,
+            detail="CSRF token invalid or missing.",
+        )

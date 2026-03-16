@@ -14,7 +14,7 @@ from sqlalchemy.pool import StaticPool
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 import models  # noqa: E402, F401  — ensures all tables are registered on Base
-from app.csrf import require_csrf  # noqa: E402
+from app.csrf import require_csrf, require_csrf_header  # noqa: E402
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 from services.auth_service import create_session_cookie, create_user  # noqa: E402
@@ -57,8 +57,12 @@ def client(db):
     async def override_csrf():
         pass
 
+    async def override_csrf_header():
+        pass
+
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[require_csrf] = override_csrf
+    app.dependency_overrides[require_csrf_header] = override_csrf_header
     with TestClient(app, raise_server_exceptions=False, follow_redirects=False) as c:
         yield c
     app.dependency_overrides.clear()
