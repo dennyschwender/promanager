@@ -26,6 +26,9 @@ class Season(Base):
     events: Mapped[list[Event]] = relationship(
         "Event", back_populates="season", lazy="select"
     )
+    player_memberships: Mapped[list[PlayerTeam]] = relationship(
+        "PlayerTeam", back_populates="season", lazy="select"
+    )
 
     def __repr__(self) -> str:
         return f"<Season id={self.id} name={self.name!r} active={self.is_active}>"

@@ -144,3 +144,25 @@ def test_players_filter_by_team(admin_client, db):
     assert resp.status_code == 200
     assert b"Eve" in resp.content
     assert b"Frank" not in resp.content
+
+
+def test_player_team_has_season_id(db):
+    from models.season import Season
+    from models.team import Team
+    from models.player import Player
+    from models.player_team import PlayerTeam
+
+    season = Season(name="2025/26", is_active=True)
+    team = Team(name="U21")
+    player = Player(first_name="Anna", last_name="Test", is_active=True)
+    db.add_all([season, team, player])
+    db.flush()
+
+    pt = PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, priority=1)
+    db.add(pt)
+    db.commit()
+    db.refresh(pt)
+
+    assert pt.season_id == season.id
+    assert pt.season is not None
+    assert pt.season.name == "2025/26"
