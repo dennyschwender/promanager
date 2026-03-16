@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.csrf import require_csrf
 from app.database import get_db
 from app.templates import render
+from models.player_team import PlayerTeam
+from models.season import Season
 from models.team import Team
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
@@ -123,7 +125,8 @@ async def teams_list(
     db: Session = Depends(get_db),
 ):
     teams = db.query(Team).order_by(Team.name).all()
-    return render(request, "teams/list.html", {"user": user, "teams": teams})
+    seasons = db.query(Season).order_by(Season.name).all()
+    return render(request, "teams/list.html", {"user": user, "teams": teams, "seasons": seasons})
 
 
 # ---------------------------------------------------------------------------
@@ -471,6 +474,59 @@ async def team_edit_post(
         # inside generate_events_for_schedule. This is an accepted limitation.
         return _render(error="An error occurred saving the schedules. Please try again.")
     return RedirectResponse(f"/teams/{team_id}/edit?saved=1", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Delete
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Copy roster
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{team_id}/copy-roster")
+async def team_copy_roster(
+    team_id: int,
+    request: Request,
+    source_season_id: int = Form(...),
+    target_season_id: int = Form(...),
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    if source_season_id == target_season_id:
+        return RedirectResponse("/teams?copy_error=same_season", status_code=302)
+
+    source_rows = (
+        db.query(PlayerTeam)
+        .filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == source_season_id)
+        .all()
+    )
+    existing = {
+        pt.player_id
+        for pt in db.query(PlayerTeam)
+        .filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == target_season_id)
+        .all()
+    }
+    for src in source_rows:
+        if src.player_id in existing:
+            continue
+        db.add(PlayerTeam(
+            player_id=src.player_id,
+            team_id=team_id,
+            season_id=target_season_id,
+            priority=src.priority,
+            role=src.role,
+            position=src.position,
+            shirt_number=src.shirt_number,
+            membership_status=src.membership_status,
+            injured_until=None,
+            absent_by_default=False,
+        ))
+    db.commit()
+    return RedirectResponse("/teams", status_code=302)
 
 
 # ---------------------------------------------------------------------------

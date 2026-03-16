@@ -21,10 +21,23 @@
       <td>{{ team.description or "—" }}</td>
       <td>
         <div class="action-group">
+          <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
+          <a href="/players?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
           {% if user.is_admin %}
-            <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
-            <a href="/players?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
-            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">Import Players</a>
+            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">Import</a>
+            {% if seasons|length > 1 %}
+            <form method="post" action="/teams/{{ team.id }}/copy-roster" style="display:contents;">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+              <select name="source_season_id" style="width:auto;display:inline-block;padding:.2rem .4rem;font-size:.8rem;">
+                {% for s in seasons %}<option value="{{ s.id }}">{{ s.name }}{% if s.is_active %} ✓{% endif %}</option>{% endfor %}
+              </select>
+              <span style="font-size:.8rem;color:var(--tp-muted);">→</span>
+              <select name="target_season_id" style="width:auto;display:inline-block;padding:.2rem .4rem;font-size:.8rem;">
+                {% for s in seasons %}<option value="{{ s.id }}" {% if s.is_active %}selected{% endif %}>{{ s.name }}{% if s.is_active %} ✓{% endif %}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline">Copy roster</button>
+            </form>
+            {% endif %}
             <form method="post" action="/teams/{{ team.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete team {{ team.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
