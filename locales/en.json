@@ -116,7 +116,10 @@
     "edit_title": "Edit Player",
     "save": "Save Player",
     "import_title": "Import Players",
-    "import_submit": "Import"
+    "import_submit": "Import",
+    "season_label": "Season",
+    "no_seasons": "No seasons available",
+    "no_active_season": "No active season. Please activate a season to assign players to teams."
   },
   "teams": {
     "title": "Teams",

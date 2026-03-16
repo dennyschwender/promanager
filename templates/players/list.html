@@ -12,6 +12,19 @@
 
 <form method="get" action="/players" class="filter-row">
   <label>
+    {{ t('players.season_label') }}
+    <select name="season_id" onchange="this.form.submit()">
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
+          {{ s.name }}{% if s.is_active %} ✓{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+  {% if not seasons %}
+    <span class="text-muted">{{ t('players.no_seasons') }}</span>
+  {% endif %}
+  <label>
     Filter by team
     <select name="team_id" onchange="this.form.submit()">
       <option value="">All Teams</option>

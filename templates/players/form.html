@@ -16,6 +16,25 @@
 <form method="post" action="{% if player %}/players/{{ player.id }}/edit{% else %}/players/new{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
+  {# 0. SEASON SELECTOR #}
+  {% if selected_season_id is none %}
+    <div class="notice alert alert-info">{{ t('players.no_active_season') }}</div>
+  {% endif %}
+  {% if seasons %}
+    <fieldset>
+      <legend>{{ t('players.season_label') }}</legend>
+      <select name="season_id" onchange="this.form.submit()">
+        {% for s in seasons %}
+          <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
+            {{ s.name }}{% if s.is_active %} ✓{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </fieldset>
+  {% else %}
+    <span class="text-muted">{{ t('players.no_seasons') }}</span>
+  {% endif %}
+
   {# 1. BASIC INFO #}
   <fieldset>
     <legend>Basic Info</legend>
@@ -122,6 +141,7 @@
   </fieldset>
 
   {# 4. TEAMS & ROLES #}
+  {% if selected_season_id %}
   <fieldset>
     <legend>Teams &amp; Roles</legend>
     <p class="recurrence-hint">
@@ -200,6 +220,7 @@
     </table>
     </div>
   </fieldset>
+  {% endif %}{# selected_season_id #}
 
   {# 5. EMERGENCY CONTACT #}
   <fieldset>

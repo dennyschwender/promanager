@@ -116,7 +116,10 @@
     "edit_title": "Modifica Giocatore",
     "save": "Salva Giocatore",
     "import_title": "Importa Giocatori",
-    "import_submit": "Importa"
+    "import_submit": "Importa",
+    "season_label": "Stagione",
+    "no_seasons": "Nessuna stagione disponibile",
+    "no_active_season": "Nessuna stagione attiva. Attiva una stagione per assegnare i giocatori ai team."
   },
   "teams": {
     "title": "Squadre",
