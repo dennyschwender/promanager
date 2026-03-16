@@ -323,18 +323,23 @@ IMPORT_COLUMNS = [
 async def player_import_get(
     request: Request,
     team_id: int,
+    season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     context_team = db.get(Team, team_id)
     if context_team is None:
         return RedirectResponse("/teams", status_code=302)
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = season_id or _active_season_id(db)
     return render(
         request,
         "players/import.html",
         {
             "user": user,
             "context_team": context_team,
+            "seasons": seasons,
+            "selected_season_id": selected_season_id,
             "columns": IMPORT_COLUMNS,
             "result": None,
             "error": None,
@@ -346,6 +351,7 @@ async def player_import_get(
 async def player_import_post(
     request: Request,
     team_id: int,
+    season_id: int | None = None,
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -355,9 +361,14 @@ async def player_import_post(
     if context_team is None:
         return RedirectResponse("/teams", status_code=302)
 
+    season_id_s = (form.get("season_id") or "").strip()
+    selected_season_id = int(season_id_s) if season_id_s else (season_id or _active_season_id(db))
+
     import_source = (form.get("import_source") or "").strip()
     error: str | None = None
     result: ImportResult | None = None
+
+    seasons = db.query(Season).order_by(Season.name).all()
 
     def _render(status: int = 200):
         return render(
@@ -366,12 +377,18 @@ async def player_import_post(
             {
                 "user": user,
                 "context_team": context_team,
+                "seasons": seasons,
+                "selected_season_id": selected_season_id,
                 "columns": IMPORT_COLUMNS,
                 "result": result,
                 "error": error,
             },
             status_code=status,
         )
+
+    if selected_season_id is None:
+        error = "No active season found. Please activate a season before importing players."
+        return _render(400)
 
     if import_source == "paste":
         rows_json = (form.get("rows_json") or "").strip()
@@ -382,7 +399,7 @@ async def player_import_post(
         except (json.JSONDecodeError, ValueError):
             error = "Invalid data submitted. Please try again."
             return _render(400)
-        result = process_rows(rows, context_team_id=team_id, db=db)
+        result = process_rows(rows, context_team_id=team_id, db=db, context_season_id=selected_season_id)
 
     elif import_source == "file":
         upload = form.get("import_file")
@@ -408,7 +425,7 @@ async def player_import_post(
             error = f"Could not read the file: {exc}"
             return _render(400)
 
-        result = process_rows(rows, context_team_id=team_id, db=db)
+        result = process_rows(rows, context_team_id=team_id, db=db, context_season_id=selected_season_id)
 
     else:
         error = "Invalid submission."
