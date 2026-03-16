@@ -33,17 +33,6 @@
   <label for="description">Description
     <textarea id="description" name="description">{{ team.description if team and team.description else '' }}</textarea>
   </label>
-  <label for="season_id">Season
-    <select id="season_id" name="season_id">
-      <option value="">— None —</option>
-      {% for s in seasons %}
-        <option value="{{ s.id }}"
-                {% if team and team.season_id == s.id %}selected{% endif %}>
-          {{ s.name }}
-        </option>
-      {% endfor %}
-    </select>
-  </label>
 
   {# ── Confirmation warning ── #}
   {% if confirm_mode and flagged %}

@@ -12,13 +12,12 @@
 {% if teams %}
 <table>
   <thead>
-    <tr><th>{{ t('teams.name') }}</th><th>{{ t('teams.season') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
+    <tr><th>{{ t('teams.name') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for t in teams %}
     <tr>
       <td><strong>{{ t.name }}</strong></td>
-      <td>{{ t.season.name if t.season else "—" }}</td>
       <td>{{ t.description or "—" }}</td>
       <td>
         <div class="action-group">
