@@ -127,17 +127,20 @@ def test_delete_player(admin_client, db):
 
 
 def test_players_filter_by_team(admin_client, db):
+    from models.season import Season
+
+    season = Season(name="2025/26", is_active=True)
     team = Team(name="FilterTeam")
-    db.add(team)
+    db.add_all([season, team])
     db.commit()
+    db.refresh(season)
     db.refresh(team)
 
     p1 = Player(first_name="Eve", last_name="InTeam", is_active=True)
     p2 = Player(first_name="Frank", last_name="NoTeam", is_active=True)
     db.add_all([p1, p2])
     db.flush()
-    # Assign p1 to the team via the association table
-    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, priority=1))
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=season.id, priority=1))
     db.commit()
 
     resp = admin_client.get(f"/players?team_id={team.id}", follow_redirects=False)

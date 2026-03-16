@@ -39,10 +39,6 @@ class Player(Base):
     )
 
     # ── Relationships ──────────────────────────────────────────────────────
-    # team_id kept for backward-compat; use team_memberships for multi-team
-    team: Mapped[Team | None] = relationship(
-        "Team", lazy="select"
-    )
     team_memberships: Mapped[list[PlayerTeam]] = relationship(
         "PlayerTeam",
         back_populates="player",
@@ -89,11 +85,6 @@ class Player(Base):
     )
 
     # ── Helpers ────────────────────────────────────────────────────────────
-    @property
-    def teams(self) -> list:
-        """Ordered list of Team objects (by priority ascending)."""
-        return [m.team for m in self.team_memberships if m.team is not None]
-
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
