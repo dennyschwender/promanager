@@ -149,6 +149,63 @@ def test_players_filter_by_team(admin_client, db):
     assert b"Frank" not in resp.content
 
 
+def test_players_list_filters_by_active_season(admin_client, db):
+    """Player list defaults to active season — only shows players in that season."""
+    from models.season import Season
+    from models.team import Team
+    from models.player import Player
+    from models.player_team import PlayerTeam
+
+    s1 = Season(name="2024/25", is_active=False)
+    s2 = Season(name="2025/26", is_active=True)
+    team = Team(name="U21")
+    db.add_all([s1, s2, team])
+    db.flush()
+
+    p1 = Player(first_name="InActive", last_name="Season", is_active=True)
+    p2 = Player(first_name="InCurrent", last_name="Season", is_active=True)
+    db.add_all([p1, p2])
+    db.flush()
+
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=s1.id, priority=1))
+    db.add(PlayerTeam(player_id=p2.id, team_id=team.id, season_id=s2.id, priority=1))
+    db.commit()
+
+    resp = admin_client.get(f"/players?season_id={s2.id}&team_id={team.id}", follow_redirects=False)
+    assert resp.status_code == 200
+    assert b"InCurrent" in resp.content
+    assert b"InActive" not in resp.content
+
+
+def test_sync_memberships_only_touches_target_season(db):
+    """Editing a player in season A must not delete their season B membership."""
+    from models.season import Season
+    from models.team import Team
+    from models.player_team import PlayerTeam
+    from routes.players import _sync_memberships
+
+    s1 = Season(name="2024/25", is_active=False)
+    s2 = Season(name="2025/26", is_active=True)
+    team = Team(name="U21")
+    db.add_all([s1, s2, team])
+    db.flush()
+
+    player = Player(first_name="Multi", last_name="Season", is_active=True)
+    db.add(player)
+    db.flush()
+
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=s1.id, priority=1))
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=s2.id, priority=1))
+    db.commit()
+
+    _sync_memberships(db, player, [], season_id=s2.id)
+    db.commit()
+
+    remaining = db.query(PlayerTeam).filter(PlayerTeam.player_id == player.id).all()
+    assert len(remaining) == 1
+    assert remaining[0].season_id == s1.id
+
+
 def test_player_team_has_season_id(db):
     from models.season import Season
     from models.team import Team

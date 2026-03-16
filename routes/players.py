@@ -17,6 +17,7 @@ from models.player import Player
 from models.player_contact import PlayerContact
 from models.player_phone import PlayerPhone
 from models.player_team import PlayerTeam
+from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
@@ -72,13 +73,20 @@ def _sync_memberships(
     db: Session,
     player: Player,
     memberships: list[tuple[int, int, dict]],
+    season_id: int,
 ) -> None:
-    """Replace all PlayerTeam rows for *player* with *memberships*."""
-    db.query(PlayerTeam).filter(PlayerTeam.player_id == player.id).delete()
+    """Replace PlayerTeam rows for *player* in *season* with *memberships*.
+    Memberships from other seasons are untouched.
+    """
+    db.query(PlayerTeam).filter(
+        PlayerTeam.player_id == player.id,
+        PlayerTeam.season_id == season_id,
+    ).delete()
     for team_id, priority, extra in memberships:
         db.add(PlayerTeam(
             player_id=player.id,
             team_id=team_id,
+            season_id=season_id,
             priority=priority,
             role=extra.get("role", "player") or "player",
             position=extra.get("position"),
@@ -146,9 +154,20 @@ def _apply_personal_fields(player: Player, form) -> None:
     player.city          = (form.get("city")          or "").strip() or None
 
 
-def _memberships_dict(player: Player) -> dict:
-    """Return {team_id: PlayerTeam} mapping for pre-filling the edit form."""
-    return {m.team_id: m for m in player.team_memberships}
+def _active_season_id(db: Session) -> int | None:
+    season = db.query(Season).filter(Season.is_active == True).first()  # noqa: E712
+    return season.id if season else None
+
+
+def _memberships_dict(player: Player, season_id: int | None) -> dict:
+    """Return {team_id: PlayerTeam} for pre-filling the edit form, scoped to season."""
+    if season_id is None:
+        return {}
+    return {
+        m.team_id: m
+        for m in player.team_memberships
+        if m.season_id == season_id
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -161,11 +180,20 @@ def _memberships_dict(player: Player) -> dict:
 async def players_list(
     request: Request,
     team_id: int | None = None,
+    season_id: int | None = None,
     user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = season_id or _active_season_id(db)
+
     q = db.query(Player)
-    if team_id is not None:
+    if team_id is not None and selected_season_id is not None:
+        q = (
+            q.join(PlayerTeam, Player.id == PlayerTeam.player_id)
+            .filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == selected_season_id)
+        )
+    elif team_id is not None:
         q = (
             q.join(PlayerTeam, Player.id == PlayerTeam.player_id)
             .filter(PlayerTeam.team_id == team_id)
@@ -177,7 +205,9 @@ async def players_list(
         "user": user,
         "players": players,
         "teams": teams,
+        "seasons": seasons,
         "selected_team_id": team_id,
+        "selected_season_id": selected_season_id,
     })
 
 
@@ -189,16 +219,21 @@ async def players_list(
 @router.get("/new")
 async def player_new_get(
     request: Request,
+    season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = season_id or _active_season_id(db)
     return render(request, "players/form.html", {
         "user": user,
         "player": None,
         "teams": teams,
         "users": users,
+        "seasons": seasons,
+        "selected_season_id": selected_season_id,
         "memberships": {},
         "error": None,
     })
@@ -217,9 +252,12 @@ async def player_new_post(
     email      = (form.get("email")      or "").strip()
     phone      = (form.get("phone")      or "").strip()
     user_id_s  = (form.get("user_id")    or "").strip()
+    season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
 
     if not first_name or not last_name:
         return render(request, "players/form.html", {
@@ -227,6 +265,8 @@ async def player_new_post(
             "player": None,
             "teams": teams,
             "users": users,
+            "seasons": seasons,
+            "selected_season_id": selected_season_id,
             "memberships": {},
             "error": "First name and last name are required.",
         }, status_code=400)
@@ -241,10 +281,11 @@ async def player_new_post(
     )
     _apply_personal_fields(player, form)
     db.add(player)
-    db.flush()  # get player.id
+    db.flush()
 
-    memberships = _parse_team_memberships(form)
-    _sync_memberships(db, player, memberships)
+    if selected_season_id is not None:
+        memberships = _parse_team_memberships(form)
+        _sync_memberships(db, player, memberships, season_id=selected_season_id)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 
@@ -387,6 +428,7 @@ async def player_detail(
 async def player_edit_get(
     player_id: int,
     request: Request,
+    season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
@@ -396,12 +438,17 @@ async def player_edit_get(
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = season_id or _active_season_id(db)
+    memberships = _memberships_dict(player, selected_season_id)
     return render(request, "players/form.html", {
         "user": user,
         "player": player,
         "teams": teams,
         "users": users,
-        "memberships": _memberships_dict(player),
+        "seasons": seasons,
+        "selected_season_id": selected_season_id,
+        "memberships": memberships,
         "error": None,
     })
 
@@ -425,9 +472,12 @@ async def player_edit_post(
     phone      = (form.get("phone")      or "").strip()
     user_id_s  = (form.get("user_id")    or "").strip()
     is_active  = (form.get("is_active")  or "")
+    season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+    selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
 
     if not first_name or not last_name:
         return render(request, "players/form.html", {
@@ -435,7 +485,9 @@ async def player_edit_post(
             "player": player,
             "teams": teams,
             "users": users,
-            "memberships": _memberships_dict(player),
+            "seasons": seasons,
+            "selected_season_id": selected_season_id,
+            "memberships": _memberships_dict(player, selected_season_id),
             "error": "First name and last name are required.",
         }, status_code=400)
 
@@ -447,7 +499,8 @@ async def player_edit_post(
     player.is_active  = is_active in ("on", "true", "1", "yes")
     _apply_personal_fields(player, form)
 
-    _sync_memberships(db, player, _parse_team_memberships(form))
+    if selected_season_id is not None:
+        _sync_memberships(db, player, _parse_team_memberships(form), season_id=selected_season_id)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 
