@@ -183,3 +183,69 @@ def test_member_cannot_update_another_members_player(client, db):
         .first()
     )
     assert att is None or att.status != "present"
+
+
+def test_ensure_attendance_only_includes_season_players(db):
+    """ensure_attendance_records only creates rows for players in event's (team, season)."""
+    from datetime import date
+    from models.season import Season
+    from models.team import Team
+    from models.player_team import PlayerTeam
+    from services.attendance_service import ensure_attendance_records
+
+    s1 = Season(name="2024/25", is_active=False)
+    s2 = Season(name="2025/26", is_active=True)
+    team = Team(name="U21")
+    db.add_all([s1, s2, team])
+    db.flush()
+
+    p1 = _make_player(db, "InSeason", "Two")
+    p2 = _make_player(db, "InSeason", "One")
+    db.add(PlayerTeam(player_id=p1.id, team_id=team.id, season_id=s1.id, priority=1))
+    db.add(PlayerTeam(player_id=p2.id, team_id=team.id, season_id=s2.id, priority=1))
+    db.commit()
+
+    event = Event(
+        title="S2 Match", event_type="match",
+        event_date=date(2026, 1, 10),
+        team_id=team.id, season_id=s2.id,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    ensure_attendance_records(db, event)
+
+    from models.attendance import Attendance
+    att_player_ids = {a.player_id for a in db.query(Attendance).filter(Attendance.event_id == event.id).all()}
+    assert p2.id in att_player_ids      # in s2 — should be included
+    assert p1.id not in att_player_ids  # in s1 — should NOT be included
+
+
+def test_ensure_attendance_no_season_creates_no_records(db):
+    """ensure_attendance_records with event.season_id=None creates no attendance rows."""
+    from datetime import date
+    from models.team import Team
+    from services.attendance_service import ensure_attendance_records
+
+    team = Team(name="NoSeason")
+    db.add(team)
+    db.flush()
+
+    player = _make_player(db, "NoSeason", "Player")
+    db.commit()
+
+    event = Event(
+        title="No Season Event", event_type="training",
+        event_date=date(2026, 2, 1),
+        team_id=team.id, season_id=None,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    ensure_attendance_records(db, event)
+
+    from models.attendance import Attendance
+    count = db.query(Attendance).filter(Attendance.event_id == event.id).count()
+    assert count == 0

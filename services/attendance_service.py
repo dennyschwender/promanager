@@ -144,36 +144,39 @@ def _default_status(event: Event) -> str:
 
 
 def _has_higher_prio_conflict(db: Session, player: Player, event: Event) -> bool:
-    """True if *player* has a higher-priority team whose event conflicts with
-    *event* (same date; same time if both have one).
+    """True if player has a higher-priority team with a conflicting event on the same date/time.
 
-    "Higher priority" means a lower priority number (1 > 2 > 3 …).
+    Both PlayerTeam queries are scoped to event.season_id.
+    If event.season_id is None, returns False (no conflict assumed).
     """
     if event.team_id is None:
         return False
+    if event.season_id is None:
+        return False
 
+    # Query 1: player's own membership in this team for this season
     my_pt = (
         db.query(PlayerTeam)
-        .filter_by(player_id=player.id, team_id=event.team_id)
+        .filter_by(player_id=player.id, team_id=event.team_id, season_id=event.season_id)
         .first()
     )
     if my_pt is None:
         return False
 
-    # Find all of this player's teams with a strictly higher priority
+    # Query 2: find all higher-priority teams for the player in this season
     higher_team_ids = [
         pt.team_id
         for pt in db.query(PlayerTeam)
         .filter(
             PlayerTeam.player_id == player.id,
-            PlayerTeam.priority < my_pt.priority,   # lower number = higher priority
+            PlayerTeam.season_id == event.season_id,
+            PlayerTeam.priority < my_pt.priority,
         )
         .all()
     ]
     if not higher_team_ids:
         return False
 
-    # Check if any of those teams have an event on the same date
     competing = (
         db.query(Event)
         .filter(
@@ -184,29 +187,35 @@ def _has_higher_prio_conflict(db: Session, player: Player, event: Event) -> bool
         .all()
     )
     for ce in competing:
-        # If either event has no time set → date-level conflict is enough
         if event.event_time is None or ce.event_time is None:
             return True
-        # Both have times → only conflict if they overlap (same start time)
         if event.event_time == ce.event_time:
             return True
     return False
 
 
 def ensure_attendance_records(db: Session, event: Event) -> None:
-    """Create Attendance rows for every active player in event's team.
+    """Create Attendance rows for every active player in event's (team, season).
 
-    Initial status comes from presence_type.  If the player also belongs to a
-    higher-priority team that has a conflicting event on the same day/time,
-    the status is set to 'absent' automatically (unless already absent).
+    If event.season_id is None, no records are created (season context required).
     """
     if event.team_id is None:
         return
+    if event.season_id is None:
+        import logging
+        logging.getLogger(__name__).warning(
+            "ensure_attendance_records called with event.season_id=None "
+            "(event_id=%s). No attendance records created.", event.id
+        )
+        return
 
-    # Fetch players via the many-to-many association table
+    # Fetch players via (team_id, season_id) — season-scoped
     memberships = (
         db.query(PlayerTeam)
-        .filter(PlayerTeam.team_id == event.team_id)
+        .filter(
+            PlayerTeam.team_id == event.team_id,
+            PlayerTeam.season_id == event.season_id,
+        )
         .all()
     )
     players = [
@@ -226,14 +235,13 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
     for player in players:
         if player.id not in existing_player_ids:
             status = default
-            # Check per-team "absent by default" flag
             mem = next(
                 (m for m in memberships if m.player_id == player.id), None
             )
             if status != "absent" and mem is not None and mem.absent_by_default:
-                status = "absent"   # player is absent by default for this team
+                status = "absent"
             if status != "absent" and _has_higher_prio_conflict(db, player, event):
-                status = "absent"   # auto-absent: higher-priority event conflicts
+                status = "absent"
             new_records.append(
                 Attendance(event_id=event.id, player_id=player.id, status=status)
             )
