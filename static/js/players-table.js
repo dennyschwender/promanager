@@ -13,6 +13,8 @@
     'Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default',
     'Priority', 'Actions'
   ];
+  // Columns that only contain meaningful data when a season is selected
+  var PT_COLS = ['Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority'];
 
   var cfg = window.PLAYERS_CONFIG || {};
 
@@ -38,6 +40,8 @@
   function applyColumnVisibility(visibleCols) {
     ALL_COLS.forEach(function (col) {
       var show = visibleCols.indexOf(col) !== -1;
+      // Force-hide season-specific columns when no season is selected
+      if (!cfg.seasonId && PT_COLS.indexOf(col) !== -1) show = false;
       document.querySelectorAll('#players-table [data-col="' + col + '"]').forEach(function (el) {
         el.style.display = show ? '' : 'none';
       });
@@ -53,6 +57,12 @@
 
     popover.querySelectorAll('.col-toggle').forEach(function (cb) {
       cb.checked = visibleCols.indexOf(cb.dataset.col) !== -1;
+      if (!cfg.seasonId && PT_COLS.indexOf(cb.dataset.col) !== -1) {
+        cb.disabled = true;
+        cb.checked = false;
+        cb.parentElement.title = 'Select a season to enable this column';
+        cb.parentElement.style.opacity = '0.45';
+      }
     });
     applyColumnVisibility(visibleCols);
 
