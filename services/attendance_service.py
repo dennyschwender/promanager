@@ -52,7 +52,13 @@ def set_attendance(
 
 def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     """Return dict keyed by status, each value a list of Player objects."""
-    attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+    attendances = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.player))
+        .filter(Attendance.event_id == event_id)
+        .all()
+    )
     summary: dict[str, list[Player]] = {
         "present": [],
         "absent": [],
@@ -80,8 +86,14 @@ def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
     if not event_ids:
         return []
 
-    # Collect all attendances for those events
-    attendances = db.query(Attendance).filter(Attendance.event_id.in_(event_ids)).all()
+    # Collect all attendances for those events (eager-load player to avoid N+1)
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+    attendances = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.player))
+        .filter(Attendance.event_id.in_(event_ids))
+        .all()
+    )
 
     # Group by player
     player_map: dict[int, dict] = {}
@@ -108,7 +120,13 @@ def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
 
 def get_player_attendance_history(db: Session, player_id: int) -> list[dict]:
     """Return list of {event, attendance} dicts sorted by event_date desc."""
-    attendances = db.query(Attendance).filter(Attendance.player_id == player_id).all()
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+    attendances = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.event))
+        .filter(Attendance.player_id == player_id)
+        .all()
+    )
     results = []
     for att in attendances:
         if att.event:
