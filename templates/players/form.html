@@ -16,23 +16,9 @@
 <form method="post" action="{% if player %}/players/{{ player.id }}/edit{% else %}/players/new{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
-  {# 0. SEASON SELECTOR #}
-  {% if selected_season_id is none %}
-    <div class="notice alert alert-info">{{ t('players.no_active_season') }}</div>
-  {% endif %}
-  {% if seasons %}
-    <fieldset>
-      <legend>{{ t('players.season_label') }}</legend>
-      <select name="season_id" onchange="this.form.submit()">
-        {% for s in seasons %}
-          <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
-            {{ s.name }}{% if s.is_active %} ✓{% endif %}
-          </option>
-        {% endfor %}
-      </select>
-    </fieldset>
-  {% else %}
-    <span class="text-muted">{{ t('players.no_seasons') }}</span>
+  {# 0. No seasons notice #}
+  {% if not seasons %}
+    <div class="alert alert-warning">{{ t('players.no_seasons') }}</div>
   {% endif %}
 
   {# 1. BASIC INFO #}
@@ -140,87 +126,99 @@
             onclick="addPhone()">+ Add phone number</button>
   </fieldset>
 
-  {# 4. TEAMS & ROLES #}
-  {% if selected_season_id %}
+  {# 4. SEASON MEMBERSHIPS — one collapsible section per season #}
+  {% if seasons %}
   <fieldset>
-    <legend>Teams &amp; Roles</legend>
+    <legend>Season Memberships</legend>
     <p class="recurrence-hint">
-      Tick each team. <strong>Priority 1 = highest</strong> &#8212; players on lower-priority teams are auto-absent at conflicting events.
-      <strong>Absent by default</strong>: player starts absent for every new event of that team (can still be changed per event).
+      Tick each team. <strong>Priority 1 = highest</strong> — players on lower-priority teams are auto-absent at conflicting events.
+      <strong>Absent by default</strong>: player starts absent for every new event of that team.
     </p>
-    <div style="overflow-x:auto;">
-    <table class="team-priority-table">
-      <thead>
-        <tr>
-          <th>Assign</th><th>Team</th><th>Priority</th><th>Role</th>
-          <th>Position</th><th>Shirt #</th><th>Status</th><th>Injured until</th>
-          <th title="Player starts absent for every new event in this team">Absent by default</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for t in teams %}
-        {% set mem = memberships.get(t.id) if memberships else none %}
-        {% set checked = mem is not none %}
-        <tr>
-          <td>
-            <input type="checkbox" name="team_ids" value="{{ t.id }}"
-                   {% if checked %}checked{% endif %}
-                   onchange="toggleTeamRow(this, {{ t.id }})">
-          </td>
-          <td>{{ t.name }}</td>
-          <td>
-            <input type="number" id="prio_{{ t.id }}" name="priority_{{ t.id }}"
-                   min="1" max="99" value="{{ mem.priority if checked else 1 }}"
-                   style="width:4.5rem;" {% if not checked %}disabled{% endif %}>
-          </td>
-          <td>
-            <select name="role_{{ t.id }}" id="role_{{ t.id }}" {% if not checked %}disabled{% endif %}>
-              {% for val, lbl in [('player','Player'),('coach','Coach'),('assistant','Assistant'),('team_leader','Team Leader')] %}
-                <option value="{{ val }}" {% if checked and mem.role == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <select name="position_{{ t.id }}" id="position_{{ t.id }}" {% if not checked %}disabled{% endif %}>
-              <option value="">&#8212;</option>
-              {% for val, lbl in [('goalie','Goalie'),('defender','Defender'),('center','Center'),('forward','Forward')] %}
-                <option value="{{ val }}" {% if checked and mem.position == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <input type="number" name="shirt_{{ t.id }}" id="shirt_{{ t.id }}"
-                   min="0" max="99" style="width:4rem;"
-                   value="{{ mem.shirt_number if checked and mem.shirt_number is not none else '' }}"
-                   {% if not checked %}disabled{% endif %}>
-          </td>
-          <td>
-            <select name="status_{{ t.id }}" id="status_{{ t.id }}" {% if not checked %}disabled{% endif %}
-                    onchange="toggleInjuredUntil(this, {{ t.id }})">
-              {% for val, lbl in [('active','Active'),('inactive','Inactive'),('injured','Injured')] %}
-                <option value="{{ val }}" {% if checked and mem.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>
-            <input type="date" name="injured_until_{{ t.id }}" id="injured_until_{{ t.id }}"
-                   value="{{ mem.injured_until.isoformat() if checked and mem.injured_until else '' }}"
-                   {% if not checked or (checked and mem.membership_status != 'injured') %}disabled{% endif %}>
-          </td>
-          <td style="text-align:center;">
-            <input type="checkbox" name="absent_default_{{ t.id }}" id="absent_default_{{ t.id }}"
-                   {% if checked and mem.absent_by_default %}checked{% endif %}
-                   {% if not checked %}disabled{% endif %}>
-          </td>
-        </tr>
-      {% else %}
-        <tr><td colspan="9"><em>No teams defined yet.</em></td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    </div>
+    {% for s in seasons %}
+      {% set s_mems = all_memberships.get(s.id, {}) %}
+      {% set is_open = s.id == active_season_id %}
+      <details {% if is_open %}open{% endif %} style="margin-bottom:.5rem;border:1px solid var(--pico-muted-border-color,#ddd);border-radius:var(--tp-radius);">
+        <summary style="padding:.5rem .75rem;cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:.5rem;">
+          {{ s.name }}{% if s.is_active %} <span class="badge badge-active" style="font-size:.7rem;">Active</span>{% endif %}
+          {% if s_mems %}<span class="text-muted" style="font-weight:400;font-size:.82rem;">({{ s_mems|length }} team{{ 's' if s_mems|length != 1 else '' }})</span>{% endif %}
+        </summary>
+        <div style="padding:.5rem .75rem .75rem;overflow-x:auto;">
+        {% if teams %}
+        <table class="team-priority-table">
+          <thead>
+            <tr>
+              <th>Assign</th><th>Team</th><th>Priority</th><th>Role</th>
+              <th>Position</th><th>Shirt #</th><th>Status</th><th>Injured until</th>
+              <th title="Player starts absent for every new event in this team">Absent default</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for t in teams %}
+            {% set mem = s_mems.get(t.id) %}
+            {% set checked = mem is not none %}
+            <tr>
+              <td>
+                <input type="checkbox" name="team_ids_{{ s.id }}" value="{{ t.id }}"
+                       {% if checked %}checked{% endif %}
+                       onchange="toggleTeamRow(this, {{ s.id }}, {{ t.id }})">
+              </td>
+              <td>{{ t.name }}</td>
+              <td>
+                <input type="number" id="prio_{{ s.id }}_{{ t.id }}" name="priority_{{ s.id }}_{{ t.id }}"
+                       min="1" max="99" value="{{ mem.priority if checked else 1 }}"
+                       style="width:4.5rem;" {% if not checked %}disabled{% endif %}>
+              </td>
+              <td>
+                <select name="role_{{ s.id }}_{{ t.id }}" id="role_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
+                  {% for val, lbl in [('player','Player'),('coach','Coach'),('assistant','Assistant'),('team_leader','Team Leader')] %}
+                    <option value="{{ val }}" {% if checked and mem.role == val %}selected{% endif %}>{{ lbl }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <select name="position_{{ s.id }}_{{ t.id }}" id="position_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
+                  <option value="">—</option>
+                  {% for val, lbl in [('goalie','Goalie'),('defender','Defender'),('center','Center'),('forward','Forward')] %}
+                    <option value="{{ val }}" {% if checked and mem.position == val %}selected{% endif %}>{{ lbl }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <input type="number" name="shirt_{{ s.id }}_{{ t.id }}" id="shirt_{{ s.id }}_{{ t.id }}"
+                       min="0" max="99" style="width:4rem;"
+                       value="{{ mem.shirt_number if checked and mem.shirt_number is not none else '' }}"
+                       {% if not checked %}disabled{% endif %}>
+              </td>
+              <td>
+                <select name="status_{{ s.id }}_{{ t.id }}" id="status_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}
+                        onchange="toggleInjuredUntil(this, {{ s.id }}, {{ t.id }})">
+                  {% for val, lbl in [('active','Active'),('inactive','Inactive'),('injured','Injured')] %}
+                    <option value="{{ val }}" {% if checked and mem.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <input type="date" name="injured_until_{{ s.id }}_{{ t.id }}" id="injured_until_{{ s.id }}_{{ t.id }}"
+                       value="{{ mem.injured_until.isoformat() if checked and mem.injured_until else '' }}"
+                       {% if not checked or (checked and mem.membership_status != 'injured') %}disabled{% endif %}>
+              </td>
+              <td style="text-align:center;">
+                <input type="checkbox" name="absent_default_{{ s.id }}_{{ t.id }}" id="absent_default_{{ s.id }}_{{ t.id }}"
+                       {% if checked and mem.absent_by_default %}checked{% endif %}
+                       {% if not checked %}disabled{% endif %}>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <em class="text-muted">No teams defined yet.</em>
+        {% endif %}
+        </div>
+      </details>
+    {% endfor %}
   </fieldset>
-  {% endif %}{# selected_season_id #}
+  {% endif %}
 
   {# 5. EMERGENCY CONTACT #}
   <fieldset>
@@ -289,22 +287,22 @@
 function setDisabled(el, disabled) {
   if (!el) return;
   el.disabled = disabled;
-  if (el._flatpickr) el._flatpickr.altInput.disabled = disabled;
+  if (el._flatpickr && el._flatpickr.altInput) el._flatpickr.altInput.disabled = disabled;
 }
 
-function toggleTeamRow(checkbox, teamId) {
+function toggleTeamRow(checkbox, seasonId, teamId) {
+  var key = seasonId + '_' + teamId;
   ['prio_', 'role_', 'position_', 'shirt_', 'status_', 'absent_default_'].forEach(function(prefix) {
-    var el = document.getElementById(prefix + teamId);
+    var el = document.getElementById(prefix + key);
     if (el) el.disabled = !checkbox.checked;
   });
-  // injured_until: only enable when team is checked AND status is 'injured'
-  var statusEl = document.getElementById('status_' + teamId);
+  var statusEl = document.getElementById('status_' + key);
   var isInjured = checkbox.checked && statusEl && statusEl.value === 'injured';
-  setDisabled(document.getElementById('injured_until_' + teamId), !isInjured);
+  setDisabled(document.getElementById('injured_until_' + key), !isInjured);
 }
 
-function toggleInjuredUntil(select, teamId) {
-  setDisabled(document.getElementById('injured_until_' + teamId), select.value !== 'injured');
+function toggleInjuredUntil(select, seasonId, teamId) {
+  setDisabled(document.getElementById('injured_until_' + seasonId + '_' + teamId), select.value !== 'injured');
 }
 
 function toggleContactSection() {

@@ -9,31 +9,20 @@
 {% block content %}
 <div class="page-header">
   <h2>{{ t('players.title') }}</h2>
-  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
-    {% if user.is_admin %}<a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>{% endif %}
-    {% if user.is_admin and selected_team_id %}<a href="/players/import?team_id={{ selected_team_id }}" class="btn btn-outline">{{ t('players.import') }}</a>{% endif %}
-    {% if user.is_admin %}
-    <div style="position:relative;display:inline-block;">
-      <button type="button" class="btn btn-outline" id="columns-btn">Columns ▾</button>
-      <div id="columns-popover" style="display:none;position:absolute;right:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
-        {% for col in ["Team","Email","Phone","Date of birth","Active","Shirt number","Position","Injured until","Absent by default","Priority","Actions"] %}
-        <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
-          <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
-        </label>
-        {% endfor %}
-      </div>
-    </div>
-    <button type="button" class="btn btn-outline" id="edit-btn">Edit</button>
-    <button type="button" class="btn btn-primary" id="save-btn" style="display:none;" disabled>Save changes</button>
-    <button type="button" class="btn btn-outline" id="cancel-btn" style="display:none;">Cancel</button>
-    {% endif %}
+  {% if user.is_admin %}
+  <div style="display:flex;gap:.5rem;">
+    <a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>
+    <a href="/players/import{% if selected_team_id and selected_season_id %}?team_id={{ selected_team_id }}&season_id={{ selected_season_id }}{% endif %}" class="btn btn-outline">{{ t('players.import') }}</a>
   </div>
+  {% endif %}
 </div>
 
-<form method="get" action="/players" class="filter-row" id="player-filter-form">
-  <label>
-    {{ t('players.season_label') }}
-    <select name="season_id" onchange="filterSubmit(this.form)">
+<form method="get" action="/players" id="player-filter-form"
+      style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Season</span>
+    <select name="season_id" onchange="filterSubmit(this.form)" class="sel-inline">
+      <option value="">All Seasons</option>
       {% for s in seasons %}
         <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
           {{ s.name }}{% if s.is_active %} ✓{% endif %}
@@ -41,18 +30,33 @@
       {% endfor %}
     </select>
   </label>
-  {% if not seasons %}
-    <span class="text-muted">{{ t('players.no_seasons') }}</span>
-  {% endif %}
-  <label>
-    Filter by team
-    <select name="team_id" onchange="filterSubmit(this.form)">
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Team</span>
+    <select name="team_id" onchange="filterSubmit(this.form)" class="sel-inline">
       <option value="">All Teams</option>
       {% for t in teams %}
         <option value="{{ t.id }}" {% if selected_team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
       {% endfor %}
     </select>
   </label>
+  <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-left:.25rem;">
+    {% if user.is_admin %}
+    <div style="position:relative;display:inline-block;">
+      <button type="button" class="btn btn-outline" id="columns-btn">Columns ▾</button>
+      <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
+        {% for col in ["Team","Email","Phone","Date of birth","Active","Role","Shirt number","Position","Status","Injured until","Absent by default","Priority","Actions"] %}
+        <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
+          <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline" id="adv-filter-btn">Filter ▾</button>
+    <button type="button" class="btn btn-outline" id="edit-btn">Edit</button>
+    <button type="button" class="btn btn-primary" id="save-btn" style="display:none;" disabled>Save changes</button>
+    <button type="button" class="btn btn-outline" id="cancel-btn" style="display:none;">Cancel</button>
+    {% endif %}
+  </div>
 </form>
 <script>
   function filterSubmit(form) {
@@ -63,34 +67,63 @@
   }
 </script>
 
+<div id="adv-filter-panel" style="display:none;margin-bottom:.75rem;">
+  <div class="adv-filter-header">
+    <strong>Advanced filter</strong>
+    <label style="display:flex;align-items:center;gap:.3rem;font-size:.85rem;margin:0;">
+      Match
+      <select id="adv-filter-logic" class="sel-inline">
+        <option value="and">ALL (AND)</option>
+        <option value="or">ANY (OR)</option>
+      </select>
+      of the following
+    </label>
+    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-add">+ Add condition</button>
+    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-clear" style="margin-left:auto;">Clear all</button>
+  </div>
+  <div id="adv-filter-rows" style="margin-top:.5rem;"></div>
+  <div id="adv-filter-status" style="margin-top:.4rem;font-size:.82rem;color:var(--tp-muted,#6c757d);"></div>
+</div>
+
 {% if user.is_admin %}
 <div id="bulk-toolbar" style="display:none;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid var(--muted-border-color,#ddd);margin-bottom:.5rem;">
   <span id="bulk-count" style="font-weight:600;"></span>
-  <div style="position:relative;">
-    <button type="button" class="btn btn-sm btn-outline" id="assign-btn"
-            {% if not selected_season_id %}disabled title="Select a season first"{% endif %}>
-      Assign to team ▾
-    </button>
-    <select id="assign-team-select" style="display:none;position:absolute;top:2rem;left:0;min-width:160px;z-index:50;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.3rem;padding:.3rem;">
-      {% for tm in teams %}
-      <option value="{{ tm.id }}">{{ tm.name }}</option>
-      {% endfor %}
-      {% if not teams %}<option disabled>No teams available</option>{% endif %}
-    </select>
+  <div style="display:flex;gap:.25rem;align-items:center;">
+    <div style="position:relative;display:inline-block;">
+      <button type="button" class="btn btn-sm btn-outline" id="assign-btn">Assign to team ▾</button>
+      <div id="assign-picker" style="display:none;position:absolute;top:100%;left:0;margin-top:.25rem;z-index:50;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.35rem;padding:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.15);flex-direction:column;gap:.35rem;min-width:180px;">
+        <select id="assign-team-select" class="sel-inline" style="width:100%;">
+          <option value="">— Team —</option>
+        </select>
+        <select id="assign-season-select" class="sel-inline" style="width:100%;">
+          <option value="">— Season —</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-primary" id="assign-confirm-btn" style="width:100%;">Assign</button>
+      </div>
+    </div>
+    <div style="position:relative;display:inline-block;">
+      <button type="button" class="btn btn-sm btn-outline" id="remove-from-team-btn" style="border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Remove from team ▾</button>
+      <div id="remove-picker" style="display:none;position:absolute;top:100%;left:0;margin-top:.25rem;z-index:50;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.35rem;padding:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.15);flex-direction:column;gap:.35rem;min-width:180px;">
+        <select id="remove-team-select" class="sel-inline" style="width:100%;">
+          <option value="">— Team —</option>
+        </select>
+        <select id="remove-season-select" class="sel-inline" style="width:100%;">
+          <option value="">— Season —</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-danger" id="remove-confirm-btn" style="width:100%;">Remove</button>
+      </div>
+    </div>
   </div>
-  <button type="button" class="btn btn-sm btn-outline" id="set-active-btn">Set active</button>
-  <button type="button" class="btn btn-sm btn-outline" id="set-inactive-btn">Set inactive</button>
-  <button type="button" class="btn btn-sm btn-outline" id="age-filter-toggle">Filter by age ▾</button>
-  <div id="age-filter-panel" style="display:none;align-items:center;gap:.4rem;">
-    <label style="font-size:.85rem;">Born after <input type="date" id="age-after" style="width:auto;"></label>
-    <label style="font-size:.85rem;">Born before <input type="date" id="age-before" style="width:auto;"></label>
-  </div>
-  <button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">Clear selection</button>
+<button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">Clear selection</button>
 </div>
 <div id="bulk-banner" style="display:none;margin-bottom:.5rem;" role="alert"></div>
 {% endif %}
 
 {% if players %}
+<div id="pt-edit-notice" style="display:none;" class="alert alert-warning" role="alert">
+  ⚠ <strong>Shirt #, Position, Injured until, Absent by default and Priority are team-specific.</strong>
+  To edit them, select a <strong>season + team</strong> using the filters above. Values shown in view mode are per-team.
+</div>
 <div style="overflow-x:auto;">
 <table id="players-table">
   <thead>
@@ -102,8 +135,10 @@
       <th data-col="Phone">Phone</th>
       <th data-col="Date of birth">Date of birth</th>
       <th data-col="Active">{{ t('players.active') }}</th>
+      <th data-col="Role">Role</th>
       <th data-col="Shirt number">Shirt #</th>
       <th data-col="Position">Position</th>
+      <th data-col="Status">Status</th>
       <th data-col="Injured until">Injured until</th>
       <th data-col="Absent by default">Absent by default</th>
       <th data-col="Priority">Priority</th>
@@ -117,11 +152,21 @@
         data-dob="{{ p.date_of_birth or '' }}">
       {% if user.is_admin %}<td><input type="checkbox" class="row-check"></td>{% endif %}
       <td><a href="/players/{{ p.id }}"><strong>{{ p.full_name }}</strong></a></td>
-      <td data-col="Team">
-        {% if p.team_memberships %}
-          {% for m in p.team_memberships %}
-            <span>{{ m.team.name if m.team else '?' }}</span>{% if not loop.last %}, {% endif %}
+      <td data-col="Team" data-value="{{ p.team_memberships | length }}">
+        {% set season_mems = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | sort(attribute='priority') | list if selected_season_id else [] %}
+        {% if season_mems %}
+          <div style="display:flex;flex-direction:column;gap:0.15rem;">
+          {% for m in season_mems %}
+            <span style="white-space:nowrap;">
+              <strong>{{ m.team.name if m.team else '?' }}</strong>
+              <span class="text-muted" style="font-size:.8rem;">
+                — {{ m.role | replace('_',' ') | capitalize if m.role else 'Player' }}{% if m.shirt_number is not none %} #{{ m.shirt_number }}{% endif %} · P{{ m.priority }}
+              </span>
+            </span>
           {% endfor %}
+          </div>
+        {% elif not selected_season_id and p.team_memberships %}
+          <span class="text-muted" style="font-size:.82rem;">{{ p.team_memberships | length }} team(s)</span>
         {% else %}—{% endif %}
       </td>
       <td data-col="Email" data-field="email" data-value="{{ p.email or '' }}">
@@ -140,47 +185,112 @@
         <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}</span>
         <input type="checkbox" class="cell-input" style="display:none;" {% if p.is_active %}checked{% endif %}>
       </td>
+      {% set season_mems_pt = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | sort(attribute='priority') | list if selected_season_id else [] %}
+      <td data-col="Role" class="pt-field" data-field="role" data-value="{{ pt.role or '' if pt else '' }}">
+        <span class="cell-view">
+          {% if pt %}{{ pt.role | replace('_',' ') | capitalize if pt.role else '—' }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.role | replace('_',' ') | capitalize if m.role else 'Player' }}</span><br>{% endfor %}
+          {% else %}—{% endif %}
+        </span>
+        <select class="cell-input pt-field" style="display:none;" {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
+          {% for val, lbl in [('player','Player'),('coach','Coach'),('assistant','Assistant'),('team_leader','Team Leader')] %}
+            <option value="{{ val }}" {% if pt and pt.role == val %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+      </td>
       <td data-col="Shirt number" class="pt-field" data-field="shirt_number" data-value="{{ pt.shirt_number if pt and pt.shirt_number is not none else '' }}">
-        <span class="cell-view">{{ pt.shirt_number if pt and pt.shirt_number is not none else '—' }}</span>
+        <span class="cell-view">
+          {% if pt %}{{ pt.shirt_number if pt.shirt_number is not none else '—' }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}{% if m.shirt_number is not none %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.shirt_number }}</span><br>{% endif %}{% else %}—{% endfor %}
+          {% else %}—{% endif %}
+        </span>
         <input type="number" class="cell-input pt-field" style="display:none;" min="0"
                value="{{ pt.shirt_number if pt and pt.shirt_number is not none else '' }}"
-               {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
+               {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
       </td>
       <td data-col="Position" class="pt-field" data-field="position" data-value="{{ pt.position or '' if pt else '' }}">
-        <span class="cell-view">{{ pt.position or '—' if pt else '—' }}</span>
-        <input type="text" class="cell-input pt-field" style="display:none;" maxlength="32"
-               value="{{ pt.position or '' if pt else '' }}"
-               {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
+        <span class="cell-view">
+          {% if pt %}{{ pt.position or '—' }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}{% if m.position %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.position }}</span><br>{% endif %}{% else %}—{% endfor %}
+          {% else %}—{% endif %}
+        </span>
+        <select class="cell-input pt-field" style="display:none;"
+                {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
+          <option value="">—</option>
+          {% for val, lbl in [('goalie','Goalie'),('defender','Defender'),('center','Center'),('forward','Forward')] %}
+            <option value="{{ val }}" {% if pt and pt.position == val %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td data-col="Status" class="pt-field" data-field="membership_status" data-value="{{ pt.membership_status or '' if pt else '' }}">
+        <span class="cell-view">
+          {% if pt %}
+            {% if pt.membership_status == 'injured' %}<span class="badge badge-absent">Injured</span>
+            {% elif pt.membership_status == 'inactive' %}<span class="badge">Inactive</span>
+            {% else %}<span class="badge badge-active">Active</span>{% endif %}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.membership_status | capitalize if m.membership_status else 'Active' }}</span><br>{% endfor %}
+          {% else %}—{% endif %}
+        </span>
+        <select class="cell-input pt-field" style="display:none;"
+                {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
+          {% for val, lbl in [('active','Active'),('inactive','Inactive'),('injured','Injured')] %}
+            <option value="{{ val }}" {% if pt and pt.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
       </td>
       <td data-col="Injured until" class="pt-field" data-field="injured_until" data-value="{{ pt.injured_until or '' if pt else '' }}">
-        <span class="cell-view">{{ pt.injured_until or '—' if pt else '—' }}</span>
-        <input type="date" class="cell-input pt-field" style="display:none;"
+        <span class="cell-view">
+          {% if pt %}{{ pt.injured_until or '—' }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}{% if m.injured_until %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.injured_until }}</span><br>{% endif %}{% else %}—{% endfor %}
+          {% else %}—{% endif %}
+        </span>
+        <input type="date" class="cell-input pt-field injured-until-input" style="display:none;"
                value="{{ pt.injured_until or '' if pt else '' }}"
-               {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
+               {% if not selected_season_id or not selected_team_id or not pt or pt.membership_status != 'injured' %}disabled{% endif %}>
       </td>
       <td data-col="Absent by default" class="pt-field" data-field="absent_by_default" data-value="{{ 'true' if pt and pt.absent_by_default else 'false' }}">
-        <span class="cell-view">{{ 'Yes' if pt and pt.absent_by_default else '—' }}</span>
+        <span class="cell-view">
+          {% if pt %}{{ 'Yes' if pt.absent_by_default else '—' }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}{% if m.absent_by_default %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: Yes</span><br>{% endif %}{% else %}—{% endfor %}
+          {% else %}—{% endif %}
+        </span>
         <input type="checkbox" class="cell-input pt-field" style="display:none;"
                {% if pt and pt.absent_by_default %}checked{% endif %}
-               {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
+               {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
       </td>
       <td data-col="Priority" class="pt-field" data-field="priority" data-value="{{ pt.priority if pt else '' }}">
-        <span class="cell-view">{{ pt.priority if pt else '—' }}</span>
+        <span class="cell-view">
+          {% if pt %}{{ pt.priority }}
+          {% elif season_mems_pt %}
+            {% for m in season_mems_pt %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.priority }}</span><br>{% endfor %}
+          {% else %}—{% endif %}
+        </span>
         <input type="number" class="cell-input pt-field" style="display:none;" min="1"
                value="{{ pt.priority if pt else '' }}"
-               {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
+               {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
       </td>
       <td data-col="Actions">
-        <div class="action-group">
-          {% if user.is_admin %}
-            <a href="/players/{{ p.id }}/edit" class="btn btn-sm btn-outline">{{ t('players.edit') }}</a>
-            <form method="post" action="/players/{{ p.id }}/delete" style="display:contents;"
-                  onsubmit="return confirm('Delete ' + {{ p.full_name | tojson }} + '?')">
-              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-            </form>
-          {% endif %}
-          <a href="/reports/player/{{ p.id }}" class="btn btn-sm btn-outline">Report</a>
+        <div class="action-dropdown">
+          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+          <div class="action-dropdown-menu">
+            {% if user.is_admin %}
+              <a href="/players/{{ p.id }}/edit">Edit</a>
+              <a href="/reports/player/{{ p.id }}">Report</a>
+              <form method="post" action="/players/{{ p.id }}/delete"
+                    onsubmit="return confirm('Delete ' + {{ p.full_name | tojson }} + '?')">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                <button type="submit" class="danger">Delete</button>
+              </form>
+            {% else %}
+              <a href="/reports/player/{{ p.id }}">Report</a>
+            {% endif %}
+          </div>
         </div>
       </td>
     </tr>
@@ -197,6 +307,10 @@
   window.PLAYERS_CONFIG = {
     seasonId: {{ selected_season_id | tojson }},
     teamId: {{ selected_team_id | tojson }},
+    seasons: {{ seasons | map(attribute='id') | list | tojson }},
+    seasonNames: {{ seasons | map(attribute='name') | list | tojson }},
+    teams: {{ teams | map(attribute='id') | list | tojson }},
+    teamNames: {{ teams | map(attribute='name') | list | tojson }},
   };
 </script>
 <script src="/static/js/players-table.js"></script>

@@ -4,21 +4,25 @@ from __future__ import annotations
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.config import settings
 
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
-# check_same_thread=False is required for SQLite when used with FastAPI
-# because SQLite connections are not thread-safe by default, but SQLAlchemy
-# handles concurrency correctly at the ORM level.
-_connect_args: dict = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+# SQLite: use NullPool (no connection pooling) — opens/closes per request,
+# which avoids QueuePool exhaustion under concurrent requests.
+# check_same_thread=False is still required for SQLite + FastAPI threading.
+if settings.DATABASE_URL.startswith("sqlite"):
+    _pool_kwargs: dict = {"poolclass": NullPool, "connect_args": {"check_same_thread": False}}
+else:
+    _pool_kwargs = {}
 
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args=_connect_args,
     echo=False,  # set True for SQL query logging during development
+    **_pool_kwargs,
 )
 
 # ---------------------------------------------------------------------------

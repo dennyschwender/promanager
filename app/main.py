@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+
+# Set by the lifespan on shutdown so long-lived generators (SSE) can exit cleanly.
+shutdown_event = asyncio.Event()
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -92,6 +96,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Database ready.")
     yield
     logger.info("Shutting down.")
+    shutdown_event.set()
 
 
 # ---------------------------------------------------------------------------

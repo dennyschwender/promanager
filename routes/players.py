@@ -168,6 +168,41 @@ def _memberships_dict(player: Player, season_id: int | None) -> dict:
     return {m.team_id: m for m in player.team_memberships if m.season_id == season_id}
 
 
+def _all_memberships_dict(player: Player) -> dict:
+    """Return {season_id: {team_id: PlayerTeam}} for all seasons."""
+    result: dict = {}
+    for m in player.team_memberships:
+        result.setdefault(m.season_id, {})[m.team_id] = m
+    return result
+
+
+def _parse_team_memberships_for_season(form, season_id: int) -> list[tuple[int, int, dict]]:
+    """Like _parse_team_memberships but reads season-scoped field names."""
+    raw_ids = form.getlist(f"team_ids_{season_id}")
+    result = []
+    for tid_str in raw_ids:
+        try:
+            tid = int(tid_str)
+        except (ValueError, TypeError):
+            continue
+        try:
+            priority = int(form.get(f"priority_{season_id}_{tid}", 1))
+        except (ValueError, TypeError):
+            priority = 1
+        shirt_raw = form.get(f"shirt_{season_id}_{tid}", "").strip()
+        injured_raw = form.get(f"injured_until_{season_id}_{tid}", "").strip()
+        extra = {
+            "role": (form.get(f"role_{season_id}_{tid}") or "player").strip(),
+            "position": (form.get(f"position_{season_id}_{tid}") or "").strip() or None,
+            "shirt_number": int(shirt_raw) if shirt_raw.isdigit() else None,
+            "membership_status": (form.get(f"status_{season_id}_{tid}") or "active").strip(),
+            "injured_until": _parse_date(injured_raw),
+            "absent_by_default": form.get(f"absent_default_{season_id}_{tid}") in ("on", "1", "true", "yes"),
+        }
+        result.append((tid, max(1, priority), extra))
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Bulk assign
 # ---------------------------------------------------------------------------
@@ -208,6 +243,32 @@ async def player_bulk_assign(
             errors.append({"id": pid, "message": "Could not assign player (database error)."})
     db.commit()
     return {"assigned": assigned, "skipped": skipped, "errors": errors}
+
+
+class BulkRemoveRequest(BaseModel):
+    player_ids: list[int]
+    team_id: int
+    season_id: int
+
+
+@router.post("/bulk-remove")
+async def player_bulk_remove(
+    body: BulkRemoveRequest,
+    _user=Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    removed = 0
+    skipped = 0
+    for pid in body.player_ids:
+        existing = db.get(PlayerTeam, (pid, body.team_id, body.season_id))
+        if not existing:
+            skipped += 1
+            continue
+        db.delete(existing)
+        removed += 1
+    db.commit()
+    return {"removed": removed, "skipped": skipped}
 
 
 # ── Allowed fields per model ───────────────────────────────────────────────
@@ -353,7 +414,7 @@ async def players_list(
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = season_id or _active_season_id(db)
+    selected_season_id = season_id
 
     q = db.query(Player)
     if team_id is not None and selected_season_id is not None:
@@ -402,14 +463,12 @@ async def players_list(
 @router.get("/new")
 async def player_new_get(
     request: Request,
-    season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = season_id or _active_season_id(db)
     return render(
         request,
         "players/form.html",
@@ -419,8 +478,8 @@ async def player_new_get(
             "teams": teams,
             "users": users,
             "seasons": seasons,
-            "selected_season_id": selected_season_id,
-            "memberships": {},
+            "active_season_id": _active_season_id(db),
+            "all_memberships": {},
             "error": None,
         },
     )
@@ -439,12 +498,10 @@ async def player_new_post(
     email = (form.get("email") or "").strip()
     phone = (form.get("phone") or "").strip()
     user_id_s = (form.get("user_id") or "").strip()
-    season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
 
     if not first_name or not last_name:
         return render(
@@ -456,8 +513,8 @@ async def player_new_post(
                 "teams": teams,
                 "users": users,
                 "seasons": seasons,
-                "selected_season_id": selected_season_id,
-                "memberships": {},
+                "active_season_id": _active_season_id(db),
+                "all_memberships": {},
                 "error": "First name and last name are required.",
             },
             status_code=400,
@@ -475,9 +532,8 @@ async def player_new_post(
     db.add(player)
     db.flush()
 
-    if selected_season_id is not None:
-        memberships = _parse_team_memberships(form)
-        _sync_memberships(db, player, memberships, season_id=selected_season_id)
+    for s in seasons:
+        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 
@@ -501,29 +557,28 @@ IMPORT_COLUMNS = [
     "street",
     "postcode",
     "city",
-    "team",
 ]
 
 
 @router.get("/import")
 async def player_import_get(
     request: Request,
-    team_id: int,
+    team_id: int | None = None,
     season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    context_team = db.get(Team, team_id)
-    if context_team is None:
-        return RedirectResponse("/teams", status_code=302)
+    context_team = db.get(Team, team_id) if team_id else None
+    all_teams = db.query(Team).order_by(Team.name).all()
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = season_id or _active_season_id(db)
+    selected_season_id = season_id or (_active_season_id(db) if team_id else None)
     return render(
         request,
         "players/import.html",
         {
             "user": user,
             "context_team": context_team,
+            "all_teams": all_teams,
             "seasons": seasons,
             "selected_season_id": selected_season_id,
             "columns": IMPORT_COLUMNS,
@@ -536,24 +591,23 @@ async def player_import_get(
 @router.post("/import")
 async def player_import_post(
     request: Request,
-    team_id: int,
+    team_id: int | None = None,
     season_id: int | None = None,
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     form = await request.form()
-    context_team = db.get(Team, team_id)
-    if context_team is None:
-        return RedirectResponse("/teams", status_code=302)
+    context_team = db.get(Team, team_id) if team_id else None
 
     season_id_s = (form.get("season_id") or "").strip()
-    selected_season_id = int(season_id_s) if season_id_s else (season_id or _active_season_id(db))
+    selected_season_id = int(season_id_s) if season_id_s else (season_id or (_active_season_id(db) if team_id else None))
 
     import_source = (form.get("import_source") or "").strip()
     error: str | None = None
     result: ImportResult | None = None
 
+    all_teams = db.query(Team).order_by(Team.name).all()
     seasons = db.query(Season).order_by(Season.name).all()
 
     def _render(status: int = 200):
@@ -563,6 +617,7 @@ async def player_import_post(
             {
                 "user": user,
                 "context_team": context_team,
+                "all_teams": all_teams,
                 "seasons": seasons,
                 "selected_season_id": selected_season_id,
                 "columns": IMPORT_COLUMNS,
@@ -571,10 +626,6 @@ async def player_import_post(
             },
             status_code=status,
         )
-
-    if selected_season_id is None:
-        error = "No active season found. Please activate a season before importing players."
-        return _render(400)
 
     if import_source == "paste":
         rows_json = (form.get("rows_json") or "").strip()
@@ -637,6 +688,8 @@ async def player_detail(
         return RedirectResponse("/players", status_code=302)
 
     history = get_player_attendance_history(db, player_id)
+    _mems = sorted(player.team_memberships, key=lambda m: m.priority)
+    sorted_memberships = sorted(_mems, key=lambda m: (m.season.name if m.season else ""), reverse=True)
 
     return render(
         request,
@@ -645,6 +698,7 @@ async def player_detail(
             "user": user,
             "player": player,
             "history": history,
+            "sorted_memberships": sorted_memberships,
         },
     )
 
@@ -658,7 +712,6 @@ async def player_detail(
 async def player_edit_get(
     player_id: int,
     request: Request,
-    season_id: int | None = None,
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
@@ -669,8 +722,7 @@ async def player_edit_get(
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = season_id or _active_season_id(db)
-    memberships = _memberships_dict(player, selected_season_id)
+    active_season_id = _active_season_id(db)
     return render(
         request,
         "players/form.html",
@@ -680,8 +732,8 @@ async def player_edit_get(
             "teams": teams,
             "users": users,
             "seasons": seasons,
-            "selected_season_id": selected_season_id,
-            "memberships": memberships,
+            "active_season_id": active_season_id,
+            "all_memberships": _all_memberships_dict(player),
             "error": None,
         },
     )
@@ -706,12 +758,11 @@ async def player_edit_post(
     phone = (form.get("phone") or "").strip()
     user_id_s = (form.get("user_id") or "").strip()
     is_active = form.get("is_active") or ""
-    season_id_s = (form.get("season_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.name).all()
-    selected_season_id = int(season_id_s) if season_id_s else _active_season_id(db)
+    active_season_id = _active_season_id(db)
 
     if not first_name or not last_name:
         return render(
@@ -723,8 +774,8 @@ async def player_edit_post(
                 "teams": teams,
                 "users": users,
                 "seasons": seasons,
-                "selected_season_id": selected_season_id,
-                "memberships": _memberships_dict(player, selected_season_id),
+                "active_season_id": active_season_id,
+                "all_memberships": _all_memberships_dict(player),
                 "error": "First name and last name are required.",
             },
             status_code=400,
@@ -738,8 +789,8 @@ async def player_edit_post(
     player.is_active = is_active in ("on", "true", "1", "yes")
     _apply_personal_fields(player, form)
 
-    if selected_season_id is not None:
-        _sync_memberships(db, player, _parse_team_memberships(form), season_id=selected_season_id)
+    for s in seasons:
+        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 

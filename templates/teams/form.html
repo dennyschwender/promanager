@@ -8,7 +8,7 @@
 </nav>
 {% endblock %}
 {% block content %}
-<div class="form-container">
+<div class="{% if team %}form-container-wide{% else %}form-container{% endif %}">
 <h2>{% if team %}{{ t('teams.edit_title') }}: {{ team.name }}{% else %}{{ t('teams.new_title') }}{% endif %}</h2>
 
 {% if saved %}
@@ -85,6 +85,16 @@
           <button type="button" class="btn btn-sm btn-danger"
                   onclick="removeRow(this)">Remove</button>
         </div>
+        <label>Season
+          <select class="sched-season">
+            <option value="">— No season —</option>
+            {% for s in seasons %}
+              <option value="{{ s.id }}" {% if row.season_id == s.id|string %}selected{% endif %}>
+                {{ s.name }}{% if s.is_active %} ✓{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
         <label>Title *
           <input type="text" class="sched-title" required value="{{ row.title }}"
                  oninput="this.dataset.auto=''"
@@ -161,10 +171,10 @@
       {% endfor %}
     </div>
 
-    <button type="button" class="btn btn-outline btn-sm"
-            onclick="addScheduleRow()" style="margin-top:.25rem;">
-      + Add Schedule
-    </button>
+    <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+      <button type="button" class="btn btn-outline btn-sm" onclick="addScheduleRow()">+ Add Schedule</button>
+      <button type="submit" class="btn btn-primary btn-sm">Save</button>
+    </div>
   </fieldset>
   {% endif %}
 
@@ -189,6 +199,11 @@
       <button type="button" class="btn btn-sm btn-danger"
               onclick="removeRow(this)">Remove</button>
     </div>
+    <label>Season
+      <select class="sched-season" id="tpl-season-placeholder">
+        <option value="">— No season —</option>
+      </select>
+    </label>
     <label>Title *
       <input type="text" class="sched-title" required value=""
              oninput="this.dataset.auto=''"
@@ -263,6 +278,8 @@
 <script>
 const TEAM_NAME = {{ team.name | tojson }};
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SEASONS = {{ seasons | map(attribute='id') | list | tojson }};
+const SEASON_NAMES = {{ seasons | map(attribute='name') | list | tojson }};
 
 function updateDefaultTitle(row) {
   const titleInput = row.querySelector('.sched-title');
@@ -284,6 +301,16 @@ function updateDefaultTitle(row) {
 function addScheduleRow() {
   const tpl = document.getElementById('schedule-row-tpl');
   const clone = tpl.content.cloneNode(true);
+  const sel = clone.querySelector('#tpl-season-placeholder');
+  if (sel) {
+    sel.removeAttribute('id');
+    SEASONS.forEach(function(id, i) {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = SEASON_NAMES[i];
+      sel.appendChild(opt);
+    });
+  }
   document.getElementById('schedule-rows').appendChild(clone);
 }
 
@@ -310,6 +337,7 @@ document.getElementById('team-form').addEventListener('submit', function() {
     row.querySelector('.sched-meeting-location').name = 'sched_meeting_location_' + i;
     row.querySelector('.sched-presence').name      = 'sched_presence_'      + i;
     row.querySelector('.sched-desc').name          = 'sched_desc_'          + i;
+    row.querySelector('.sched-season').name        = 'sched_season_'        + i;
   });
   let countField = document.getElementById('sched-count-field');
   if (!countField) {

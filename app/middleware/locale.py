@@ -20,6 +20,8 @@ from starlette.responses import Response
 
 from app.i18n import SUPPORTED_LOCALES
 
+SUPPORTED_THEMES = {"light", "dark"}
+
 
 class LocaleMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -41,4 +43,8 @@ class LocaleMiddleware(BaseHTTPMiddleware):
                 locale = cookie_locale
 
         request.state.locale = locale
+
+        theme_cookie = request.cookies.get("theme", "")
+        request.state.theme = theme_cookie if theme_cookie in SUPPORTED_THEMES else "light"
+
         return await call_next(request)

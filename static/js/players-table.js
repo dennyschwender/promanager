@@ -3,10 +3,14 @@
 
   // ── Constants ──────────────────────────────────────────────────────────────
   var LS_KEY = 'promanager_player_columns';
+  var LS_ORDER_KEY = 'promanager_player_col_order';
+  var _params = new URLSearchParams(window.location.search);
+  var HAS_TEAM_FILTER = !!(_params.get('season_id') && _params.get('team_id'));
+  var LS_ORDER_KEY = 'promanager_player_col_order';
   var DEFAULT_COLS = ['Team', 'Email', 'Active', 'Actions'];
   var ALL_COLS = [
     'Team', 'Email', 'Phone', 'Date of birth', 'Active',
-    'Shirt number', 'Position', 'Injured until', 'Absent by default',
+    'Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default',
     'Priority', 'Actions'
   ];
 
@@ -124,19 +128,34 @@
   var pendingChanges = {};
 
   function enterEditMode() {
+    var table = document.getElementById('players-table');
+    table.classList.add('edit-mode');
+    if (HAS_TEAM_FILTER) table.classList.add('team-filtered');
+    if (!HAS_TEAM_FILTER) table.classList.add('pt-hidden');
     document.getElementById('edit-btn').style.display = 'none';
+    var notice = document.getElementById('pt-edit-notice');
+    if (notice) notice.style.display = HAS_TEAM_FILTER ? 'none' : '';
     document.getElementById('save-btn').style.display = '';
     document.getElementById('cancel-btn').style.display = '';
     document.querySelectorAll('#players-table tbody tr').forEach(function (row) {
       row.querySelectorAll('td[data-field]').forEach(function (cell) {
-        cell.querySelector('.cell-view').style.display = 'none';
         var input = cell.querySelector('.cell-input');
-        if (input) input.style.display = '';
+        if (input && !input.disabled) {
+          cell.querySelector('.cell-view').style.display = 'none';
+          input.style.display = '';
+        }
+        // disabled pt-fields: leave cell-view visible so stacked values remain readable
       });
     });
   }
 
   function exitEditMode(discard) {
+    var table = document.getElementById('players-table');
+    table.classList.remove('edit-mode');
+    table.classList.remove('pt-hidden');
+    table.classList.remove('team-filtered');
+    var notice = document.getElementById('pt-edit-notice');
+    if (notice) notice.style.display = 'none';
     document.getElementById('edit-btn').style.display = '';
     document.getElementById('save-btn').style.display = 'none';
     document.getElementById('cancel-btn').style.display = 'none';
@@ -206,6 +225,20 @@
         var input = cell.querySelector('.cell-input');
         if (input) trackCellChange(cell, input);
       });
+
+      // Status → Injured until coupling
+      var statusSel = row.querySelector('td[data-field="membership_status"] select.cell-input');
+      var injuredIn = row.querySelector('.injured-until-input');
+      if (statusSel && injuredIn) {
+        statusSel.addEventListener('change', function () {
+          var isInjured = statusSel.value === 'injured';
+          injuredIn.disabled = !isInjured;
+          injuredIn.style.display = isInjured ? '' : 'none';
+          var view = injuredIn.closest('td') && injuredIn.closest('td').querySelector('.cell-view');
+          if (view) view.style.display = isInjured ? 'none' : '';
+          if (!isInjured) injuredIn.value = '';
+        });
+      }
     });
 
     saveBtn.addEventListener('click', function () {
@@ -326,68 +359,78 @@
     if (setActiveBtn) setActiveBtn.addEventListener('click', function () { bulkSetActive(true); });
     if (setInactiveBtn) setInactiveBtn.addEventListener('click', function () { bulkSetActive(false); });
 
-    // Assign to team dropdown
-    var assignBtn = document.getElementById('assign-btn');
-    var assignSelect = document.getElementById('assign-team-select');
-    if (assignBtn && assignSelect) {
-      assignBtn.addEventListener('click', function (e) {
+    // Assign to team+season picker
+    var allPickers = [];
+
+    function closeAllPickers() {
+      allPickers.forEach(function (p) { p.style.display = 'none'; });
+    }
+
+    function initPicker(btnId, pickerId, teamSelId, seasonSelId, confirmBtnId, onConfirm) {
+      var btn        = document.getElementById(btnId);
+      var picker     = document.getElementById(pickerId);
+      var teamSel    = document.getElementById(teamSelId);
+      var seasonSel  = document.getElementById(seasonSelId);
+      var confirmBtn = document.getElementById(confirmBtnId);
+      if (!btn || !picker || !teamSel || !seasonSel || !confirmBtn) return;
+      allPickers.push(picker);
+
+      (cfg.teams || []).forEach(function (id, i) {
+        var opt = document.createElement('option');
+        opt.value = id; opt.textContent = (cfg.teamNames || [])[i] || id;
+        teamSel.appendChild(opt);
+      });
+      (cfg.seasons || []).forEach(function (id, i) {
+        var opt = document.createElement('option');
+        opt.value = id; opt.textContent = (cfg.seasonNames || [])[i] || id;
+        seasonSel.appendChild(opt);
+      });
+
+      btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        if (assignBtn.disabled) return;
-        assignSelect.style.display = assignSelect.style.display === 'none' ? 'block' : 'none';
+        var open = picker.style.display === 'flex';
+        closeAllPickers();
+        if (!open) { picker.style.display = 'flex'; teamSel.value = ''; seasonSel.value = ''; }
       });
-      assignSelect.addEventListener('change', function () {
-        var teamId = parseInt(assignSelect.value, 10);
-        if (!teamId) return;
-        assignSelect.value = '';
-        assignSelect.style.display = 'none';
-        bulkAssign(teamId);
+
+      confirmBtn.addEventListener('click', function () {
+        var teamId   = parseInt(teamSel.value,   10);
+        var seasonId = parseInt(seasonSel.value, 10);
+        if (!teamId || !seasonId) { showBanner('error', 'Please select both a team and a season.', null); return; }
+        picker.style.display = 'none';
+        onConfirm(teamId, seasonId);
       });
-      document.addEventListener('click', function (e) {
-        if (e.target !== assignBtn && e.target !== assignSelect) {
-          assignSelect.style.display = 'none';
-        }
-      });
+
     }
 
-    // Age filter
-    var ageToggle = document.getElementById('age-filter-toggle');
-    var agePanel = document.getElementById('age-filter-panel');
-    if (ageToggle && agePanel) {
-      ageToggle.addEventListener('click', function () {
-        agePanel.style.display = agePanel.style.display === 'none' ? 'flex' : 'none';
-      });
-    }
-    var ageAfter = document.getElementById('age-after');
-    var ageBefore = document.getElementById('age-before');
-    if (ageAfter) ageAfter.addEventListener('input', applyAgeFilter);
-    if (ageBefore) ageBefore.addEventListener('input', applyAgeFilter);
-  }
-
-  function applyAgeFilter() {
-    var ageAfter = document.getElementById('age-after');
-    var ageBefore = document.getElementById('age-before');
-    var after = ageAfter && ageAfter.value ? new Date(ageAfter.value) : null;
-    var before = ageBefore && ageBefore.value ? new Date(ageBefore.value) : null;
-    if (!after && !before) {
-      document.querySelectorAll('#players-table .row-check').forEach(function (cb) { cb.checked = false; });
-      var selectAll = document.getElementById('select-all');
-      if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
-      updateToolbar();
-      return;
-    }
-
-    document.querySelectorAll('#players-table tbody tr').forEach(function (row) {
-      var cb = row.querySelector('.row-check');
-      if (!cb) return;
-      var dob = row.dataset.dob;
-      if (!dob) { cb.checked = false; return; }
-      var d = new Date(dob);
-      cb.checked = (!after || d >= after) && (!before || d <= before);
+    document.addEventListener('click', function (e) {
+      var insideAny = allPickers.some(function (p) { return p.contains(e.target); });
+      var isBtn = e.target.closest('#assign-btn, #remove-from-team-btn');
+      if (!insideAny && !isBtn) closeAllPickers();
     });
 
-    var selectAll = document.getElementById('select-all');
-    if (selectAll) selectAll.indeterminate = true;
-    updateToolbar();
+    initPicker('assign-btn', 'assign-picker', 'assign-team-select', 'assign-season-select', 'assign-confirm-btn',
+      function (teamId, seasonId) { bulkAssign(teamId, seasonId); }
+    );
+
+    initPicker('remove-from-team-btn', 'remove-picker', 'remove-team-select', 'remove-season-select', 'remove-confirm-btn',
+      function (teamId, seasonId) {
+        var ids = getCheckedRows().map(function (cb) { return parseInt(cb.closest('tr').dataset.playerId, 10); });
+        if (!ids.length) return;
+        fetch('/players/bulk-remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+          body: JSON.stringify({ player_ids: ids, team_id: teamId, season_id: seasonId }),
+        })
+          .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.detail || 'Error'); }); })
+          .then(function (data) {
+            showBanner('success', data.removed + ' removed, ' + data.skipped + ' skipped.', null);
+            if (data.removed > 0) setTimeout(function () { location.reload(); }, 800);
+          })
+          .catch(function (err) { showBanner('error', (err && err.message) || 'Network error.', null); });
+      }
+    );
+
   }
 
   function bulkSetActive(isActive) {
@@ -417,16 +460,16 @@
     .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
   }
 
-  function bulkAssign(teamId) {
+  function bulkAssign(teamId, seasonId) {
     var ids = getCheckedRows().map(function (cb) {
       return parseInt(cb.closest('tr').dataset.playerId, 10);
     });
-    if (!ids.length || !cfg.seasonId) return;
+    if (!ids.length || !teamId || !seasonId) return;
 
     fetch('/players/bulk-assign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-      body: JSON.stringify({ player_ids: ids, team_id: teamId, season_id: cfg.seasonId }),
+      body: JSON.stringify({ player_ids: ids, team_id: teamId, season_id: seasonId }),
     })
     .then(function (r) {
       if (!r.ok) return r.json().then(function (e) { throw new Error(e.detail || r.statusText); });
@@ -444,11 +487,361 @@
     .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
   }
 
+  // ── Action dropdowns ───────────────────────────────────────────────────────
+  function initActionDropdowns() {
+    document.addEventListener('click', function (e) {
+      var toggle = e.target.closest('.action-dropdown-toggle');
+      if (toggle) {
+        e.stopPropagation();
+        var menu = toggle.nextElementSibling;
+        var isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        if (!isOpen) menu.classList.add('open');
+        return;
+      }
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+    });
+  }
+
+  // ── Column reordering ─────────────────────────────────────────────────────
+  function loadColOrder() {
+    try {
+      var raw = localStorage.getItem(LS_ORDER_KEY);
+      if (!raw) return ALL_COLS.slice();
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return ALL_COLS.slice();
+      var valid = parsed.filter(function (c) { return ALL_COLS.indexOf(c) !== -1; });
+      ALL_COLS.forEach(function (c) { if (valid.indexOf(c) === -1) valid.push(c); });
+      return valid;
+    } catch (e) { return ALL_COLS.slice(); }
+  }
+
+  function saveColOrder(order) {
+    try { localStorage.setItem(LS_ORDER_KEY, JSON.stringify(order)); } catch (e) {}
+  }
+
+  function applyColOrder(order) {
+    var table = document.getElementById('players-table');
+    if (!table) return;
+    ALL_COLS.length = 0;
+    order.forEach(function (c) { ALL_COLS.push(c); });
+    var headerRow = table.querySelector('thead tr');
+    var thMap = {};
+    headerRow.querySelectorAll('th[data-col]').forEach(function (th) { thMap[th.dataset.col] = th; });
+    headerRow.querySelectorAll('th[data-col]').forEach(function (th) { th.remove(); });
+    order.forEach(function (col) { if (thMap[col]) headerRow.appendChild(thMap[col]); });
+    table.querySelectorAll('tbody tr').forEach(function (row) {
+      var tdMap = {};
+      row.querySelectorAll('td[data-col]').forEach(function (td) { tdMap[td.dataset.col] = td; });
+      row.querySelectorAll('td[data-col]').forEach(function (td) { td.remove(); });
+      order.forEach(function (col) { if (tdMap[col]) row.appendChild(tdMap[col]); });
+    });
+  }
+
+  function initColReorder() {
+    var table = document.getElementById('players-table');
+    if (!table) return;
+    applyColOrder(loadColOrder());
+    var dragSrcCol = null;
+    var headerRow = table.querySelector('thead tr');
+    headerRow.querySelectorAll('th[data-col]').forEach(function (th) {
+      th.draggable = true;
+      th.style.cursor = 'grab';
+      th.addEventListener('dragstart', function (e) {
+        dragSrcCol = th.dataset.col;
+        th.classList.add('col-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragSrcCol);
+      });
+      th.addEventListener('dragend', function () {
+        th.classList.remove('col-dragging');
+        headerRow.querySelectorAll('th[data-col]').forEach(function (h) { h.classList.remove('col-drag-over'); });
+      });
+      th.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        headerRow.querySelectorAll('th[data-col]').forEach(function (h) { h.classList.remove('col-drag-over'); });
+        th.classList.add('col-drag-over');
+      });
+      th.addEventListener('dragleave', function () { th.classList.remove('col-drag-over'); });
+      th.addEventListener('drop', function (e) {
+        e.preventDefault();
+        th.classList.remove('col-drag-over');
+        var targetCol = th.dataset.col;
+        if (!dragSrcCol || dragSrcCol === targetCol) return;
+        var currentOrder = ALL_COLS.slice();
+        var srcIdx = currentOrder.indexOf(dragSrcCol);
+        var tgtIdx = currentOrder.indexOf(targetCol);
+        if (srcIdx === -1 || tgtIdx === -1) return;
+        currentOrder.splice(srcIdx, 1);
+        currentOrder.splice(tgtIdx, 0, dragSrcCol);
+        saveColOrder(currentOrder);
+        applyColOrder(currentOrder);
+        initColReorder();
+      });
+    });
+  }
+
+  // ── Advanced filter ───────────────────────────────────────────────────────
+  var ADV_FILTER_FIELDS = [
+    { key: 'name',          label: 'Name',          type: 'text' },
+    { key: 'email',         label: 'Email',         type: 'text' },
+    { key: 'phone',         label: 'Phone',         type: 'text' },
+    { key: 'date_of_birth', label: 'Date of birth', type: 'daterange' },
+    { key: 'is_active',     label: 'Active',        type: 'boolean', boolLabels: ['Active', 'Inactive'] },
+    { key: 'shirt_number',  label: 'Shirt #',       type: 'number' },
+    { key: 'position',      label: 'Position',      type: 'text' },
+    { key: 'priority',      label: 'Priority',      type: 'number' },
+    { key: 'has_membership', label: 'Has membership', type: 'boolean', boolLabels: ['Yes', 'No'] },
+  ];
+  var ADV_TEXT_OPS = [
+    { value: 'contains',     label: 'contains' },
+    { value: 'not_contains', label: 'does not contain' },
+    { value: 'equals',       label: 'equals' },
+    { value: 'starts_with',  label: 'starts with' },
+    { value: 'is_empty',     label: 'is empty' },
+    { value: 'is_not_empty', label: 'is not empty' },
+  ];
+  var ADV_NUM_OPS = [
+    { value: 'eq',           label: '=' },
+    { value: 'neq',          label: '≠' },
+    { value: 'lt',           label: '<' },
+    { value: 'gt',           label: '>' },
+    { value: 'is_empty',     label: 'is empty' },
+    { value: 'is_not_empty', label: 'is not empty' },
+  ];
+
+  function getRowValue(row, fieldKey) {
+    function valOf(sel) { var el = row.querySelector(sel); return el ? (el.dataset.value || '') : ''; }
+    switch (fieldKey) {
+      case 'name':
+        var tds = Array.from(row.querySelectorAll('td'));
+        for (var i = 0; i < tds.length; i++) {
+          if (!tds[i].dataset.col && tds[i].querySelector('a')) return tds[i].textContent.trim().toLowerCase();
+        }
+        return '';
+      case 'email':         return valOf('td[data-col="Email"]');
+      case 'phone':         return valOf('td[data-col="Phone"]');
+      case 'date_of_birth': return valOf('td[data-col="Date of birth"]');
+      case 'is_active':     return valOf('td[data-col="Active"]');
+      case 'shirt_number':  return valOf('td[data-col="Shirt number"]');
+      case 'position':      return valOf('td[data-col="Position"]');
+      case 'priority':      return valOf('td[data-col="Priority"]');
+      case 'has_membership': {
+        var td = row.querySelector('td[data-col="Team"]');
+        return td ? (parseInt(td.dataset.value || '0', 10) > 0 ? 'true' : 'false') : 'false';
+      }
+      default: return '';
+    }
+  }
+
+  function testTextOp(rowVal, op, filterVal) {
+    var rv = rowVal.toLowerCase(), fv = filterVal.toLowerCase().trim();
+    switch (op) {
+      case 'contains':     return rv.indexOf(fv) !== -1;
+      case 'not_contains': return rv.indexOf(fv) === -1;
+      case 'equals':       return rv === fv;
+      case 'starts_with':  return rv.indexOf(fv) === 0;
+      case 'is_empty':     return rv === '' || rv === '\u2014';
+      case 'is_not_empty': return rv !== '' && rv !== '\u2014';
+      default: return true;
+    }
+  }
+
+  function testNumOp(rowVal, op, filterVal) {
+    if (op === 'is_empty')     return rowVal === '';
+    if (op === 'is_not_empty') return rowVal !== '';
+    var rv = parseFloat(rowVal), fv = parseFloat(filterVal);
+    if (isNaN(rv) || isNaN(fv)) return false;
+    switch (op) {
+      case 'eq':  return rv === fv;
+      case 'neq': return rv !== fv;
+      case 'lt':  return rv < fv;
+      case 'gt':  return rv > fv;
+      default: return true;
+    }
+  }
+
+  function rowMatchesCondition(row, c) {
+    var def = null;
+    for (var i = 0; i < ADV_FILTER_FIELDS.length; i++) {
+      if (ADV_FILTER_FIELDS[i].key === c.field) { def = ADV_FILTER_FIELDS[i]; break; }
+    }
+    if (!def) return true;
+    var rowVal = getRowValue(row, c.field);
+    if (def.type === 'boolean')   return c.boolVal === 'any' || rowVal === c.boolVal;
+    if (def.type === 'daterange') {
+      if (!c.dateFrom && !c.dateTo) return true;
+      if (!rowVal) return false;
+      if (c.dateFrom && rowVal < c.dateFrom) return false;
+      if (c.dateTo   && rowVal > c.dateTo)   return false;
+      return true;
+    }
+    if (def.type === 'text')   return testTextOp(rowVal, c.op, c.value || '');
+    if (def.type === 'number') return testNumOp(rowVal, c.op, c.value || '');
+    return true;
+  }
+
+  function readConditions() {
+    var conditions = [];
+    document.querySelectorAll('#adv-filter-rows .adv-filter-row').forEach(function (rowEl) {
+      var fieldKey = rowEl.querySelector('.adv-field-sel').value;
+      var def = null;
+      for (var i = 0; i < ADV_FILTER_FIELDS.length; i++) {
+        if (ADV_FILTER_FIELDS[i].key === fieldKey) { def = ADV_FILTER_FIELDS[i]; break; }
+      }
+      if (!def) return;
+      var c = { field: fieldKey };
+      if (def.type === 'boolean') {
+        var bs = rowEl.querySelector('.adv-bool-sel');
+        c.boolVal = bs ? bs.value : 'any';
+      } else if (def.type === 'daterange') {
+        c.dateFrom = (rowEl.querySelector('.adv-date-from') || {}).value || '';
+        c.dateTo   = (rowEl.querySelector('.adv-date-to')   || {}).value || '';
+      } else {
+        c.op    = (rowEl.querySelector('.adv-op-sel')    || {}).value || '';
+        c.value = (rowEl.querySelector('.adv-val-input') || {}).value || '';
+      }
+      conditions.push(c);
+    });
+    return conditions;
+  }
+
+  function applyAdvFilter() {
+    var conditions = readConditions();
+    var logic = (document.getElementById('adv-filter-logic') || {}).value || 'and';
+    var statusEl = document.getElementById('adv-filter-status');
+    var total = 0, visible = 0;
+    document.querySelectorAll('#players-table tbody tr').forEach(function (row) {
+      total++;
+      var show = conditions.length === 0 ? true
+        : logic === 'and'
+          ? conditions.every(function (c) { return rowMatchesCondition(row, c); })
+          : conditions.some(function  (c) { return rowMatchesCondition(row, c); });
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (statusEl) statusEl.textContent = conditions.length > 0 ? 'Showing ' + visible + ' of ' + total + ' players' : '';
+  }
+
+  function buildValueArea(def, container) {
+    container.querySelectorAll('.adv-op-sel,.adv-val-input,.adv-bool-sel,.adv-date-from,.adv-date-to,.adv-date-sep').forEach(function (el) { el.remove(); });
+    function mk(tag, attrs, style) {
+      var el = document.createElement(tag);
+      Object.keys(attrs || {}).forEach(function (k) {
+        if (k === 'textContent') el.textContent = attrs[k];
+        else el[k] = attrs[k];
+      });
+      if (style) el.style.cssText = style;
+      return el;
+    }
+    var inputStyle = 'width:auto;padding:.2rem .4rem;font-size:.85rem;';
+    if (def.type === 'boolean') {
+      var sel = mk('select', { className: 'adv-bool-sel sel-inline' });
+      var trueLabel  = (def.boolLabels && def.boolLabels[0]) || 'Yes';
+      var falseLabel = (def.boolLabels && def.boolLabels[1]) || 'No';
+      [['any','Any'],['true', trueLabel],['false', falseLabel]].forEach(function (o) {
+        sel.appendChild(mk('option', { value: o[0], textContent: o[1] }));
+      });
+      sel.addEventListener('change', applyAdvFilter);
+      container.appendChild(sel);
+      return;
+    }
+    if (def.type === 'daterange') {
+      var fromIn = mk('input', { type: 'date', className: 'adv-date-from' }, inputStyle);
+      var sep    = mk('span',  { className: 'adv-date-sep', textContent: '\u2192' }, 'margin:0 .3rem;');
+      var toIn   = mk('input', { type: 'date', className: 'adv-date-to'   }, inputStyle);
+      fromIn.addEventListener('input', applyAdvFilter);
+      toIn.addEventListener('input',   applyAdvFilter);
+      container.appendChild(fromIn); container.appendChild(sep); container.appendChild(toIn);
+      return;
+    }
+    var ops = def.type === 'number' ? ADV_NUM_OPS : ADV_TEXT_OPS;
+    var opSel = mk('select', { className: 'adv-op-sel sel-inline' });
+    ops.forEach(function (o) { opSel.appendChild(mk('option', { value: o.value, textContent: o.label })); });
+    var noValOps = ['is_empty', 'is_not_empty'];
+    var valIn = mk('input', {
+      type: def.type === 'number' ? 'number' : 'text',
+      className: 'adv-val-input',
+      placeholder: 'value'
+    }, 'width:130px;padding:.2rem .4rem;font-size:.85rem;');
+    opSel.addEventListener('change', function () {
+      valIn.style.display = noValOps.indexOf(opSel.value) !== -1 ? 'none' : '';
+      applyAdvFilter();
+    });
+    valIn.addEventListener('input', applyAdvFilter);
+    container.appendChild(opSel);
+    container.appendChild(valIn);
+  }
+
+  function addFilterRow(container) {
+    var rowEl = document.createElement('div');
+    rowEl.className = 'adv-filter-row';
+    var fieldSel = document.createElement('select');
+    fieldSel.className = 'adv-field-sel';
+    fieldSel.classList.add('sel-inline');
+    ADV_FILTER_FIELDS.forEach(function (f) {
+      var o = document.createElement('option');
+      o.value = f.key;
+      o.textContent = f.label;
+      fieldSel.appendChild(o);
+    });
+    var valWrap = document.createElement('span');
+    valWrap.className = 'adv-val-wrap';
+    valWrap.style.cssText = 'display:inline-flex;align-items:center;gap:.3rem;flex-wrap:wrap;';
+    function onFieldChange() {
+      var def = null;
+      for (var i = 0; i < ADV_FILTER_FIELDS.length; i++) {
+        if (ADV_FILTER_FIELDS[i].key === fieldSel.value) { def = ADV_FILTER_FIELDS[i]; break; }
+      }
+      if (def) buildValueArea(def, valWrap);
+      applyAdvFilter();
+    }
+    fieldSel.addEventListener('change', onFieldChange);
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '\u2715';
+    removeBtn.title = 'Remove';
+    removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tp-muted,#6c757d);font-size:.9rem;padding:.1rem .3rem;line-height:1;';
+    removeBtn.addEventListener('click', function () { rowEl.remove(); applyAdvFilter(); });
+    rowEl.appendChild(fieldSel);
+    rowEl.appendChild(valWrap);
+    rowEl.appendChild(removeBtn);
+    container.appendChild(rowEl);
+    onFieldChange();
+  }
+
+  function clearFilterRows(container) {
+    while (container.firstChild) container.removeChild(container.firstChild);
+  }
+
+  function initAdvFilter() {
+    var toggleBtn = document.getElementById('adv-filter-btn');
+    var panel     = document.getElementById('adv-filter-panel');
+    var addBtn    = document.getElementById('adv-filter-add');
+    var clearBtn  = document.getElementById('adv-filter-clear');
+    var logicSel  = document.getElementById('adv-filter-logic');
+    var rowsCont  = document.getElementById('adv-filter-rows');
+    if (!toggleBtn || !panel) return;
+    toggleBtn.addEventListener('click', function () {
+      var open = panel.style.display !== 'none';
+      panel.style.display = open ? 'none' : '';
+      toggleBtn.textContent = open ? 'Filter \u25be' : 'Filter \u25b4';
+    });
+    if (addBtn)   addBtn.addEventListener('click', function () { addFilterRow(rowsCont); });
+    if (clearBtn) clearBtn.addEventListener('click', function () { clearFilterRows(rowsCont); applyAdvFilter(); });
+    if (logicSel) logicSel.addEventListener('change', applyAdvFilter);
+    addFilterRow(rowsCont);
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     initColumnsPopover();
+    initColReorder();
+    initAdvFilter();
     initEditMode();
     initBulkToolbar();
+    initActionDropdowns();
   });
 
 })();

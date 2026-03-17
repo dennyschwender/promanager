@@ -17,6 +17,9 @@ class TeamRecurringSchedule(Base):
     team_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    season_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("seasons.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     title: Mapped[str] = mapped_column(String(256), nullable=False)
     event_type: Mapped[str] = mapped_column(String(32), nullable=False, default="training")
     recurrence_rule: Mapped[str] = mapped_column(
@@ -38,6 +41,7 @@ class TeamRecurringSchedule(Base):
     team: Mapped["Team"] = relationship(  # type: ignore[name-defined]
         "Team", back_populates="recurring_schedules"
     )
+    season: Mapped["Season | None"] = relationship("Season")  # type: ignore[name-defined]
 
     def __repr__(self) -> str:
         return f"<TeamRecurringSchedule id={self.id} title={self.title!r}>"

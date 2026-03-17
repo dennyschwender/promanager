@@ -55,6 +55,7 @@ def _parse_schedule_rows(form, count: int) -> list[dict]:
                 "meeting_location": (form.get(f"sched_meeting_location_{i}") or "").strip(),
                 "presence_type": (form.get(f"sched_presence_{i}") or "normal").strip(),
                 "description": (form.get(f"sched_desc_{i}") or "").strip(),
+                "season_id": (form.get(f"sched_season_{i}") or "").strip(),
             }
         )
     return rows
@@ -94,6 +95,7 @@ def _schedule_to_dict(s: TeamRecurringSchedule) -> dict:
         "presence_type": s.presence_type,
         "description": s.description or "",
         "recurrence_group_id": s.recurrence_group_id,
+        "season_id": str(s.season_id) if s.season_id else "",
     }
 
 
@@ -110,6 +112,8 @@ def _apply_row_to_schedule(sched: TeamRecurringSchedule, row: dict) -> None:
     sched.meeting_location = row["meeting_location"] or None
     sched.presence_type = row["presence_type"]
     sched.description = row["description"] or None
+    sid = row.get("season_id", "")
+    sched.season_id = int(sid) if sid else None
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +150,7 @@ async def team_new_get(
         {
             "user": user,
             "team": None,
+            "seasons": db.query(Season).order_by(Season.name).all(),
             "error": None,
             "schedule_rows": [],
             "saved": False,
@@ -193,6 +198,34 @@ async def team_new_post(
 
 
 # ---------------------------------------------------------------------------
+# Detail
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{team_id}")
+async def team_detail(
+    team_id: int,
+    request: Request,
+    saved: str = "",
+    user=Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    team = db.get(Team, team_id)
+    if team is None:
+        return RedirectResponse("/teams", status_code=302)
+    return render(
+        request,
+        "teams/detail.html",
+        {
+            "user": user,
+            "team": team,
+            "schedules": team.recurring_schedules,
+            "saved": saved == "1",
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # Edit
 # ---------------------------------------------------------------------------
 
@@ -215,6 +248,7 @@ async def team_edit_get(
         {
             "user": user,
             "team": team,
+            "seasons": db.query(Season).order_by(Season.name).all(),
             "schedule_rows": [_schedule_to_dict(s) for s in team.recurring_schedules],
             "error": None,
             "saved": saved == "1",
@@ -242,6 +276,8 @@ async def team_edit_post(
 
     form = await request.form()
 
+    all_seasons = db.query(Season).order_by(Season.name).all()
+
     def _render(error=None, confirm_mode=False, flagged=None, schedule_rows=None, schedules_json="", saved=False):
         return render(
             request,
@@ -249,6 +285,7 @@ async def team_edit_post(
             {
                 "user": user,
                 "team": team,
+                "seasons": all_seasons,
                 "schedule_rows": (
                     schedule_rows
                     if schedule_rows is not None
@@ -360,7 +397,7 @@ async def team_edit_post(
             # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
             # inside generate_events_for_schedule. This is an accepted limitation.
             return _render(error="An error occurred saving the schedules. Please try again.")
-        return RedirectResponse(f"/teams/{team_id}/edit?saved=1", status_code=302)
+        return RedirectResponse(f"/teams/{team_id}?saved=1", status_code=302)
 
     # ── FIRST POST ───────────────────────────────────────────────────────────
     try:
@@ -473,7 +510,7 @@ async def team_edit_post(
         # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
         # inside generate_events_for_schedule. This is an accepted limitation.
         return _render(error="An error occurred saving the schedules. Please try again.")
-    return RedirectResponse(f"/teams/{team_id}/edit?saved=1", status_code=302)
+    return RedirectResponse(f"/teams/{team_id}?saved=1", status_code=302)
 
 
 # ---------------------------------------------------------------------------

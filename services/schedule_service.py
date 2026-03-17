@@ -64,9 +64,20 @@ def generate_events_for_schedule(
 
     # At this point `end` is always a concrete date — the None case raised above.
     # The while loop is therefore always finite.
+    # Build set of dates already covered by this schedule's recurrence group
+    existing_dates: set[date] = {
+        d
+        for (d,) in db.query(Event.event_date).filter(
+            Event.recurrence_group_id == schedule.recurrence_group_id
+        ).all()
+    }
+
     events: list[Event] = []
     cur = schedule.start_date
     while cur <= end:
+        if cur in existing_dates:
+            cur = advance_date(cur, schedule.recurrence_rule)
+            continue
         ev = Event(
             title=schedule.title,
             event_type=schedule.event_type,

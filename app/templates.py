@@ -31,9 +31,11 @@ def render(
 ) -> HTMLResponse:
     """Render a template with i18n context (t, current_locale) auto-injected."""
     locale = getattr(request.state, "locale", "en")
+    theme = getattr(request.state, "theme", "light")
     i18n_ctx = {
         "t": lambda key, **kw: _t(key, locale, **kw),
         "current_locale": locale,
+        "current_theme": theme,
     }
     return templates.TemplateResponse(
         request,

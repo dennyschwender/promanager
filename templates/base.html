@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_locale }}">
+<html lang="{{ current_locale }}" data-theme="{{ current_theme }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,6 +52,24 @@
               <li><hr style="margin:.25rem 0;"></li>
             {% endif %}
             <li><a href="/profile">{{ t('nav.profile') }}</a></li>
+            <li>
+              <a href="#" onclick="toggleTheme(); return false;">
+                {% if current_theme == 'dark' %}☀️ {{ t('nav.light_mode') }}{% else %}🌙 {{ t('nav.dark_mode') }}{% endif %}
+              </a>
+            </li>
+            <li>
+              <form method="post" action="/set-locale" style="display:flex;align-items:center;gap:.3rem;margin:0;padding:.25rem 1rem;">
+                <input type="hidden" name="next" value="{{ request.url.path }}">
+                <span style="font-size:.9rem;">🌐</span>
+                <select name="locale" onchange="this.form.submit()" class="sel-inline">
+                  <option value="en" {% if current_locale == 'en' %}selected{% endif %}>EN</option>
+                  <option value="it" {% if current_locale == 'it' %}selected{% endif %}>IT</option>
+                  <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>FR</option>
+                  <option value="de" {% if current_locale == 'de' %}selected{% endif %}>DE</option>
+                </select>
+              </form>
+            </li>
+            <li><hr style="margin:.25rem 0;"></li>
             <li><a href="/auth/logout">{{ t('nav.sign_out') }}</a></li>
           </ul>
         </details>
@@ -59,26 +77,15 @@
     {% else %}
       <li><a href="/auth/login" role="button" class="outline">{{ t('nav.login') }}</a></li>
     {% endif %}
-    <li>
-      <form method="post" action="/set-locale" style="display:inline;margin:0;">
-        <input type="hidden" name="next" value="{{ request.url.path }}">
-        <select name="locale" onchange="this.form.submit()" style="margin:0;padding:.2rem .4rem;font-size:.85rem;width:auto;">
-          <option value="en" {% if current_locale == 'en' %}selected{% endif %}>EN</option>
-          <option value="it" {% if current_locale == 'it' %}selected{% endif %}>IT</option>
-          <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>FR</option>
-          <option value="de" {% if current_locale == 'de' %}selected{% endif %}>DE</option>
-        </select>
-      </form>
-    </li>
   </ul>
 </nav>
 
-<main class="container" style="padding-top:1.5rem;">
+<main class="container-fluid" style="padding-top:1.5rem;max-width:1600px;margin-inline:auto;">
   {% block breadcrumb %}{% endblock %}
   {% block content %}{% endblock %}
 </main>
 
-<footer class="container site-footer">
+<footer class="container-fluid site-footer" style="max-width:1600px;margin-inline:auto;">
   <div class="footer-inner">
     <span>⬡ ProManager</span>
     {% if user %}
@@ -138,12 +145,28 @@
 @keyframes slideIn { from { transform: translateY(2rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 </style>
 {% endif %}
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  document.cookie = "theme=" + next + ";path=/;max-age=31536000;samesite=lax";
+  // Update toggle link text without reload
+  document.querySelectorAll("[data-theme-toggle]").forEach(el => {
+    el.textContent = next === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+  });
+}
+</script>
 <script src="/static/js/flatpickr.min.js"></script>
 <script>
-  flatpickr("input[type=date]", {
+  flatpickr("input[type=date]:not(.cell-input)", {
     dateFormat: "Y-m-d",
     altInput: true,
     altFormat: "d/m/Y",
+    allowInput: true
+  });
+  flatpickr("input[type=date].cell-input", {
+    dateFormat: "Y-m-d",
     allowInput: true
   });
 </script>

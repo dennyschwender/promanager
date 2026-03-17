@@ -13,14 +13,43 @@
   --tp-shadow:    0 1px 3px rgba(0,0,0,.12);
 }
 
+/* ── Global density overrides (compact Pico) ─────────────── */
+:root {
+  --font-size: 15px !important;
+  --spacing: 0.75rem;
+  --form-element-spacing-vertical: 0.4rem;
+  --form-element-spacing-horizontal: 0.65rem;
+  --nav-element-spacing-vertical: 0.4rem;
+  --nav-element-spacing-horizontal: 0.55rem;
+  --block-spacing-vertical: 0.75rem;
+  --typography-spacing-vertical: 1rem;
+}
+/* Override Pico's responsive font-size bumps */
+@media (min-width: 576px)  { :root { --font-size: 15px !important; } }
+@media (min-width: 768px)  { :root { --font-size: 15px !important; } }
+@media (min-width: 992px)  { :root { --font-size: 15px !important; } }
+@media (min-width: 1200px) { :root { --font-size: 15px !important; } }
+/* Override Pico's responsive block-spacing bumps */
+@media (min-width: 576px) { body > footer, body > header, body > main, section { --block-spacing-vertical: 0.75rem; } }
+@media (min-width: 768px) { body > footer, body > header, body > main, section { --block-spacing-vertical: 0.75rem; } }
+@media (min-width: 992px) { body > footer, body > header, body > main, section { --block-spacing-vertical: 0.75rem; } }
+body > main { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+article { padding: 0.65rem 0.85rem !important; }
+h1 { font-size: 1.4rem; margin-bottom: 0.4rem; }
+h2 { font-size: 1.2rem; margin-bottom: 0.35rem; }
+h3 { font-size: 1rem;   margin-bottom: 0.3rem; }
+table { font-size: 0.88rem; }
+thead th, tbody td { padding: 0.4rem 0.65rem !important; }
+section { margin-bottom: 0.5rem; }
+
 /* ── Page header (title + primary action) ────────────────── */
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 .page-header h2 { margin: 0; }
 
@@ -116,9 +145,9 @@ button.btn-sm {
 /* ── Form footer ─────────────────────────────────────────── */
 .form-footer {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
   border-top: 1px solid var(--pico-muted-border-color, #e0e0e0);
   align-items: center;
   flex-wrap: wrap;
@@ -127,23 +156,23 @@ button.btn-sm {
 /* ── Stat grid (dashboard / reports) ────────────────────── */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
 }
 .stat-card {
   background: var(--pico-card-background-color, #fff);
   border: 1px solid var(--pico-muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
-  padding: 1rem;
+  padding: 0.6rem 0.75rem;
   text-align: center;
   box-shadow: var(--tp-shadow);
 }
 .stat-card .stat-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.1;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 .stat-card .stat-label {
   font-size: 0.82rem;
@@ -196,16 +225,16 @@ nav a.nav-active {
 /* ── Quick-action button grid (dashboard admin) ──────────── */
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 .quick-actions a {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.65rem 0.5rem;
+  gap: 0.35rem;
+  padding: 0.45rem 0.5rem;
   border: 1px solid var(--pico-muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   text-decoration: none;
@@ -224,15 +253,15 @@ nav a.nav-active {
 .attendance-card {
   border: 1px solid var(--pico-muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.5rem;
   background: var(--pico-card-background-color, #fff);
   box-shadow: var(--tp-shadow);
 }
 .attendance-card-header {
   font-weight: 600;
-  font-size: 1.05rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
 }
 .radio-group {
   display: flex;
@@ -260,6 +289,7 @@ nav a.nav-active {
 
 /* ── Narrow form container ───────────────────────────────── */
 .form-container { max-width: 640px; }
+.form-container-wide { max-width: 900px; }
 .form-container-sm { max-width: 400px; margin: 4rem auto; }
 
 /* ── Two-column form grid ────────────────────────────────── */
@@ -280,10 +310,10 @@ input.time-24h {
 /* ── Filter row (list page top bar) ─────────────────────── */
 .filter-row {
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
   align-items: flex-end;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 .filter-row label { margin: 0; }
 
@@ -296,6 +326,7 @@ input.time-24h {
   margin: 0;
 }
 .select-sm { width: auto; padding: 0.2rem 0.45rem; font-size: 0.82rem; }
+select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; line-height: 1.4; }
 .input-sm  { width: 120px; padding: 0.2rem 0.45rem; font-size: 0.82rem; }
 
 /* ── Attendance summary buckets (event detail) ───────────── */
@@ -517,7 +548,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   background: var(--pico-card-background-color, #fff);
   border: 1px solid var(--pico-muted-border-color, #e0e0e0);
   border-radius: 0.5rem;
-  padding: 1rem 1.25rem;
+  padding: 0.65rem 0.85rem;
 }
 .detail-dl {
   display: grid;
@@ -533,4 +564,103 @@ footer.site-footer a:hover { text-decoration: underline; }
 }
 .detail-dl dd { margin: 0; }
 .muted { color: var(--tp-muted); }
+
+/* ── Action dropdown (players table) ────────────────────── */
+.action-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.action-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 200;
+  min-width: 110px;
+  background: var(--pico-card-background-color, #fff);
+  border: 1px solid var(--pico-muted-border-color, #ddd);
+  border-radius: var(--tp-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  padding: 0.25rem 0;
+}
+.action-dropdown-menu.open { display: block; }
+.action-dropdown-menu a,
+.action-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.83rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--pico-color, inherit);
+  white-space: nowrap;
+  border-radius: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+.action-dropdown-menu a:hover,
+.action-dropdown-menu button:hover { background: rgba(0,0,0,.05); }
+.action-dropdown-menu button.danger { color: var(--tp-danger); }
+.action-dropdown-menu form { margin: 0; padding: 0; }
+
+/* Hide Team column in edit mode when team filter is active */
+#players-table.edit-mode.team-filtered td[data-col="Team"],
+#players-table.edit-mode.team-filtered th[data-col="Team"] { display: none; }
+
+/* Hide disabled pt-columns in edit mode (no team filter selected) */
+#players-table.edit-mode.pt-hidden td.pt-field,
+#players-table.edit-mode.pt-hidden th[data-col="Role"],
+#players-table.edit-mode.pt-hidden th[data-col="Shirt number"],
+#players-table.edit-mode.pt-hidden th[data-col="Position"],
+#players-table.edit-mode.pt-hidden th[data-col="Status"],
+#players-table.edit-mode.pt-hidden th[data-col="Injured until"],
+#players-table.edit-mode.pt-hidden th[data-col="Absent by default"],
+#players-table.edit-mode.pt-hidden th[data-col="Priority"] { display: none; }
+
+/* ── Column drag-and-drop ────────────────────────────────── */
+#players-table th[data-col] { user-select: none; }
+#players-table th.col-dragging { opacity: 0.4; cursor: grabbing; }
+#players-table th.col-drag-over {
+  outline: 2px solid var(--tp-primary);
+  outline-offset: -2px;
+  background: rgba(26,107,196,.08);
+}
+
+/* ── Advanced filter panel ───────────────────────────────── */
+#adv-filter-panel {
+  border: 1px solid var(--pico-muted-border-color, #ddd);
+  border-radius: var(--tp-radius);
+  padding: .6rem .85rem;
+  background: var(--pico-card-background-color, #fff);
+  font-size: 0.88rem;
+}
+.adv-filter-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+#adv-filter-rows .adv-filter-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+  padding: .3rem 0;
+  border-top: 1px solid var(--pico-muted-border-color, #f0f0f0);
+}
+
+/* Compact inline edit inputs in players table */
+#players-table .cell-input:not([type="checkbox"]) {
+  padding: 0.2rem 0.35rem;
+  margin: 0;
+  font-size: 0.85rem;
+  height: auto;
+  min-height: unset;
+  line-height: 1.4;
+  width: 100%;
+  box-sizing: border-box;
+}
 

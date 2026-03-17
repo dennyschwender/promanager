@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from models.player import Player
 from models.player_team import PlayerTeam
-from models.team import Team
 
 
 @dataclass
@@ -90,17 +89,16 @@ def parse_xlsx(stream: BinaryIO) -> list[dict]:
 
 def process_rows(
     rows: list[dict],
-    context_team_id: int,
     db: Session,
+    context_team_id: int | None = None,
     context_season_id: int | None = None,
 ) -> ImportResult:
-    """Process import rows best-effort (per-row independent commits via savepoints)."""
+    """Process import rows best-effort (per-row independent commits via savepoints).
+
+    When *context_team_id* is None players are created without a team/season membership.
+    """
     result = ImportResult()
     seen_keys: set[str] = set()
-
-    all_teams = {t.name.lower(): t for t in db.query(Team).all()}
-    context_team = db.get(Team, context_team_id)
-    ctx_name = context_team.name if context_team else str(context_team_id)
 
     for idx, raw in enumerate(rows, start=1):
         row = {k: (v.strip() if isinstance(v, str) else v) for k, v in raw.items()}
@@ -139,19 +137,7 @@ def process_rows(
             skip("duplicate")
             continue
 
-        # 3. Team resolution
-        team_name = row.get("team", "").strip()
-        resolved_team_id = context_team_id
-        resolved_season_id = context_season_id
-        team_warning: str | None = None
-        if team_name:
-            matched = all_teams.get(team_name.lower())
-            if matched:
-                resolved_team_id = matched.id
-            else:
-                team_warning = f"team not found: {team_name}, assigned to {ctx_name}"
-
-        # 4. Date parsing
+        # 3. Date parsing
         dob_raw = row.get("date_of_birth", "").strip()
         dob: date | None = None
         if dob_raw:
@@ -161,7 +147,7 @@ def process_rows(
                 skip("invalid date_of_birth")
                 continue
 
-        # 5. Create player + membership within a savepoint
+        # 4. Create player (+ optional membership) within a savepoint
         try:
             sp = db.begin_nested()
             player = Player(
@@ -178,17 +164,18 @@ def process_rows(
             )
             db.add(player)
             db.flush()
-            db.add(
-                PlayerTeam(
-                    player_id=player.id,
-                    team_id=resolved_team_id,
-                    season_id=resolved_season_id,
-                    priority=1,
-                    role="player",
-                    membership_status="active",
-                    absent_by_default=False,
+            if context_team_id is not None:
+                db.add(
+                    PlayerTeam(
+                        player_id=player.id,
+                        team_id=context_team_id,
+                        season_id=context_season_id,
+                        priority=1,
+                        role="player",
+                        membership_status="active",
+                        absent_by_default=False,
+                    )
                 )
-            )
             sp.commit()
         except SQLAlchemyError:
             sp.rollback()
@@ -197,8 +184,6 @@ def process_rows(
 
         seen_keys.add(batch_key)
         result.imported.append(player)
-        if team_warning:
-            result.skipped.append({"row": idx, "name": display_name, "reason": team_warning})
 
     db.commit()
     return result

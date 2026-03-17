@@ -21,15 +21,16 @@
   <table>
     <thead>
       <tr>
-        <th>Team</th><th>Priority</th><th>Role</th><th>Position</th>
+        <th>Season</th><th>Team</th><th>Prio</th><th>Role</th><th>Position</th>
         <th>Shirt #</th><th>Status</th><th>Injured until</th><th>Absent by default</th>
       </tr>
     </thead>
     <tbody>
-    {% for m in player.team_memberships %}
+    {% for m in sorted_memberships %}
       <tr>
+        <td>{{ m.season.name if m.season else '?' }}</td>
         <td>{{ m.team.name if m.team else '?' }}</td>
-        <td><span class="badge-recurring" title="Priority">P{{ m.priority }}</span></td>
+        <td>{{ m.priority }}</td>
         <td>{{ m.role|replace('_',' ')|capitalize if m.role else '—' }}</td>
         <td>{{ m.position|capitalize if m.position else '—' }}</td>
         <td>{{ m.shirt_number if m.shirt_number is not none else '—' }}</td>

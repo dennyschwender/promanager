@@ -52,21 +52,44 @@ async def vapid_public_key():
 
 
 @router.get("/stream")
-async def notification_stream(request: Request, db: Session = Depends(get_db)):
+async def notification_stream(request: Request):
     """Server-Sent Events stream for real-time notification badge updates."""
+    from app.database import SessionLocal
     user = get_user_from_cookie(request)
     if user is None:
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
 
-    player_ids = _player_ids_for_user(user, db)
+    with SessionLocal() as db:
+        player_ids = _player_ids_for_user(user, db)
+
+    from app.main import shutdown_event
+
+    async def _sleep_or_shutdown(seconds: float) -> bool:
+        """Sleep for *seconds* OR return True immediately if shutdown is signalled."""
+        done, pending = await asyncio.wait(
+            [
+                asyncio.ensure_future(asyncio.sleep(seconds)),
+                asyncio.ensure_future(shutdown_event.wait()),
+            ],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        for t in pending:
+            t.cancel()
+        return shutdown_event.is_set()
+
     if not player_ids:
 
         async def keepalive() -> AsyncGenerator[str, None]:
+            elapsed = 0
             while True:
                 if await request.is_disconnected():
                     break
-                yield ": keepalive\n\n"
-                await asyncio.sleep(30)
+                if await _sleep_or_shutdown(2):
+                    break
+                elapsed += 2
+                if elapsed >= 30:
+                    yield ": keepalive\n\n"
+                    elapsed = 0
 
         return StreamingResponse(keepalive(), media_type="text/event-stream")
 
@@ -74,15 +97,36 @@ async def notification_stream(request: Request, db: Session = Depends(get_db)):
     q = register_connection(player_id)
 
     async def event_generator() -> AsyncGenerator[str, None]:
+        ticks = 0
         try:
             while True:
                 if await request.is_disconnected():
                     break
                 try:
-                    payload = await asyncio.wait_for(q.get(), timeout=30.0)
-                    yield f"data: {payload}\n\n"
-                except asyncio.TimeoutError:
-                    yield ": keepalive\n\n"
+                    get_task = asyncio.ensure_future(q.get())
+                    shutdown_task = asyncio.ensure_future(shutdown_event.wait())
+                    done, pending = await asyncio.wait(
+                        [get_task, shutdown_task],
+                        timeout=2.0,
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    for t in pending:
+                        t.cancel()
+                    if shutdown_event.is_set():
+                        break
+                    if get_task in done:
+                        yield f"data: {get_task.result()}\n\n"
+                        ticks = 0
+                    else:
+                        # timeout
+                        if await request.is_disconnected():
+                            break
+                        ticks += 1
+                        if ticks >= 15:
+                            yield ": keepalive\n\n"
+                            ticks = 0
+                except asyncio.CancelledError:
+                    break
         finally:
             unregister_connection(player_id, q)
 

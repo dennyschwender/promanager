@@ -89,32 +89,47 @@ table.jexcel tbody td.edition textarea {
 {% block breadcrumb %}
 <nav class="breadcrumb">
   <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/teams">Teams</a><span class="breadcrumb-sep"></span>
-  <span>Import Players — {{ context_team.name }}</span>
+  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
+  <span>Import Players{% if context_team %} — {{ context_team.name }}{% endif %}</span>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h2>{{ t('players.import_title') }} — {{ context_team.name }}</h2>
+  <h2>{{ t('players.import_title') }}</h2>
 </div>
 
-<form method="get" action="/players/import" style="margin-bottom:1rem;">
-  <input type="hidden" name="team_id" value="{{ context_team.id }}">
-  <label for="season_import_filter" style="display:inline;margin-right:.5rem;">Season:</label>
-  <select id="season_import_filter" name="season_id" onchange="this.form.submit()" style="width:auto;display:inline-block;">
+<!-- Context selector: team + season -->
+<form method="get" action="/players/import" style="margin-bottom:1rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+  <label style="margin:0;">Team:</label>
+  <select name="team_id" onchange="this.form.submit()" style="width:auto;">
+    <option value="">— No team —</option>
+    {% for t_obj in all_teams %}
+      <option value="{{ t_obj.id }}" {% if context_team and t_obj.id == context_team.id %}selected{% endif %}>{{ t_obj.name }}</option>
+    {% endfor %}
+  </select>
+  {% if context_team %}
+  <label style="margin:0;">Season:</label>
+  <select name="season_id" onchange="this.form.submit()" style="width:auto;">
     {% for s in seasons %}
       <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
         {{ s.name }}{% if s.is_active %} ✓{% endif %}
       </option>
     {% endfor %}
   </select>
-  {% if not seasons %}
-    <span class="text-muted">No seasons available</span>
   {% endif %}
 </form>
-{% if selected_season_id is none %}
-  <div class="alert alert-warning">No active season. Please activate a season before importing players.</div>
+
+{% if not context_team %}
+<div class="alert alert-warning" style="margin-bottom:1rem;">
+  <strong>No team/season selected.</strong> Players will be imported without any team or season membership. Select a team above to assign them directly on import.
+</div>
+{% else %}
+<div class="alert" style="background:var(--card-sectionning-background-color);border:1px solid var(--muted-border-color);margin-bottom:1rem;">
+  Importing into <strong>{{ context_team.name }}</strong>
+  {% if selected_season_id %}{% for s in seasons %}{% if s.id == selected_season_id %} / <strong>{{ s.name }}</strong>{% endif %}{% endfor %}{% endif %}.
+  Players will be assigned to this team and season automatically.
+</div>
 {% endif %}
 
 {% if error %}
@@ -178,14 +193,13 @@ table.jexcel tbody td.edition textarea {
 
     <div id="spreadsheet"></div>
 
-    <form method="post" action="/players/import?team_id={{ context_team.id }}"
+    <form method="post" action="/players/import{% if context_team %}?team_id={{ context_team.id }}{% if selected_season_id %}&season_id={{ selected_season_id }}{% endif %}{% endif %}"
           id="paste-form" style="margin-top:1rem;">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="import_source" value="paste">
-      <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
       <input type="hidden" name="rows_json" id="rows-json-input">
       <button type="submit" class="btn btn-primary" id="paste-submit-btn">{{ t('players.import_submit') }}</button>
-      <a href="/teams" class="btn btn-outline" style="margin-left:.5rem;">Cancel</a>
+      <a href="/players" class="btn btn-outline" style="margin-left:.5rem;">Cancel</a>
     </form>
   </div>
 
@@ -197,18 +211,17 @@ table.jexcel tbody td.edition textarea {
       (<code>first_name</code>, <code>last_name</code>, <code>email</code>, etc.).
       Unknown columns are ignored.
     </p>
-    <form method="post" action="/players/import?team_id={{ context_team.id }}"
+    <form method="post" action="/players/import{% if context_team %}?team_id={{ context_team.id }}{% if selected_season_id %}&season_id={{ selected_season_id }}{% endif %}{% endif %}"
           enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="import_source" value="file">
-      <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
       <label>
         File
         <input type="file" name="import_file" accept=".csv,.xlsx" required>
       </label>
       <div class="form-footer">
         <button type="submit" class="btn btn-primary">{{ t('players.import_submit') }}</button>
-        <a href="/teams" class="btn btn-outline">Cancel</a>
+        <a href="/players" class="btn btn-outline">Cancel</a>
       </div>
     </form>
   </div>
@@ -220,8 +233,7 @@ table.jexcel tbody td.edition textarea {
 <script src="/static/js/jspreadsheet.min.js"></script>
 <script>
 (function () {
-  const CONTEXT_TEAM = {{ context_team.name | tojson }};
-  const DEFAULT_COLS = ["first_name", "last_name", "email", "phone", "team"];
+  const DEFAULT_COLS = ["first_name", "last_name", "email", "phone"];
   const ALL_COLS = {{ columns | tojson }};
 
   // ── Tab switching ────────────────────────────────────────────────────────
@@ -243,9 +255,7 @@ table.jexcel tbody td.edition textarea {
 
   function makeInitialData(cols, rows) {
     rows = rows || 20;
-    return Array.from({ length: rows }, () => {
-      return cols.map(c => c === "team" ? CONTEXT_TEAM : "");
-    });
+    return Array.from({ length: rows }, () => cols.map(() => ""));
   }
 
   const container = document.getElementById("spreadsheet");
@@ -269,13 +279,7 @@ table.jexcel tbody td.edition textarea {
     },
     onchange: validateCell,
     onpaste: function() { setTimeout(validateAll, 0); },
-    oninsertrow: function(el, rowNumber, numOfRows) {
-      var teamIdx = activeCols.indexOf("team");
-      if (teamIdx === -1) return;
-      for (var r = rowNumber; r < rowNumber + numOfRows; r++) {
-        sheet.setValueFromCoords(teamIdx, r, CONTEXT_TEAM, true);
-      }
-    },
+    oninsertrow: function() {},
     ondeletecolumn: function(el, col, numCols) {
       activeCols.splice(col, numCols || 1);
       refreshDropdown();

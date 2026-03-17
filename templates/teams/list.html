@@ -17,7 +17,7 @@
   <tbody>
   {% for team in teams %}
     <tr>
-      <td><strong>{{ team.name }}</strong></td>
+      <td><a href="/teams/{{ team.id }}"><strong>{{ team.name }}</strong></a></td>
       <td>{{ team.description or "—" }}</td>
       <td>
         <div class="action-group">
