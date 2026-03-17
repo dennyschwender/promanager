@@ -273,6 +273,32 @@ def test_coach_cannot_create_player(db):
     assert resp.status_code == 403
 
 
+def test_coach_can_view_season_report(db):
+    from app.main import app
+
+    coach, team, season = _setup_coach_with_team(db)
+
+    c = _coach_client(app, db, coach)
+    resp = c.get(f"/reports/season/{season.id}")
+    app.dependency_overrides.clear()
+    assert resp.status_code == 200
+
+
+def test_coach_cannot_view_other_player_report(db):
+    from models.player import Player
+    from app.main import app
+
+    coach, _, _ = _setup_coach_with_team(db)
+    other_player = Player(first_name="Other", last_name="Guy", is_active=True)
+    db.add(other_player)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.get(f"/reports/player/{other_player.id}")
+    app.dependency_overrides.clear()
+    assert resp.status_code in (302, 403)
+
+
 def test_coach_cannot_mark_attendance_on_other_team(db):
     from datetime import date
     from models.event import Event

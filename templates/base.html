@@ -34,6 +34,8 @@
     <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
     {% if user.is_admin %}
       <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
+    {% endif %}
+    {% if user.is_admin or user.is_coach %}
       <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
     {% endif %}
   </ul>

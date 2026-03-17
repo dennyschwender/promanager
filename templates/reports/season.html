@@ -40,6 +40,7 @@
   </thead>
   <tbody>
   {% for row in stats %}
+  {% if coach_player_ids is none or row.player.id in coach_player_ids %}
     {% set total = row.total_events %}
     {% set pct = ((row.present_count / total * 100) | round(1)) if total > 0 else 0 %}
     <tr>
@@ -56,6 +57,7 @@
         </div>
       </td>
     </tr>
+  {% endif %}
   {% endfor %}
   </tbody>
 </table>
