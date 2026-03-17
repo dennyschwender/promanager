@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from models.player import Player
 from models.player_team import PlayerTeam
+from models.team import Team
 
 
 @dataclass
@@ -147,7 +148,18 @@ def process_rows(
                 skip("invalid date_of_birth")
                 continue
 
-        # 4. Create player (+ optional membership) within a savepoint
+        # 4. Resolve optional "team" column to a team_id
+        resolved_team_id = context_team_id
+        team_name = row.get("team", "").strip()
+        if team_name:
+            matched = db.query(Team).filter(Team.name.ilike(team_name)).first()
+            if matched:
+                resolved_team_id = matched.id
+            else:
+                skip(f"team not found: {team_name}")
+                # fall back to context team — still import the player
+
+        # 5. Create player (+ optional membership) within a savepoint
         try:
             sp = db.begin_nested()
             player = Player(
@@ -164,11 +176,11 @@ def process_rows(
             )
             db.add(player)
             db.flush()
-            if context_team_id is not None:
+            if resolved_team_id is not None:
                 db.add(
                     PlayerTeam(
                         player_id=player.id,
-                        team_id=context_team_id,
+                        team_id=resolved_team_id,
                         season_id=context_season_id,
                         priority=1,
                         role="player",
