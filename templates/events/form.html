@@ -45,12 +45,17 @@
       </select>
     </label>
     <label>Team
-      <select name="team_id">
-        <option value="">— None —</option>
-        {% for t in teams %}
-          <option value="{{ t.id }}" {% if event and event.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
-        {% endfor %}
-      </select>
+      {% if not user.is_admin and event %}
+        <input type="hidden" name="team_id" value="{{ event.team_id }}">
+        <p>{{ event.team.name if event.team else '—' }}</p>
+      {% else %}
+        <select name="team_id">
+          <option value="">— None —</option>
+          {% for t in teams %}
+            <option value="{{ t.id }}" {% if event and event.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
     </label>
   </div>
 

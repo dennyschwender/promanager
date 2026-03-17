@@ -122,3 +122,89 @@ def test_public_schedule_has_no_player_names(client, db):
     resp = client.get("/schedule")
     assert "Secret" not in resp.text
     assert "Player" not in resp.text
+
+
+def _setup_coach_with_team(db):
+    """Helper: creates a coach user, a team, a season, and UserTeam assignment. Returns (coach, team, season)."""
+    from datetime import date
+    from models.season import Season
+    from models.team import Team
+    from models.user import User
+    from models.user_team import UserTeam
+    from services.auth_service import hash_password
+
+    season = Season(name="S2025", start_date=date(2025, 1, 1), end_date=date(2025, 12, 31))
+    team = Team(name="Coach Team")
+    db.add_all([season, team])
+    db.flush()
+
+    coach = User(username="coach_ev", email="coach_ev@test.com",
+                 hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach)
+    db.flush()
+
+    ut = UserTeam(user_id=coach.id, team_id=team.id, season_id=None)
+    db.add(ut)
+    db.commit()
+    return coach, team, season
+
+
+def _coach_client(app, db_override, coach_user):
+    """Build a TestClient logged in as the given coach user."""
+    from fastapi.testclient import TestClient
+    from app.database import get_db
+    from app.csrf import require_csrf, require_csrf_header
+    from services.auth_service import create_session_cookie
+
+    async def _no_csrf():
+        pass
+
+    app.dependency_overrides[get_db] = lambda: (yield db_override)
+    app.dependency_overrides[require_csrf] = _no_csrf
+    app.dependency_overrides[require_csrf_header] = _no_csrf
+
+    cookie_val = create_session_cookie(coach_user.id)
+    c = TestClient(app, raise_server_exceptions=False, follow_redirects=False)
+    c.cookies.set("session_user_id", cookie_val)
+    return c
+
+
+def test_coach_can_create_event_on_assigned_team(db):
+    from datetime import date
+    from app.main import app
+
+    coach, team, season = _setup_coach_with_team(db)
+    c = _coach_client(app, db, coach)
+    resp = c.post("/events/new", data={
+        "title": "Training 1",
+        "event_type": "training",
+        "event_date": "2025-06-01",
+        "team_id": str(team.id),
+        "season_id": str(season.id),
+        "csrf_token": "test",
+    })
+    app.dependency_overrides.clear()
+    assert resp.status_code == 302
+
+
+def test_coach_cannot_create_event_on_unassigned_team(db):
+    from datetime import date
+    from models.team import Team
+    from app.main import app
+
+    coach, _, season = _setup_coach_with_team(db)
+    other_team = Team(name="Other Team")
+    db.add(other_team)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.post("/events/new", data={
+        "title": "Should Fail",
+        "event_type": "training",
+        "event_date": "2025-06-01",
+        "team_id": str(other_team.id),
+        "season_id": str(season.id),
+        "csrf_token": "test",
+    })
+    app.dependency_overrides.clear()
+    assert resp.status_code == 403

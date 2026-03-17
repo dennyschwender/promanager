@@ -64,7 +64,7 @@
   {% if event.presence_type != "no_registration" %}
     <a href="/attendance/{{ event.id }}" class="btn btn-primary">{{ t('events.attendance') }}</a>
   {% endif %}
-  {% if user.is_admin %}
+  {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
     <a href="/events/{{ event.id }}/edit" class="btn btn-outline">{{ t('events.edit') }}</a>
     <a href="/events/{{ event.id }}/notify" class="btn btn-sm btn-outline">{{ t('events.notify_players') }}</a>
     <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">

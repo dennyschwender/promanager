@@ -18,7 +18,7 @@ from models.event import Event
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import require_admin, require_login
+from routes._auth_helpers import check_team_access, get_coach_teams, require_admin, require_coach_or_admin, require_login
 from services.attendance_service import (
     ensure_attendance_records,
     get_event_attendance_summary,
@@ -84,6 +84,7 @@ async def events_list(
             "teams": teams,
             "selected_season_id": season_id,
             "selected_team_id": team_id,
+            "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
         },
     )
 
@@ -96,11 +97,15 @@ async def events_list(
 @router.get("/new")
 async def event_new_get(
     request: Request,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
-    teams = db.query(Team).order_by(Team.name).all()
+    if user.is_admin:
+        teams = db.query(Team).order_by(Team.name).all()
+    else:
+        managed_ids = get_coach_teams(user, db)
+        teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
     return render(
         request,
         "events/form.html",
@@ -132,12 +137,20 @@ async def event_new_post(
     is_recurring: str = Form(""),
     recurrence_rule: str = Form(""),
     recurrence_end_date: str = Form(""),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
-    teams = db.query(Team).order_by(Team.name).all()
+    if user.is_admin:
+        teams = db.query(Team).order_by(Team.name).all()
+    else:
+        managed_ids = get_coach_teams(user, db)
+        teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
+
+    parsed_team_id = int(team_id) if team_id.strip() else None
+    if not user.is_admin and parsed_team_id is not None:
+        check_team_access(user, parsed_team_id, db)
 
     if not title.strip():
         return render(
@@ -258,7 +271,7 @@ async def event_new_post(
         presence_type=presence_type,
         description=description.strip() or None,
         season_id=int(season_id) if season_id.strip() else None,
-        team_id=int(team_id) if team_id.strip() else None,
+        team_id=parsed_team_id,
         recurrence_group_id=group_id,
         recurrence_rule=rule,
     )
@@ -295,12 +308,13 @@ async def event_new_post(
 async def notify_get(
     event_id: int,
     request: Request,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
+    check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     counts_q = (
         db.query(Attendance.status, func.count(Attendance.id))
@@ -327,13 +341,14 @@ async def notify_post(
     event_id: int,
     request: Request,
     background_tasks: BackgroundTasks,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
+    check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     form = await request.form()
     title = (form.get("title") or "").strip()
@@ -390,6 +405,7 @@ async def event_detail(
             "user": user,
             "event": event,
             "summary": summary,
+            "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
         },
     )
 
@@ -403,15 +419,21 @@ async def event_detail(
 async def event_edit_get(
     event_id: int,
     request: Request,
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
+    check_team_access(user, event.team_id, db, season_id=event.season_id)
+
     seasons = db.query(Season).order_by(Season.name).all()
-    teams = db.query(Team).order_by(Team.name).all()
+    if user.is_admin:
+        teams = db.query(Team).order_by(Team.name).all()
+    else:
+        managed_ids = get_coach_teams(user, db)
+        teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
     return render(
         request,
         "events/form.html",
@@ -441,7 +463,7 @@ async def event_edit_post(
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
-    user: User = Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
@@ -449,8 +471,17 @@ async def event_edit_post(
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
+    check_team_access(user, event.team_id, db, season_id=event.season_id)
+
+    if not user.is_admin:
+        team_id = str(event.team_id) if event.team_id is not None else ""
+
     seasons = db.query(Season).order_by(Season.name).all()
-    teams = db.query(Team).order_by(Team.name).all()
+    if user.is_admin:
+        teams = db.query(Team).order_by(Team.name).all()
+    else:
+        managed_ids = get_coach_teams(user, db)
+        teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
 
     if not title.strip():
         return render(
@@ -544,12 +575,13 @@ async def event_edit_post(
 async def event_delete(
     event_id: int,
     request: Request,
-    _user: User = Depends(require_admin),
+    _user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     event = db.get(Event, event_id)
     if event:
+        check_team_access(_user, event.team_id, db, season_id=event.season_id)
         db.delete(event)
         db.commit()
     return RedirectResponse("/events", status_code=302)
@@ -564,13 +596,14 @@ async def event_delete(
 async def send_reminders(
     event_id: int,
     request: Request,
-    _user: User = Depends(require_admin),
+    _user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
+    check_team_access(_user, event.team_id, db, season_id=event.season_id)
 
     # Find all attendances with status 'unknown' that have a player email
     attendances = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.status == "unknown").all()

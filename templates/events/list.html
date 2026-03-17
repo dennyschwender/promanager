@@ -6,7 +6,7 @@
 {% block content %}
 <div class="page-header">
   <h2>{{ t('events.title') }}</h2>
-  {% if user.is_admin %}<a href="/events/new" class="btn btn-primary">{{ t('events.new') }}</a>{% endif %}
+  {% if user.is_admin or user.is_coach %}<a href="/events/new" class="btn btn-primary">{{ t('events.new') }}</a>{% endif %}
 </div>
 
 <form method="get" action="/events" class="filter-row">
@@ -46,7 +46,7 @@
       <td>
         <div class="action-group">
           <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a>
-          {% if user.is_admin %}
+          {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
             <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">{{ t('events.edit') }}</a>
           {% endif %}
         </div>
