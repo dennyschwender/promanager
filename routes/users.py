@@ -156,7 +156,6 @@ async def bulk_create_post(
         db.add(new_user)
         db.flush()  # get new_user.id
         player.user_id = new_user.id
-        db.commit()
 
         # Send welcome email
         sent = email_service.send_email(
@@ -170,6 +169,8 @@ async def bulk_create_post(
         else:
             email_failed.append(player.full_name)
             created += 1  # account created even if email failed
+
+    db.commit()
 
     teams = db.query(Team).order_by(Team.name).all()
     seasons = db.query(Season).order_by(Season.name).all()

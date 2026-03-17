@@ -234,7 +234,7 @@ def test_bulk_create_post_creates_users(admin_client, db):
             follow_redirects=False,
         )
     assert resp.status_code == 200  # re-render with results
-    assert b"1" in resp.content  # created count
+    assert b"account(s) created" in resp.content  # verify results rendered
 
     db.expire_all()
     p_fresh = db.get(Player, p.id)
@@ -253,14 +253,15 @@ def test_bulk_create_post_skips_already_linked(admin_client, db):
     db.add(p)
     db.commit()
 
+    count_before = db.query(User).count()
     with patch("services.email_service.send_email", return_value=True):
         resp = admin_client.post(
             "/auth/users/bulk-create",
             data={"player_ids": str(p.id), "role": "member", "csrf_token": "test"},
         )
     assert resp.status_code == 200
-    # No new user created — count stays same
-    assert db.query(User).count() == 2  # admin + existing_user
+    # No new user created — count unchanged
+    assert db.query(User).count() == count_before
 
 
 def test_bulk_create_post_skips_existing_email(admin_client, db):
