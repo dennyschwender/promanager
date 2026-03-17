@@ -11,7 +11,9 @@
     "sign_out": "Abmelden",
     "login": "Anmelden",
     "register_user": "Benutzer registrieren",
-    "language": "Sprache"
+    "language": "Sprache",
+    "dark_mode": "Dunkelmodus",
+    "light_mode": "Hellmodus"
   },
   "auth": {
     "login_title": "Anmelden",
