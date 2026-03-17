@@ -19,8 +19,8 @@
   <h3>{{ t('users.results_title') }}</h3>
   <p>✅ {{ t('users.created_count').replace('{count}', results.created|string) }}</p>
   <p>⏭ {{ t('users.skipped_count').replace('{count}', results.skipped|string) }}</p>
+  <p>⚠️ {{ t('users.email_failed_count').replace('{count}', results.email_failed|length|string) }}</p>
   {% if results.email_failed %}
-    <p>⚠️ {{ t('users.email_failed_count').replace('{count}', results.email_failed|length|string) }}</p>
     <ul>{% for name in results.email_failed %}<li>{{ name }}</li>{% endfor %}</ul>
   {% endif %}
 </div>
