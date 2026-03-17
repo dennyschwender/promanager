@@ -135,6 +135,7 @@ def create_app() -> FastAPI:
         ("routes.events", "/events", "events"),
         ("routes.attendance", "/attendance", "attendance"),
         ("routes.reports", "/reports", "reports"),
+        ("routes.users", "/auth/users", "users"),
     ]
     for module_path, prefix, tag in _routers:
         try:
