@@ -397,7 +397,7 @@ async def team_edit_post(
             # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
             # inside generate_events_for_schedule. This is an accepted limitation.
             return _render(error="An error occurred saving the schedules. Please try again.")
-        return RedirectResponse(f"/teams/{team_id}?saved=1", status_code=302)
+        return RedirectResponse(f"/teams/{int(team_id)}?saved=1", status_code=302)
 
     # ── FIRST POST ───────────────────────────────────────────────────────────
     try:
@@ -510,7 +510,7 @@ async def team_edit_post(
         # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
         # inside generate_events_for_schedule. This is an accepted limitation.
         return _render(error="An error occurred saving the schedules. Please try again.")
-    return RedirectResponse(f"/teams/{team_id}?saved=1", status_code=302)
+    return RedirectResponse(f"/teams/{int(team_id)}?saved=1", status_code=302)
 
 
 # ---------------------------------------------------------------------------
