@@ -216,5 +216,29 @@
   "schedule": {
     "title": "Schedule",
     "no_events": "No upcoming events"
+  },
+  "users": {
+    "title": "Users",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "linked_player": "Linked Player",
+    "created_at": "Created",
+    "actions": "Actions",
+    "create_from_players": "Create from players",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "delete": "Delete",
+    "cannot_edit_self": "Cannot edit your own account",
+    "bulk_create_title": "Create Accounts from Players",
+    "no_email_note": "{count} player(s) not shown — no email address on file.",
+    "role_label": "Assign role",
+    "select_all": "Select all",
+    "submit_bulk": "Create accounts & send emails",
+    "results_title": "Results",
+    "created_count": "{count} account(s) created",
+    "skipped_count": "{count} skipped (already linked or email already in use)",
+    "email_failed_count": "{count} email delivery failure(s)",
+    "back_to_users": "Back to users"
   }
 }

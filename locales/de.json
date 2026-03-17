@@ -216,5 +216,29 @@
   "schedule": {
     "title": "Spielplan",
     "no_events": "Keine bevorstehenden Ereignisse"
+  },
+  "users": {
+    "title": "Benutzer",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "role": "Rolle",
+    "linked_player": "Verknüpfter Spieler",
+    "created_at": "Erstellt",
+    "actions": "Aktionen",
+    "create_from_players": "Aus Spielern erstellen",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "delete": "Löschen",
+    "cannot_edit_self": "Eigenes Konto kann nicht bearbeitet werden",
+    "bulk_create_title": "Konten aus Spielern erstellen",
+    "no_email_note": "{count} Spieler nicht angezeigt — keine E-Mail-Adresse.",
+    "role_label": "Rolle zuweisen",
+    "select_all": "Alle auswählen",
+    "submit_bulk": "Konten erstellen und E-Mails senden",
+    "results_title": "Ergebnisse",
+    "created_count": "{count} Konto/Konten erstellt",
+    "skipped_count": "{count} übersprungen (bereits verknüpft oder E-Mail in Verwendung)",
+    "email_failed_count": "{count} E-Mail-Zustellungsfehler",
+    "back_to_users": "Zurück zu Benutzern"
   }
 }

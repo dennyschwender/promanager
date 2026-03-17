@@ -216,5 +216,29 @@
   "schedule": {
     "title": "Calendrier",
     "no_events": "Aucun événement à venir"
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "role": "Rôle",
+    "linked_player": "Joueur lié",
+    "created_at": "Créé le",
+    "actions": "Actions",
+    "create_from_players": "Créer depuis les joueurs",
+    "deactivate": "Désactiver",
+    "reactivate": "Réactiver",
+    "delete": "Supprimer",
+    "cannot_edit_self": "Impossible de modifier votre propre compte",
+    "bulk_create_title": "Créer des comptes depuis les joueurs",
+    "no_email_note": "{count} joueur(s) non affiché(s) — pas d'adresse email.",
+    "role_label": "Attribuer un rôle",
+    "select_all": "Tout sélectionner",
+    "submit_bulk": "Créer les comptes et envoyer les emails",
+    "results_title": "Résultats",
+    "created_count": "{count} compte(s) créé(s)",
+    "skipped_count": "{count} ignoré(s) (déjà lié ou email déjà utilisé)",
+    "email_failed_count": "{count} échec(s) d'envoi d'email",
+    "back_to_users": "Retour aux utilisateurs"
   }
 }
