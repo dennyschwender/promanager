@@ -34,7 +34,7 @@
   function applyColumnVisibility(visibleCols) {
     ALL_COLS.forEach(function (col) {
       var show = visibleCols.indexOf(col) !== -1;
-      document.querySelectorAll('[data-col="' + col + '"]').forEach(function (el) {
+      document.querySelectorAll('#players-table [data-col="' + col + '"]').forEach(function (el) {
         el.style.display = show ? '' : 'none';
       });
     });
