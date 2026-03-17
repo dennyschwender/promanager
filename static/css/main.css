@@ -152,7 +152,7 @@ button.btn-sm {
   gap: 0.5rem;
   margin-top: 0.75rem;
   padding-top: 0.6rem;
-  border-top: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border-top: 1px solid var(--muted-border-color, #e0e0e0);
   align-items: center;
   flex-wrap: wrap;
 }
@@ -165,8 +165,8 @@ button.btn-sm {
   margin-bottom: 1rem;
 }
 .stat-card {
-  background: var(--pico-card-background-color, #fff);
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   padding: 0.6rem 0.75rem;
   text-align: center;
@@ -247,12 +247,12 @@ nav a.nav-active {
   justify-content: center;
   gap: 0.35rem;
   padding: 0.45rem 0.5rem;
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 500;
-  background: var(--pico-card-background-color, #fff);
+  background: var(--card-background-color, #fff);
   box-shadow: var(--tp-shadow);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
@@ -263,11 +263,11 @@ nav a.nav-active {
 
 /* ── Attendance mark page cards ──────────────────────────── */
 .attendance-card {
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   padding: 0.65rem 0.85rem;
   margin-bottom: 0.5rem;
-  background: var(--pico-card-background-color, #fff);
+  background: var(--card-background-color, #fff);
   box-shadow: var(--tp-shadow);
 }
 .attendance-card-header {
@@ -286,7 +286,7 @@ nav a.nav-active {
   align-items: center;
   gap: 0.25rem;
   padding: 0.3rem 0.75rem;
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: 999px;
   cursor: pointer;
   font-size: 0.88rem;
@@ -349,7 +349,7 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   margin-bottom: 1.25rem;
 }
 .attendance-summary > div {
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   padding: 0.75rem;
 }
@@ -415,9 +415,9 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
 .recurrence-options {
   margin-top: 0.5rem;
   padding: 1rem;
-  background: var(--pico-card-sectionning-background-color);
+  background: var(--card-sectionning-background-color);
   border-radius: 6px;
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid var(--muted-border-color);
 }
 .recurrence-hint {
   margin: 0.6rem 0 0;
@@ -456,8 +456,8 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   line-height: 1;
   text-decoration: none;
   border-radius: var(--tp-radius);
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
-  background: var(--pico-card-background-color, #fff);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
+  background: var(--card-background-color, #fff);
   color: var(--tp-muted);
   transition: border-color 0.12s, color 0.12s;
   cursor: pointer;
@@ -473,8 +473,8 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   margin: 0;
   padding: 0;
   list-style: none;
-  background: var(--pico-card-background-color, #fff);
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-top: none;
   border-radius: 0 0 var(--tp-radius) var(--tp-radius);
   box-shadow: 0 4px 12px rgba(0,0,0,.12);
@@ -486,7 +486,7 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   cursor: pointer;
   font-size: 0.88rem;
   line-height: 1.3;
-  border-bottom: 1px solid var(--pico-muted-border-color, #f0f0f0);
+  border-bottom: 1px solid var(--muted-border-color, #f0f0f0);
 }
 .location-suggestion-item:last-child { border-bottom: none; }
 .location-suggestion-item:hover,
@@ -525,7 +525,7 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.65rem 0.85rem;
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: var(--tp-radius);
   cursor: pointer;
   transition: border-color 0.12s, background 0.12s;
@@ -546,7 +546,7 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
 footer.site-footer {
   margin-top: 3rem;
   padding: 1.25rem 0;
-  border-top: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  border-top: 1px solid var(--muted-border-color, #e0e0e0);
   font-size: 0.82rem;
   color: var(--tp-muted);
 }
@@ -562,8 +562,8 @@ footer.site-footer a:hover { text-decoration: underline; }
 
 /* ── Player detail sections ──────────────────────────────── */
 .card {
-  background: var(--pico-card-background-color, #fff);
-  border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--muted-border-color, #e0e0e0);
   border-radius: 0.5rem;
   padding: 0.65rem 0.85rem;
 }
@@ -594,8 +594,8 @@ footer.site-footer a:hover { text-decoration: underline; }
   top: 100%;
   z-index: 200;
   min-width: 110px;
-  background: var(--pico-card-background-color, #fff);
-  border: 1px solid var(--pico-muted-border-color, #ddd);
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--muted-border-color);
   border-radius: var(--tp-radius);
   box-shadow: 0 4px 12px rgba(0,0,0,.12);
   padding: 0.25rem 0;
@@ -612,7 +612,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   border: none;
   cursor: pointer;
   text-decoration: none;
-  color: var(--pico-color, inherit);
+  color: var(--color, inherit);
   white-space: nowrap;
   border-radius: 0;
   margin: 0;
@@ -650,10 +650,10 @@ footer.site-footer a:hover { text-decoration: underline; }
 
 /* ── Advanced filter panel ───────────────────────────────── */
 #adv-filter-panel {
-  border: 1px solid var(--pico-muted-border-color, #ddd);
+  border: 1px solid var(--muted-border-color);
   border-radius: var(--tp-radius);
   padding: .6rem .85rem;
-  background: var(--pico-card-background-color, #fff);
+  background: var(--card-background-color, #fff);
   font-size: 0.88rem;
 }
 .adv-filter-header {
@@ -668,7 +668,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   gap: .4rem;
   flex-wrap: wrap;
   padding: .3rem 0;
-  border-top: 1px solid var(--pico-muted-border-color, #f0f0f0);
+  border-top: 1px solid var(--muted-border-color, #f0f0f0);
 }
 
 /* Compact inline edit inputs in players table */
