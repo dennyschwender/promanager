@@ -18,7 +18,12 @@ from models.event import Event
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import check_team_access, get_coach_teams, require_admin, require_coach_or_admin, require_login
+from routes._auth_helpers import (
+    check_team_access,
+    get_coach_teams,
+    require_coach_or_admin,
+    require_login,
+)
 from services.attendance_service import (
     ensure_attendance_records,
     get_event_attendance_summary,
@@ -53,11 +58,13 @@ def _parse_time(val: str):
 @router.get("/")
 async def events_list(
     request: Request,
-    season_id: int | None = None,
-    team_id: int | None = None,
+    season_id: str | None = None,
+    team_id: str | None = None,
     user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
+    season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]
+    team_id = int(team_id) if team_id and team_id.strip() else None  # type: ignore[assignment]
     today = datetime.today().date()
 
     q = db.query(Event)

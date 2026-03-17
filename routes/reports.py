@@ -64,8 +64,8 @@ async def report_season(
     all_seasons = db.query(Season).order_by(Season.name).all()
 
     if user.is_coach and not user.is_admin:
-        from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
         from models.player_team import PlayerTeam as _PT  # noqa: PLC0415
+        from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
         coach_team_ids = get_coach_teams(user, db, season_id=season_id)
         # Build set of player IDs on any of the coach's teams this season
         coach_player_ids: set[int] | None = {
@@ -110,8 +110,8 @@ async def report_player(
     # Non-admins access control
     if not user.is_admin:
         if user.is_coach:
-            from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
             from models.player_team import PlayerTeam as _PT  # noqa: PLC0415
+            from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
             managed_ids = get_coach_teams(user, db)
             player_team_ids = {
                 row.team_id for row in db.query(_PT).filter(_PT.player_id == player.id).all()

@@ -14,9 +14,9 @@ from app.templates import render
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
-from models.user_team import UserTeam
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
+from models.user_team import UserTeam
 from routes._auth_helpers import require_admin, require_login
 from services.schedule_service import (
     count_future_events,

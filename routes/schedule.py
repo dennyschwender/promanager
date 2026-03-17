@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -20,10 +20,15 @@ router = APIRouter()
 @router.get("/", include_in_schema=False)
 async def schedule_page(
     request: Request,
-    season_id: int | None = None,
-    team_id: int | None = None,
+    season_id: str | None = Query(default=None),
+    team_id: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
+    season_id_int: int | None = int(season_id) if season_id and season_id.strip() else None
+    team_id_int: int | None = int(team_id) if team_id and team_id.strip() else None
+    season_id = season_id_int  # type: ignore[assignment]
+    team_id = team_id_int  # type: ignore[assignment]
+
     seasons = db.query(Season).order_by(Season.start_date.desc()).all()
     teams = db.query(Team).order_by(Team.name).all()
 
