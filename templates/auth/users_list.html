@@ -1,4 +1,87 @@
 {% extends "base.html" %}
+{% block title %}{{ t('users.title') }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('users.title') }}</span>
+</nav>
+{% endblock %}
 {% block content %}
-{% for u in users %}<span>{{ u.username }}</span>{% endfor %}
+<div class="page-header">
+  <h2>{{ t('users.title') }}</h2>
+  <a href="/auth/users/bulk-create" class="btn btn-primary">{{ t('users.create_from_players') }}</a>
+</div>
+
+<div class="table-responsive">
+<table>
+  <thead><tr>
+    <th>{{ t('users.username') }}</th>
+    <th>{{ t('users.email') }}</th>
+    <th>{{ t('users.role') }}</th>
+    <th>{{ t('users.linked_player') }}</th>
+    <th>{{ t('users.created_at') }}</th>
+    <th>{{ t('users.actions') }}</th>
+  </tr></thead>
+  <tbody>
+  {% for u in users %}
+  <tr>
+    <td>{{ u.username }}</td>
+    <td>{{ u.email }}</td>
+    <td><span class="badge badge-{{ u.role }}">{{ u.role|capitalize }}</span></td>
+    <td>
+      {% set p = player_by_user.get(u.id) %}
+      {% if p %}<a href="/players/{{ p.id }}">{{ p.full_name }}</a>{% else %}—{% endif %}
+    </td>
+    <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+    <td>
+      {% if u.id == user.id %}
+        <span class="text-muted" style="font-size:.82rem;">{{ t('users.cannot_edit_self') }}</span>
+      {% else %}
+      <div class="action-dropdown">
+        <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+        <div class="action-dropdown-menu">
+          <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit" class="{% if not u.is_active %}reactivate{% endif %}">
+              {% if u.is_active %}{{ t('users.deactivate') }}{% else %}{{ t('users.reactivate') }}{% endif %}
+            </button>
+          </form>
+          <form method="post" action="/auth/users/{{ u.id }}/delete"
+                onsubmit="return confirm('Delete user {{ u.username }}?')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit" class="danger">{{ t('users.delete') }}</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('click', function (e) {
+  var toggle = e.target.closest('.action-dropdown-toggle');
+  if (toggle) {
+    e.stopPropagation();
+    var menu = toggle.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
+    document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
+    if (!isOpen) {
+      var rect = toggle.getBoundingClientRect();
+      menu.classList.add('open');
+      if (window.innerHeight - rect.bottom < 120) menu.classList.add('open-up');
+      var wrapper = toggle.closest('.table-responsive');
+      if (wrapper) wrapper.classList.add('dropdown-open');
+    }
+    return;
+  }
+  document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
+  document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
+});
+</script>
 {% endblock %}

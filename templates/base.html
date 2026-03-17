@@ -55,6 +55,7 @@
         <ul role="listbox" style="right:0;left:auto;">
           {% if user.is_admin %}
             <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
+            <li><a href="/auth/users">{{ t('users.title') }}</a></li>
             <li><hr style="margin:.25rem 0;"></li>
           {% endif %}
           <li><a href="/profile">{{ t('nav.profile') }}</a></li>
