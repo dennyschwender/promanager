@@ -12,6 +12,7 @@ from .season import Season
 from .team import Team
 from .team_recurring_schedule import TeamRecurringSchedule
 from .user import User
+from .user_team import UserTeam as UserTeam  # noqa: F401
 from .web_push_subscription import WebPushSubscription
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "Notification",
     "NotificationPreference",
     "WebPushSubscription",
+    "UserTeam",
 ]

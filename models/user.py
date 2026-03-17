@@ -36,11 +36,16 @@ class User(Base):
 
     # ── Relationships ──────────────────────────────────────────────────────
     players: Mapped[list[Player]] = relationship("Player", back_populates="user", lazy="select")
+    managed_teams: Mapped[list["UserTeam"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
 
     # ── Helpers ────────────────────────────────────────────────────────────
     @property
     def is_admin(self) -> bool:
         return self.role == "admin"
+
+    @property
+    def is_coach(self) -> bool:
+        return self.role == "coach"
 
     def __repr__(self) -> str:
         return f"<User id={self.id} username={self.username!r} role={self.role!r}>"
