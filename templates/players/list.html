@@ -140,31 +140,31 @@
         <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}</span>
         <input type="checkbox" class="cell-input" style="display:none;" {% if p.is_active %}checked{% endif %}>
       </td>
-      <td data-col="Shirt number" data-field="shirt_number" data-value="{{ pt.shirt_number if pt and pt.shirt_number is not none else '' }}">
+      <td data-col="Shirt number" class="pt-field" data-field="shirt_number" data-value="{{ pt.shirt_number if pt and pt.shirt_number is not none else '' }}">
         <span class="cell-view">{{ pt.shirt_number if pt and pt.shirt_number is not none else '—' }}</span>
         <input type="number" class="cell-input pt-field" style="display:none;" min="0"
                value="{{ pt.shirt_number if pt and pt.shirt_number is not none else '' }}"
                {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
       </td>
-      <td data-col="Position" data-field="position" data-value="{{ pt.position or '' if pt else '' }}">
+      <td data-col="Position" class="pt-field" data-field="position" data-value="{{ pt.position or '' if pt else '' }}">
         <span class="cell-view">{{ pt.position or '—' if pt else '—' }}</span>
         <input type="text" class="cell-input pt-field" style="display:none;" maxlength="32"
                value="{{ pt.position or '' if pt else '' }}"
                {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
       </td>
-      <td data-col="Injured until" data-field="injured_until" data-value="{{ pt.injured_until or '' if pt else '' }}">
+      <td data-col="Injured until" class="pt-field" data-field="injured_until" data-value="{{ pt.injured_until or '' if pt else '' }}">
         <span class="cell-view">{{ pt.injured_until or '—' if pt else '—' }}</span>
         <input type="date" class="cell-input pt-field" style="display:none;"
                value="{{ pt.injured_until or '' if pt else '' }}"
                {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
       </td>
-      <td data-col="Absent by default" data-field="absent_by_default" data-value="{{ 'true' if pt and pt.absent_by_default else 'false' }}">
+      <td data-col="Absent by default" class="pt-field" data-field="absent_by_default" data-value="{{ 'true' if pt and pt.absent_by_default else 'false' }}">
         <span class="cell-view">{{ 'Yes' if pt and pt.absent_by_default else '—' }}</span>
         <input type="checkbox" class="cell-input pt-field" style="display:none;"
                {% if pt and pt.absent_by_default %}checked{% endif %}
                {% if not selected_season_id or not selected_team_id %}disabled title="Select a season and team to edit this field"{% endif %}>
       </td>
-      <td data-col="Priority" data-field="priority" data-value="{{ pt.priority if pt else '' }}">
+      <td data-col="Priority" class="pt-field" data-field="priority" data-value="{{ pt.priority if pt else '' }}">
         <span class="cell-view">{{ pt.priority if pt else '—' }}</span>
         <input type="number" class="cell-input pt-field" style="display:none;" min="1"
                value="{{ pt.priority if pt else '' }}"
