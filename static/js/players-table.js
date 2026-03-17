@@ -227,7 +227,10 @@
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
       body: JSON.stringify(body),
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r.ok) return r.json().then(function (e) { throw new Error(e.detail || r.statusText); });
+      return r.json();
+    })
     .then(function (data) {
       data.saved.forEach(function (pid) {
         var row = document.querySelector('#players-table tr[data-player-id="' + pid + '"]');
@@ -268,8 +271,8 @@
       if (saveBtn) saveBtn.disabled = Object.keys(pendingChanges).length === 0;
       if (data.errors.length === 0) exitEditMode(false);
     })
-    .catch(function () {
-      showBanner('error', 'Save failed — network error. Please try again.', null);
+    .catch(function (err) {
+      showBanner('error', (err && err.message) || 'Save failed — network error. Please try again.', null);
     });
   }
 
@@ -398,7 +401,10 @@
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
       body: JSON.stringify({ players: ids.map(function (id) { return { id: id, is_active: isActive }; }) }),
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r.ok) return r.json().then(function (e) { throw new Error(e.detail || r.statusText); });
+      return r.json();
+    })
     .then(function (data) {
       var msg = data.saved.length + ' player(s) updated.';
       showBanner(
@@ -408,7 +414,7 @@
       );
       if (data.saved.length) setTimeout(function () { location.reload(); }, 800);
     })
-    .catch(function () { showBanner('error', 'Network error. Please try again.', null); });
+    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
   }
 
   function bulkAssign(teamId) {
@@ -422,7 +428,10 @@
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
       body: JSON.stringify({ player_ids: ids, team_id: teamId, season_id: cfg.seasonId }),
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r.ok) return r.json().then(function (e) { throw new Error(e.detail || r.statusText); });
+      return r.json();
+    })
     .then(function (data) {
       var msg = data.assigned + ' assigned, ' + data.skipped + ' skipped.';
       showBanner(
@@ -432,7 +441,7 @@
       );
       if (data.assigned > 0) setTimeout(function () { location.reload(); }, 800);
     })
-    .catch(function () { showBanner('error', 'Network error. Please try again.', null); });
+    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
   }
 
   // ── Boot ───────────────────────────────────────────────────────────────────
