@@ -10,6 +10,7 @@
 </div>
 
 {% if teams %}
+<div class="table-responsive">
 <table>
   <thead>
     <tr><th>{{ t('teams.name') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
@@ -44,6 +45,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>{{ t('teams.no_teams') }} {% if user.is_admin %}<a href="/teams/new">Create one</a>.{% endif %}</p>
 {% endif %}

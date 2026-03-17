@@ -10,6 +10,7 @@
 </div>
 
 {% if seasons %}
+<div class="table-responsive">
 <table>
   <thead>
     <tr><th>{{ t('seasons.name') }}</th><th>Start</th><th>End</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
@@ -44,6 +45,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>{{ t('seasons.no_seasons') }}</p>
 {% endif %}

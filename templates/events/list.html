@@ -30,6 +30,7 @@
 
 <h3>{{ t('events.upcoming') }}</h3>
 {% if upcoming %}
+<div class="table-responsive">
 <table>
   <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th>{{ t('events.actions') }}</th></tr></thead>
   <tbody>
@@ -54,12 +55,14 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>{{ t('events.no_upcoming') }}</p>
 {% endif %}
 
 <h3>{{ t('events.past') }}</h3>
 {% if past %}
+<div class="table-responsive">
 <table>
   <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th></th></tr></thead>
   <tbody>
@@ -76,6 +79,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>{{ t('events.no_past') }}</p>
 {% endif %}
