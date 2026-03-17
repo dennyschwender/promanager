@@ -60,15 +60,18 @@
       <td>{{ e.location or '—' }}</td>
       {% if user %}
       <td>
-        <div class="action-group">
-          {% if section == 'upcoming' %}
-            <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a>
-          {% else %}
-            <a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a>
-          {% endif %}
-          {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
-            <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">{{ t('events.edit') }}</a>
-          {% endif %}
+        <div class="action-dropdown">
+          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+          <div class="action-dropdown-menu">
+            {% if section == 'upcoming' %}
+              <a href="/attendance/{{ e.id }}">{{ t('events.attendance') }}</a>
+            {% else %}
+              <a href="/events/{{ e.id }}">{{ t('events.view') }}</a>
+            {% endif %}
+            {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
+              <a href="/events/{{ e.id }}/edit">{{ t('events.edit') }}</a>
+            {% endif %}
+          </div>
         </div>
       </td>
       {% endif %}
