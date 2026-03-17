@@ -79,10 +79,11 @@ button.btn {
 .btn-primary:hover { filter: brightness(1.12); color: #fff; }
 .btn-outline {
   background: transparent;
-  color: var(--pico-color, inherit);
+  color: var(--color, inherit);
   border-color: currentColor;
 }
-.btn-outline:hover { background: var(--pico-secondary-background); }
+.btn-outline:hover { background: rgba(0,0,0,.06); }
+[data-theme="dark"] .btn-outline:hover { background: rgba(255,255,255,.08); }
 .btn-danger {
   background: var(--tp-danger);
   color: #fff;
@@ -618,7 +619,9 @@ footer.site-footer a:hover { text-decoration: underline; }
   line-height: 1.4;
 }
 .action-dropdown-menu a:hover,
-.action-dropdown-menu button:hover { background: var(--pico-secondary-background); }
+.action-dropdown-menu button:hover { background: rgba(0,0,0,.05); }
+[data-theme="dark"] .action-dropdown-menu a:hover,
+[data-theme="dark"] .action-dropdown-menu button:hover { background: rgba(255,255,255,.07); }
 .action-dropdown-menu button.danger { color: var(--tp-danger); }
 .action-dropdown-menu form { margin: 0; padding: 0; }
 
