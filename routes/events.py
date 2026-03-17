@@ -21,6 +21,7 @@ from models.user import User
 from routes._auth_helpers import (
     check_team_access,
     get_coach_teams,
+    optional_user,
     require_coach_or_admin,
     require_login,
 )
@@ -60,7 +61,7 @@ async def events_list(
     request: Request,
     season_id: str | None = None,
     team_id: str | None = None,
-    user: User = Depends(require_login),
+    user: "User | None" = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
     season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]
@@ -91,7 +92,7 @@ async def events_list(
             "teams": teams,
             "selected_season_id": season_id,
             "selected_team_id": team_id,
-            "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
+            "coach_team_ids": get_coach_teams(user, db) if user and user.is_coach else set(),
         },
     )
 

@@ -24,21 +24,22 @@
   <ul>
     <li><a href="/dashboard" style="font-weight:700;text-decoration:none;">⬡ ProManager</a></li>
   </ul>
-  {% if user %}
   {% set path = request.url.path %}
   <ul id="nav-links">
-    <li><a href="/schedule" class="{% if path.startswith('/schedule') %}nav-active{% endif %}">{{ t('nav.schedule') }}</a></li>
+    <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
+    {% if user %}
     <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
-    <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
     <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
     <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
     {% if user.is_admin %}
-      <li><a href="/seasons"  class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
+      <li><a href="/seasons" class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
     {% endif %}
     {% if user.is_admin or user.is_coach %}
-      <li><a href="/reports"  class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
+      <li><a href="/reports" class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
+    {% endif %}
     {% endif %}
   </ul>
+  {% if user %}
   <ul id="user-actions">
     <li>
       <a href="/notifications" class="notif-bell" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}">
@@ -86,7 +87,6 @@
   </ul>
   {% else %}
   <ul id="user-actions">
-    <li><a href="/schedule">{{ t('nav.schedule') }}</a></li>
     <li><a href="/auth/login" role="button" class="outline">{{ t('nav.login') }}</a></li>
   </ul>
   {% endif %}

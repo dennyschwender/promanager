@@ -15,10 +15,9 @@ def test_events_list(admin_client):
     assert resp.status_code == 200
 
 
-def test_events_requires_login(client):
+def test_events_public(client):
     resp = client.get("/events", follow_redirects=False)
-    assert resp.status_code == 302
-    assert "/auth/login" in resp.headers["location"]
+    assert resp.status_code == 200
 
 
 # ---------------------------------------------------------------------------

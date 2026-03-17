@@ -27,6 +27,11 @@ class NotAuthorized(Exception):
 # ---------------------------------------------------------------------------
 
 
+def optional_user(request: Request) -> "User | None":
+    """Return the current user or None (no redirect). For public routes that adapt to auth state."""
+    return request.state.user
+
+
 def require_login(request: Request) -> User:
     """Return the current user or raise NotAuthenticated.
 

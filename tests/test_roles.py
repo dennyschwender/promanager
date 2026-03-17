@@ -66,9 +66,9 @@ def test_check_team_access_coach_passes_assigned(db):
     check_team_access(coach, team.id, db)  # should not raise
 
 
-def test_public_schedule_no_auth(client):
-    """Public /schedule returns 200 without authentication."""
-    resp = client.get("/schedule")
+def test_public_events_no_auth(client):
+    """Public /events returns 200 without authentication."""
+    resp = client.get("/events")
     assert resp.status_code == 200
 
 
@@ -116,15 +116,15 @@ def test_admin_can_remove_coach(admin_client, db):
     assert db.get(UserTeam, ut.id) is None
 
 
-def test_public_schedule_has_no_player_names(client, db):
-    """Schedule page does not expose player names."""
+def test_public_events_has_no_player_names(client, db):
+    """Public events page does not expose player names."""
     from models.player import Player
-    p = Player(first_name="Secret", last_name="Player", is_active=True)
+    p = Player(first_name="Secret", last_name="PlayerSurname", is_active=True)
     db.add(p)
     db.commit()
-    resp = client.get("/schedule")
+    resp = client.get("/events")
     assert "Secret" not in resp.text
-    assert "Player" not in resp.text
+    assert "PlayerSurname" not in resp.text
 
 
 def _setup_coach_with_team(db):
