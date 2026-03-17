@@ -73,12 +73,37 @@ def test_cannot_deactivate_self(admin_client, db, admin_user):
     assert resp.status_code in (400, 403)
 
 
-def test_cannot_deactivate_last_admin(admin_client, db, admin_user):
-    resp = admin_client.post(
-        f"/auth/users/{admin_user.id}/toggle-active",
-        data={"csrf_token": "test"},
-        follow_redirects=False,
-    )
+def test_cannot_deactivate_last_admin(db):
+    """Cannot deactivate a user who is the only remaining active admin."""
+    from app.main import app
+    from app.csrf import require_csrf, require_csrf_header
+    from app.database import get_db
+    from routes._auth_helpers import require_admin
+    from services.auth_service import create_session_cookie
+    from fastapi.testclient import TestClient
+
+    # admin_b is the only active admin; admin_a is a member acting as the requester
+    admin_a = _make_user(db, "admina_last", "admina@test.com", role="member")
+    admin_b = _make_user(db, "adminb_last", "adminb@test.com", role="admin")
+    db.commit()
+
+    async def _no_csrf(): pass
+    # Bypass role guard so member admin_a can reach the route
+    from starlette.requests import Request as _Request
+    def _fake_require_admin(request: _Request): return request.state.user  # noqa: E731
+
+    app.dependency_overrides[get_db] = lambda: (yield db)
+    app.dependency_overrides[require_csrf] = _no_csrf
+    app.dependency_overrides[require_csrf_header] = _no_csrf
+    app.dependency_overrides[require_admin] = _fake_require_admin
+
+    cookie_val = create_session_cookie(admin_a.id)
+    c = TestClient(app, raise_server_exceptions=False, follow_redirects=False)
+    c.cookies.set("session_user_id", cookie_val)
+
+    # admin_a (member) tries to deactivate admin_b (the only active admin) → last-admin guard fires
+    resp = c.post(f"/auth/users/{admin_b.id}/toggle-active", data={"csrf_token": "test"})
+    app.dependency_overrides.clear()
     assert resp.status_code in (400, 403)
 
 
@@ -121,10 +146,34 @@ def test_cannot_delete_self(admin_client, db, admin_user):
     assert resp.status_code in (400, 403)
 
 
-def test_cannot_delete_last_admin(admin_client, db, admin_user):
-    resp = admin_client.post(
-        f"/auth/users/{admin_user.id}/delete",
-        data={"csrf_token": "test"},
-        follow_redirects=False,
-    )
+def test_cannot_delete_last_admin(db):
+    """Cannot delete a user who is the only remaining active admin."""
+    from app.main import app
+    from app.csrf import require_csrf, require_csrf_header
+    from app.database import get_db
+    from routes._auth_helpers import require_admin
+    from services.auth_service import create_session_cookie
+    from starlette.requests import Request as _Request
+    from fastapi.testclient import TestClient
+
+    # admin_b is the only active admin; admin_a is a member acting as the requester
+    admin_a = _make_user(db, "admina_del", "admina_del@test.com", role="member")
+    admin_b = _make_user(db, "adminb_del", "adminb_del@test.com", role="admin")
+    db.commit()
+
+    async def _no_csrf(): pass
+    def _fake_require_admin(request: _Request): return request.state.user  # noqa: E731
+
+    app.dependency_overrides[get_db] = lambda: (yield db)
+    app.dependency_overrides[require_csrf] = _no_csrf
+    app.dependency_overrides[require_csrf_header] = _no_csrf
+    app.dependency_overrides[require_admin] = _fake_require_admin
+
+    cookie_val = create_session_cookie(admin_a.id)
+    c = TestClient(app, raise_server_exceptions=False, follow_redirects=False)
+    c.cookies.set("session_user_id", cookie_val)
+
+    # admin_a (member) tries to delete admin_b (the only active admin) → last-admin guard fires
+    resp = c.post(f"/auth/users/{admin_b.id}/delete", data={"csrf_token": "test"})
+    app.dependency_overrides.clear()
     assert resp.status_code in (400, 403)
