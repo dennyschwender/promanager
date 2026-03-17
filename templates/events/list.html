@@ -66,17 +66,27 @@
 {% if past %}
 <div class="table-responsive">
 <table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th></th>{% endif %}</tr></thead>
+  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th>{{ t('events.actions') }}</th>{% endif %}</tr></thead>
   <tbody>
   {% for e in past %}
     <tr>
       <td>{{ e.event_date }}</td>
+      <td>{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
       <td><a href="/events/{{ e.id }}">{{ e.title }}</a>
         {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635;</span>{% endif %}
       </td>
       <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
       <td>{{ e.location or '—' }}</td>
-      {% if user %}<td><a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a></td>{% endif %}
+      {% if user %}
+      <td>
+        <div class="action-group">
+          <a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a>
+          {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
+            <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">{{ t('events.edit') }}</a>
+          {% endif %}
+        </div>
+      </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
