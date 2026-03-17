@@ -1,7 +1,9 @@
 """routes/users.py — Admin user management."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+import secrets
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -14,6 +16,8 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import NotAuthorized, require_admin
+from services import email_service
+from services.auth_service import hash_password
 
 router = APIRouter()
 
@@ -102,6 +106,91 @@ async def bulk_create_get(
             "eligible": eligible,
             "no_email_count": no_email_count,
             "results": None,
+        },
+    )
+
+
+@router.post("/bulk-create", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def bulk_create_post(
+    request: Request,
+    db: Session = Depends(get_db),
+    player_ids: list[int] = Form(default=[]),
+    role: str = Form(default="member"),
+):
+    if role not in ("admin", "coach", "member"):
+        role = "member"
+
+    created = 0
+    skipped = 0
+    email_failed: list[str] = []
+
+    for pid in player_ids:
+        player = db.get(Player, pid)
+        if player is None:
+            skipped += 1
+            continue
+        # Skip if already linked
+        if player.user_id is not None:
+            skipped += 1
+            continue
+        # Skip if no email
+        if not player.email:
+            skipped += 1
+            continue
+        # Skip if email already used as username or email on another User
+        existing = db.query(User).filter(
+            (User.username == player.email) | (User.email == player.email)
+        ).first()
+        if existing:
+            skipped += 1
+            continue
+
+        # Create user
+        pw = secrets.token_urlsafe(12)
+        new_user = User(
+            username=player.email,
+            email=player.email,
+            hashed_password=hash_password(pw),
+            role=role,
+        )
+        db.add(new_user)
+        db.flush()  # get new_user.id
+        player.user_id = new_user.id
+        db.commit()
+
+        # Send welcome email
+        sent = email_service.send_email(
+            to=player.email,
+            subject="Your ProManager account",
+            body_html=f"<p>Your account has been created.<br>Username: <strong>{player.email}</strong><br>Password: <strong>{pw}</strong></p>",
+            body_text=f"Your account has been created.\nUsername: {player.email}\nPassword: {pw}",
+        )
+        if sent:
+            created += 1
+        else:
+            email_failed.append(player.full_name)
+            created += 1  # account created even if email failed
+
+    teams = db.query(Team).order_by(Team.name).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+
+    return render(
+        request,
+        "auth/bulk_create_users.html",
+        {
+            "user": request.state.user,
+            "teams": teams,
+            "seasons": seasons,
+            "selected_team_id": None,
+            "selected_season_id": None,
+            "eligible": [],
+            "no_email_count": 0,
+            "already_taken_count": 0,
+            "results": {
+                "created": created,
+                "skipped": skipped,
+                "email_failed": email_failed,
+            },
         },
     )
 

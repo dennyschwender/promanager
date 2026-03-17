@@ -214,3 +214,69 @@ def test_bulk_create_excludes_linked_players(admin_client, db):
     db.commit()
     resp = admin_client.get("/auth/users/bulk-create")
     assert b"henry@test.com" not in resp.content
+
+
+# ---------------------------------------------------------------------------
+# Bulk create — POST
+# ---------------------------------------------------------------------------
+
+def test_bulk_create_post_creates_users(admin_client, db):
+    from models.player import Player
+    from unittest.mock import patch
+    p = Player(first_name="Ivy", last_name="Test", is_active=True, email="ivy@test.com")
+    db.add(p)
+    db.commit()
+
+    with patch("services.email_service.send_email", return_value=True):
+        resp = admin_client.post(
+            "/auth/users/bulk-create",
+            data={"player_ids": str(p.id), "role": "member", "csrf_token": "test"},
+            follow_redirects=False,
+        )
+    assert resp.status_code == 200  # re-render with results
+    assert b"1" in resp.content  # created count
+
+    db.expire_all()
+    p_fresh = db.get(Player, p.id)
+    assert p_fresh.user_id is not None
+    u = db.get(User, p_fresh.user_id)
+    assert u.email == "ivy@test.com"
+    assert u.role == "member"
+
+
+def test_bulk_create_post_skips_already_linked(admin_client, db):
+    from models.player import Player
+    from unittest.mock import patch
+    existing_user = _make_user(db, "jack@test.com", "jack@test.com")
+    p = Player(first_name="Jack", last_name="Test", is_active=True,
+               email="jack@test.com", user_id=existing_user.id)
+    db.add(p)
+    db.commit()
+
+    with patch("services.email_service.send_email", return_value=True):
+        resp = admin_client.post(
+            "/auth/users/bulk-create",
+            data={"player_ids": str(p.id), "role": "member", "csrf_token": "test"},
+        )
+    assert resp.status_code == 200
+    # No new user created — count stays same
+    assert db.query(User).count() == 2  # admin + existing_user
+
+
+def test_bulk_create_post_skips_existing_email(admin_client, db):
+    from models.player import Player
+    from unittest.mock import patch
+    # User with same email already exists but player not linked
+    _make_user(db, "kate@test.com", "kate@test.com")
+    p = Player(first_name="Kate", last_name="Test", is_active=True, email="kate@test.com")
+    db.add(p)
+    db.commit()
+
+    with patch("services.email_service.send_email", return_value=True):
+        resp = admin_client.post(
+            "/auth/users/bulk-create",
+            data={"player_ids": str(p.id), "role": "member", "csrf_token": "test"},
+        )
+    assert resp.status_code == 200
+    db.expire_all()
+    assert db.get(Player, p.id).user_id is None  # not linked
