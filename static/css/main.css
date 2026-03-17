@@ -79,8 +79,11 @@ button.btn {
 .btn-primary:hover { filter: brightness(1.12); color: #fff; }
 .btn-outline {
   background: transparent;
-  color: var(--color, inherit);
+  color: var(--pico-color, var(--contrast, #333));
   border-color: currentColor;
+}
+[data-theme="dark"] .btn-outline {
+  color: var(--pico-color, var(--contrast, #eee));
 }
 .btn-outline:hover { background: rgba(0,0,0,.06); }
 [data-theme="dark"] .btn-outline:hover { background: rgba(255,255,255,.08); }
