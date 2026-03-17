@@ -11,9 +11,9 @@
 <form method="get" action="/schedule"
       style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Season</span>
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('events.season') }}</span>
     <select name="season_id" onchange="this.form.submit()" class="sel-inline">
-      <option value="">All Seasons</option>
+      <option value="">{{ t('events.all_seasons') }}</option>
       {% for s in seasons %}
         <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
           {{ s.name }}{% if s.is_active %} ✓{% endif %}
@@ -22,9 +22,9 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Team</span>
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('events.team') }}</span>
     <select name="team_id" onchange="this.form.submit()" class="sel-inline">
-      <option value="">All Teams</option>
+      <option value="">{{ t('events.all_teams') }}</option>
       {% for tm in teams %}
         <option value="{{ tm.id }}" {% if tm.id == selected_team_id %}selected{% endif %}>{{ tm.name }}</option>
       {% endfor %}
@@ -37,11 +37,11 @@
 <table>
   <thead>
     <tr>
-      <th>Date</th>
-      <th>Time</th>
-      <th>Type</th>
-      <th>Team</th>
-      <th>Location</th>
+      <th>{{ t('events.date') }}</th>
+      <th>{{ t('events.time') }}</th>
+      <th>{{ t('events.type') }}</th>
+      <th>{{ t('events.team') }}</th>
+      <th>{{ t('events.location') }}</th>
     </tr>
   </thead>
   <tbody>
