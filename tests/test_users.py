@@ -1,5 +1,4 @@
 """Tests for /auth/users routes."""
-import pytest
 from models.user import User
 from services.auth_service import hash_password
 
@@ -75,12 +74,13 @@ def test_cannot_deactivate_self(admin_client, db, admin_user):
 
 def test_cannot_deactivate_last_admin(db):
     """Cannot deactivate a user who is the only remaining active admin."""
-    from app.main import app
+    from fastapi.testclient import TestClient
+
     from app.csrf import require_csrf, require_csrf_header
     from app.database import get_db
+    from app.main import app
     from routes._auth_helpers import require_admin
     from services.auth_service import create_session_cookie
-    from fastapi.testclient import TestClient
 
     # admin_b is the only active admin; admin_a is a member acting as the requester
     admin_a = _make_user(db, "admina_last", "admina@test.com", role="member")
@@ -148,13 +148,14 @@ def test_cannot_delete_self(admin_client, db, admin_user):
 
 def test_cannot_delete_last_admin(db):
     """Cannot delete a user who is the only remaining active admin."""
-    from app.main import app
+    from fastapi.testclient import TestClient
+    from starlette.requests import Request as _Request
+
     from app.csrf import require_csrf, require_csrf_header
     from app.database import get_db
+    from app.main import app
     from routes._auth_helpers import require_admin
     from services.auth_service import create_session_cookie
-    from starlette.requests import Request as _Request
-    from fastapi.testclient import TestClient
 
     # admin_b is the only active admin; admin_a is a member acting as the requester
     admin_a = _make_user(db, "admina_del", "admina_del@test.com", role="member")
@@ -221,8 +222,9 @@ def test_bulk_create_excludes_linked_players(admin_client, db):
 # ---------------------------------------------------------------------------
 
 def test_bulk_create_post_creates_users(admin_client, db):
-    from models.player import Player
     from unittest.mock import patch
+
+    from models.player import Player
     p = Player(first_name="Ivy", last_name="Test", is_active=True, email="ivy@test.com")
     db.add(p)
     db.commit()
@@ -245,8 +247,9 @@ def test_bulk_create_post_creates_users(admin_client, db):
 
 
 def test_bulk_create_post_skips_already_linked(admin_client, db):
-    from models.player import Player
     from unittest.mock import patch
+
+    from models.player import Player
     existing_user = _make_user(db, "jack@test.com", "jack@test.com")
     p = Player(first_name="Jack", last_name="Test", is_active=True,
                email="jack@test.com", user_id=existing_user.id)
@@ -265,8 +268,9 @@ def test_bulk_create_post_skips_already_linked(admin_client, db):
 
 
 def test_bulk_create_post_skips_existing_email(admin_client, db):
-    from models.player import Player
     from unittest.mock import patch
+
+    from models.player import Player
     # User with same email already exists but player not linked
     _make_user(db, "kate@test.com", "kate@test.com")
     p = Player(first_name="Kate", last_name="Test", is_active=True, email="kate@test.com")

@@ -1,18 +1,15 @@
-import pytest
+from datetime import date
 
+import pytest
+from sqlalchemy.orm import Session
+
+from models.user import User
 from models.user_team import UserTeam
+from routes._auth_helpers import NotAuthorized, check_team_access, get_coach_teams
 
 
 def test_user_team_importable():
     assert UserTeam.__tablename__ == "user_team"
-
-
-from datetime import date
-
-from sqlalchemy.orm import Session
-
-from models.user import User
-from routes._auth_helpers import NotAuthorized, check_team_access, get_coach_teams
 
 
 def _make_coach(db: Session) -> User:
