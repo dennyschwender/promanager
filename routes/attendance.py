@@ -39,6 +39,14 @@ async def attendance_page(
         attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
         my_players: list[Player] = []
         summary = get_event_attendance_summary(db, event_id)
+        is_admin_view = True
+    elif user.is_coach:
+        from routes._auth_helpers import check_team_access  # noqa: PLC0415
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
+        attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
+        my_players = []
+        summary = get_event_attendance_summary(db, event_id)
+        is_admin_view = True
     else:
         my_players = db.query(Player).filter(Player.user_id == user.id).all()
         player_ids = [p.id for p in my_players]
@@ -51,6 +59,7 @@ async def attendance_page(
             .all()
         )
         summary = None
+        is_admin_view = False
 
     att_map = {att.player_id: att for att in attendances}
 
@@ -64,6 +73,7 @@ async def attendance_page(
             "att_map": att_map,
             "my_players": my_players,
             "summary": summary,
+            "is_admin_view": is_admin_view,
             "flash": request.query_params.get("flash"),
         },
     )
@@ -85,8 +95,16 @@ async def update_attendance(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    # Members may only update their own players
-    if not user.is_admin:
+    # Authorization check
+    if user.is_admin:
+        pass  # full access
+    elif user.is_coach:
+        event = db.get(Event, event_id)
+        if event is None:
+            return RedirectResponse(f"/attendance/{event_id}", status_code=302)
+        from routes._auth_helpers import check_team_access  # noqa: PLC0415
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
+    else:
         player = db.get(Player, player_id)
         if player is None or player.user_id != user.id:
             return RedirectResponse(f"/attendance/{event_id}", status_code=302)

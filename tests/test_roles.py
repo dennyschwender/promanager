@@ -208,3 +208,98 @@ def test_coach_cannot_create_event_on_unassigned_team(db):
     })
     app.dependency_overrides.clear()
     assert resp.status_code == 403
+
+
+def test_coach_can_mark_attendance_on_their_team(db):
+    from datetime import date
+    from models.event import Event
+    from models.player import Player
+    from models.player_team import PlayerTeam
+    from app.main import app
+
+    coach, team, season = _setup_coach_with_team(db)
+
+    player = Player(first_name="Alice", last_name="Smith", is_active=True)
+    db.add(player)
+    db.flush()
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id,
+                               season_id=season.id, priority=1))
+
+    event = Event(title="Match", event_type="match", event_date=date(2025, 6, 1),
+                  team_id=team.id, season_id=season.id)
+    db.add(event)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.post(f"/attendance/{event.id}/{player.id}",
+                  data={"status": "present", "csrf_token": "test"})
+    app.dependency_overrides.clear()
+    assert resp.status_code == 302
+
+
+def test_coach_can_bulk_update_pt_fields(db):
+    from models.player import Player
+    from models.player_team import PlayerTeam
+    from app.main import app
+
+    coach, team, season = _setup_coach_with_team(db)
+    player = Player(first_name="Carol", last_name="White", is_active=True)
+    db.add(player)
+    db.flush()
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id,
+                               season_id=season.id, priority=1))
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.post("/players/bulk-update", json={
+        "players": [{"id": player.id, "shirt_number": 7}],
+        "team_id": team.id,
+        "season_id": season.id,
+    })
+    app.dependency_overrides.clear()
+    assert resp.status_code == 200
+
+
+def test_coach_cannot_create_player(db):
+    from app.main import app
+
+    coach, _, _ = _setup_coach_with_team(db)
+
+    c = _coach_client(app, db, coach)
+    resp = c.post("/players/new", data={
+        "first_name": "New", "last_name": "Player", "csrf_token": "test"
+    })
+    app.dependency_overrides.clear()
+    assert resp.status_code == 403
+
+
+def test_coach_cannot_mark_attendance_on_other_team(db):
+    from datetime import date
+    from models.event import Event
+    from models.player import Player
+    from models.team import Team
+    from models.player_team import PlayerTeam
+    from models.season import Season
+    from app.main import app
+
+    coach, _, _ = _setup_coach_with_team(db)
+
+    other_team = Team(name="Other Team2")
+    db.add(other_team)
+    other_season = Season(name="S2026", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+    db.add(other_season)
+    player = Player(first_name="Bob", last_name="Jones", is_active=True)
+    db.add(player)
+    db.flush()
+    db.add(PlayerTeam(player_id=player.id, team_id=other_team.id,
+                               season_id=other_season.id, priority=1))
+    event = Event(title="Other Match", event_type="match", event_date=date(2026, 6, 1),
+                  team_id=other_team.id, season_id=other_season.id)
+    db.add(event)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.post(f"/attendance/{event.id}/{player.id}",
+                  data={"status": "present", "csrf_token": "test"})
+    app.dependency_overrides.clear()
+    assert resp.status_code == 403

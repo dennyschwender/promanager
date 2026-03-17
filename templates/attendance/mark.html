@@ -19,7 +19,7 @@
   <div class="alert alert-success">{{ flash }}</div>
 {% endif %}
 
-{% if user.is_admin %}
+{% if is_admin_view %}
   {% if attendances %}
   <div class="table-responsive">
   <table>
