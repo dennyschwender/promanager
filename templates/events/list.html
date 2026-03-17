@@ -9,7 +9,7 @@
   {% if user.is_admin or user.is_coach %}<a href="/events/new" class="btn btn-primary">{{ t('events.new') }}</a>{% endif %}
 </div>
 
-<form method="get" action="/events" class="filter-row">
+<form method="get" action="{{ request.url.path }}" class="filter-row">
   <label>{{ t('events.season') }}
     <select name="season_id" onchange="this.form.submit()">
       <option value="">{{ t('events.all_seasons') }}</option>
