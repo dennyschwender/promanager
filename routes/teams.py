@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.templates import render
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
+from models.user_team import UserTeam
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
 from routes._auth_helpers import require_admin, require_login
@@ -213,6 +214,8 @@ async def team_detail(
     team = db.get(Team, team_id)
     if team is None:
         return RedirectResponse("/teams", status_code=302)
+    coach_users = db.query(User).filter(User.role == "coach").all()
+    seasons = db.query(Season).order_by(Season.start_date.desc()).all()
     return render(
         request,
         "teams/detail.html",
@@ -221,6 +224,8 @@ async def team_detail(
             "team": team,
             "schedules": team.recurring_schedules,
             "saved": saved == "1",
+            "coach_users": coach_users,
+            "seasons": seasons,
         },
     )
 
@@ -514,8 +519,54 @@ async def team_edit_post(
 
 
 # ---------------------------------------------------------------------------
-# Delete
+# Coach assignment
 # ---------------------------------------------------------------------------
+
+
+@router.post("/{team_id}/coaches", dependencies=[Depends(require_admin)])
+async def add_team_coach(
+    team_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    _csrf=Depends(require_csrf),
+):
+    team = db.get(Team, team_id)
+    if not team:
+        raise HTTPException(status_code=404)
+
+    form = await request.form()
+    user_id = int(form.get("user_id", 0))
+    season_id_raw = form.get("season_id", "").strip()
+    season_id = int(season_id_raw) if season_id_raw else None
+
+    existing_q = db.query(UserTeam).filter(
+        UserTeam.user_id == user_id,
+        UserTeam.team_id == team_id,
+    )
+    if season_id is None:
+        existing_q = existing_q.filter(UserTeam.season_id.is_(None))
+    else:
+        existing_q = existing_q.filter(UserTeam.season_id == season_id)
+
+    if not existing_q.first():
+        db.add(UserTeam(user_id=user_id, team_id=team_id, season_id=season_id))
+        db.commit()
+
+    return RedirectResponse(f"/teams/{int(team_id)}", status_code=302)
+
+
+@router.post("/{team_id}/coaches/{ut_id}/delete", dependencies=[Depends(require_admin)])
+async def remove_team_coach(
+    team_id: int,
+    ut_id: int,
+    db: Session = Depends(get_db),
+    _csrf=Depends(require_csrf),
+):
+    ut = db.get(UserTeam, ut_id)
+    if ut and ut.team_id == team_id:
+        db.delete(ut)
+        db.commit()
+    return RedirectResponse(f"/teams/{int(team_id)}", status_code=302)
 
 
 # ---------------------------------------------------------------------------

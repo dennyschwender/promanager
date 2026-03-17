@@ -69,6 +69,50 @@ def test_public_schedule_no_auth(client):
     assert resp.status_code == 200
 
 
+def test_admin_can_assign_coach(admin_client, db):
+    from models.team import Team
+    from models.user import User
+    from services.auth_service import hash_password
+
+    team = Team(name="Team Alpha")
+    db.add(team)
+    coach_user = User(username="coachy", email="coachy@test.com",
+                      hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach_user)
+    db.commit()
+
+    resp = admin_client.post(
+        f"/teams/{team.id}/coaches",
+        data={"user_id": coach_user.id, "season_id": "", "csrf_token": "test"},
+    )
+    assert resp.status_code in (200, 302)
+    from models.user_team import UserTeam
+    ut = db.query(UserTeam).filter_by(user_id=coach_user.id, team_id=team.id).first()
+    assert ut is not None
+
+
+def test_admin_can_remove_coach(admin_client, db):
+    from models.team import Team
+    from models.user import User
+    from models.user_team import UserTeam
+    from services.auth_service import hash_password
+
+    team = Team(name="Team Beta")
+    db.add(team)
+    coach_user = User(username="coachy2", email="coachy2@test.com",
+                      hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach_user)
+    db.flush()
+    ut = UserTeam(user_id=coach_user.id, team_id=team.id, season_id=None)
+    db.add(ut)
+    db.commit()
+
+    resp = admin_client.post(f"/teams/{team.id}/coaches/{ut.id}/delete",
+                             data={"csrf_token": "test"})
+    assert resp.status_code in (200, 302)
+    assert db.get(UserTeam, ut.id) is None
+
+
 def test_public_schedule_has_no_player_names(client, db):
     """Schedule page does not expose player names."""
     from models.player import Player

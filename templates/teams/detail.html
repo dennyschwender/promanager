@@ -51,4 +51,57 @@
 {% else %}
 <p class="text-muted">No recurring schedules defined. <a href="/teams/{{ team.id }}/edit">Edit the team</a> to add one.</p>
 {% endif %}
+
+{% if user.is_admin %}
+<article style="margin-top:1.5rem;">
+  <header><strong>{{ t('teams.coaches') }}</strong></header>
+  {% if team.coaches %}
+  <table>
+    <thead><tr><th>Coach</th><th>Season scope</th><th></th></tr></thead>
+    <tbody>
+    {% for ut in team.coaches %}
+      <tr>
+        <td>{{ ut.user.username }}</td>
+        <td>{{ ut.season.name if ut.season else 'All seasons' }}</td>
+        <td>
+          <form method="post" action="/teams/{{ team.id }}/coaches/{{ ut.id }}/delete">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit" class="btn btn-sm btn-outline"
+                    style="color:var(--tp-danger,#dc3545);"
+                    onclick="return confirm('Remove this coach?')">{{ t('teams.remove_coach') }}</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted">{{ t('teams.no_coaches') }}</p>
+  {% endif %}
+
+  <form method="post" action="/teams/{{ team.id }}/coaches"
+        style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:1rem;">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <label style="margin:0;">
+      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">Coach</span>
+      <select name="user_id" class="sel-inline" required>
+        <option value="">— Select coach —</option>
+        {% for cu in coach_users %}
+          <option value="{{ cu.id }}">{{ cu.username }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label style="margin:0;">
+      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">Season (optional)</span>
+      <select name="season_id" class="sel-inline">
+        <option value="">All seasons</option>
+        {% for s in seasons %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="btn btn-primary">{{ t('teams.add_coach') }}</button>
+  </form>
+</article>
+{% endif %}
 {% endblock %}
