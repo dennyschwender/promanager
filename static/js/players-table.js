@@ -236,9 +236,14 @@
           cell.style.backgroundColor = '';
           var input = cell.querySelector('.cell-input');
           if (input) {
-            cell.dataset.value = input.type === 'checkbox'
+            var newVal = input.type === 'checkbox'
               ? (input.checked ? 'true' : 'false')
               : input.value;
+            cell.dataset.value = newVal;
+            var view = cell.querySelector('.cell-view');
+            if (view && input.type !== 'checkbox') {
+              view.textContent = input.value || '—';
+            }
           }
         });
         delete pendingChanges[pid];
@@ -360,7 +365,13 @@
     var ageBefore = document.getElementById('age-before');
     var after = ageAfter && ageAfter.value ? new Date(ageAfter.value) : null;
     var before = ageBefore && ageBefore.value ? new Date(ageBefore.value) : null;
-    if (!after && !before) return;
+    if (!after && !before) {
+      document.querySelectorAll('#players-table .row-check').forEach(function (cb) { cb.checked = false; });
+      var selectAll = document.getElementById('select-all');
+      if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+      updateToolbar();
+      return;
+    }
 
     document.querySelectorAll('#players-table tbody tr').forEach(function (row) {
       var cb = row.querySelector('.row-check');
