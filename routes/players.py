@@ -355,6 +355,20 @@ async def players_list(
     players = q.order_by(Player.last_name, Player.first_name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
+    # Build {player_id: PlayerTeam} for the template (requires both filters set)
+    player_team_map: dict = {}
+    if selected_season_id is not None and team_id is not None:
+        pts = (
+            db.query(PlayerTeam)
+            .filter(
+                PlayerTeam.season_id == selected_season_id,
+                PlayerTeam.team_id == team_id,
+                PlayerTeam.player_id.in_([p.id for p in players]),
+            )
+            .all()
+        )
+        player_team_map = {pt.player_id: pt for pt in pts}
+
     return render(
         request,
         "players/list.html",
@@ -365,6 +379,7 @@ async def players_list(
             "seasons": seasons,
             "selected_team_id": team_id,
             "selected_season_id": selected_season_id,
+            "player_team_map": player_team_map,
         },
     )
 
