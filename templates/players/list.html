@@ -302,6 +302,19 @@
   <p>{{ t('players.no_players') }}</p>
 {% endif %}
 
+<script>
+(function () {
+  var seasonId = {{ selected_season_id | tojson }};
+  if (!seasonId) {
+    var ptCols = ['Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority'];
+    ptCols.forEach(function (col) {
+      document.querySelectorAll('#players-table [data-col="' + col + '"]').forEach(function (el) {
+        el.style.display = 'none';
+      });
+    });
+  }
+})();
+</script>
 {% if user.is_admin %}
 <script>
   window.PLAYERS_CONFIG = {
