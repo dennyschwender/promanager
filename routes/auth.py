@@ -103,6 +103,17 @@ async def register_post(
     db: Session = Depends(get_db),
 ):
     # Validation
+    if role not in {"admin", "coach", "member"}:
+        return render(
+            request,
+            "auth/register.html",
+            {
+                "user": user,
+                "error": "Invalid role selected.",
+                "flash": None,
+            },
+            status_code=400,
+        )
     if get_user_by_username(db, username):
         return render(
             request,

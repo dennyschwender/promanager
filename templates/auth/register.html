@@ -29,6 +29,7 @@
   <label for="role">Role
     <select id="role" name="role">
       <option value="member">Member</option>
+      <option value="coach" {% if form_data and form_data.role == 'coach' %}selected{% endif %}>Coach</option>
       <option value="admin">Admin</option>
     </select>
   </label>
