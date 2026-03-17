@@ -46,14 +46,14 @@
       <li>
         <details role="list" style="list-style:none;">
           <summary aria-haspopup="listbox" role="link">{{ user.username }}</summary>
-          <ul role="listbox">
+          <ul role="listbox" style="right:0;left:auto;">
             {% if user.is_admin %}
               <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
               <li><hr style="margin:.25rem 0;"></li>
             {% endif %}
             <li><a href="/profile">{{ t('nav.profile') }}</a></li>
             <li>
-              <a href="#" onclick="toggleTheme(); return false;">
+              <a href="#" data-theme-toggle onclick="toggleTheme(); return false;">
                 {% if current_theme == 'dark' %}☀️ {{ t('nav.light_mode') }}{% else %}🌙 {{ t('nav.dark_mode') }}{% endif %}
               </a>
             </li>
@@ -153,7 +153,7 @@ function toggleTheme() {
   document.cookie = "theme=" + next + ";path=/;max-age=31536000;samesite=lax";
   // Update toggle link text without reload
   document.querySelectorAll("[data-theme-toggle]").forEach(el => {
-    el.textContent = next === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    el.textContent = next === "dark" ? "☀️ {{ t('nav.light_mode') }}" : "🌙 {{ t('nav.dark_mode') }}";
   });
 }
 </script>
