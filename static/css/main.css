@@ -371,6 +371,9 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+.table-responsive.dropdown-open {
+  overflow: visible;
+}
 
 /* ── Team priority table (player form) ───────────────────── */
 .team-priority-table {
@@ -607,6 +610,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   padding: 0.25rem 0;
 }
 .action-dropdown-menu.open { display: block; }
+.action-dropdown-menu.open-up { top: auto; bottom: 100%; }
 .action-dropdown-menu a,
 .action-dropdown-menu button {
   display: block;
