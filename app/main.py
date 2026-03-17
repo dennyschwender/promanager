@@ -7,9 +7,6 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-# Set by the lifespan on shutdown so long-lived generators (SSE) can exit cleanly.
-shutdown_event = asyncio.Event()
-
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -29,6 +26,9 @@ from app.templates import render
 from routes._auth_helpers import NotAuthenticated, NotAuthorized
 
 logger = logging.getLogger(__name__)
+
+# Set by the lifespan on shutdown so long-lived generators (SSE) can exit cleanly.
+shutdown_event = asyncio.Event()
 
 # ---------------------------------------------------------------------------
 # Middleware — inject request.state.user
