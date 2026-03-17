@@ -28,25 +28,44 @@
   </label>
 </form>
 
-<h3>{{ t('events.upcoming') }}</h3>
-{% if upcoming %}
+{% macro events_table(events, section) %}
 <div class="table-responsive">
-<table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th>{{ t('events.actions') }}</th>{% endif %}</tr></thead>
+<table style="table-layout:fixed;width:100%;">
+  <colgroup>
+    <col style="width:7rem;">
+    <col style="width:5rem;">
+    <col>
+    <col style="width:7rem;">
+    <col style="width:12rem;">
+    {% if user %}<col style="width:10rem;">{% endif %}
+  </colgroup>
+  <thead><tr>
+    <th>{{ t('events.date') }}</th>
+    <th>{{ t('events.time') }}</th>
+    <th>{{ t('events.title_col') }}</th>
+    <th>{{ t('events.type') }}</th>
+    <th>{{ t('events.location') }}</th>
+    {% if user %}<th>{{ t('events.actions') }}</th>{% endif %}
+  </tr></thead>
   <tbody>
-  {% for e in upcoming %}
+  {% for e in events %}
     <tr>
       <td>{{ e.event_date }}</td>
       <td>{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
-      <td><a href="/events/{{ e.id }}"><strong>{{ e.title }}</strong></a>
-        {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635; {{ t('events.recurring') }}</span>{% endif %}
+      <td>
+        <a href="/events/{{ e.id }}">{% if section == 'upcoming' %}<strong>{{ e.title }}</strong>{% else %}{{ e.title }}{% endif %}</a>
+        {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635;{% if section == 'upcoming' %} {{ t('events.recurring') }}{% endif %}</span>{% endif %}
       </td>
       <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
       <td>{{ e.location or '—' }}</td>
       {% if user %}
       <td>
         <div class="action-group">
-          <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a>
+          {% if section == 'upcoming' %}
+            <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a>
+          {% else %}
+            <a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a>
+          {% endif %}
           {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
             <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">{{ t('events.edit') }}</a>
           {% endif %}
@@ -58,40 +77,18 @@
   </tbody>
 </table>
 </div>
+{% endmacro %}
+
+<h3>{{ t('events.upcoming') }}</h3>
+{% if upcoming %}
+  {{ events_table(upcoming, 'upcoming') }}
 {% else %}
   <p>{{ t('events.no_upcoming') }}</p>
 {% endif %}
 
 <h3>{{ t('events.past') }}</h3>
 {% if past %}
-<div class="table-responsive">
-<table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th>{{ t('events.actions') }}</th>{% endif %}</tr></thead>
-  <tbody>
-  {% for e in past %}
-    <tr>
-      <td>{{ e.event_date }}</td>
-      <td>{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
-      <td><a href="/events/{{ e.id }}">{{ e.title }}</a>
-        {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635;</span>{% endif %}
-      </td>
-      <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
-      <td>{{ e.location or '—' }}</td>
-      {% if user %}
-      <td>
-        <div class="action-group">
-          <a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a>
-          {% if user.is_admin or (user.is_coach and e.team_id in coach_team_ids) %}
-            <a href="/events/{{ e.id }}/edit" class="btn btn-sm btn-outline">{{ t('events.edit') }}</a>
-          {% endif %}
-        </div>
-      </td>
-      {% endif %}
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+  {{ events_table(past, 'past') }}
 {% else %}
   <p>{{ t('events.no_past') }}</p>
 {% endif %}
