@@ -1,4 +1,5 @@
 import pytest
+
 from models.user_team import UserTeam
 
 
@@ -7,9 +8,11 @@ def test_user_team_importable():
 
 
 from datetime import date
+
 from sqlalchemy.orm import Session
+
 from models.user import User
-from routes._auth_helpers import get_coach_teams, check_team_access, NotAuthorized
+from routes._auth_helpers import NotAuthorized, check_team_access, get_coach_teams
 
 
 def _make_coach(db: Session) -> User:
@@ -126,7 +129,6 @@ def test_public_schedule_has_no_player_names(client, db):
 
 def _setup_coach_with_team(db):
     """Helper: creates a coach user, a team, a season, and UserTeam assignment. Returns (coach, team, season)."""
-    from datetime import date
     from models.season import Season
     from models.team import Team
     from models.user import User
@@ -152,8 +154,9 @@ def _setup_coach_with_team(db):
 def _coach_client(app, db_override, coach_user):
     """Build a TestClient logged in as the given coach user."""
     from fastapi.testclient import TestClient
-    from app.database import get_db
+
     from app.csrf import require_csrf, require_csrf_header
+    from app.database import get_db
     from services.auth_service import create_session_cookie
 
     async def _no_csrf():
@@ -170,7 +173,6 @@ def _coach_client(app, db_override, coach_user):
 
 
 def test_coach_can_create_event_on_assigned_team(db):
-    from datetime import date
     from app.main import app
 
     coach, team, season = _setup_coach_with_team(db)
@@ -188,9 +190,8 @@ def test_coach_can_create_event_on_assigned_team(db):
 
 
 def test_coach_cannot_create_event_on_unassigned_team(db):
-    from datetime import date
-    from models.team import Team
     from app.main import app
+    from models.team import Team
 
     coach, _, season = _setup_coach_with_team(db)
     other_team = Team(name="Other Team")
@@ -211,11 +212,10 @@ def test_coach_cannot_create_event_on_unassigned_team(db):
 
 
 def test_coach_can_mark_attendance_on_their_team(db):
-    from datetime import date
+    from app.main import app
     from models.event import Event
     from models.player import Player
     from models.player_team import PlayerTeam
-    from app.main import app
 
     coach, team, season = _setup_coach_with_team(db)
 
@@ -238,9 +238,9 @@ def test_coach_can_mark_attendance_on_their_team(db):
 
 
 def test_coach_can_bulk_update_pt_fields(db):
+    from app.main import app
     from models.player import Player
     from models.player_team import PlayerTeam
-    from app.main import app
 
     coach, team, season = _setup_coach_with_team(db)
     player = Player(first_name="Carol", last_name="White", is_active=True)
@@ -285,8 +285,8 @@ def test_coach_can_view_season_report(db):
 
 
 def test_coach_cannot_view_other_player_report(db):
-    from models.player import Player
     from app.main import app
+    from models.player import Player
 
     coach, _, _ = _setup_coach_with_team(db)
     other_player = Player(first_name="Other", last_name="Guy", is_active=True)
@@ -300,13 +300,12 @@ def test_coach_cannot_view_other_player_report(db):
 
 
 def test_coach_cannot_mark_attendance_on_other_team(db):
-    from datetime import date
+    from app.main import app
     from models.event import Event
     from models.player import Player
-    from models.team import Team
     from models.player_team import PlayerTeam
     from models.season import Season
-    from app.main import app
+    from models.team import Team
 
     coach, _, _ = _setup_coach_with_team(db)
 
@@ -327,5 +326,105 @@ def test_coach_cannot_mark_attendance_on_other_team(db):
     c = _coach_client(app, db, coach)
     resp = c.post(f"/attendance/{event.id}/{player.id}",
                   data={"status": "present", "csrf_token": "test"})
+    app.dependency_overrides.clear()
+    assert resp.status_code == 403
+
+
+def test_coach_season_scoped_denied_other_season(db):
+    """Coach assigned to team X for season A cannot manage events in season B."""
+    from app.main import app
+    from models.event import Event
+    from models.season import Season
+    from models.team import Team
+    from models.user import User
+    from models.user_team import UserTeam
+    from services.auth_service import hash_password
+
+    season_a = Season(name="2025", start_date=date(2025, 1, 1), end_date=date(2025, 12, 31))
+    season_b = Season(name="2026", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+    team = Team(name="Scoped Team")
+    db.add_all([season_a, season_b, team])
+    db.flush()
+
+    coach = User(username="scoped_coach", email="scoped@test.com",
+                 hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach)
+    db.flush()
+
+    # Assign coach to team X for season A ONLY
+    db.add(UserTeam(user_id=coach.id, team_id=team.id, season_id=season_a.id))
+
+    event_b = Event(title="Season B Event", event_type="training",
+                    event_date=date(2026, 3, 1), team_id=team.id, season_id=season_b.id)
+    db.add(event_b)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.get(f"/events/{event_b.id}/edit")
+    app.dependency_overrides.clear()
+    assert resp.status_code == 403
+
+
+def test_coach_null_season_can_access_all_seasons(db):
+    """Coach assigned with season_id=NULL can manage events in any season."""
+    from app.main import app
+    from models.event import Event
+    from models.season import Season
+    from models.team import Team
+    from models.user import User
+    from models.user_team import UserTeam
+    from services.auth_service import hash_password
+
+    season_c = Season(name="2027", start_date=date(2027, 1, 1), end_date=date(2027, 12, 31))
+    team = Team(name="All Season Team")
+    db.add_all([season_c, team])
+    db.flush()
+
+    coach = User(username="all_season_coach", email="allseason@test.com",
+                 hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach)
+    db.flush()
+
+    # Assign with season_id=NULL → all seasons
+    db.add(UserTeam(user_id=coach.id, team_id=team.id, season_id=None))
+
+    event_c = Event(title="Future Event", event_type="training",
+                    event_date=date(2027, 5, 1), team_id=team.id, season_id=season_c.id)
+    db.add(event_c)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.get(f"/events/{event_c.id}/edit")
+    app.dependency_overrides.clear()
+    assert resp.status_code == 200
+
+
+def test_coach_with_no_teams_behaves_like_member(db):
+    """A coach with no UserTeam rows cannot edit events."""
+    from app.main import app
+    from models.event import Event
+    from models.season import Season
+    from models.team import Team
+    from models.user import User
+    from services.auth_service import hash_password
+
+    season = Season(name="S_no_team", start_date=date(2025, 1, 1), end_date=date(2025, 12, 31))
+    team = Team(name="Unassigned Team")
+    db.add_all([season, team])
+    db.flush()
+
+    coach = User(username="no_team_coach", email="noteam@test.com",
+                 hashed_password=hash_password("Pass1234!"), role="coach")
+    db.add(coach)
+    db.flush()
+    # No UserTeam row added
+
+    event = Event(title="No Access Event", event_type="training",
+                  event_date=date(2025, 7, 1), team_id=team.id, season_id=season.id)
+    db.add(event)
+    db.commit()
+
+    c = _coach_client(app, db, coach)
+    resp = c.get(f"/events/{event.id}/edit")
     app.dependency_overrides.clear()
     assert resp.status_code == 403
