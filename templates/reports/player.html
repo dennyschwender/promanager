@@ -45,6 +45,7 @@
 {% endif %}
 
 {% if history %}
+<div class="table-responsive">
 <table>
   <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Note</th></tr></thead>
   <tbody>
@@ -59,6 +60,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>No attendance records found.</p>
 {% endif %}

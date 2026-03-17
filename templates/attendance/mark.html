@@ -21,6 +21,7 @@
 
 {% if user.is_admin %}
   {% if attendances %}
+  <div class="table-responsive">
   <table>
     <thead><tr><th>{{ t('attendance.player') }}</th><th>{{ t('attendance.status') }}</th><th>{{ t('attendance.notes') }}</th><th>Update</th></tr></thead>
     <tbody>
@@ -45,6 +46,7 @@
     {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
     <p>{{ t('attendance.no_players') }}</p>
   {% endif %}

@@ -153,6 +153,7 @@ table.jexcel tbody td.edition textarea {
   {% if result.skipped %}
     <div class="alert alert-warning" style="margin-bottom:1rem;">
       <strong>{{ result.skipped|length }} row{{ 's' if result.skipped|length != 1 else '' }} skipped or warned:</strong>
+      <div class="table-responsive">
       <table style="margin-top:.5rem;width:100%;font-size:.88rem;">
         <thead><tr><th>Row</th><th>Name</th><th>Reason</th></tr></thead>
         <tbody>
@@ -165,6 +166,7 @@ table.jexcel tbody td.edition textarea {
           {% endfor %}
         </tbody>
       </table>
+      </div>
     </div>
   {% endif %}
 {% endif %}

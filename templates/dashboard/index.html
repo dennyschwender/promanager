@@ -23,6 +23,7 @@
 
 <h3>{{ t('dashboard.next_5_events') }}</h3>
 {% if top_events %}
+<div class="table-responsive">
 <table>
   <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th></th></tr></thead>
   <tbody>
@@ -37,6 +38,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
   <p>{{ t('dashboard.no_upcoming') }} {% if user.is_admin %}<a href="/events/new">{{ t('dashboard.create_one') }}</a>.{% endif %}</p>
 {% endif %}
