@@ -203,9 +203,9 @@ async def player_bulk_assign(
             ))
             sp.commit()
             assigned += 1
-        except Exception as exc:
+        except Exception:
             sp.rollback()
-            errors.append({"id": pid, "message": str(exc)})
+            errors.append({"id": pid, "message": "Could not assign player (database error)."})
     db.commit()
     return {"assigned": assigned, "skipped": skipped, "errors": errors}
 
@@ -253,6 +253,16 @@ async def player_bulk_update(
             status_code=400,
             detail="team_id is required when updating PlayerTeam fields.",
         )
+
+    # Reject unknown fields early
+    all_known = _PLAYER_FIELDS | _PT_FIELDS
+    for diff in body.players:
+        unknown = set((diff.model_extra or {}).keys()) - all_known
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown field(s): {', '.join(sorted(unknown))}",
+            )
 
     for diff in body.players:
         extra = diff.model_extra or {}
@@ -320,9 +330,9 @@ async def player_bulk_update(
             sp.commit()
             saved.append(diff.id)
 
-        except Exception as exc:
+        except Exception:
             sp.rollback()
-            errors.append({"id": diff.id, "message": str(exc)})
+            errors.append({"id": diff.id, "message": "Could not update player (database error)."})
 
     db.commit()
     return {"saved": saved, "errors": errors}
