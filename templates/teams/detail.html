@@ -11,7 +11,7 @@
 <div class="page-header">
   <h2>{{ team.name }}</h2>
   {% if user.is_admin %}
-  <div style="display:flex;gap:.5rem;">
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
     <a href="/teams/{{ team.id }}/edit" class="btn btn-outline">Edit</a>
     <a href="/players?team_id={{ team.id }}" class="btn btn-outline">Players</a>
   </div>
