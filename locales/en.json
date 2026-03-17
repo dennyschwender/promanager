@@ -13,7 +13,8 @@
     "register_user": "Register User",
     "language": "Language",
     "dark_mode": "Dark mode",
-    "light_mode": "Light mode"
+    "light_mode": "Light mode",
+    "schedule": "Schedule"
   },
   "auth": {
     "login_title": "Sign In",
@@ -35,7 +36,8 @@
     "push_not_configured": "Web Push is not configured on this server.",
     "push_active": "Active on %{count} device(s).",
     "push_not_enabled": "Not enabled on this device.",
-    "push_enabled": "Enabled on this device."
+    "push_enabled": "Enabled on this device.",
+    "role_coach": "Coach"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -135,7 +137,11 @@
     "new_title": "New Team",
     "edit_title": "Edit Team",
     "save": "Save Team",
-    "back": "Back to Teams"
+    "back": "Back to Teams",
+    "coaches": "Coaches",
+    "add_coach": "Add coach",
+    "remove_coach": "Remove",
+    "no_coaches": "No coaches assigned"
   },
   "seasons": {
     "title": "Seasons",
@@ -206,5 +212,9 @@
     "attendance_subject": "Please confirm attendance: %{event_name} on %{date}",
     "attendance_body": "Hi %{name},\n\nPlease confirm your attendance for:\n\n  Event: %{event_name}\n  Date:  %{date}\n\nUpdate your status here: %{url}\n\nBest regards,\n%{app_name}",
     "attendance_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>Please confirm your attendance for <strong>%{event_name}</strong> on %{date}.</p><p><a href=\"%{url}\">Click here to update your attendance status</a></p><p>Best regards,<br>%{app_name}</p>"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "no_events": "No upcoming events"
   }
 }

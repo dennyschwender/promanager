@@ -13,7 +13,8 @@
     "register_user": "Benutzer registrieren",
     "language": "Sprache",
     "dark_mode": "Dunkelmodus",
-    "light_mode": "Hellmodus"
+    "light_mode": "Hellmodus",
+    "schedule": "Spielplan"
   },
   "auth": {
     "login_title": "Anmelden",
@@ -35,7 +36,8 @@
     "push_not_configured": "Web Push ist auf diesem Server nicht konfiguriert.",
     "push_active": "Aktiv auf %{count} Gerät(en).",
     "push_not_enabled": "Auf diesem Gerät nicht aktiviert.",
-    "push_enabled": "Auf diesem Gerät aktiviert."
+    "push_enabled": "Auf diesem Gerät aktiviert.",
+    "role_coach": "Trainer"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -135,7 +137,11 @@
     "new_title": "Neues Team",
     "edit_title": "Team bearbeiten",
     "save": "Team speichern",
-    "back": "Zurück zu Teams"
+    "back": "Zurück zu Teams",
+    "coaches": "Trainer",
+    "add_coach": "Trainer hinzufügen",
+    "remove_coach": "Entfernen",
+    "no_coaches": "Kein Trainer zugewiesen"
   },
   "seasons": {
     "title": "Saisons",
@@ -206,5 +212,9 @@
     "attendance_subject": "Anwesenheit bestätigen: %{event_name} am %{date}",
     "attendance_body": "Hallo %{name},\n\nBitte bestätigen Sie Ihre Anwesenheit für:\n\n  Termin: %{event_name}\n  Datum:  %{date}\n\nStatus hier aktualisieren: %{url}\n\nMit freundlichen Grüßen,\n%{app_name}",
     "attendance_body_html": "<p>Hallo <strong>%{name}</strong>,</p><p>Bitte bestätigen Sie Ihre Anwesenheit für <strong>%{event_name}</strong> am %{date}.</p><p><a href=\"%{url}\">Hier klicken, um den Status zu aktualisieren</a></p><p>Mit freundlichen Grüßen,<br>%{app_name}</p>"
+  },
+  "schedule": {
+    "title": "Spielplan",
+    "no_events": "Keine bevorstehenden Ereignisse"
   }
 }

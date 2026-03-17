@@ -13,7 +13,8 @@
     "register_user": "Enregistrer un utilisateur",
     "language": "Langue",
     "dark_mode": "Mode sombre",
-    "light_mode": "Mode clair"
+    "light_mode": "Mode clair",
+    "schedule": "Calendrier"
   },
   "auth": {
     "login_title": "Connexion",
@@ -35,7 +36,8 @@
     "push_not_configured": "Web Push n'est pas configuré sur ce serveur.",
     "push_active": "Actif sur %{count} appareil(s).",
     "push_not_enabled": "Non activé sur cet appareil.",
-    "push_enabled": "Activé sur cet appareil."
+    "push_enabled": "Activé sur cet appareil.",
+    "role_coach": "Entraîneur"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -135,7 +137,11 @@
     "new_title": "Nouvelle équipe",
     "edit_title": "Modifier l'équipe",
     "save": "Enregistrer",
-    "back": "Retour aux équipes"
+    "back": "Retour aux équipes",
+    "coaches": "Entraîneurs",
+    "add_coach": "Ajouter un entraîneur",
+    "remove_coach": "Retirer",
+    "no_coaches": "Aucun entraîneur assigné"
   },
   "seasons": {
     "title": "Saisons",
@@ -206,5 +212,9 @@
     "attendance_subject": "Confirmation de présence : %{event_name} le %{date}",
     "attendance_body": "Bonjour %{name},\n\nConfirmez votre présence pour :\n\n  Événement : %{event_name}\n  Date :      %{date}\n\nMettez à jour votre statut ici : %{url}\n\nCordialement,\n%{app_name}",
     "attendance_body_html": "<p>Bonjour <strong>%{name}</strong>,</p><p>Confirmez votre présence pour <strong>%{event_name}</strong> le %{date}.</p><p><a href=\"%{url}\">Cliquez ici pour mettre à jour votre statut</a></p><p>Cordialement,<br>%{app_name}</p>"
+  },
+  "schedule": {
+    "title": "Calendrier",
+    "no_events": "Aucun événement à venir"
   }
 }
