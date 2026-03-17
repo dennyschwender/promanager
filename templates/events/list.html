@@ -96,3 +96,19 @@
   <p>{{ t('events.no_past') }}</p>
 {% endif %}
 {% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('click', function (e) {
+  var toggle = e.target.closest('.action-dropdown-toggle');
+  if (toggle) {
+    e.stopPropagation();
+    var menu = toggle.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+    if (!isOpen) menu.classList.add('open');
+    return;
+  }
+  document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+});
+</script>
+{% endblock %}
