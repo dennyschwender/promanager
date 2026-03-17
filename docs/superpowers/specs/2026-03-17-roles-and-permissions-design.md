@@ -4,7 +4,7 @@
 
 **Goal:** Introduce a `coach` role with team-scoped management rights, and add a public `/schedule` page for unauthenticated visitors.
 
-**Architecture:** Add a `UserTeam` join table linking coach users to their managed teams. Extend the auth helper layer with a `require_coach_for_team` guard. A new public route serves event schedule data without authentication.
+**Architecture:** Add a `UserTeam` join table linking coach users to their managed teams. Extend the auth helper layer with a `require_coach_or_admin` guard and a `check_team_access` utility. A new public route serves event schedule data without authentication.
 
 **Tech Stack:** FastAPI, SQLAlchemy 2.x, Jinja2, Alembic, pytest
 
@@ -25,6 +25,8 @@ Helper properties on `User`:
 - `is_admin` — already exists (`role == "admin"`)
 - `is_coach` — new (`role == "coach"`)
 
+**A coach with no assigned `UserTeam` rows is functionally equivalent to a member** — they can view data but take no management actions until an admin assigns them to a team.
+
 ---
 
 ## 2. Data Model — `UserTeam`
@@ -43,13 +45,15 @@ class UserTeam(Base):
     user:   Mapped["User"]          = relationship(back_populates="managed_teams")
     team:   Mapped["Team"]          = relationship(back_populates="coaches")
     season: Mapped["Season | None"] = relationship()
-
-    __table_args__ = (UniqueConstraint("user_id", "team_id", "season_id"),)
 ```
 
 - `season_id = NULL` means the coach manages that team across all seasons.
 - A coach may have multiple `UserTeam` rows (multiple teams or season-specific assignments).
 - Add `managed_teams` back-reference on `User`, `coaches` back-reference on `Team`.
+
+**Uniqueness:** SQLite does not enforce unique constraints when any column is NULL. Use an application-level guard in the admin UI: before inserting a `UserTeam` row, check for an existing row with the same `(user_id, team_id, season_id)` (comparing `season_id IS NULL` explicitly) and reject duplicates. No DB-level unique constraint is added.
+
+**When a coach is removed from a team** (admin deletes the `UserTeam` row): existing events for that team remain unchanged and become admin-only editable. Access is revoked immediately going forward. No notification is sent.
 
 **Alembic migration required.**
 
@@ -60,40 +64,45 @@ class UserTeam(Base):
 File: `routes/_auth_helpers.py`
 
 ### New helper: `get_coach_teams`
+Returns the set of team IDs the user may manage. Only called for coach users.
+
 ```python
 def get_coach_teams(user: User, db: Session, season_id: int | None = None) -> set[int]:
-    """Return the set of team_ids the user may manage for the given season."""
-    if user.is_admin:
-        return None  # None = all teams
-    if not user.is_coach:
-        return set()
+    """Return set of team_ids the coach user manages for the given season.
+    Always returns empty set for non-coach users — callers should check is_admin first.
+    """
     q = db.query(UserTeam.team_id).filter(UserTeam.user_id == user.id)
     if season_id:
         q = q.filter(or_(UserTeam.season_id == season_id, UserTeam.season_id.is_(None)))
-    else:
-        q = q  # no season filter — return all assigned teams
     return {row[0] for row in q.all()}
 ```
 
 ### New dependency: `require_coach_or_admin`
 ```python
-def require_coach_or_admin(user=Depends(require_login)):
+def require_coach_or_admin(user: User = Depends(require_login)) -> User:
     if not (user.is_admin or user.is_coach):
         raise NotAuthorized
     return user
 ```
 
-### New dependency factory: `require_team_access(team_id)`
-Used in route handlers to verify the coach (or admin) has rights to a specific team:
+### New utility: `check_team_access`
+Called imperatively inside route handlers to verify the acting user has rights over a team.
+`season_id` should be passed whenever the context has one (e.g. the event's season); this enforces season-scoped assignments correctly. A coach assigned to team X for season 2025 only (`season_id != NULL`) will be denied on season 2026 events for the same team.
+
 ```python
-def check_team_access(user: User, team_id: int, db: Session) -> None:
-    """Raise NotAuthorized if user has no access to team_id."""
+def check_team_access(
+    user: User, team_id: int, db: Session, season_id: int | None = None
+) -> None:
+    """Raise NotAuthorized if user has no access to team_id (in the given season)."""
     if user.is_admin:
         return
-    managed = get_coach_teams(user, db)
-    if team_id not in managed:
+    if team_id not in get_coach_teams(user, db, season_id=season_id):
         raise NotAuthorized
 ```
+
+**Season-scope enforcement decision:** A coach with `season_id = NULL` on their `UserTeam` row manages that team across all seasons. A coach with `season_id = X` manages only season X. `check_team_access` always passes the context season so season-specific assignments are correctly enforced.
+
+Both GET and POST handlers that are team-specific must call `check_team_access` — GET handlers need it so a coach cannot load the edit form for a team they don't manage.
 
 ---
 
@@ -103,37 +112,50 @@ def check_team_access(user: User, team_id: int, db: Session) -> None:
 
 | Route | Before | After |
 |-------|--------|-------|
-| GET/POST `/events/new` | `require_admin` | `require_coach_or_admin`; new event must belong to a team the coach manages |
-| GET/POST `/events/{id}/edit` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
+| GET `/events/new` | `require_admin` | `require_coach_or_admin` |
+| POST `/events/new` | `require_admin` | `require_coach_or_admin`; `check_team_access(submitted_team_id)` |
+| GET `/events/{id}/edit` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
+| POST `/events/{id}/edit` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)`; **coach may not change `team_id`** — the team field is hidden/ignored for coaches on save |
 | POST `/events/{id}/delete` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
+| GET `/events/{id}/notify` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
 | POST `/events/{id}/notify` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
 | POST `/events/{id}/send-reminders` | `require_admin` | `require_coach_or_admin` + `check_team_access(event.team_id)` |
 
-For coaches: the "team" dropdown on the new event form is limited to their assigned teams.
+For coaches: the team dropdown on the new event form is limited to their assigned teams.
+
+**Coach cannot change `event.team_id`:** on the edit POST, if the user is a coach, the submitted `team_id` is ignored and the event's existing `team_id` is kept.
 
 ### 4b. Players (`routes/players.py`)
 
 | Route | Before | After |
 |-------|--------|-------|
-| POST `/players/bulk-assign` | `require_admin` | `require_coach_or_admin`; coach can only assign to their teams |
-| POST `/players/bulk-remove` | `require_admin` | `require_coach_or_admin`; coach can only remove from their teams |
-| POST `/players/bulk-update` | `require_admin` | `require_coach_or_admin`; only pt-fields (shirt#, position, role, status, injured_until, absent_by_default, priority); scoped to coach's teams |
+| GET `/players` | `require_login` | unchanged; inline edit mode activated only if user is admin or coach |
+| GET `/players/{id}/edit` | `require_admin` | stays `require_admin` (coaches use inline edit only) |
+| POST `/players/bulk-assign` | `require_admin` | `require_coach_or_admin`; `check_team_access(submitted_team_id)` |
+| POST `/players/bulk-remove` | `require_admin` | `require_coach_or_admin`; `check_team_access(submitted_team_id)` |
+| POST `/players/bulk-update` | `require_admin` | `require_coach_or_admin`; only pt-fields allowed for coaches (shirt#, position, role, status, injured_until, absent_by_default, priority); `check_team_access(submitted_team_id)` |
 | GET/POST `/players/new` | `require_admin` | stays `require_admin` |
 | POST `/players/{id}/delete` | `require_admin` | stays `require_admin` |
 | POST `/players/import` | `require_admin` | stays `require_admin` |
+
+The inline edit form on `GET /players` is safe for coaches because the actual data mutation goes through `POST /players/bulk-update`, which calls `check_team_access`. No additional GET guard is needed beyond the existing `require_login`.
 
 ### 4c. Attendance (`routes/attendance.py`)
 
 | Route | Before | After |
 |-------|--------|-------|
-| POST `/attendance/{event_id}/{player_id}` | member=own only, admin=all | member=own only, coach=all players on their team, admin=all |
+| GET `/attendance/{event_id}` | member=own players only, admin=all | member=own only, **coach=all players on their team** (full admin-style view), admin=all |
+| POST `/attendance/{event_id}/{player_id}` | member=own only, admin=all | member=own only, **coach=all players on their team**, admin=all |
+
+For the GET handler: when the user is a coach, verify `check_team_access(event.team_id)` and render the full player list (same template path as admin).
 
 ### 4d. Reports (`routes/reports.py`)
 
 | Route | Before | After |
 |-------|--------|-------|
-| GET `/reports/season/{season_id}` | `require_login` | coach sees only their team's stats on the page |
-| GET `/reports/player/{player_id}` | member=own only | coach=players on their team, admin=all |
+| GET `/reports` | `require_login` → redirect to active season | coach redirect includes `?team_id=<first_managed_team_id>` to pre-filter |
+| GET `/reports/season/{season_id}` | `require_login`; shows all teams | coach: filter display to their managed team(s) only |
+| GET `/reports/player/{player_id}` | member=own only, admin=all | member=own only, **coach=players on their team**, admin=all |
 
 ### 4e. New public route (`routes/schedule.py`)
 
@@ -141,68 +163,120 @@ For coaches: the "team" dropdown on the new event form is limited to their assig
 GET /schedule
 ```
 
-- No auth required (no `require_login` dependency).
+- No auth required — no `require_login` dependency.
 - Renders `templates/schedule/index.html`.
 - Accepts optional `?season_id=` and `?team_id=` query params.
-- Returns only: event date, time, location, type, team name, season name.
-- Excludes: player names, attendance data, any admin UI.
+- Exposes only: event date, time, location, type (match/training/other), team name, season name.
+- Excludes: player names, attendance data, any admin/coach UI.
+- Registered in `app/main.py` router list.
 
 ---
 
 ## 5. Admin UI — Assign Coaches
 
-Admins need a way to create coach users and assign them to teams. This fits naturally into the existing team detail page (`/teams/{team_id}`).
+Admins need a way to assign coach users to teams. This fits on the existing team detail page (`/teams/{team_id}`).
 
-**New section on team detail page:** "Coaches" card listing assigned coach users with season scope. An admin can:
-- Add a coach: select user (filtered to `role = "coach"`) + optional season → creates `UserTeam` row
-- Remove a coach: delete the `UserTeam` row
+### New section on team detail page: "Coaches"
 
-**User registration (`/auth/register`):** The existing form already collects username/email/password/role. Add `"coach"` as a selectable role option (was limited to admin/member).
+Lists assigned coach users (name + season scope). Admin can:
+- **Add coach:** select a user with `role = "coach"` + optional season → `POST /teams/{id}/coaches` creates `UserTeam` row (with application-level duplicate guard)
+- **Remove coach:** `POST /teams/{id}/coaches/{user_team_id}/delete` deletes the row
+
+New routes (admin-only):
+```
+POST /teams/{team_id}/coaches          — add coach assignment
+POST /teams/{team_id}/coaches/{ut_id}/delete  — remove coach assignment
+```
+
+### User registration (`/auth/register`)
+
+Stays `require_admin` guarded — no self-registration path. Add `"coach"` as a third option in the role dropdown. No other changes.
 
 ---
 
 ## 6. Template Changes
 
 ### Navigation (`templates/base.html`)
-- Add "Schedule" link visible to **all** users including unauthenticated (always shown).
-- Coaches see the same nav as members (no Seasons or Reports links), except Reports becomes visible if they have at least one assigned team.
+- "Schedule" link added for **all** visitors including unauthenticated — always visible in nav.
+- Coaches see the same nav links as members, with one addition: **Reports** is shown to coaches (was admin-only).
+- Seasons link remains admin-only.
 
 ### Events (`templates/events/`)
 - New event form: coaches only see their assigned teams in the team dropdown.
-- Edit/delete/notify buttons: shown to admins and to coaches who own the event's team.
+- Edit form: team field is read-only (hidden) for coaches.
+- Edit/delete/notify/reminders buttons: shown to admins and to coaches who own the event's team.
 
 ### Players (`templates/players/list.html`)
-- Inline edit mode: coaches can edit pt-fields for players on their team.
-- Bulk assign/remove: coaches can use these for their teams only.
+- Inline edit mode: available to coaches (pt-fields for players on their team).
+- Bulk assign/remove: available to coaches for their teams only.
 - "New player", "Delete", "Import" buttons: admin-only (unchanged).
 
+### Attendance (`templates/attendance/mark.html`)
+- Coaches get the full admin-style view (all team players), not the member-only-own-player view.
+
 ### Teams (`templates/teams/detail.html`)
-- New "Coaches" section (admin-only): lists assigned coaches, add/remove form.
+- New "Coaches" section (admin-only): lists assigned coaches with season scope, add/remove form.
+
+### Reports (`templates/reports/`)
+- Season report: when user is coach, display only their team's data.
 
 ### Schedule (`templates/schedule/index.html`)
-- New template. Season/team filter dropdowns. Table of upcoming events (date, time, location, type, team). No login required.
+- New template. Season/team filter dropdowns (same style as events list). Table of upcoming events: date, time, location, type, team name. No player data. No login required.
 
 ---
 
-## 7. Testing
+## 7. i18n Keys
 
-- `tests/test_roles.py` — new file covering:
-  - Coach can create/edit/delete event on assigned team
-  - Coach cannot modify event on a different team (403)
-  - Coach can edit pt-fields for players on their team
-  - Coach cannot create/delete players
-  - Coach can mark attendance for all players on their team
-  - Coach cannot mark attendance on a different team's event
-  - Public `/schedule` returns 200 without authentication
-  - Public `/schedule` does not expose player names
-  - Member still limited to own attendance
+New keys required in all four locale files (`locales/en.json`, `it.json`, `fr.json`, `de.json`):
+
+```
+nav.schedule           — "Schedule" / "Calendario" / "Calendrier" / "Spielplan"
+teams.coaches          — "Coaches" (section heading)
+teams.add_coach        — "Add coach"
+teams.remove_coach     — "Remove"
+teams.no_coaches       — "No coaches assigned"
+schedule.title         — "Schedule"
+schedule.no_events     — "No upcoming events"
+auth.role_coach        — "Coach"
+```
 
 ---
 
-## 8. Migration
+## 8. Testing
 
-Alembic revision to add `user_team` table:
-- `user_id` FK → `user.id`
-- `team_id` FK → `team.id`
-- `season_id` FK → `season.id` (nullable)
-- Unique constraint on `(user_id, team_id, season_id)`
+New file: `tests/test_roles.py`
+
+- Coach can create event on assigned team → 302
+- Coach cannot create event on unassigned team → 403
+- Coach can edit event on assigned team → 302
+- Coach cannot edit event on unassigned team → 403
+- Coach cannot change `team_id` on event edit
+- Coach can edit pt-fields for player on their team → 200
+- Coach cannot create/delete players → 403
+- Coach can mark attendance for all players on their team → 302
+- Coach cannot mark attendance for player on unassigned team's event → 403
+- Member still limited to own attendance → 403 for others
+- Public `/schedule` returns 200 without authentication
+- Public `/schedule` response does not contain player names
+- Coach with no assigned teams behaves like a member
+- Coach assigned to team X for season A cannot manage events in season B for team X
+- Coach assigned to team X with `season_id = NULL` can manage events across all seasons for team X
+
+---
+
+## 9. Migration
+
+Alembic revision: add `user_team` table.
+
+```python
+def upgrade():
+    op.create_table(
+        "user_team",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("user_id", sa.Integer(), sa.ForeignKey("user.id"), nullable=False),
+        sa.Column("team_id", sa.Integer(), sa.ForeignKey("team.id"), nullable=False),
+        sa.Column("season_id", sa.Integer(), sa.ForeignKey("season.id"), nullable=True),
+    )
+    op.create_index("ix_user_team_user_id", "user_team", ["user_id"])
+    op.create_index("ix_user_team_team_id", "user_team", ["team_id"])
+```
