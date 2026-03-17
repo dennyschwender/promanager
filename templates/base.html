@@ -27,6 +27,7 @@
   {% if user %}
   {% set path = request.url.path %}
   <ul id="nav-links">
+    <li><a href="/schedule" class="{% if path.startswith('/schedule') %}nav-active{% endif %}">{{ t('nav.schedule') }}</a></li>
     <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
     <li><a href="/events"    class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
     <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
@@ -83,6 +84,7 @@
   </ul>
   {% else %}
   <ul id="user-actions">
+    <li><a href="/schedule">{{ t('nav.schedule') }}</a></li>
     <li><a href="/auth/login" role="button" class="outline">{{ t('nav.login') }}</a></li>
   </ul>
   {% endif %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ t('schedule.title') }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb"><span>{{ t('schedule.title') }}</span></nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('schedule.title') }}</h2>
+</div>
+
+<form method="get" action="/schedule"
+      style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Season</span>
+    <select name="season_id" onchange="this.form.submit()" class="sel-inline">
+      <option value="">All Seasons</option>
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
+          {{ s.name }}{% if s.is_active %} ✓{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Team</span>
+    <select name="team_id" onchange="this.form.submit()" class="sel-inline">
+      <option value="">All Teams</option>
+      {% for tm in teams %}
+        <option value="{{ tm.id }}" {% if tm.id == selected_team_id %}selected{% endif %}>{{ tm.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+{% if events %}
+<div class="table-responsive">
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Type</th>
+      <th>Team</th>
+      <th>Location</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for ev in events %}
+    <tr>
+      <td>{{ ev.event_date }}</td>
+      <td>{{ ev.event_time or '—' }}</td>
+      <td><span class="badge badge-{{ ev.event_type }}">{{ ev.event_type | capitalize }}</span></td>
+      <td>{{ ev.team.name if ev.team else '—' }}</td>
+      <td>{{ ev.location or '—' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+  <p>{{ t('schedule.no_events') }}</p>
+{% endif %}
+{% endblock %}

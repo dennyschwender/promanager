@@ -153,6 +153,14 @@ def create_app() -> FastAPI:
     except ModuleNotFoundError:
         logger.debug("Notifications router not found — skipping.")
 
+    # ── Schedule (public) ─────────────────────────────────────────────────────
+    try:
+        from routes import schedule as _schedule_mod  # noqa: PLC0415
+
+        app.include_router(_schedule_mod.router, prefix="/schedule", tags=["schedule"])
+    except ModuleNotFoundError:
+        logger.debug("Schedule router not found — skipping.")
+
     # ── Locale switcher ───────────────────────────────────────────────────
     from routes.locale import router as _locale_router  # noqa: PLC0415
 
