@@ -177,3 +177,40 @@ def test_cannot_delete_last_admin(db):
     resp = c.post(f"/auth/users/{admin_b.id}/delete", data={"csrf_token": "test"})
     app.dependency_overrides.clear()
     assert resp.status_code in (400, 403)
+
+
+# ---------------------------------------------------------------------------
+# Bulk create — GET
+# ---------------------------------------------------------------------------
+
+def test_bulk_create_get_admin_200(admin_client):
+    resp = admin_client.get("/auth/users/bulk-create", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_bulk_create_get_member_403(member_client):
+    resp = member_client.get("/auth/users/bulk-create", follow_redirects=False)
+    assert resp.status_code in (302, 403)
+
+
+def test_bulk_create_shows_eligible_players(admin_client, db):
+    from models.player import Player
+    p = Player(first_name="Frank", last_name="Test", is_active=True, email="frank@test.com")
+    db.add(p)
+    p2 = Player(first_name="Grace", last_name="Test", is_active=True)
+    db.add(p2)
+    db.commit()
+    resp = admin_client.get("/auth/users/bulk-create")
+    assert b"frank@test.com" in resp.content
+    assert b"Grace" not in resp.content
+
+
+def test_bulk_create_excludes_linked_players(admin_client, db):
+    from models.player import Player
+    u = _make_user(db, "henry", "henry@test.com")
+    p = Player(first_name="Henry", last_name="Test", is_active=True,
+               email="henry@test.com", user_id=u.id)
+    db.add(p)
+    db.commit()
+    resp = admin_client.get("/auth/users/bulk-create")
+    assert b"henry@test.com" not in resp.content

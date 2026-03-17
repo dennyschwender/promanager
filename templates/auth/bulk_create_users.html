@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ t('users.bulk_create_title') }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/auth/users">{{ t('users.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('users.bulk_create_title') }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div style="max-width:800px;">
+<div class="page-header">
+  <h2>{{ t('users.bulk_create_title') }}</h2>
+</div>
+
+{% if results %}
+<!-- Results view -->
+<div class="alert alert-info" style="margin-bottom:1.5rem;">
+  <h3>{{ t('users.results_title') }}</h3>
+  <p>✅ {{ t('users.created_count').replace('{count}', results.created|string) }}</p>
+  <p>⏭ {{ t('users.skipped_count').replace('{count}', results.skipped|string) }}</p>
+  {% if results.email_failed %}
+    <p>⚠️ {{ t('users.email_failed_count').replace('{count}', results.email_failed|length|string) }}</p>
+    <ul>{% for name in results.email_failed %}<li>{{ name }}</li>{% endfor %}</ul>
+  {% endif %}
+</div>
+<a href="/auth/users" class="btn btn-outline">{{ t('users.back_to_users') }}</a>
+
+{% else %}
+<!-- Filter row -->
+<form method="get" action="/auth/users/bulk-create" class="filter-row">
+  <label>{{ t('events.team') }}
+    <select name="team_id" onchange="this.form.submit()">
+      <option value="">{{ t('events.all_teams') }}</option>
+      {% for tm in teams %}
+        <option value="{{ tm.id }}" {% if selected_team_id == tm.id %}selected{% endif %}>{{ tm.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>{{ t('events.season') }}
+    <select name="season_id" onchange="this.form.submit()">
+      <option value="">{{ t('events.all_seasons') }}</option>
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if selected_season_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+{% if no_email_count > 0 %}
+<p class="text-muted" style="font-size:.88rem;">
+  ⚠️ {{ t('users.no_email_note').replace('{count}', no_email_count|string) }}
+</p>
+{% endif %}
+
+{% if eligible %}
+<form method="post" action="/auth/users/bulk-create">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  {% if selected_team_id %}<input type="hidden" name="team_id" value="{{ selected_team_id }}">{% endif %}
+  {% if selected_season_id %}<input type="hidden" name="season_id" value="{{ selected_season_id }}">{% endif %}
+
+  <div class="table-responsive" style="margin-bottom:1rem;">
+  <table>
+    <thead><tr>
+      <th style="width:2.5rem;"><input type="checkbox" id="select-all" title="{{ t('users.select_all') }}"></th>
+      <th>{{ t('players.name') }}</th>
+      <th>{{ t('users.email') }}</th>
+    </tr></thead>
+    <tbody>
+    {% for p in eligible %}
+    <tr>
+      <td><input type="checkbox" name="player_ids" value="{{ p.id }}" class="player-cb" checked></td>
+      <td>{{ p.full_name }}</td>
+      <td>{{ p.email }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+    {{ t('users.role_label') }}
+    <select name="role" style="width:auto;margin:0;">
+      <option value="member">Member</option>
+      <option value="coach">Coach</option>
+    </select>
+  </label>
+
+  <button type="submit" class="btn btn-primary">{{ t('users.submit_bulk') }}</button>
+  <a href="/auth/users" class="btn btn-outline" style="margin-left:.5rem;">{{ t('common.cancel') }}</a>
+</form>
+
+{% else %}
+<p>{{ t('players.no_players') }}</p>
+<a href="/auth/users" class="btn btn-outline">{{ t('users.back_to_users') }}</a>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+var selectAll = document.getElementById('select-all');
+if (selectAll) {
+  selectAll.addEventListener('change', function () {
+    document.querySelectorAll('.player-cb').forEach(function (cb) {
+      cb.checked = selectAll.checked;
+    });
+  });
+}
+</script>
+{% endblock %}
