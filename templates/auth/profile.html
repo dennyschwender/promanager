@@ -7,6 +7,7 @@
 </nav>
 {% endblock %}
 {% block content %}
+<div style="max-width:560px;">
 <div class="page-header">
   <h2>{{ t('auth.profile_title') }}</h2>
 </div>
@@ -105,15 +106,16 @@
 <!-- ── Language Preference ──────────────────────────────────────────────── -->
 <section style="margin-top:2rem;">
   <h3>{{ t('auth.language_preference') }}</h3>
-  <form method="post" action="/set-locale">
+  <form method="post" action="/set-locale" style="display:flex;align-items:center;gap:.5rem;">
     <input type="hidden" name="next" value="/profile">
-    <select name="locale">
+    <select name="locale" style="width:auto;margin:0;">
       <option value="en" {% if current_locale == 'en' %}selected{% endif %}>English</option>
       <option value="it" {% if current_locale == 'it' %}selected{% endif %}>Italiano</option>
       <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>Français</option>
       <option value="de" {% if current_locale == 'de' %}selected{% endif %}>Deutsch</option>
     </select>
-    <button type="submit" class="btn btn-sm btn-outline" style="margin-left:.5rem;">{{ t('common.save') }}</button>
+    <button type="submit" class="btn btn-sm btn-outline">{{ t('common.save') }}</button>
   </form>
 </section>
+</div>
 {% endblock %}
