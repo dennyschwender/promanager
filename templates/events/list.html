@@ -32,7 +32,7 @@
 {% if upcoming %}
 <div class="table-responsive">
 <table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th>{{ t('events.actions') }}</th></tr></thead>
+  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.time') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th>{{ t('events.actions') }}</th>{% endif %}</tr></thead>
   <tbody>
   {% for e in upcoming %}
     <tr>
@@ -43,6 +43,7 @@
       </td>
       <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
       <td>{{ e.location or '—' }}</td>
+      {% if user %}
       <td>
         <div class="action-group">
           <a href="/attendance/{{ e.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a>
@@ -51,6 +52,7 @@
           {% endif %}
         </div>
       </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
@@ -64,7 +66,7 @@
 {% if past %}
 <div class="table-responsive">
 <table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th></th></tr></thead>
+  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th>{% if user %}<th></th>{% endif %}</tr></thead>
   <tbody>
   {% for e in past %}
     <tr>
@@ -74,7 +76,7 @@
       </td>
       <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
       <td>{{ e.location or '—' }}</td>
-      <td><a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a></td>
+      {% if user %}<td><a href="/events/{{ e.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a></td>{% endif %}
     </tr>
   {% endfor %}
   </tbody>
