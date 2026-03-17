@@ -21,7 +21,7 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import require_admin, require_login
+from routes._auth_helpers import check_team_access, require_admin, require_coach_or_admin, require_login
 from services.attendance_service import get_player_attendance_history
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
@@ -217,10 +217,11 @@ class BulkAssignRequest(BaseModel):
 @router.post("/bulk-assign")
 async def player_bulk_assign(
     body: BulkAssignRequest,
-    _user=Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf=Depends(require_csrf_header),
     db: Session = Depends(get_db),
 ):
+    check_team_access(user, body.team_id, db)
     assigned = 0
     skipped = 0
     errors = []
@@ -254,10 +255,11 @@ class BulkRemoveRequest(BaseModel):
 @router.post("/bulk-remove")
 async def player_bulk_remove(
     body: BulkRemoveRequest,
-    _user=Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf=Depends(require_csrf_header),
     db: Session = Depends(get_db),
 ):
+    check_team_access(user, body.team_id, db)
     removed = 0
     skipped = 0
     for pid in body.player_ids:
@@ -297,10 +299,13 @@ class BulkUpdateRequest(BaseModel):
 @router.post("/bulk-update")
 async def player_bulk_update(
     body: BulkUpdateRequest,
-    _user=Depends(require_admin),
+    user: User = Depends(require_coach_or_admin),
     _csrf=Depends(require_csrf_header),
     db: Session = Depends(get_db),
 ):
+    if body.team_id is not None:
+        check_team_access(user, body.team_id, db)
+
     saved: list[int] = []
     errors: list[dict] = []
 
@@ -327,6 +332,9 @@ async def player_bulk_update(
 
     for diff in body.players:
         extra = diff.model_extra or {}
+        # Coaches may only update PT-fields (team-scoped); player-level fields are admin-only
+        if not user.is_admin:
+            extra = {k: v for k, v in extra.items() if k in _PT_FIELDS}
         player_changes = {k: v for k, v in extra.items() if k in _PLAYER_FIELDS}
         pt_changes = {k: v for k, v in extra.items() if k in _PT_FIELDS}
 

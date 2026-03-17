@@ -52,6 +52,8 @@
       </div>
     </div>
     <button type="button" class="btn btn-outline" id="adv-filter-btn">Filter ▾</button>
+    {% endif %}
+    {% if user.is_admin or user.is_coach %}
     <button type="button" class="btn btn-outline" id="edit-btn">Edit</button>
     <button type="button" class="btn btn-primary" id="save-btn" style="display:none;" disabled>Save changes</button>
     <button type="button" class="btn btn-outline" id="cancel-btn" style="display:none;">Cancel</button>
@@ -315,7 +317,7 @@
   }
 })();
 </script>
-{% if user.is_admin %}
+{% if user.is_admin or user.is_coach %}
 <script>
   window.PLAYERS_CONFIG = {
     seasonId: {{ selected_season_id | tojson }},
