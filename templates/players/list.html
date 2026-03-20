@@ -359,6 +359,7 @@
 </script>
 <script src="/static/js/players-table.js"></script>
 {% endif %}
+{% if user.is_admin %}
 <dialog id="archive-dialog">
   <article>
     <h3>Archive players?</h3>
@@ -370,4 +371,5 @@
     </footer>
   </article>
 </dialog>
+{% endif %}
 {% endblock %}
