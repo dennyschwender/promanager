@@ -39,6 +39,14 @@
       {% endfor %}
     </select>
   </label>
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Archived</span>
+    <select name="archived" onchange="filterSubmit(this.form)" class="sel-inline">
+      <option value="">Active only</option>
+      <option value="only" {% if archived_filter == 'only' %}selected{% endif %}>Archived only</option>
+      <option value="all" {% if archived_filter == 'all' %}selected{% endif %}>All</option>
+    </select>
+  </label>
   <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-left:.25rem;">
     {% if user.is_admin %}
     <div style="position:relative;display:inline-block;">
@@ -116,6 +124,14 @@
       </div>
     </div>
   </div>
+<button type="button" class="btn btn-sm btn-outline" id="bulk-activate-btn"
+        style="display:none;">Activate</button>
+<button type="button" class="btn btn-sm btn-outline" id="bulk-deactivate-btn"
+        style="display:none;">Deactivate</button>
+<button type="button" class="btn btn-sm btn-outline" id="bulk-archive-btn"
+        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Archive</button>
+<button type="button" class="btn btn-sm btn-outline" id="bulk-unarchive-btn"
+        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Unarchive</button>
 <button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">Clear selection</button>
 </div>
 <div id="bulk-banner" style="display:none;margin-bottom:.5rem;" role="alert"></div>
@@ -151,7 +167,9 @@
   {% for p in players %}
     {% set pt = player_team_map.get(p.id) %}
     <tr data-player-id="{{ p.id }}"
-        data-dob="{{ p.date_of_birth or '' }}">
+        data-dob="{{ p.date_of_birth or '' }}"
+        data-is-active="{{ 'true' if p.is_active else 'false' }}"
+        data-archived-at="{{ p.archived_at.isoformat() if p.archived_at else '' }}">
       {% if user.is_admin %}<td><input type="checkbox" class="row-check"></td>{% endif %}
       <td><a href="/players/{{ p.id }}"><strong>{{ p.full_name }}</strong></a></td>
       <td data-col="Team" data-value="{{ p.team_memberships | length }}">
@@ -279,16 +297,27 @@
       </td>
       <td data-col="Actions">
         <div class="action-dropdown">
-          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">&#8943;</button>
           <div class="action-dropdown-menu">
             {% if user.is_admin %}
               <a href="/players/{{ p.id }}/edit">Edit</a>
               <a href="/reports/player/{{ p.id }}">Report</a>
-              <form method="post" action="/players/{{ p.id }}/delete"
-                    onsubmit="return confirm('Delete ' + {{ p.full_name | tojson }} + '?')">
-                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                <button type="submit" class="danger">Delete</button>
-              </form>
+              {% if p.is_active %}
+                <button type="button" class="row-deactivate-btn" data-id="{{ p.id }}">Deactivate</button>
+              {% else %}
+                <button type="button" class="row-activate-btn" data-id="{{ p.id }}">Activate</button>
+              {% endif %}
+              {% if p.archived_at %}
+                <form method="post" action="/players/{{ p.id }}/unarchive">
+                  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                  <button type="submit">Unarchive</button>
+                </form>
+              {% else %}
+                <button type="button" class="row-archive-btn danger"
+                        data-id="{{ p.id }}"
+                        data-name="{{ p.full_name | e }}"
+                        data-dob="{{ p.date_of_birth or '' }}">Archive</button>
+              {% endif %}
             {% else %}
               <a href="/reports/player/{{ p.id }}">Report</a>
             {% endif %}
@@ -330,4 +359,15 @@
 </script>
 <script src="/static/js/players-table.js"></script>
 {% endif %}
+<dialog id="archive-dialog">
+  <article>
+    <h3>Archive players?</h3>
+    <p>The following players will be archived and hidden from day-to-day views:</p>
+    <ul id="archive-dialog-list" style="margin:.5rem 0 1rem;padding-left:1.5rem;"></ul>
+    <footer style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button type="button" class="btn btn-outline" id="archive-dialog-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="archive-dialog-confirm">Archive</button>
+    </footer>
+  </article>
+</dialog>
 {% endblock %}
