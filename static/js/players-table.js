@@ -331,6 +331,42 @@
     if (!toolbar) return;
     toolbar.style.display = checked.length > 0 ? 'flex' : 'none';
     if (countEl) countEl.textContent = checked.length + ' row' + (checked.length !== 1 ? 's' : '') + ' selected';
+
+    var hasInactive = false, hasActive = false, hasNotArchived = false, hasArchived = false;
+    checked.forEach(function (cb) {
+      var row = cb.closest('tr');
+      var isActive = row.dataset.isActive === 'true';
+      var isArchived = !!row.dataset.archivedAt;
+      if (!isArchived && !isActive) hasInactive = true;
+      if (!isArchived && isActive)  hasActive   = true;
+      if (!isArchived)              hasNotArchived = true;
+      if (isArchived)               hasArchived  = true;
+    });
+
+    var activateBtn   = document.getElementById('bulk-activate-btn');
+    var deactivateBtn = document.getElementById('bulk-deactivate-btn');
+    var archiveBtn    = document.getElementById('bulk-archive-btn');
+    var unarchiveBtn  = document.getElementById('bulk-unarchive-btn');
+    if (activateBtn)   activateBtn.style.display   = hasInactive    ? '' : 'none';
+    if (deactivateBtn) deactivateBtn.style.display = hasActive      ? '' : 'none';
+    if (archiveBtn)    archiveBtn.style.display    = hasNotArchived ? '' : 'none';
+    if (unarchiveBtn)  unarchiveBtn.style.display  = hasArchived    ? '' : 'none';
+  }
+
+  function bulkPost(url, ids, resultKey, reloadOnCount) {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+      body: JSON.stringify({ player_ids: ids }),
+    })
+    .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.detail || 'Error'); }); })
+    .then(function (data) {
+      var count = data[resultKey] || 0;
+      showBanner(data.errors && data.errors.length ? 'warning' : 'success',
+        count + ' ' + resultKey + ', ' + (data.skipped || 0) + ' skipped.', null);
+      if (count > 0) setTimeout(function () { location.reload(); }, 800);
+    })
+    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error.', null); });
   }
 
   function initBulkToolbar() {
@@ -364,10 +400,38 @@
       });
     }
 
-    var setActiveBtn = document.getElementById('set-active-btn');
-    var setInactiveBtn = document.getElementById('set-inactive-btn');
-    if (setActiveBtn) setActiveBtn.addEventListener('click', function () { bulkSetActive(true); });
-    if (setInactiveBtn) setInactiveBtn.addEventListener('click', function () { bulkSetActive(false); });
+    var bulkActivateBtn = document.getElementById('bulk-activate-btn');
+    if (bulkActivateBtn) {
+      bulkActivateBtn.addEventListener('click', function () {
+        var ids = getCheckedRows()
+          .map(function (cb) { return cb.closest('tr'); })
+          .filter(function (row) { return row.dataset.isActive === 'false' && !row.dataset.archivedAt; })
+          .map(function (row) { return parseInt(row.dataset.playerId, 10); });
+        if (ids.length) bulkPost('/players/bulk-activate', ids, 'activated', true);
+      });
+    }
+
+    var bulkDeactivateBtn = document.getElementById('bulk-deactivate-btn');
+    if (bulkDeactivateBtn) {
+      bulkDeactivateBtn.addEventListener('click', function () {
+        var ids = getCheckedRows()
+          .map(function (cb) { return cb.closest('tr'); })
+          .filter(function (row) { return row.dataset.isActive === 'true' && !row.dataset.archivedAt; })
+          .map(function (row) { return parseInt(row.dataset.playerId, 10); });
+        if (ids.length) bulkPost('/players/bulk-deactivate', ids, 'deactivated', true);
+      });
+    }
+
+    var bulkUnarchiveBtn = document.getElementById('bulk-unarchive-btn');
+    if (bulkUnarchiveBtn) {
+      bulkUnarchiveBtn.addEventListener('click', function () {
+        var ids = getCheckedRows()
+          .map(function (cb) { return cb.closest('tr'); })
+          .filter(function (row) { return !!row.dataset.archivedAt; })
+          .map(function (row) { return parseInt(row.dataset.playerId, 10); });
+        if (ids.length) bulkPost('/players/bulk-unarchive', ids, 'unarchived', true);
+      });
+    }
 
     // Assign to team+season picker
     var allPickers = [];
@@ -440,6 +504,25 @@
           .catch(function (err) { showBanner('error', (err && err.message) || 'Network error.', null); });
       }
     );
+
+    var bulkArchiveBtn = document.getElementById('bulk-archive-btn');
+    if (bulkArchiveBtn) {
+      bulkArchiveBtn.addEventListener('click', function () {
+        var rows = getCheckedRows()
+          .map(function (cb) { return cb.closest('tr'); })
+          .filter(function (row) { return !row.dataset.archivedAt; });
+        if (!rows.length) return;
+        openArchiveDialog(
+          rows.map(function (row) {
+            return {
+              id: parseInt(row.dataset.playerId, 10),
+              name: (row.querySelector('td:nth-child(2) a') || {}).textContent || 'Player',
+              dob: row.dataset.dob || '',
+            };
+          })
+        );
+      });
+    }
 
   }
 
@@ -859,6 +942,60 @@
     if (logicSel) logicSel.addEventListener('change', applyAdvFilter);
     addFilterRow(rowsCont);
   }
+
+  // ── Archive dialog ────────────────────────────────────────────────────────
+  function openArchiveDialog(players) {
+    var dialog = document.getElementById('archive-dialog');
+    var list   = document.getElementById('archive-dialog-list');
+    if (!dialog || !list) return;
+    // Clear existing items safely
+    while (list.firstChild) { list.removeChild(list.firstChild); }
+    players.forEach(function (p) {
+      var li = document.createElement('li');
+      li.textContent = p.name.trim() + (p.dob ? '  (' + p.dob + ')' : '');
+      list.appendChild(li);
+    });
+    dialog._pendingIds = players.map(function (p) { return p.id; });
+    dialog.showModal();
+  }
+
+  var archiveDialog  = document.getElementById('archive-dialog');
+  var archiveConfirm = document.getElementById('archive-dialog-confirm');
+  var archiveCancel  = document.getElementById('archive-dialog-cancel');
+  if (archiveCancel && archiveDialog) {
+    archiveCancel.addEventListener('click', function () { archiveDialog.close(); });
+  }
+  if (archiveConfirm && archiveDialog) {
+    archiveConfirm.addEventListener('click', function () {
+      var ids = archiveDialog._pendingIds || [];
+      archiveDialog.close();
+      if (!ids.length) return;
+      bulkPost('/players/bulk-archive', ids, 'archived', true);
+    });
+  }
+
+  // ── Per-row delegated handlers ─────────────────────────────────────────────
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.row-archive-btn');
+    if (!btn) return;
+    openArchiveDialog([{
+      id: parseInt(btn.dataset.id, 10),
+      name: btn.dataset.name || 'Player',
+      dob:  btn.dataset.dob  || '',
+    }]);
+  });
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.row-activate-btn');
+    if (!btn) return;
+    bulkPost('/players/bulk-activate', [parseInt(btn.dataset.id, 10)], 'activated', true);
+  });
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.row-deactivate-btn');
+    if (!btn) return;
+    bulkPost('/players/bulk-deactivate', [parseInt(btn.dataset.id, 10)], 'deactivated', true);
+  });
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
