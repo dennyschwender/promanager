@@ -829,9 +829,10 @@ async def player_archive(
     db: Session = Depends(get_db),
 ):
     player = db.get(Player, player_id)
-    if player:
-        player.archived_at = datetime.now(timezone.utc)
-        db.commit()
+    if not player:
+        raise HTTPException(status_code=404)
+    player.archived_at = datetime.now(timezone.utc)
+    db.commit()
     return RedirectResponse("/players", status_code=302)
 
 
@@ -843,7 +844,8 @@ async def player_unarchive(
     db: Session = Depends(get_db),
 ):
     player = db.get(Player, player_id)
-    if player:
-        player.archived_at = None
-        db.commit()
+    if not player:
+        raise HTTPException(status_code=404)
+    player.archived_at = None
+    db.commit()
     return RedirectResponse("/players", status_code=302)

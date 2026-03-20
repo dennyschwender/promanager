@@ -107,11 +107,11 @@ def test_edit_player(admin_client, db):
 
 
 # ---------------------------------------------------------------------------
-# Delete
+# Archive
 # ---------------------------------------------------------------------------
 
 
-def test_delete_player(admin_client, db):
+def test_archive_player(admin_client, db):
     player = Player(first_name="Dave", last_name="Delete", is_active=True)
     db.add(player)
     db.commit()
