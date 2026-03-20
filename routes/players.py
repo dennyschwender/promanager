@@ -407,6 +407,130 @@ async def player_bulk_update(
     return {"saved": saved, "errors": errors}
 
 
+class BulkPlayerIdsRequest(BaseModel):
+    player_ids: list[int]
+
+
+@router.post("/bulk-archive")
+async def player_bulk_archive(
+    body: BulkPlayerIdsRequest,
+    _user: User = Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    archived = 0
+    skipped = 0
+    errors = []
+    for pid in body.player_ids:
+        player = db.get(Player, pid)
+        if player is None:
+            errors.append({"id": pid, "message": "Player not found."})
+            continue
+        if player.archived_at is not None:
+            skipped += 1
+            continue
+        try:
+            sp = db.begin_nested()
+            player.archived_at = datetime.now(timezone.utc)
+            sp.commit()
+            archived += 1
+        except Exception:
+            sp.rollback()
+            errors.append({"id": pid, "message": "Could not archive player."})
+    db.commit()
+    return {"archived": archived, "skipped": skipped, "errors": errors}
+
+
+@router.post("/bulk-unarchive")
+async def player_bulk_unarchive(
+    body: BulkPlayerIdsRequest,
+    _user: User = Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    unarchived = 0
+    skipped = 0
+    errors = []
+    for pid in body.player_ids:
+        player = db.get(Player, pid)
+        if player is None:
+            errors.append({"id": pid, "message": "Player not found."})
+            continue
+        if player.archived_at is None:
+            skipped += 1
+            continue
+        try:
+            sp = db.begin_nested()
+            player.archived_at = None
+            sp.commit()
+            unarchived += 1
+        except Exception:
+            sp.rollback()
+            errors.append({"id": pid, "message": "Could not unarchive player."})
+    db.commit()
+    return {"unarchived": unarchived, "skipped": skipped, "errors": errors}
+
+
+@router.post("/bulk-activate")
+async def player_bulk_activate(
+    body: BulkPlayerIdsRequest,
+    _user: User = Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    activated = 0
+    skipped = 0
+    errors = []
+    for pid in body.player_ids:
+        player = db.get(Player, pid)
+        if player is None:
+            errors.append({"id": pid, "message": "Player not found."})
+            continue
+        if player.is_active or player.archived_at is not None:
+            skipped += 1
+            continue
+        try:
+            sp = db.begin_nested()
+            player.is_active = True
+            sp.commit()
+            activated += 1
+        except Exception:
+            sp.rollback()
+            errors.append({"id": pid, "message": "Could not activate player."})
+    db.commit()
+    return {"activated": activated, "skipped": skipped, "errors": errors}
+
+
+@router.post("/bulk-deactivate")
+async def player_bulk_deactivate(
+    body: BulkPlayerIdsRequest,
+    _user: User = Depends(require_admin),
+    _csrf=Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+):
+    deactivated = 0
+    skipped = 0
+    errors = []
+    for pid in body.player_ids:
+        player = db.get(Player, pid)
+        if player is None:
+            errors.append({"id": pid, "message": "Player not found."})
+            continue
+        if not player.is_active or player.archived_at is not None:
+            skipped += 1
+            continue
+        try:
+            sp = db.begin_nested()
+            player.is_active = False
+            sp.commit()
+            deactivated += 1
+        except Exception:
+            sp.rollback()
+            errors.append({"id": pid, "message": "Could not deactivate player."})
+    db.commit()
+    return {"deactivated": deactivated, "skipped": skipped, "errors": errors}
+
+
 # ---------------------------------------------------------------------------
 # List
 # ---------------------------------------------------------------------------
