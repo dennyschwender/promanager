@@ -50,3 +50,49 @@ def test_archived_filter_all(admin_client, db):
     assert resp.status_code == 200
     assert "Active" in resp.text
     assert "Gone" in resp.text
+
+
+def test_single_player_archive(admin_client, db):
+    """POST /players/{id}/archive sets archived_at."""
+    p = Player(first_name="Solo", last_name="Archive", is_active=True)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    resp = admin_client.post(f"/players/{p.id}/archive", follow_redirects=False)
+    assert resp.status_code == 302
+    db.refresh(p)
+    assert p.archived_at is not None
+
+
+def test_single_player_unarchive(admin_client, db):
+    """POST /players/{id}/unarchive clears archived_at."""
+    p = Player(first_name="Solo", last_name="Unarchive", is_active=True,
+               archived_at=datetime.now(timezone.utc))
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    resp = admin_client.post(f"/players/{p.id}/unarchive", follow_redirects=False)
+    assert resp.status_code == 302
+    db.refresh(p)
+    assert p.archived_at is None
+
+
+def test_member_cannot_archive(member_client, db):
+    """Non-admin gets 403 when trying to archive a player."""
+    p = Player(first_name="Protected", last_name="Player", is_active=True)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    resp = member_client.post(f"/players/{p.id}/archive", follow_redirects=False)
+    assert resp.status_code == 403
+
+
+def test_member_cannot_unarchive(member_client, db):
+    """Non-admin gets 403 when trying to unarchive a player."""
+    p = Player(first_name="Protected", last_name="Player", is_active=True,
+               archived_at=datetime.now(timezone.utc))
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    resp = member_client.post(f"/players/{p.id}/unarchive", follow_redirects=False)
+    assert resp.status_code == 403

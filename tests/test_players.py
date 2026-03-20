@@ -118,9 +118,10 @@ def test_delete_player(admin_client, db):
     db.refresh(player)
     pid = player.id
 
-    resp = admin_client.post(f"/players/{pid}/delete", follow_redirects=False)
+    resp = admin_client.post(f"/players/{pid}/archive", follow_redirects=False)
     assert resp.status_code == 302
-    assert db.get(Player, pid) is None
+    db.refresh(player)
+    assert player.archived_at is not None   # soft-archived, not gone
 
 
 # ---------------------------------------------------------------------------

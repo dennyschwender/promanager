@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -817,20 +817,33 @@ async def player_edit_post(
 
 
 # ---------------------------------------------------------------------------
-# Delete
+# Archive / Unarchive
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{player_id}/delete")
-async def player_delete(
+@router.post("/{player_id}/archive")
+async def player_archive(
     player_id: int,
-    request: Request,
     _user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
     player = db.get(Player, player_id)
     if player:
-        db.delete(player)
+        player.archived_at = datetime.now(timezone.utc)
+        db.commit()
+    return RedirectResponse("/players", status_code=302)
+
+
+@router.post("/{player_id}/unarchive")
+async def player_unarchive(
+    player_id: int,
+    _user: User = Depends(require_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    player = db.get(Player, player_id)
+    if player:
+        player.archived_at = None
         db.commit()
     return RedirectResponse("/players", status_code=302)
