@@ -131,6 +131,9 @@ async def bulk_create_post(
         if player is None:
             skipped += 1
             continue
+        if player.archived_at is not None:
+            skipped += 1
+            continue
         # Skip if already linked
         if player.user_id is not None:
             skipped += 1
