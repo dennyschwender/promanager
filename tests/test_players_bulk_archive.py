@@ -168,6 +168,18 @@ def test_bulk_deactivate(admin_client, db):
     assert p.is_active is False
 
 
+def test_bulk_activate_skips_already_active(admin_client, db):
+    """bulk-activate skips players that are already active."""
+    p = Player(first_name="Already", last_name="Active", is_active=True)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    resp = admin_client.post("/players/bulk-activate", json={"player_ids": [p.id]})
+    assert resp.status_code == 200
+    assert resp.json()["skipped"] == 1
+    assert resp.json()["activated"] == 0
+
+
 def test_bulk_activate_skips_archived_players(admin_client, db):
     """bulk-activate skips archived players."""
     p = Player(first_name="Arch", last_name="Skip", is_active=False, archived_at=datetime.now(timezone.utc))
