@@ -431,8 +431,8 @@ async def players_list(
         q = q.filter(Player.archived_at.isnot(None))
     elif archived == "all":
         pass  # no filter
-    else:
-        q = q.filter(Player.archived_at.is_(None))  # default: active only
+    else:  # default (None, empty string, or unrecognized value): show active only
+        q = q.filter(Player.archived_at.is_(None))
     if team_id is not None and selected_season_id is not None:
         q = q.join(PlayerTeam, Player.id == PlayerTeam.player_id).filter(
             PlayerTeam.team_id == team_id, PlayerTeam.season_id == selected_season_id
