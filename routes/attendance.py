@@ -48,7 +48,7 @@ async def attendance_page(
         summary = get_event_attendance_summary(db, event_id)
         is_admin_view = True
     else:
-        my_players = db.query(Player).filter(Player.user_id == user.id).all()
+        my_players = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).all()
         player_ids = [p.id for p in my_players]
         attendances = (
             db.query(Attendance)

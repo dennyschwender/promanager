@@ -67,10 +67,11 @@ def _resolve_players(event, recipient_statuses: list[str] | None, db: Session) -
                 PlayerTeam.team_id == event.team_id,
                 PlayerTeam.membership_status == "active",
                 Player.is_active.is_(True),
+                Player.archived_at.is_(None),
             )
         )
     else:
-        base_q = db.query(Player).filter(Player.is_active.is_(True))
+        base_q = db.query(Player).filter(Player.is_active.is_(True), Player.archived_at.is_(None))
 
     if not recipient_statuses:
         return base_q.all()

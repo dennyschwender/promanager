@@ -65,6 +65,7 @@ async def bulk_create_get(
             Player.email.isnot(None),
             Player.email != "",
             Player.user_id.is_(None),
+            Player.archived_at.is_(None),
         )
     )
 
@@ -86,6 +87,7 @@ async def bulk_create_get(
         Player.is_active == True,  # noqa: E712
         (Player.email.is_(None)) | (Player.email == ""),
         Player.user_id.is_(None),
+        Player.archived_at.is_(None),
     )
     if selected_team_id:
         no_email_q = no_email_q.filter(Player.id.in_(

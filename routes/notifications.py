@@ -32,7 +32,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 def _get_linked_players(user, db: Session) -> list[Player]:
     """Return all active Player rows linked to *user*."""
-    return db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True)).all()
+    return db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True), Player.archived_at.is_(None)).all()
 
 
 def _player_ids_for_user(user, db: Session) -> list[int]:
