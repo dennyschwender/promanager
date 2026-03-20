@@ -407,6 +407,9 @@ async def player_bulk_update(
     return {"saved": saved, "errors": errors}
 
 
+# ── Bulk archive / activate ───────────────────────────────────────────────
+
+
 class BulkPlayerIdsRequest(BaseModel):
     player_ids: list[int]
 

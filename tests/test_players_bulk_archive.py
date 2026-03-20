@@ -198,3 +198,29 @@ def test_bulk_deactivate_skips_archived_players(admin_client, db):
     assert resp.status_code == 200
     assert resp.json()["skipped"] == 1
     assert resp.json()["deactivated"] == 0
+
+
+def test_member_cannot_bulk_archive(member_client, db):
+    """Non-admin gets 403 on bulk-archive."""
+    resp = member_client.post("/players/bulk-archive", json={"player_ids": []})
+    assert resp.status_code == 403
+
+
+def test_bulk_archive_empty_list(admin_client, db):
+    """bulk-archive with empty player_ids returns zero counts."""
+    resp = admin_client.post("/players/bulk-archive", json={"player_ids": []})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["archived"] == 0
+    assert data["skipped"] == 0
+    assert data["errors"] == []
+
+
+def test_bulk_archive_not_found_player(admin_client, db):
+    """bulk-archive with nonexistent player_id adds to errors."""
+    resp = admin_client.post("/players/bulk-archive", json={"player_ids": [99999]})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["archived"] == 0
+    assert len(data["errors"]) == 1
+    assert data["errors"][0]["id"] == 99999
