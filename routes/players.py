@@ -418,6 +418,7 @@ async def players_list(
     request: Request,
     team_id: int | None = None,
     season_id: int | None = None,
+    archived: str | None = None,
     user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
@@ -425,6 +426,13 @@ async def players_list(
     selected_season_id = season_id
 
     q = db.query(Player)
+    # Archive filter
+    if archived == "only":
+        q = q.filter(Player.archived_at.isnot(None))
+    elif archived == "all":
+        pass  # no filter
+    else:
+        q = q.filter(Player.archived_at.is_(None))  # default: active only
     if team_id is not None and selected_season_id is not None:
         q = q.join(PlayerTeam, Player.id == PlayerTeam.player_id).filter(
             PlayerTeam.team_id == team_id, PlayerTeam.season_id == selected_season_id
@@ -459,6 +467,7 @@ async def players_list(
             "selected_team_id": team_id,
             "selected_season_id": selected_season_id,
             "player_team_map": player_team_map,
+            "archived_filter": archived or "",
         },
     )
 
