@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -20,6 +20,7 @@ class Player(Base):
     # Legacy single phone kept for backward-compat; use phones for multi-number
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
     # ── Personal info ───────────────────────────────────────────────────
     # "male" | "female" | "other"
