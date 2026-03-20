@@ -1,4 +1,5 @@
 """Tests for the header-based CSRF dependency."""
+
 from __future__ import annotations
 
 import os
@@ -39,9 +40,7 @@ def test_valid_header_passes():
 
 def test_missing_header_returns_403():
     c = make_client()
-    resp = c.post(
-        "/json-endpoint", json={}, cookies={"session_user_id": SESSION_COOKIE}
-    )
+    resp = c.post("/json-endpoint", json={}, cookies={"session_user_id": SESSION_COOKIE})
     assert resp.status_code == 403
 
 

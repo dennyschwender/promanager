@@ -1,4 +1,5 @@
 """Tests for theme resolution in LocaleMiddleware."""
+
 from __future__ import annotations
 
 

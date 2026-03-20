@@ -32,7 +32,11 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 def _get_linked_players(user, db: Session) -> list[Player]:
     """Return all active Player rows linked to *user*."""
-    return db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True), Player.archived_at.is_(None)).all()
+    return (
+        db.query(Player)
+        .filter(Player.user_id == user.id, Player.is_active.is_(True), Player.archived_at.is_(None))
+        .all()
+    )
 
 
 def _player_ids_for_user(user, db: Session) -> list[int]:
@@ -55,6 +59,7 @@ async def vapid_public_key():
 async def notification_stream(request: Request):
     """Server-Sent Events stream for real-time notification badge updates."""
     from app.database import SessionLocal
+
     user = get_user_from_cookie(request)
     if user is None:
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)

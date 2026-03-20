@@ -36,6 +36,7 @@ async def reports_index(
     if season:
         if _user.is_coach and not _user.is_admin:
             from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
+
             managed = get_coach_teams(_user, db)
             if managed:
                 first_team_id = next(iter(sorted(managed)))
@@ -66,15 +67,22 @@ async def report_season(
     if user.is_coach and not user.is_admin:
         from models.player_team import PlayerTeam as _PT  # noqa: PLC0415
         from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
+
         coach_team_ids = get_coach_teams(user, db, season_id=season_id)
         # Build set of player IDs on any of the coach's teams this season
-        coach_player_ids: set[int] | None = {
-            row.player_id
-            for row in db.query(_PT).filter(
-                _PT.team_id.in_(coach_team_ids),
-                _PT.season_id == season_id,
-            ).all()
-        } if coach_team_ids else set()
+        coach_player_ids: set[int] | None = (
+            {
+                row.player_id
+                for row in db.query(_PT)
+                .filter(
+                    _PT.team_id.in_(coach_team_ids),
+                    _PT.season_id == season_id,
+                )
+                .all()
+            }
+            if coach_team_ids
+            else set()
+        )
     else:
         coach_player_ids = None
 
@@ -112,10 +120,9 @@ async def report_player(
         if user.is_coach:
             from models.player_team import PlayerTeam as _PT  # noqa: PLC0415
             from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
+
             managed_ids = get_coach_teams(user, db)
-            player_team_ids = {
-                row.team_id for row in db.query(_PT).filter(_PT.player_id == player.id).all()
-            }
+            player_team_ids = {row.team_id for row in db.query(_PT).filter(_PT.player_id == player.id).all()}
             if not managed_ids.intersection(player_team_ids):
                 return RedirectResponse("/dashboard", status_code=302)
         elif player.user_id != user.id:

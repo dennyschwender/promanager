@@ -42,6 +42,7 @@ async def attendance_page(
         is_admin_view = True
     elif user.is_coach:
         from routes._auth_helpers import check_team_access  # noqa: PLC0415
+
         check_team_access(user, event.team_id, db, season_id=event.season_id)
         attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
         my_players = []
@@ -103,6 +104,7 @@ async def update_attendance(
         if event is None:
             return RedirectResponse(f"/attendance/{event_id}", status_code=302)
         from routes._auth_helpers import check_team_access  # noqa: PLC0415
+
         check_team_access(user, event.team_id, db, season_id=event.season_id)
     else:
         player = db.get(Player, player_id)

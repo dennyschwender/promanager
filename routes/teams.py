@@ -588,9 +588,7 @@ async def team_copy_roster(
         return RedirectResponse("/teams?copy_error=same_season", status_code=302)
 
     source_rows = (
-        db.query(PlayerTeam)
-        .filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == source_season_id)
-        .all()
+        db.query(PlayerTeam).filter(PlayerTeam.team_id == team_id, PlayerTeam.season_id == source_season_id).all()
     )
     existing = {
         pt.player_id
@@ -601,18 +599,20 @@ async def team_copy_roster(
     for src in source_rows:
         if src.player_id in existing:
             continue
-        db.add(PlayerTeam(
-            player_id=src.player_id,
-            team_id=team_id,
-            season_id=target_season_id,
-            priority=src.priority,
-            role=src.role,
-            position=src.position,
-            shirt_number=src.shirt_number,
-            membership_status=src.membership_status,
-            injured_until=None,
-            absent_by_default=False,
-        ))
+        db.add(
+            PlayerTeam(
+                player_id=src.player_id,
+                team_id=team_id,
+                season_id=target_season_id,
+                priority=src.priority,
+                role=src.role,
+                position=src.position,
+                shirt_number=src.shirt_number,
+                membership_status=src.membership_status,
+                injured_until=None,
+                absent_by_default=False,
+            )
+        )
     db.commit()
     return RedirectResponse("/teams", status_code=302)
 

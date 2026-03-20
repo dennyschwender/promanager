@@ -232,11 +232,13 @@ async def player_bulk_assign(
             continue
         try:
             sp = db.begin_nested()  # savepoint — failure here won't roll back prior rows
-            db.add(PlayerTeam(
-                player_id=pid,
-                team_id=body.team_id,
-                season_id=body.season_id,
-            ))
+            db.add(
+                PlayerTeam(
+                    player_id=pid,
+                    team_id=body.team_id,
+                    season_id=body.season_id,
+                )
+            )
             sp.commit()
             assigned += 1
         except Exception:
@@ -275,14 +277,27 @@ async def player_bulk_remove(
 
 # ── Allowed fields per model ───────────────────────────────────────────────
 # All of these exist as mapped columns on Player (verified against models/player.py).
-_PLAYER_FIELDS = frozenset({
-    "email", "phone", "is_active", "date_of_birth",
-    "sex", "street", "postcode", "city",
-})
-_PT_FIELDS = frozenset({
-    "shirt_number", "position", "injured_until",
-    "absent_by_default", "priority",
-})
+_PLAYER_FIELDS = frozenset(
+    {
+        "email",
+        "phone",
+        "is_active",
+        "date_of_birth",
+        "sex",
+        "street",
+        "postcode",
+        "city",
+    }
+)
+_PT_FIELDS = frozenset(
+    {
+        "shirt_number",
+        "position",
+        "injured_until",
+        "absent_by_default",
+        "priority",
+    }
+)
 
 
 class PlayerDiff(BaseModel):
@@ -310,10 +325,7 @@ async def player_bulk_update(
     errors: list[dict] = []
 
     # Reject early if PlayerTeam fields are present but team_id is missing
-    pt_keys_present = any(
-        bool(_PT_FIELDS & set((diff.model_extra or {}).keys()))
-        for diff in body.players
-    )
+    pt_keys_present = any(bool(_PT_FIELDS & set((diff.model_extra or {}).keys())) for diff in body.players)
     if pt_keys_present and body.team_id is None:
         raise HTTPException(
             status_code=400,
@@ -351,13 +363,12 @@ async def player_bulk_update(
                 .first()
             )
             if conflict:
-                errors.append({
-                    "id": diff.id,
-                    "message": (
-                        f"Shirt number {pt_changes['shirt_number']} "
-                        "already taken in this team/season."
-                    ),
-                })
+                errors.append(
+                    {
+                        "id": diff.id,
+                        "message": (f"Shirt number {pt_changes['shirt_number']} already taken in this team/season."),
+                    }
+                )
                 continue
 
         try:
@@ -745,7 +756,9 @@ async def player_import_post(
     context_team = db.get(Team, team_id) if team_id else None
 
     season_id_s = (form.get("season_id") or "").strip()
-    selected_season_id = int(season_id_s) if season_id_s else (season_id or (_active_season_id(db) if team_id else None))
+    selected_season_id = (
+        int(season_id_s) if season_id_s else (season_id or (_active_season_id(db) if team_id else None))
+    )
 
     import_source = (form.get("import_source") or "").strip()
     error: str | None = None
@@ -833,7 +846,7 @@ async def player_detail(
 
     history = get_player_attendance_history(db, player_id)
     _mems = sorted(player.team_memberships, key=lambda m: m.priority)
-    sorted_memberships = sorted(_mems, key=lambda m: (m.season.name if m.season else ""), reverse=True)
+    sorted_memberships = sorted(_mems, key=lambda m: m.season.name if m.season else "", reverse=True)
 
     return render(
         request,

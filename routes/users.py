@@ -1,4 +1,5 @@
 """routes/users.py — Admin user management."""
+
 from __future__ import annotations
 
 import secrets
@@ -58,22 +59,17 @@ async def bulk_create_get(
     taken = existing_emails | existing_usernames
 
     # Base query: active players with email, no user_id
-    q = (
-        db.query(Player)
-        .filter(
-            Player.is_active == True,  # noqa: E712
-            Player.email.isnot(None),
-            Player.email != "",
-            Player.user_id.is_(None),
-            Player.archived_at.is_(None),
-        )
+    q = db.query(Player).filter(
+        Player.is_active == True,  # noqa: E712
+        Player.email.isnot(None),
+        Player.email != "",
+        Player.user_id.is_(None),
+        Player.archived_at.is_(None),
     )
 
     # Apply team/season filter via PlayerTeam join
     if selected_team_id:
-        pt_q = db.query(PlayerTeam.player_id).filter(
-            PlayerTeam.team_id == selected_team_id
-        )
+        pt_q = db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id == selected_team_id)
         if selected_season_id:
             pt_q = pt_q.filter(PlayerTeam.season_id == selected_season_id)
         player_ids_in_team = [row[0] for row in pt_q.all()]
@@ -90,10 +86,11 @@ async def bulk_create_get(
         Player.archived_at.is_(None),
     )
     if selected_team_id:
-        no_email_q = no_email_q.filter(Player.id.in_(
-            [row[0] for row in db.query(PlayerTeam.player_id)
-             .filter(PlayerTeam.team_id == selected_team_id).all()]
-        ))
+        no_email_q = no_email_q.filter(
+            Player.id.in_(
+                [row[0] for row in db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id == selected_team_id).all()]
+            )
+        )
     no_email_count = no_email_q.count()
 
     return render(
@@ -143,9 +140,7 @@ async def bulk_create_post(
             skipped += 1
             continue
         # Skip if email already used as username or email on another User
-        existing = db.query(User).filter(
-            (User.username == player.email) | (User.email == player.email)
-        ).first()
+        existing = db.query(User).filter((User.username == player.email) | (User.email == player.email)).first()
         if existing:
             skipped += 1
             continue
@@ -218,9 +213,14 @@ async def toggle_active(
 
     # Cannot deactivate the last active admin
     if target.role == "admin" and target.is_active:
-        active_admin_count = db.query(User).filter(
-            User.role == "admin", User.is_active == True  # noqa: E712
-        ).count()
+        active_admin_count = (
+            db.query(User)
+            .filter(
+                User.role == "admin",
+                User.is_active == True,  # noqa: E712
+            )
+            .count()
+        )
         if active_admin_count <= 1:
             raise NotAuthorized
 
@@ -246,9 +246,14 @@ async def delete_user(
 
     # Cannot delete the last active admin
     if target.role == "admin":
-        active_admin_count = db.query(User).filter(
-            User.role == "admin", User.is_active == True  # noqa: E712
-        ).count()
+        active_admin_count = (
+            db.query(User)
+            .filter(
+                User.role == "admin",
+                User.is_active == True,  # noqa: E712
+            )
+            .count()
+        )
         if active_admin_count <= 1:
             raise NotAuthorized
 

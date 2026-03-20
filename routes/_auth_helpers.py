@@ -80,9 +80,7 @@ def get_coach_teams(
     """
     q = db.query(_UserTeam.team_id).filter(_UserTeam.user_id == user.id)
     if season_id:
-        q = q.filter(
-            or_(_UserTeam.season_id == season_id, _UserTeam.season_id.is_(None))
-        )
+        q = q.filter(or_(_UserTeam.season_id == season_id, _UserTeam.season_id.is_(None)))
     return {row[0] for row in q.all()}
 
 

@@ -66,10 +66,7 @@ def generate_events_for_schedule(
     # The while loop is therefore always finite.
     # Build set of dates already covered by this schedule's recurrence group
     existing_dates: set[date] = {
-        d
-        for (d,) in db.query(Event.event_date).filter(
-            Event.recurrence_group_id == schedule.recurrence_group_id
-        ).all()
+        d for (d,) in db.query(Event.event_date).filter(Event.recurrence_group_id == schedule.recurrence_group_id).all()
     }
 
     events: list[Event] = []

@@ -14,8 +14,8 @@ def test_user_team_importable():
 
 def _make_coach(db: Session) -> User:
     from services.auth_service import hash_password
-    u = User(username="coach1", email="coach1@test.com",
-             hashed_password=hash_password("Pass1234!"), role="coach")
+
+    u = User(username="coach1", email="coach1@test.com", hashed_password=hash_password("Pass1234!"), role="coach")
     db.add(u)
     db.flush()
     return u
@@ -29,6 +29,7 @@ def test_get_coach_teams_returns_empty_for_unassigned(db):
 
 def test_get_coach_teams_returns_assigned_team(db):
     from models.team import Team
+
     coach = _make_coach(db)
     team = Team(name="Test Team")
     db.add(team)
@@ -53,6 +54,7 @@ def test_check_team_access_coach_denied_unassigned(db):
 
 def test_check_team_access_coach_passes_assigned(db):
     from models.team import Team
+
     coach = _make_coach(db)
     team = Team(name="Allowed Team")
     db.add(team)
@@ -76,8 +78,9 @@ def test_admin_can_assign_coach(admin_client, db):
 
     team = Team(name="Team Alpha")
     db.add(team)
-    coach_user = User(username="coachy", email="coachy@test.com",
-                      hashed_password=hash_password("Pass1234!"), role="coach")
+    coach_user = User(
+        username="coachy", email="coachy@test.com", hashed_password=hash_password("Pass1234!"), role="coach"
+    )
     db.add(coach_user)
     db.commit()
 
@@ -87,6 +90,7 @@ def test_admin_can_assign_coach(admin_client, db):
     )
     assert resp.status_code in (200, 302)
     from models.user_team import UserTeam
+
     ut = db.query(UserTeam).filter_by(user_id=coach_user.id, team_id=team.id).first()
     assert ut is not None
 
@@ -99,16 +103,16 @@ def test_admin_can_remove_coach(admin_client, db):
 
     team = Team(name="Team Beta")
     db.add(team)
-    coach_user = User(username="coachy2", email="coachy2@test.com",
-                      hashed_password=hash_password("Pass1234!"), role="coach")
+    coach_user = User(
+        username="coachy2", email="coachy2@test.com", hashed_password=hash_password("Pass1234!"), role="coach"
+    )
     db.add(coach_user)
     db.flush()
     ut = UserTeam(user_id=coach_user.id, team_id=team.id, season_id=None)
     db.add(ut)
     db.commit()
 
-    resp = admin_client.post(f"/teams/{team.id}/coaches/{ut.id}/delete",
-                             data={"csrf_token": "test"})
+    resp = admin_client.post(f"/teams/{team.id}/coaches/{ut.id}/delete", data={"csrf_token": "test"})
     assert resp.status_code in (200, 302)
     assert db.get(UserTeam, ut.id) is None
 
@@ -116,6 +120,7 @@ def test_admin_can_remove_coach(admin_client, db):
 def test_public_events_has_no_player_names(client, db):
     """Public events page does not expose player names."""
     from models.player import Player
+
     p = Player(first_name="Secret", last_name="PlayerSurname", is_active=True)
     db.add(p)
     db.commit()
@@ -137,8 +142,9 @@ def _setup_coach_with_team(db):
     db.add_all([season, team])
     db.flush()
 
-    coach = User(username="coach_ev", email="coach_ev@test.com",
-                 hashed_password=hash_password("Pass1234!"), role="coach")
+    coach = User(
+        username="coach_ev", email="coach_ev@test.com", hashed_password=hash_password("Pass1234!"), role="coach"
+    )
     db.add(coach)
     db.flush()
 
@@ -174,14 +180,17 @@ def test_coach_can_create_event_on_assigned_team(db):
 
     coach, team, season = _setup_coach_with_team(db)
     c = _coach_client(app, db, coach)
-    resp = c.post("/events/new", data={
-        "title": "Training 1",
-        "event_type": "training",
-        "event_date": "2025-06-01",
-        "team_id": str(team.id),
-        "season_id": str(season.id),
-        "csrf_token": "test",
-    })
+    resp = c.post(
+        "/events/new",
+        data={
+            "title": "Training 1",
+            "event_type": "training",
+            "event_date": "2025-06-01",
+            "team_id": str(team.id),
+            "season_id": str(season.id),
+            "csrf_token": "test",
+        },
+    )
     app.dependency_overrides.clear()
     assert resp.status_code == 302
 
@@ -196,14 +205,17 @@ def test_coach_cannot_create_event_on_unassigned_team(db):
     db.commit()
 
     c = _coach_client(app, db, coach)
-    resp = c.post("/events/new", data={
-        "title": "Should Fail",
-        "event_type": "training",
-        "event_date": "2025-06-01",
-        "team_id": str(other_team.id),
-        "season_id": str(season.id),
-        "csrf_token": "test",
-    })
+    resp = c.post(
+        "/events/new",
+        data={
+            "title": "Should Fail",
+            "event_type": "training",
+            "event_date": "2025-06-01",
+            "team_id": str(other_team.id),
+            "season_id": str(season.id),
+            "csrf_token": "test",
+        },
+    )
     app.dependency_overrides.clear()
     assert resp.status_code == 403
 
@@ -219,17 +231,14 @@ def test_coach_can_mark_attendance_on_their_team(db):
     player = Player(first_name="Alice", last_name="Smith", is_active=True)
     db.add(player)
     db.flush()
-    db.add(PlayerTeam(player_id=player.id, team_id=team.id,
-                               season_id=season.id, priority=1))
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, priority=1))
 
-    event = Event(title="Match", event_type="match", event_date=date(2025, 6, 1),
-                  team_id=team.id, season_id=season.id)
+    event = Event(title="Match", event_type="match", event_date=date(2025, 6, 1), team_id=team.id, season_id=season.id)
     db.add(event)
     db.commit()
 
     c = _coach_client(app, db, coach)
-    resp = c.post(f"/attendance/{event.id}/{player.id}",
-                  data={"status": "present", "csrf_token": "test"})
+    resp = c.post(f"/attendance/{event.id}/{player.id}", data={"status": "present", "csrf_token": "test"})
     app.dependency_overrides.clear()
     assert resp.status_code == 302
 
@@ -243,16 +252,18 @@ def test_coach_can_bulk_update_pt_fields(db):
     player = Player(first_name="Carol", last_name="White", is_active=True)
     db.add(player)
     db.flush()
-    db.add(PlayerTeam(player_id=player.id, team_id=team.id,
-                               season_id=season.id, priority=1))
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, priority=1))
     db.commit()
 
     c = _coach_client(app, db, coach)
-    resp = c.post("/players/bulk-update", json={
-        "players": [{"id": player.id, "shirt_number": 7}],
-        "team_id": team.id,
-        "season_id": season.id,
-    })
+    resp = c.post(
+        "/players/bulk-update",
+        json={
+            "players": [{"id": player.id, "shirt_number": 7}],
+            "team_id": team.id,
+            "season_id": season.id,
+        },
+    )
     app.dependency_overrides.clear()
     assert resp.status_code == 200
 
@@ -263,9 +274,7 @@ def test_coach_cannot_create_player(db):
     coach, _, _ = _setup_coach_with_team(db)
 
     c = _coach_client(app, db, coach)
-    resp = c.post("/players/new", data={
-        "first_name": "New", "last_name": "Player", "csrf_token": "test"
-    })
+    resp = c.post("/players/new", data={"first_name": "New", "last_name": "Player", "csrf_token": "test"})
     app.dependency_overrides.clear()
     assert resp.status_code == 403
 
@@ -313,16 +322,19 @@ def test_coach_cannot_mark_attendance_on_other_team(db):
     player = Player(first_name="Bob", last_name="Jones", is_active=True)
     db.add(player)
     db.flush()
-    db.add(PlayerTeam(player_id=player.id, team_id=other_team.id,
-                               season_id=other_season.id, priority=1))
-    event = Event(title="Other Match", event_type="match", event_date=date(2026, 6, 1),
-                  team_id=other_team.id, season_id=other_season.id)
+    db.add(PlayerTeam(player_id=player.id, team_id=other_team.id, season_id=other_season.id, priority=1))
+    event = Event(
+        title="Other Match",
+        event_type="match",
+        event_date=date(2026, 6, 1),
+        team_id=other_team.id,
+        season_id=other_season.id,
+    )
     db.add(event)
     db.commit()
 
     c = _coach_client(app, db, coach)
-    resp = c.post(f"/attendance/{event.id}/{player.id}",
-                  data={"status": "present", "csrf_token": "test"})
+    resp = c.post(f"/attendance/{event.id}/{player.id}", data={"status": "present", "csrf_token": "test"})
     app.dependency_overrides.clear()
     assert resp.status_code == 403
 
@@ -343,16 +355,22 @@ def test_coach_season_scoped_denied_other_season(db):
     db.add_all([season_a, season_b, team])
     db.flush()
 
-    coach = User(username="scoped_coach", email="scoped@test.com",
-                 hashed_password=hash_password("Pass1234!"), role="coach")
+    coach = User(
+        username="scoped_coach", email="scoped@test.com", hashed_password=hash_password("Pass1234!"), role="coach"
+    )
     db.add(coach)
     db.flush()
 
     # Assign coach to team X for season A ONLY
     db.add(UserTeam(user_id=coach.id, team_id=team.id, season_id=season_a.id))
 
-    event_b = Event(title="Season B Event", event_type="training",
-                    event_date=date(2026, 3, 1), team_id=team.id, season_id=season_b.id)
+    event_b = Event(
+        title="Season B Event",
+        event_type="training",
+        event_date=date(2026, 3, 1),
+        team_id=team.id,
+        season_id=season_b.id,
+    )
     db.add(event_b)
     db.commit()
 
@@ -377,16 +395,21 @@ def test_coach_null_season_can_access_all_seasons(db):
     db.add_all([season_c, team])
     db.flush()
 
-    coach = User(username="all_season_coach", email="allseason@test.com",
-                 hashed_password=hash_password("Pass1234!"), role="coach")
+    coach = User(
+        username="all_season_coach",
+        email="allseason@test.com",
+        hashed_password=hash_password("Pass1234!"),
+        role="coach",
+    )
     db.add(coach)
     db.flush()
 
     # Assign with season_id=NULL → all seasons
     db.add(UserTeam(user_id=coach.id, team_id=team.id, season_id=None))
 
-    event_c = Event(title="Future Event", event_type="training",
-                    event_date=date(2027, 5, 1), team_id=team.id, season_id=season_c.id)
+    event_c = Event(
+        title="Future Event", event_type="training", event_date=date(2027, 5, 1), team_id=team.id, season_id=season_c.id
+    )
     db.add(event_c)
     db.commit()
 
@@ -410,14 +433,20 @@ def test_coach_with_no_teams_behaves_like_member(db):
     db.add_all([season, team])
     db.flush()
 
-    coach = User(username="no_team_coach", email="noteam@test.com",
-                 hashed_password=hash_password("Pass1234!"), role="coach")
+    coach = User(
+        username="no_team_coach", email="noteam@test.com", hashed_password=hash_password("Pass1234!"), role="coach"
+    )
     db.add(coach)
     db.flush()
     # No UserTeam row added
 
-    event = Event(title="No Access Event", event_type="training",
-                  event_date=date(2025, 7, 1), team_id=team.id, season_id=season.id)
+    event = Event(
+        title="No Access Event",
+        event_type="training",
+        event_date=date(2025, 7, 1),
+        team_id=team.id,
+        season_id=season.id,
+    )
     db.add(event)
     db.commit()
 

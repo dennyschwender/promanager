@@ -121,7 +121,7 @@ def test_archive_player(admin_client, db):
     resp = admin_client.post(f"/players/{pid}/archive", follow_redirects=False)
     assert resp.status_code == 302
     db.refresh(player)
-    assert player.archived_at is not None   # soft-archived, not gone
+    assert player.archived_at is not None  # soft-archived, not gone
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +235,7 @@ def test_player_team_has_season_id(db):
 # Helpers (used by bulk-assign and bulk-update tests)
 # ---------------------------------------------------------------------------
 
+
 def _make_season(db, name="2025/26", is_active=True):
     s = Season(name=name, is_active=is_active)
     db.add(s)
@@ -259,6 +260,7 @@ def _make_player(db, first="Alice", last="Smith"):
 # ---------------------------------------------------------------------------
 # Bulk assign
 # ---------------------------------------------------------------------------
+
 
 def test_bulk_assign_creates_player_teams(admin_client, db):
     season = _make_season(db)
@@ -311,6 +313,7 @@ def test_bulk_assign_requires_admin(client, db):
 # ---------------------------------------------------------------------------
 # Bulk update
 # ---------------------------------------------------------------------------
+
 
 def test_bulk_update_player_fields(admin_client, db):
     p = _make_player(db, "Alice", "Old")
@@ -452,8 +455,8 @@ def test_bulk_update_partial_success(admin_client, db):
             "season_id": season.id,
             "team_id": team.id,
             "players": [
-                {"id": p1.id, "email": "han@ok.com"},   # succeeds
-                {"id": p2.id, "shirt_number": 1},       # conflicts with p1
+                {"id": p1.id, "email": "han@ok.com"},  # succeeds
+                {"id": p2.id, "shirt_number": 1},  # conflicts with p1
             ],
         },
         headers={"X-CSRF-Token": "test"},
