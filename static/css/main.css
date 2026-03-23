@@ -15,7 +15,7 @@
 
 /* ── Global density overrides (compact Pico) ─────────────── */
 :root {
-  --font-size: 15px !important;
+  --font-size: 16px !important;
   --spacing: 0.75rem;
   --form-element-spacing-vertical: 0.4rem;
   --form-element-spacing-horizontal: 0.65rem;
