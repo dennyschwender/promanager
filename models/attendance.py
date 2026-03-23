@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from typing import Optional
+
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,9 +46,16 @@ class Attendance(Base):
         onupdate=_utcnow,
     )
 
+    borrowed_from_team_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("teams.id", ondelete="SET NULL"), nullable=True, default=None
+    )
+
     # ── Relationships ──────────────────────────────────────────────────────
     event: Mapped[Event] = relationship("Event", back_populates="attendances", lazy="select")
     player: Mapped[Player] = relationship("Player", back_populates="attendances", lazy="select")
+    borrowed_from_team: Mapped[Optional["Team"]] = relationship(
+        "Team", lazy="select", foreign_keys=[borrowed_from_team_id]
+    )
 
     def __repr__(self) -> str:
         return f"<Attendance id={self.id} event_id={self.event_id} player_id={self.player_id} status={self.status!r}>"
