@@ -21,14 +21,29 @@
   </div>
 </div>
 
-{# ── Compact info strip ────────────────────────────────────────── #}
-<p class="text-muted" style="margin-bottom:1rem;font-size:.92rem;">
-  📅 {{ event.event_date }}
-  {% if event.event_time %} · {{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}{% endif %}
-  {% if event.location %} · 📍 <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a>{% endif %}
-  {% if event.meeting_time %} · {{ t('events_detail.meeting_point') }}: {{ event.meeting_time.strftime('%H:%M') }}{% if event.meeting_location %} @ {{ event.meeting_location }}{% endif %}{% endif %}
-  {% if event.description %} · {{ event.description }}{% endif %}
-</p>
+{# ── Info card ─────────────────────────────────────────────────── #}
+<article style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
+  <dl style="display:grid;grid-template-columns:max-content 1fr;gap:.3rem .75rem;margin:0;">
+    <dt class="text-muted" style="white-space:nowrap;">📅 {{ t('events.form.date') }}</dt>
+    <dd style="margin:0;">{{ event.event_date }}</dd>
+    {% if event.event_time %}
+    <dt class="text-muted" style="white-space:nowrap;">🕐 {{ t('events.form.start_time') }}</dt>
+    <dd style="margin:0;">{{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}</dd>
+    {% endif %}
+    {% if event.location %}
+    <dt class="text-muted" style="white-space:nowrap;">📍 {{ t('events.form.event_location') }}</dt>
+    <dd style="margin:0;"><a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a></dd>
+    {% endif %}
+    {% if event.meeting_time %}
+    <dt class="text-muted" style="white-space:nowrap;">🤝 {{ t('events_detail.meeting_point') }}</dt>
+    <dd style="margin:0;">{{ event.meeting_time.strftime('%H:%M') }}{% if event.meeting_location %} @ {{ event.meeting_location }}{% endif %}</dd>
+    {% endif %}
+    {% if event.description %}
+    <dt class="text-muted" style="white-space:nowrap;">📝</dt>
+    <dd style="margin:0;">{{ event.description }}</dd>
+    {% endif %}
+  </dl>
+</article>
 
 {# ── Action bar ────────────────────────────────────────────────── #}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
@@ -69,7 +84,7 @@
   <p class="text-muted">{{ t('events_detail.no_registration_note') }}</p>
 {% else %}
 <h3>{{ t('events.attendance_summary') }}</h3>
-<div id="attendance-columns" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+<div id="attendance-columns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;align-items:flex-start;">
   {% for bucket, label in [
     ("present",  t('attendance.status_attend')),
     ("absent",   t('attendance.status_absent')),
@@ -77,11 +92,12 @@
     ("unknown",  t('attendance.status_unknown'))
   ] %}
   <div class="att-col" data-bucket="{{ bucket }}"
-       style="flex:1;min-width:160px;{% if not summary[bucket] %}display:none;{% endif %}">
-    <div class="att-col-header">
+       style="{% if not summary[bucket] %}display:none;{% endif %}">
+    <div style="border:1px solid var(--muted-border-color,#ddd);border-radius:.5rem;padding:.75rem;">
+    <div class="att-col-header" style="margin-bottom:.5rem;">
       <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length }}</span>)</span>
     </div>
-    <ul class="att-player-list" style="list-style:none;padding:0;margin:.5rem 0 0;">
+    <ul class="att-player-list" style="list-style:none;padding:0;margin:0;">
       {% for entry in summary[bucket] %}
       <li>
         <button type="button" class="att-player-btn"
@@ -95,6 +111,7 @@
       </li>
       {% endfor %}
     </ul>
+    </div>
   </div>
   {% endfor %}
 </div>
