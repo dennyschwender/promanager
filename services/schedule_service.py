@@ -56,10 +56,18 @@ def generate_events_for_schedule(
     """Generate Event rows for a schedule. Flushes each event before calling
     ensure_attendance_records (which commits internally). Caller should not
     expect a fully uncommitted state after this call."""
-    end = schedule.end_date
+    from models.season import Season  # local import to avoid circular deps
+
+    season = db.query(Season).filter(Season.id == schedule.season_id).first() if schedule.season_id else None
+
+    start = schedule.start_date or (season.start_date if season else None)
+    end = schedule.end_date or (season.end_date if season else None)
+
+    if start is None:
+        raise ValueError("Set a start date on the schedule (or assign a season with a start date).")
     if end is None:
-        raise ValueError("Set an end date on the schedule.")
-    if schedule.start_date > end:
+        raise ValueError("Set an end date on the schedule (or assign a season with an end date).")
+    if start > end:
         raise ValueError("Start date must be on or before end date.")
 
     # At this point `end` is always a concrete date — the None case raised above.
@@ -70,7 +78,7 @@ def generate_events_for_schedule(
     }
 
     events: list[Event] = []
-    cur = schedule.start_date
+    cur = start
     while cur <= end:
         if cur in existing_dates:
             cur = advance_date(cur, schedule.recurrence_rule)
