@@ -1,6 +1,7 @@
 """Tests for /events routes."""
 
-from datetime import date
+import uuid
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from models.event import Event
@@ -127,3 +128,86 @@ def test_delete_event(admin_client, db):
     resp = admin_client.post(f"/events/{eid}/delete", follow_redirects=False)
     assert resp.status_code == 302
     assert db.get(Event, eid) is None
+
+
+# ---------------------------------------------------------------------------
+# Recurrence-aware deletion
+# ---------------------------------------------------------------------------
+
+
+def _make_recurring_events(db, count=3, start_days_ago=7):
+    """Create `count` events sharing a recurrence_group_id.
+
+    The first event is `start_days_ago` days in the past; subsequent events
+    are 7 days apart (weekly). Returns list of Event objects sorted by date.
+    """
+    group_id = str(uuid.uuid4())
+    events = []
+    for i in range(count):
+        ev = Event(
+            title=f"Recurring {i}",
+            event_type="training",
+            event_date=date.today() - timedelta(days=start_days_ago) + timedelta(weeks=i),
+            recurrence_group_id=group_id,
+            recurrence_rule="weekly",
+        )
+        db.add(ev)
+        events.append(ev)
+    db.commit()
+    for ev in events:
+        db.refresh(ev)
+    return events
+
+
+def test_event_delete_single_leaves_series_intact(admin_client, db):
+    """scope=single deletes only the targeted event; other series events survive."""
+    evs = _make_recurring_events(db, count=3, start_days_ago=14)
+    target = evs[0]  # past event
+    sibling = evs[1]
+
+    resp = admin_client.post(
+        f"/events/{target.id}/delete",
+        data={"scope": "single"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    assert db.get(Event, target.id) is None
+    assert db.get(Event, sibling.id) is not None
+
+
+def test_event_delete_future_removes_current_and_future(admin_client, db):
+    """scope=future deletes the current event and all future events in the series,
+    but leaves past events untouched."""
+    # evs[0] is 7 days ago (past), evs[1] is today, evs[2] is 7 days from now
+    evs = _make_recurring_events(db, count=3, start_days_ago=7)
+    past_ev = evs[0]
+    today_ev = evs[1]
+    future_ev = evs[2]
+
+    resp = admin_client.post(
+        f"/events/{today_ev.id}/delete",
+        data={"scope": "future"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    assert db.get(Event, past_ev.id) is not None   # past — untouched
+    assert db.get(Event, today_ev.id) is None       # today — deleted
+    assert db.get(Event, future_ev.id) is None      # future — deleted
+
+
+def test_event_delete_future_on_nonrecurring_falls_back_to_single(admin_client, db):
+    """scope=future on a non-recurring event silently deletes only that event."""
+    ev = Event(title="Solo", event_type="training", event_date=date.today())
+    db.add(ev)
+    db.commit()
+    db.refresh(ev)
+
+    resp = admin_client.post(
+        f"/events/{ev.id}/delete",
+        data={"scope": "future"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert db.get(Event, ev.id) is None
