@@ -8,13 +8,14 @@ from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.csrf import require_csrf
 from app.database import get_db
 from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
+from models.player import Player
 from models.season import Season
 from models.team import Team
 from models.user import User
@@ -414,7 +415,30 @@ async def event_detail(
 
     summary = get_event_attendance_detail(db, event_id)
 
-    future_count = count_future_events(db, event.recurrence_group_id) if event.recurrence_group_id else 0
+    future_count = (
+        count_future_events(db, event.recurrence_group_id)
+        if event.recurrence_group_id
+        else 0
+    )
+
+    atts = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.borrowed_from_team))
+        .filter(Attendance.event_id == event_id)
+        .all()
+    )
+    att_by_player = {a.player_id: a for a in atts}
+
+    if not (user.is_admin or user.is_coach):
+        user_player_ids = {
+            p.id
+            for p in db.query(Player).filter(
+                Player.user_id == user.id,
+                Player.archived_at.is_(None),
+            ).all()
+        }
+    else:
+        user_player_ids = set()
 
     return render(
         request,
@@ -425,6 +449,9 @@ async def event_detail(
             "summary": summary,
             "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
             "future_count": future_count,
+            "att_by_player": att_by_player,
+            "user_player_ids": user_player_ids,
+            "flash": request.query_params.get("flash"),
         },
     )
 
