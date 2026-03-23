@@ -165,7 +165,7 @@ def test_member_cannot_update_another_members_player(client, db):
     )
     # Must be redirected away — not allowed to update another user's player
     assert resp.status_code == 302
-    assert f"/attendance/{event.id}" in resp.headers["location"]
+    assert f"/events/{event.id}" in resp.headers["location"]
 
     # Attendance must not have been changed to 'present'
     att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player_b.id).first()
@@ -292,7 +292,7 @@ def test_update_attendance_form_redirect_unchanged(admin_client, db):
         follow_redirects=False,
     )
     assert resp.status_code == 302
-    assert f"/attendance/{event.id}" in resp.headers["location"]
+    assert f"/events/{event.id}" in resp.headers["location"]
 
 
 def test_get_event_attendance_detail_includes_notes(db):
