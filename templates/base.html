@@ -200,6 +200,13 @@ document.addEventListener('DOMContentLoaded', function() {
     altFormat: "d/m/Y",
     allowInput: true
   });
+  flatpickr("input[type=time]", {
+    enableTime: true,
+    noCalendar: true,
+    time_24hr: true,
+    dateFormat: "H:i",
+    allowInput: true
+  });
 </script>
 </body>
 </html>

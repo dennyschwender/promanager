@@ -307,7 +307,12 @@ function addScheduleRow() {
       sel.appendChild(opt);
     });
   }
-  document.getElementById('schedule-rows').appendChild(clone);
+  const container = document.getElementById('schedule-rows');
+  container.appendChild(clone);
+  const newRow = container.lastElementChild;
+  newRow.querySelectorAll('input[type=time]').forEach(function(el) {
+    flatpickr(el, { enableTime: true, noCalendar: true, time_24hr: true, dateFormat: 'H:i', allowInput: true });
+  });
 }
 
 function removeRow(btn) {
