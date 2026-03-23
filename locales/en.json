@@ -118,7 +118,18 @@
     "status_maybe": "Maybe",
     "note_optional": "Note (optional)",
     "update_header": "Update",
-    "at_time": "at"
+    "at_time": "at",
+    "borrow_btn": "Add borrowed player",
+    "borrow_title": "Borrow a player",
+    "borrow_search_placeholder": "Search by name (min. 2 chars)...",
+    "borrow_add": "Add to event",
+    "borrow_no_team": "no team",
+    "borrow_tooltip": "Borrowed from %{team}",
+    "borrow_tooltip_no_team": "Borrowed — no home team",
+    "borrow_err_duplicate": "This player is already in the attendance list.",
+    "borrow_err_not_found": "Player not found or inactive.",
+    "borrow_err_event_not_found": "Event not found.",
+    "borrow_err_generic": "Could not add player. Please try again."
   },
   "players": {
     "title": "Players",

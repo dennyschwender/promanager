@@ -118,7 +118,18 @@
     "status_maybe": "Peut-être",
     "note_optional": "Note (optionnel)",
     "update_header": "Mettre à jour",
-    "at_time": "à"
+    "at_time": "à",
+    "borrow_btn": "Ajouter un joueur emprunté",
+    "borrow_title": "Emprunter un joueur",
+    "borrow_search_placeholder": "Rechercher par nom (min. 2 caractères)...",
+    "borrow_add": "Ajouter à l'événement",
+    "borrow_no_team": "sans équipe",
+    "borrow_tooltip": "Emprunté à %{team}",
+    "borrow_tooltip_no_team": "Emprunté — pas d'équipe d'origine",
+    "borrow_err_duplicate": "Ce joueur est déjà dans la liste des présences.",
+    "borrow_err_not_found": "Joueur introuvable ou inactif.",
+    "borrow_err_event_not_found": "Événement introuvable.",
+    "borrow_err_generic": "Impossible d'ajouter le joueur. Veuillez réessayer."
   },
   "players": {
     "title": "Joueurs",

@@ -118,7 +118,18 @@
     "status_maybe": "Vielleicht",
     "note_optional": "Notiz (optional)",
     "update_header": "Aktualisieren",
-    "at_time": "um"
+    "at_time": "um",
+    "borrow_btn": "Ausgeliehenen Spieler hinzufügen",
+    "borrow_title": "Spieler ausleihen",
+    "borrow_search_placeholder": "Nach Name suchen (min. 2 Zeichen)...",
+    "borrow_add": "Zum Ereignis hinzufügen",
+    "borrow_no_team": "kein Team",
+    "borrow_tooltip": "Ausgeliehen von %{team}",
+    "borrow_tooltip_no_team": "Ausgeliehen — kein Heimteam",
+    "borrow_err_duplicate": "Dieser Spieler ist bereits in der Anwesenheitsliste.",
+    "borrow_err_not_found": "Spieler nicht gefunden oder inaktiv.",
+    "borrow_err_event_not_found": "Ereignis nicht gefunden.",
+    "borrow_err_generic": "Spieler konnte nicht hinzugefügt werden. Bitte erneut versuchen."
   },
   "players": {
     "title": "Spieler",

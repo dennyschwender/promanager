@@ -118,7 +118,18 @@
     "status_maybe": "Forse",
     "note_optional": "Nota (opzionale)",
     "update_header": "Aggiorna",
-    "at_time": "alle"
+    "at_time": "alle",
+    "borrow_btn": "Aggiungi giocatore in prestito",
+    "borrow_title": "Prendi in prestito un giocatore",
+    "borrow_search_placeholder": "Cerca per nome (min. 2 caratteri)...",
+    "borrow_add": "Aggiungi all'evento",
+    "borrow_no_team": "nessuna squadra",
+    "borrow_tooltip": "In prestito da %{team}",
+    "borrow_tooltip_no_team": "In prestito — nessuna squadra di appartenenza",
+    "borrow_err_duplicate": "Questo giocatore è già nell'elenco presenze.",
+    "borrow_err_not_found": "Giocatore non trovato o non attivo.",
+    "borrow_err_event_not_found": "Evento non trovato.",
+    "borrow_err_generic": "Impossibile aggiungere il giocatore. Riprovare."
   },
   "players": {
     "title": "Giocatori",
