@@ -192,9 +192,9 @@ def test_event_delete_future_removes_current_and_future(admin_client, db):
     )
     assert resp.status_code == 302
 
-    assert db.get(Event, past_ev.id) is not None   # past — untouched
-    assert db.get(Event, today_ev.id) is None       # today — deleted
-    assert db.get(Event, future_ev.id) is None      # future — deleted
+    assert db.get(Event, past_ev.id) is not None  # past — untouched
+    assert db.get(Event, today_ev.id) is None  # today — deleted
+    assert db.get(Event, future_ev.id) is None  # future — deleted
 
 
 def test_event_delete_future_on_nonrecurring_falls_back_to_single(admin_client, db):
@@ -211,3 +211,62 @@ def test_event_delete_future_on_nonrecurring_falls_back_to_single(admin_client, 
     )
     assert resp.status_code == 302
     assert db.get(Event, ev.id) is None
+
+
+def test_event_detail_includes_att_by_player(admin_client, db):
+    """GET /events/{id} returns 200 and the route now provides att_by_player context."""
+    from models.attendance import Attendance
+    from models.player import Player
+
+    event = Event(title="Context Test", event_type="training", event_date=date.today())
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    player = Player(first_name="Test", last_name="Player", is_active=True)
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+
+    att = Attendance(event_id=event.id, player_id=player.id, status="present")
+    db.add(att)
+    db.commit()
+
+    resp = admin_client.get(f"/events/{event.id}", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_member_can_edit_own_player_from_detail(client, db):
+    """A member POSTing attendance for their own player redirects to /events/{id}."""
+    from models.attendance import Attendance
+    from models.player import Player
+    from services.auth_service import create_session_cookie, create_user
+
+    member = create_user(db, "member_detail", "detail@test.com", "password1", role="member")
+    event = Event(title="Member Edit Event", event_type="training", event_date=date.today())
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    player = Player(first_name="Own", last_name="Player", is_active=True, user_id=member.id)
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+
+    db.add(Attendance(event_id=event.id, player_id=player.id, status="unknown"))
+    db.commit()
+
+    client.cookies.set("session_user_id", create_session_cookie(member.id))
+    resp = client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "present", "note": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert f"/events/{event.id}" in resp.headers["location"]
+
+    att = db.query(Attendance).filter(
+        Attendance.event_id == event.id, Attendance.player_id == player.id
+    ).first()
+    assert att is not None
+    assert att.status == "present"
