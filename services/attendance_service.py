@@ -286,11 +286,7 @@ def backfill_attendance_for_player(
     """
     today = date.today()
 
-    events = (
-        db.query(Event)
-        .filter(Event.team_id == team_id, Event.season_id == season_id)
-        .all()
-    )
+    events = db.query(Event).filter(Event.team_id == team_id, Event.season_id == season_id).all()
     if not events:
         return 0
 
@@ -298,11 +294,7 @@ def backfill_attendance_for_player(
     if player is None or not player.is_active:
         return 0
 
-    mem = (
-        db.query(PlayerTeam)
-        .filter_by(player_id=player_id, team_id=team_id, season_id=season_id)
-        .first()
-    )
+    mem = db.query(PlayerTeam).filter_by(player_id=player_id, team_id=team_id, season_id=season_id).first()
 
     event_ids = [e.id for e in events]
     existing_event_ids = {

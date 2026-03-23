@@ -265,8 +265,6 @@ def test_member_can_edit_own_player_from_detail(client, db):
     assert resp.status_code == 302
     assert f"/events/{event.id}" in resp.headers["location"]
 
-    att = db.query(Attendance).filter(
-        Attendance.event_id == event.id, Attendance.player_id == player.id
-    ).first()
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "present"

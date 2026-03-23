@@ -415,11 +415,7 @@ async def event_detail(
 
     summary = get_event_attendance_detail(db, event_id)
 
-    future_count = (
-        count_future_events(db, event.recurrence_group_id)
-        if event.recurrence_group_id
-        else 0
-    )
+    future_count = count_future_events(db, event.recurrence_group_id) if event.recurrence_group_id else 0
 
     atts = (
         db.query(Attendance)
@@ -432,10 +428,12 @@ async def event_detail(
     if not (user.is_admin or user.is_coach):
         user_player_ids = {
             p.id
-            for p in db.query(Player).filter(
+            for p in db.query(Player)
+            .filter(
                 Player.user_id == user.id,
                 Player.archived_at.is_(None),
-            ).all()
+            )
+            .all()
         }
     else:
         user_player_ids = set()
@@ -480,11 +478,7 @@ async def event_edit_get(
     else:
         managed_ids = get_coach_teams(user, db)
         teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
-    future_count = (
-        count_future_events(db, event.recurrence_group_id)
-        if event.recurrence_group_id
-        else 0
-    )
+    future_count = count_future_events(db, event.recurrence_group_id) if event.recurrence_group_id else 0
 
     return render(
         request,

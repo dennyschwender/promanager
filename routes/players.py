@@ -85,10 +85,12 @@ def _sync_memberships(
     # Capture existing team_ids before deletion so we know what's new
     existing_team_ids = {
         pt.team_id
-        for pt in db.query(PlayerTeam).filter(
+        for pt in db.query(PlayerTeam)
+        .filter(
             PlayerTeam.player_id == player.id,
             PlayerTeam.season_id == season_id,
-        ).all()
+        )
+        .all()
     }
 
     db.query(PlayerTeam).filter(
@@ -884,19 +886,14 @@ async def player_search(
             season_id = ev.season_id
             excluded_player_ids = {
                 row.player_id
-                for row in db.query(Attendance.player_id)
-                .filter(Attendance.event_id == exclude_event_id)
-                .all()
+                for row in db.query(Attendance.player_id).filter(Attendance.event_id == exclude_event_id).all()
             }
 
     term = f"%{q.strip()}%"
-    query = (
-        db.query(Player)
-        .filter(
-            Player.is_active.is_(True),
-            Player.archived_at.is_(None),
-            or_(Player.first_name.ilike(term), Player.last_name.ilike(term)),
-        )
+    query = db.query(Player).filter(
+        Player.is_active.is_(True),
+        Player.archived_at.is_(None),
+        or_(Player.first_name.ilike(term), Player.last_name.ilike(term)),
     )
     # Apply exclusion at the DB level so the LIMIT applies to valid candidates only
     if excluded_player_ids:
@@ -918,11 +915,13 @@ async def player_search(
                 team = db.get(Team, mem.team_id)
                 if team:
                     team_name = team.name
-        results.append({
-            "id": p.id,
-            "full_name": f"{p.first_name} {p.last_name}",
-            "team_name": team_name,
-        })
+        results.append(
+            {
+                "id": p.id,
+                "full_name": f"{p.first_name} {p.last_name}",
+                "team_name": team_name,
+            }
+        )
 
     return JSONResponse(results)
 
