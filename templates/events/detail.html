@@ -139,7 +139,7 @@
   function openPopover(btn) {
     var rect = btn.getBoundingClientRect();
     popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
-    popover.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 260) + 'px';
+    popover.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 260) + 'px';
     popName.textContent = btn.dataset.playerName;
     popNote.value = btn.dataset.note || '';
     popError.style.display = 'none';
@@ -230,11 +230,11 @@
       e.stopPropagation();
       var menu = toggle.nextElementSibling;
       var isOpen = menu.classList.contains('open');
-      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
       if (!isOpen) menu.classList.add('open');
       return;
     }
-    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
   });
 })();
 </script>
