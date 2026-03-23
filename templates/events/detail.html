@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% block head_extra %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endblock %}
+{% block head_extra %}
+<meta name="csrf-token" content="{{ request.state.csrf_token }}">
+<style>
+.att-player-btn:hover { background: var(--primary-focus, rgba(0,0,0,.06)) !important; }
+</style>
+{% endblock %}
 {% block title %}{{ event.title }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
@@ -99,13 +104,13 @@
     </div>
     <ul class="att-player-list" style="list-style:none;padding:0;margin:0;">
       {% for entry in summary[bucket] %}
-      <li>
+      <li style="border-top:1px solid var(--muted-border-color,#eee);{% if loop.first %}border-top:none;{% endif %}">
         <button type="button" class="att-player-btn"
                 data-player-id="{{ entry.player.id }}"
                 data-player-name="{{ entry.player.full_name | e }}"
                 data-status="{{ bucket }}"
                 data-note="{{ entry.note | e }}"
-                style="background:none;border:none;padding:.2rem 0;cursor:pointer;text-align:left;width:100%;color:inherit;text-decoration:underline dotted;">
+                style="background:none;border:none;padding:.35rem .25rem;cursor:pointer;text-align:left;width:100%;color:inherit;font-size:.88rem;border-radius:.25rem;transition:background .15s;">
           {{ entry.player.full_name }}
         </button>
       </li>
