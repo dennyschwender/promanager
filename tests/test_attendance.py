@@ -242,3 +242,21 @@ def test_ensure_attendance_no_season_creates_no_records(db):
 
     count = db.query(Attendance).filter(Attendance.event_id == event.id).count()
     assert count == 0
+
+
+def test_get_event_attendance_detail_includes_notes(db):
+    """get_event_attendance_detail returns player + note per bucket."""
+    from services.attendance_service import get_event_attendance_detail
+
+    event = _make_event(db, title="Detail Test")
+    p1 = _make_player(db, "Alice", "Detail")
+    set_attendance(db, event.id, p1.id, "present", note="On time")
+
+    detail = get_event_attendance_detail(db, event.id)
+
+    assert len(detail["present"]) == 1
+    entry = detail["present"][0]
+    assert entry["player"].first_name == "Alice"
+    assert entry["note"] == "On time"
+    assert len(detail["absent"]) == 0
+    assert len(detail["unknown"]) == 0

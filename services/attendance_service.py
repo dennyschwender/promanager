@@ -70,6 +70,33 @@ def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     return summary
 
 
+def get_event_attendance_detail(db: Session, event_id: int) -> dict:
+    """Return dict keyed by status, each value a list of {player, note} dicts.
+
+    Unlike get_event_attendance_summary, this preserves the attendance note
+    so it can be surfaced in the event detail UI.
+    """
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+
+    attendances = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.player))
+        .filter(Attendance.event_id == event_id)
+        .all()
+    )
+    detail: dict[str, list[dict]] = {
+        "present": [],
+        "absent": [],
+        "maybe": [],
+        "unknown": [],
+    }
+    for att in attendances:
+        bucket = att.status if att.status in detail else "unknown"
+        if att.player:
+            detail[bucket].append({"player": att.player, "note": att.note or ""})
+    return detail
+
+
 def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
     """Per-player stats for an entire season.
 
