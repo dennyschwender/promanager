@@ -59,33 +59,37 @@
 
   {# ── Shared edit dialog ────────────────────────────────────────── #}
   <dialog id="att-edit-dialog" class="att-dialog">
-    <h3 id="att-dialog-name" class="att-dialog-title"></h3>
-    <form method="post" id="att-dialog-form">
-      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <fieldset>
-        <legend>{{ t('attendance.status') }}</legend>
-        <div class="att-dialog-status-grid">
-          {% for s, label in [
-            ("present", t('attendance.status_attend')),
-            ("absent",  t('attendance.status_absent')),
-            ("maybe",   t('attendance.status_maybe')),
-            ("unknown", t('attendance.status_unknown'))
-          ] %}
-          <label class="att-dialog-radio">
-            <input type="radio" name="status" value="{{ s }}"> {{ label }}
-          </label>
-          {% endfor %}
-        </div>
-      </fieldset>
-      <label>
-        {{ t('attendance.note_optional') }}
-        <input type="text" name="note" id="att-dialog-note" placeholder="{{ t('attendance.notes_placeholder') }}">
-      </label>
-      <div class="att-dialog-actions">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('att-edit-dialog').close()">{{ t('common.cancel') }}</button>
-        <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
-      </div>
-    </form>
+    <article>
+      <header>
+        <h3 id="att-dialog-name"></h3>
+      </header>
+      <form method="post" id="att-dialog-form">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+        <fieldset>
+          <legend>{{ t('attendance.status') }}</legend>
+          <div class="att-dialog-status-grid">
+            {% for s, label in [
+              ("present", t('attendance.status_attend')),
+              ("absent",  t('attendance.status_absent')),
+              ("maybe",   t('attendance.status_maybe')),
+              ("unknown", t('attendance.status_unknown'))
+            ] %}
+            <label class="att-dialog-radio">
+              <input type="radio" name="status" value="{{ s }}"> {{ label }}
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <label>
+          {{ t('attendance.note_optional') }}
+          <input type="text" name="note" id="att-dialog-note" placeholder="{{ t('attendance.notes_placeholder') }}">
+        </label>
+        <footer class="att-dialog-actions">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('att-edit-dialog').close()">{{ t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+        </footer>
+      </form>
+    </article>
   </dialog>
 
   <script>

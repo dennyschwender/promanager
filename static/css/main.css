@@ -942,22 +942,14 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 
 /* ── Attendance edit dialog ─────────────────────────────────────── */
 .att-dialog {
-  border-radius: .5rem;
-  border: 1px solid var(--muted-border-color, #ddd);
-  padding: 1.5rem;
   min-width: 300px;
   max-width: 420px;
   width: 90vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, .2);
+  padding: 0;
 }
 
 .att-dialog::backdrop {
   background: rgba(0, 0, 0, .4);
-}
-
-.att-dialog-title {
-  margin-top: 0;
-  margin-bottom: 1rem;
 }
 
 .att-dialog-status-grid {
@@ -978,5 +970,4 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   display: flex;
   gap: .5rem;
   justify-content: flex-end;
-  margin-top: 1rem;
 }
