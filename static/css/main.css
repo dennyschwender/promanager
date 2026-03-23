@@ -806,6 +806,18 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   align-items: start;
 }
 
+@media (max-width: 600px) {
+  .att-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .att-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .att-col-hidden {
   display: none;
 }
