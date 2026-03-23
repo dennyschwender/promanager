@@ -971,3 +971,8 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   gap: .5rem;
   justify-content: flex-end;
 }
+
+.att-dialog article {
+  overflow: visible;
+  margin-bottom: 0;
+}
