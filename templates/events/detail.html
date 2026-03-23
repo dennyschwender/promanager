@@ -24,14 +24,14 @@
 {# ── Info card ─────────────────────────────────────────────────── #}
 <article class="event-info-card">
   <dl class="event-info-dl">
-    <dt class="text-muted">📅 {{ t('events.form.date') }}</dt>
+    <dt class="text-muted">📅 {{ t('events.date') }}</dt>
     <dd>{{ event.event_date }}</dd>
     {% if event.event_time %}
-    <dt class="text-muted">🕐 {{ t('events.form.start_time') }}</dt>
+    <dt class="text-muted">🕐 {{ t('events.time') }}</dt>
     <dd>{{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}</dd>
     {% endif %}
     {% if event.location %}
-    <dt class="text-muted">📍 {{ t('events.form.event_location') }}</dt>
+    <dt class="text-muted">📍 {{ t('events.location') }}</dt>
     <dd><a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a></dd>
     {% endif %}
     {% if event.meeting_time %}

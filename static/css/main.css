@@ -821,13 +821,13 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 }
 
 .att-player-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .att-player-item {
-  list-style: none;
+  list-style: none !important;
   border-top: 1px solid var(--muted-border-color, #eee);
 }
 
@@ -835,21 +835,25 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   border-top: none;
 }
 
-.att-player-btn {
-  background: none;
-  border: none;
+.att-player-btn,
+.att-player-btn:not(:disabled) {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
   padding: .35rem .25rem;
+  margin: 0;
   cursor: pointer;
   text-align: left;
   width: 100%;
-  color: inherit;
+  color: inherit !important;
   font-size: .88rem;
   border-radius: .25rem;
   transition: background .15s;
 }
 
-.att-player-btn:hover {
-  background: var(--primary-focus, rgba(0, 0, 0, .06));
+.att-player-btn:hover,
+.att-player-btn:not(:disabled):hover {
+  background: var(--primary-focus, rgba(0, 0, 0, .06)) !important;
 }
 
 /* ── Attendance popover ─────────────────────────────────────────── */
