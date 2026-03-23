@@ -59,7 +59,7 @@
           <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
           <div class="action-dropdown-menu">
             {% if section == 'upcoming' %}
-              <a href="/attendance/{{ e.id }}">{{ t('events.attendance') }}</a>
+              <a href="/events/{{ e.id }}">{{ t('events.attendance') }}</a>
             {% else %}
               <a href="/events/{{ e.id }}">{{ t('events.view') }}</a>
             {% endif %}

@@ -33,7 +33,7 @@
       <td><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
       <td><span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span></td>
       <td>{{ event.location or "—" }}</td>
-      <td><a href="/attendance/{{ event.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a></td>
+      <td><a href="/events/{{ event.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>
