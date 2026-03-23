@@ -12,9 +12,9 @@ Eliminate the standalone `/attendance/{event_id}` page. All attendance functiona
 - `GET /attendance/{event_id}` — handler deleted from `routes/attendance.py`
 - `templates/attendance/mark.html` — template deleted
 
-### Keep unchanged
-- `POST /attendance/{event_id}/{player_id}` — AJAX status update (already used by detail page)
-- `POST /attendance/{event_id}/borrow` — borrow endpoint
+### Keep, but update redirect fallbacks
+- `POST /attendance/{event_id}/{player_id}` — AJAX status update. The handler has four non-AJAX fallback `RedirectResponse(f"/attendance/{event_id}", ...)` paths (lines ~184, 194, 203, 213). All four must be updated to redirect to `/events/{event_id}` instead, otherwise form-POST fallbacks (non-JS browsers, failed fetch) will land on a 404.
+- `POST /attendance/{event_id}/borrow` — borrow endpoint (no changes needed)
 
 ### Update links
 Any template that links to `/attendance/{event_id}` is updated to point to `/events/{event_id}` instead. Search all templates for `/attendance/` links.
@@ -106,7 +106,44 @@ Inside the `{% if user.is_admin or (user.is_coach and event.team_id in coach_tea
 </div>
 ```
 
-The full borrow `<dialog>` and its `<script>` block (already implemented in `mark.html`) are moved verbatim into `detail.html`, placed at the end of `{% block content %}` before the delete dialog.
+The borrow `<dialog>` markup is moved verbatim. The borrow `<script>` is moved with one adaptation: **`addBorrowRow` must be rewritten** for the column layout. The `mark.html` version targets `<table tbody>`, which does not exist on the detail page. Instead, `addBorrowRow` must append a new `<li class="att-player-item">` containing an `.att-player-btn` to the `unknown` column's `.att-player-list`, matching the existing column structure. It must also call `updateColumn("unknown")` to refresh the count badge.
+
+```js
+function addBorrowRow(data) {
+  var unknownList = document.querySelector('.att-col[data-bucket="unknown"] .att-player-list');
+  if (!unknownList) { location.reload(); return; }
+
+  var tooltipText = data.team_name
+    ? _i18n.tooltipTpl.replace('__TEAM__', data.team_name)
+    : _i18n.tooltipNoTeam;
+
+  var li = document.createElement('li');
+  li.className = 'att-player-item';
+
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'att-player-btn';
+  btn.dataset.playerId = data.player_id;
+  btn.dataset.playerName = data.full_name;
+  btn.dataset.status = 'unknown';
+  btn.dataset.note = '';
+  btn.textContent = data.full_name;
+
+  var icon = document.createElement('span');
+  icon.className = 'borrow-icon';
+  icon.tabIndex = 0;
+  icon.textContent = '⟳';
+  var tip = document.createElement('span');
+  tip.className = 'borrow-tooltip';
+  tip.textContent = tooltipText;
+  icon.appendChild(tip);
+  btn.appendChild(icon);
+
+  li.appendChild(btn);
+  unknownList.appendChild(li);
+  updateColumn('unknown');
+}
+```
 
 The borrow JS requires `enums.status` and `event.id` — both already available in the detail page context.
 
@@ -116,7 +153,7 @@ The borrow JS requires `enums.status` and `event.id` — both already available 
 
 | File | Change |
 |---|---|
-| `routes/attendance.py` | Remove `GET /{event_id}` handler |
+| `routes/attendance.py` | Remove `GET /{event_id}` handler; update 4 redirect fallbacks in `update_attendance` to `/events/{event_id}` |
 | `routes/events.py` | Add `att_by_player` and `user_player_ids` to `event_detail` context |
 | `templates/events/detail.html` | Add borrow indicator, member editing gate, borrow button + dialog |
 | `templates/attendance/mark.html` | Delete |
