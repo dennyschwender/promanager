@@ -23,13 +23,13 @@
   {% if attendances %}
   <div class="table-responsive">
   <table>
-    <thead><tr><th>{{ t('attendance.player') }}</th><th>{{ t('attendance.status') }}</th><th>{{ t('attendance.notes') }}</th><th>{{ t('attendance.update_header') }}</th></tr></thead>
+    <thead><tr><th>{{ t('attendance.player') }}</th><th class="col-hide-mobile">{{ t('attendance.status') }}</th><th class="col-hide-mobile">{{ t('attendance.notes') }}</th><th>{{ t('attendance.update_header') }}</th></tr></thead>
     <tbody>
     {% for att in attendances %}
       <tr>
         <td>{{ att.player.full_name if att.player else att.player_id }}</td>
-        <td><span class="badge badge-{{ att.status }}">{{ enums.status.get(att.status, att.status|capitalize) }}</span></td>
-        <td>{{ att.note or "" }}</td>
+        <td class="col-hide-mobile"><span class="badge badge-{{ att.status }}">{{ enums.status.get(att.status, att.status|capitalize) }}</span></td>
+        <td class="col-hide-mobile">{{ att.note or "" }}</td>
         <td>
           <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
