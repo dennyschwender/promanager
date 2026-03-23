@@ -34,7 +34,11 @@ from services.attendance_service import (
 from services.email_service import send_event_reminder
 from services.notification_service import send_notifications
 from services.notification_templates import TEMPLATES
-from services.schedule_service import advance_date as _advance_date
+from services.schedule_service import (
+    advance_date as _advance_date,
+    count_future_events,
+    delete_future_events,
+)
 
 router = APIRouter()
 
@@ -94,6 +98,7 @@ async def events_list(
             "selected_season_id": season_id,
             "selected_team_id": team_id,
             "coach_team_ids": get_coach_teams(user, db) if user and user.is_coach else set(),
+            "flash": request.query_params.get("flash"),
         },
     )
 
@@ -407,6 +412,12 @@ async def event_detail(
 
     summary = get_event_attendance_detail(db, event_id)
 
+    future_count = (
+        count_future_events(db, event.recurrence_group_id)
+        if event.recurrence_group_id
+        else 0
+    )
+
     return render(
         request,
         "events/detail.html",
@@ -415,6 +426,7 @@ async def event_detail(
             "event": event,
             "summary": summary,
             "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
+            "future_count": future_count,
         },
     )
 
@@ -584,16 +596,30 @@ async def event_edit_post(
 async def event_delete(
     event_id: int,
     request: Request,
+    scope: str = Form("single"),
     _user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
+    from urllib.parse import quote  # noqa: PLC0415
+
     event = db.get(Event, event_id)
-    if event:
-        check_team_access(_user, event.team_id, db, season_id=event.season_id)
-        db.delete(event)
+    if not event:
+        return RedirectResponse("/events", status_code=302)
+
+    check_team_access(_user, event.team_id, db, season_id=event.season_id)
+
+    if scope == "future" and event.recurrence_group_id:
+        n = delete_future_events(db, event.recurrence_group_id)
         db.commit()
-    return RedirectResponse("/events", status_code=302)
+        msg = quote(rt(request, "events.deleted_series", count=n))
+        return RedirectResponse(f"/events?flash={msg}", status_code=302)
+
+    # Default: delete single event
+    db.delete(event)
+    db.commit()
+    msg = quote(rt(request, "events.deleted_single"))
+    return RedirectResponse(f"/events?flash={msg}", status_code=302)
 
 
 # ---------------------------------------------------------------------------

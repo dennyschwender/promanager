@@ -4,6 +4,9 @@
 <nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('events.title') }}</span></nav>
 {% endblock %}
 {% block content %}
+{% if flash %}
+  <div class="alert alert-success">{{ flash }}</div>
+{% endif %}
 <div class="page-header">
   <h2>{{ t('events.title') }}</h2>
   {% if user.is_admin or user.is_coach %}<a href="/events/new" class="btn btn-primary">{{ t('events.new') }}</a>{% endif %}
