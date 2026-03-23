@@ -23,33 +23,124 @@
   {% if attendances %}
   <div class="table-responsive">
   <table>
-    <thead><tr><th>{{ t('attendance.player') }}</th><th class="col-hide-mobile">{{ t('attendance.status') }}</th><th class="col-hide-mobile">{{ t('attendance.notes') }}</th><th>{{ t('attendance.update_header') }}</th></tr></thead>
+    <thead>
+      <tr>
+        <th>{{ t('attendance.player') }}</th>
+        <th>{{ t('attendance.status') }}</th>
+        <th class="col-hide-mobile">{{ t('attendance.notes') }}</th>
+        <th></th>
+      </tr>
+    </thead>
     <tbody>
     {% for att in attendances %}
-      <tr>
+      <tr data-player-id="{{ att.player_id }}">
         <td>{{ att.player.full_name if att.player else att.player_id }}</td>
-        <td class="col-hide-mobile"><span class="badge badge-{{ att.status }}">{{ enums.status.get(att.status, att.status|capitalize) }}</span></td>
-        <td class="col-hide-mobile">{{ att.note or "" }}</td>
         <td>
-          <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <select name="status" class="select-sm">
-              {% for s, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('attendance.status_maybe')),("unknown", t('attendance.status_unknown'))] %}
-                <option value="{{ s }}" {% if att.status == s %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-            <input type="text" name="note" placeholder="{{ t('attendance.notes_placeholder') }}" value="{{ att.note or "" }}" class="input-sm">
-            <button type="submit" class="btn btn-sm btn-primary">{{ t('attendance.save') }}</button>
-          </form>
+          <span class="badge badge-{{ att.status }} att-status-badge">
+            {{ enums.status.get(att.status, att.status|capitalize) }}
+          </span>
+        </td>
+        <td class="col-hide-mobile att-note-cell">{{ att.note or "" }}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-outline"
+                  data-player-id="{{ att.player_id }}"
+                  data-player-name="{{ (att.player.full_name if att.player else att.player_id) | e }}"
+                  data-status="{{ att.status }}"
+                  data-note="{{ att.note | e if att.note else '' }}"
+                  onclick="openAttDialog(this)">
+            {{ t('common.edit') }}
+          </button>
         </td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
+
+  {# ── Shared edit dialog ────────────────────────────────────────── #}
+  <dialog id="att-edit-dialog" class="att-dialog">
+    <h3 id="att-dialog-name" class="att-dialog-title"></h3>
+    <form method="post" id="att-dialog-form">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <fieldset>
+        <legend>{{ t('attendance.status') }}</legend>
+        <div class="att-dialog-status-grid">
+          {% for s, label in [
+            ("present", t('attendance.status_attend')),
+            ("absent",  t('attendance.status_absent')),
+            ("maybe",   t('attendance.status_maybe')),
+            ("unknown", t('attendance.status_unknown'))
+          ] %}
+          <label class="att-dialog-radio">
+            <input type="radio" name="status" value="{{ s }}"> {{ label }}
+          </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      <label>
+        {{ t('attendance.note_optional') }}
+        <input type="text" name="note" id="att-dialog-note" placeholder="{{ t('attendance.notes_placeholder') }}">
+      </label>
+      <div class="att-dialog-actions">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('att-edit-dialog').close()">{{ t('common.cancel') }}</button>
+        <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+  function openAttDialog(btn) {
+    var playerId = btn.dataset.playerId;
+    var status   = btn.dataset.status;
+    document.getElementById('att-dialog-name').textContent = btn.dataset.playerName;
+    document.getElementById('att-dialog-form').action = '/attendance/{{ event.id }}/' + playerId;
+    document.getElementById('att-dialog-note').value = btn.dataset.note || '';
+    document.querySelector('#att-edit-dialog input[name=status][value="' + status + '"]').checked = true;
+    document.getElementById('att-edit-dialog').showModal();
+  }
+
+  // After form submit, update the row in-place via fetch instead of full reload
+  document.getElementById('att-dialog-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var form = this;
+    var formData = new FormData(form);
+    var playerId = form.action.split('/').pop();
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData,
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        var row = document.querySelector('tr[data-player-id="' + playerId + '"]');
+        if (row) {
+          // Update badge
+          var badge = row.querySelector('.att-status-badge');
+          badge.className = 'badge badge-' + data.status + ' att-status-badge';
+          badge.textContent = {{ enums.status | tojson }}[data.status] || data.status;
+          // Update note cell
+          var noteCell = row.querySelector('.att-note-cell');
+          if (noteCell) noteCell.textContent = data.note || '';
+          // Update edit button data attrs
+          var editBtn = row.querySelector('[data-player-id]');
+          editBtn.dataset.status = data.status;
+          editBtn.dataset.note   = data.note || '';
+        }
+        document.getElementById('att-edit-dialog').close();
+      }
+    })
+    .catch(function() {
+      // fallback: full submit
+      form.submit();
+    });
+  });
+  </script>
+
   {% else %}
     <p>{{ t('attendance.no_players') }}</p>
   {% endif %}
+
 {% else %}
   {% if my_players %}
     {% for player in my_players %}
