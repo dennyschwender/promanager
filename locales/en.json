@@ -628,7 +628,14 @@
     "bool_any": "Any",
     "remove_btn": "Remove",
     "player_fallback": "Player",
-    "of": "of"
+    "of": "of",
+    "day_0": "Sunday",
+    "day_1": "Monday",
+    "day_2": "Tuesday",
+    "day_3": "Wednesday",
+    "day_4": "Thursday",
+    "day_5": "Friday",
+    "day_6": "Saturday"
   },
   "enums": {
     "event_type_training": "Training",

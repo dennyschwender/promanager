@@ -628,7 +628,14 @@
     "bool_any": "Beliebig",
     "remove_btn": "Entfernen",
     "player_fallback": "Spieler",
-    "of": "von"
+    "of": "von",
+    "day_0": "Sonntag",
+    "day_1": "Montag",
+    "day_2": "Dienstag",
+    "day_3": "Mittwoch",
+    "day_4": "Donnerstag",
+    "day_5": "Freitag",
+    "day_6": "Samstag"
   },
   "enums": {
     "event_type_training": "Training",

@@ -273,7 +273,7 @@
 
 <script>
 const TEAM_NAME = {{ team.name | tojson }};
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS = [{{ t('js_strings.day_0') | tojson }},{{ t('js_strings.day_1') | tojson }},{{ t('js_strings.day_2') | tojson }},{{ t('js_strings.day_3') | tojson }},{{ t('js_strings.day_4') | tojson }},{{ t('js_strings.day_5') | tojson }},{{ t('js_strings.day_6') | tojson }}];
 const SEASONS = {{ seasons | map(attribute='id') | list | tojson }};
 const SEASON_NAMES = {{ seasons | map(attribute='name') | list | tojson }};
 
@@ -284,7 +284,7 @@ function updateDefaultTitle(row) {
   const eventType = row.querySelector('.sched-event-type').value;
   const rule = row.querySelector('.sched-rule').value;
   const startDate = row.querySelector('.sched-start').value;
-  const labelMap = {training: 'Training', match: 'Match', other: 'Other'};
+  const labelMap = {training: {{ t('enums.event_type_training') | tojson }}, match: {{ t('enums.event_type_match') | tojson }}, other: {{ t('enums.event_type_other') | tojson }}};
   let title = TEAM_NAME + ' - ' + (labelMap[eventType] || eventType);
   if (rule === 'weekly' && startDate) {
     // Append T00:00:00 to prevent UTC timezone offset from shifting the day

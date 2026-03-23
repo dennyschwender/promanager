@@ -628,7 +628,14 @@
     "bool_any": "Qualsiasi",
     "remove_btn": "Rimuovi",
     "player_fallback": "Giocatore",
-    "of": "di"
+    "of": "di",
+    "day_0": "Domenica",
+    "day_1": "Lunedì",
+    "day_2": "Martedì",
+    "day_3": "Mercoledì",
+    "day_4": "Giovedì",
+    "day_5": "Venerdì",
+    "day_6": "Sabato"
   },
   "enums": {
     "event_type_training": "Allenamento",
