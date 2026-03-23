@@ -16,7 +16,7 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import NotAuthorized, require_admin
+from routes._auth_helpers import NotAuthorized, require_admin, rt
 from services import email_service
 from services.auth_service import hash_password
 
@@ -160,7 +160,7 @@ async def bulk_create_post(
         # Send welcome email
         sent = email_service.send_email(
             to=player.email,
-            subject="Your ProManager account",
+            subject=rt(request, "users.email_subject"),
             body_html=f"<p>Your account has been created.<br>Username: <strong>{player.email}</strong><br>Password: <strong>{pw}</strong></p>",
             body_text=f"Your account has been created.\nUsername: {player.email}\nPassword: {pw}",
         )

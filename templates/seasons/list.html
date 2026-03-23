@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Seasons — ProManager{% endblock %}
+{% block title %}{{ t('seasons.title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('seasons.title') }}</span></nav>
 {% endblock %}
@@ -13,7 +13,7 @@
 <div class="table-responsive">
 <table>
   <thead>
-    <tr><th>{{ t('seasons.name') }}</th><th>Start</th><th>End</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
+    <tr><th>{{ t('seasons.name') }}</th><th>{{ t('seasons.start_date') }}</th><th>{{ t('seasons.end_date') }}</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for s in seasons %}
@@ -21,7 +21,7 @@
       <td>{{ s.name }}</td>
       <td>{{ s.start_date or '—' }}</td>
       <td>{{ s.end_date or '—' }}</td>
-      <td>{% if s.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">—</span>{% endif %}</td>
+      <td>{% if s.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">—</span>{% endif %}</td>
       <td>
         <div class="action-group">
           {% if user.is_admin %}
@@ -29,14 +29,14 @@
             {% if not s.is_active %}
               <form method="post" action="/seasons/{{ s.id }}/activate" style="display:contents;">
                 <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                <button type="submit" class="btn btn-sm btn-outline">Activate</button>
+                <button type="submit" class="btn btn-sm btn-outline">{{ t('seasons.activate') }}</button>
               </form>
             {% endif %}
-            <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">Report</a>
+            <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">{{ t('seasons.report') }}</a>
             <form method="post" action="/seasons/{{ s.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete season {{ s.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+              <button type="submit" class="btn btn-sm btn-danger">{{ t('common.delete') }}</button>
             </form>
           {% endif %}
         </div>

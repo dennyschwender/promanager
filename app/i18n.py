@@ -20,6 +20,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 SUPPORTED_LOCALES: list[str] = ["en", "it", "fr", "de"]
+DEFAULT_LOCALE: str = "it"
 _LOCALES_DIR = Path(__file__).parent.parent / "locales"
 
 # ---------------------------------------------------------------------------
@@ -80,7 +81,7 @@ def t(key: str, locale: str, **kwargs) -> str:
     In DEBUG mode, raises KeyError for missing keys instead of falling back.
     """
     if locale not in SUPPORTED_LOCALES:
-        locale = "en"
+        locale = DEFAULT_LOCALE
 
     value = _get(_translations.get(locale, {}), key)
 

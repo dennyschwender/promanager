@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}My Profile — ProManager{% endblock %}
+{% block title %}{{ t('auth.profile_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <span>Profile</span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('auth.profile_title') }}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -24,7 +24,7 @@
   <h3>{{ t('auth.notification_preferences') }}</h3>
   <form method="post" action="/notifications/preferences">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-    {% for channel, label in [("email","Email"), ("inapp","In-app inbox"), ("webpush","Browser push")] %}
+    {% for channel, label in [("email", t('auth.channel_email')), ("inapp", t('auth.channel_inbox')), ("webpush", t('auth.channel_push'))] %}
       {% set pref_enabled = player_prefs.get(channel, true) %}
       <label style="display:flex;align-items:center;gap:.5rem;">
         <input type="checkbox" name="{{ channel }}" value="on" {% if pref_enabled %}checked{% endif %}>

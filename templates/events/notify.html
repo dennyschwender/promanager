@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Notify Players — {{ event.title }}{% endblock %}
+{% block title %}{{ t('notify.title') }} — ProManager{% endblock %}
 
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/events">{{ t('events.title') }}</a><span class="breadcrumb-sep"></span>
   <a href="/events/{{ event.id }}">{{ event.title }}</a><span class="breadcrumb-sep"></span>
-  <span>Notify</span>
+  <span>{{ t('notify.title') }}</span>
 </nav>
 {% endblock %}
 
@@ -21,9 +21,9 @@
 
   <!-- Template picker -->
   <label>
-    Template
+    {{ t('notify_form.template') }}
     <select id="template-select" name="template_key">
-      <option value="">— Start from template —</option>
+      <option value="">{{ t('notify_form.start_template') }}</option>
       {% for tpl in templates %}
         <option value="{{ tpl.key }}"
           data-title="{{ tpl.title_tpl }}"
@@ -38,39 +38,39 @@
 
   <!-- Title -->
   <label>
-    Title <span style="color:red">*</span>
+    {{ t('notify_form.title_label') }} <span style="color:red">*</span>
     <input type="text" name="title" id="notify-title" required maxlength="256">
   </label>
 
   <!-- Body -->
   <label>
-    Message <span style="color:red">*</span>
+    {{ t('notify_form.message') }} <span style="color:red">*</span>
     <textarea name="body" id="notify-body" rows="5" required></textarea>
   </label>
 
   <!-- Tag -->
   <fieldset>
-    <legend>Type</legend>
-    <label><input type="radio" name="tag" value="direct" checked id="tag-direct"> Direct (targeted)</label>
-    <label><input type="radio" name="tag" value="announcement" id="tag-announcement"> Team Announcement</label>
+    <legend>{{ t('notify_form.type_section') }}</legend>
+    <label><input type="radio" name="tag" value="direct" checked id="tag-direct"> {{ t('notify_form.type_direct') }}</label>
+    <label><input type="radio" name="tag" value="announcement" id="tag-announcement"> {{ t('notify_form.type_announcement') }}</label>
   </fieldset>
 
   <!-- Recipients -->
   <fieldset>
-    <legend>Recipients <span id="recipient-preview" class="text-muted" style="font-size:.88rem;font-weight:normal;"></span></legend>
-    <label><input type="checkbox" name="recipients" value="all" id="chk-all" checked> All players</label>
-    <label><input type="checkbox" name="recipients" value="present"> Present</label>
-    <label><input type="checkbox" name="recipients" value="absent"> Absent</label>
-    <label><input type="checkbox" name="recipients" value="maybe"> Maybe</label>
-    <label><input type="checkbox" name="recipients" value="unknown"> Unknown</label>
+    <legend>{{ t('notify_form.recipients') }} <span id="recipient-preview" class="text-muted" style="font-size:.88rem;font-weight:normal;"></span></legend>
+    <label><input type="checkbox" name="recipients" value="all" id="chk-all" checked> {{ t('notify_form.all_players') }}</label>
+    <label><input type="checkbox" name="recipients" value="present"> {{ t('notify_form.present') }}</label>
+    <label><input type="checkbox" name="recipients" value="absent"> {{ t('notify_form.absent') }}</label>
+    <label><input type="checkbox" name="recipients" value="maybe"> {{ t('notify_form.maybe') }}</label>
+    <label><input type="checkbox" name="recipients" value="unknown"> {{ t('notify_form.unknown') }}</label>
   </fieldset>
 
   <!-- Channels -->
   <fieldset>
-    <legend>Channels</legend>
-    <label><input type="checkbox" name="channels" value="email" checked> Email</label>
-    <label><input type="checkbox" name="channels" value="inapp" checked> In-app</label>
-    <label><input type="checkbox" name="channels" value="webpush" checked> Web Push</label>
+    <legend>{{ t('notify_form.channels') }}</legend>
+    <label><input type="checkbox" name="channels" value="email" checked> {{ t('notify_form.channel_email') }}</label>
+    <label><input type="checkbox" name="channels" value="inapp" checked> {{ t('notify_form.channel_inbox') }}</label>
+    <label><input type="checkbox" name="channels" value="webpush" checked> {{ t('notify_form.channel_push') }}</label>
   </fieldset>
 
   <div class="form-footer">

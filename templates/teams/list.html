@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Teams — ProManager{% endblock %}
+{% block title %}{{ t('teams.title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('teams.title') }}</span></nav>
 {% endblock %}
@@ -13,7 +13,7 @@
 <div class="table-responsive">
 <table>
   <thead>
-    <tr><th>{{ t('teams.name') }}</th><th>Description</th><th>{{ t('teams.actions') }}</th></tr>
+    <tr><th>{{ t('teams.name') }}</th><th>{{ t('teams_list.description') }}</th><th>{{ t('teams.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for team in teams %}
@@ -25,18 +25,18 @@
           <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
           <a href="/players?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
           {% if user.is_admin %}
-            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">Import</a>
+            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('common.import') }}</a>
             {% if seasons|length > 1 %}
             <button type="button" class="btn btn-sm btn-outline"
                     data-team-id="{{ team.id }}" data-team-name="{{ team.name | e }}"
                     onclick="openCopyDialog(this)">
-              Copy roster
+              {{ t('teams_list.copy_roster') }}
             </button>
             {% endif %}
             <form method="post" action="/teams/{{ team.id }}/delete" style="display:contents;"
                   onsubmit="return confirm('Delete team {{ team.name }}?')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+              <button type="submit" class="btn btn-sm btn-danger">{{ t('common.delete') }}</button>
             </form>
           {% endif %}
         </div>
@@ -47,17 +47,17 @@
 </table>
 </div>
 {% else %}
-  <p>{{ t('teams.no_teams') }} {% if user.is_admin %}<a href="/teams/new">Create one</a>.{% endif %}</p>
+  <p>{{ t('teams.no_teams') }} {% if user.is_admin %}<a href="/teams/new">{{ t('dashboard.create_one') }}</a>.{% endif %}</p>
 {% endif %}
 
 {% if user.is_admin and seasons|length > 1 %}
 <!-- Copy-roster dialog (shared, one per page) -->
 <dialog id="copy-roster-dialog" style="border-radius:.5rem;border:1px solid var(--muted-border-color,#ddd);padding:1.5rem;min-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.18);">
-  <h3 style="margin-top:0;">Copy roster — <span id="dialog-team-name"></span></h3>
+  <h3 style="margin-top:0;">{{ t('teams_list.copy_roster_title') }} <span id="dialog-team-name"></span></h3>
   <form method="post" id="copy-roster-form">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
     <label style="display:block;margin-bottom:1rem;">
-      From season
+      {{ t('teams_list.from_season') }}
       <select name="source_season_id" id="dialog-source" style="display:block;width:100%;margin-top:.25rem;">
         {% for s in seasons %}
           <option value="{{ s.id }}">{{ s.name }}{% if s.is_active %} ✓{% endif %}</option>
@@ -65,7 +65,7 @@
       </select>
     </label>
     <label style="display:block;margin-bottom:1.25rem;">
-      To season
+      {{ t('teams_list.to_season') }}
       <select name="target_season_id" id="dialog-target" style="display:block;width:100%;margin-top:.25rem;">
         {% for s in seasons %}
           <option value="{{ s.id }}" {% if s.is_active %}selected{% endif %}>{{ s.name }}{% if s.is_active %} ✓{% endif %}</option>
@@ -73,8 +73,8 @@
       </select>
     </label>
     <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-      <button type="button" class="btn btn-outline" onclick="document.getElementById('copy-roster-dialog').close()">Cancel</button>
-      <button type="submit" class="btn btn-primary">Copy</button>
+      <button type="button" class="btn btn-outline" onclick="document.getElementById('copy-roster-dialog').close()">{{ t('common.cancel') }}</button>
+      <button type="submit" class="btn btn-primary">{{ t('common.copy') }}</button>
     </div>
   </form>
 </dialog>

@@ -16,6 +16,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from app.i18n import DEFAULT_LOCALE
 from app.i18n import t as _t
 
 templates = Jinja2Templates(directory="templates")
@@ -30,7 +31,7 @@ def render(
     status_code: int = 200,
 ) -> HTMLResponse:
     """Render a template with i18n context (t, current_locale) auto-injected."""
-    locale = getattr(request.state, "locale", "en")
+    locale = getattr(request.state, "locale", DEFAULT_LOCALE)
     theme = getattr(request.state, "theme", "light")
     i18n_ctx = {
         "t": lambda key, **kw: _t(key, locale, **kw),

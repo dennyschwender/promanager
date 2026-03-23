@@ -62,9 +62,11 @@ def test_t_returns_german_string():
 # ---------------------------------------------------------------------------
 
 
-def test_t_unsupported_locale_falls_back_to_en():
+def test_t_unsupported_locale_falls_back_to_default():
+    from app.i18n import DEFAULT_LOCALE
+
     t = _make_t()
-    assert t("nav.dashboard", "xx") == t("nav.dashboard", "en")
+    assert t("nav.dashboard", "xx") == t("nav.dashboard", DEFAULT_LOCALE)
 
 
 def test_t_missing_key_raises_in_debug():

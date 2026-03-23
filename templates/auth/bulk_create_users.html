@@ -2,7 +2,7 @@
 {% block title %}{{ t('users.bulk_create_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
   <a href="/auth/users">{{ t('users.title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ t('users.bulk_create_title') }}</span>
 </nav>
@@ -81,8 +81,8 @@
   <label style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
     {{ t('users.role_label') }}
     <select name="role" style="width:auto;margin:0;">
-      <option value="member">Member</option>
-      <option value="coach">Coach</option>
+      <option value="member">{{ t('auth.member') }}</option>
+      <option value="coach">{{ t('auth.role_coach') }}</option>
     </select>
   </label>
 

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{% if team %}Edit Team{% else %}New Team{% endif %} — ProManager{% endblock %}
+{% block title %}{{ t('teams.edit_title') if team else t('teams.new_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/teams">Teams</a><span class="breadcrumb-sep"></span>
-  <span>{% if team %}Edit{% else %}New{% endif %}</span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/teams">{{ t('teams.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{% if team %}{{ t('teams.edit_title') }}{% else %}{{ t('teams.new_title') }}{% endif %}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -12,7 +12,7 @@
 <h2>{% if team %}{{ t('teams.edit_title') }}: {{ team.name }}{% else %}{{ t('teams.new_title') }}{% endif %}</h2>
 
 {% if saved %}
-  <div class="alert alert-success">Changes saved.</div>
+  <div class="alert alert-success">{{ t('common.changes_saved') }}</div>
 {% endif %}
 {% if error %}
   <div class="alert alert-error">{{ error }}</div>
@@ -26,22 +26,20 @@
          value="{{ _schedules_json }}">
 
   {# ── Core team fields ── #}
-  <label for="name">Team Name *
+  <label for="name">{{ t('teams_form.team_name') }} *
     <input type="text" id="name" name="name" required
            value="{{ team.name if team else '' }}">
   </label>
-  <label for="description">Description
+  <label for="description">{{ t('teams_form.description') }}
     <textarea id="description" name="description">{{ team.description if team and team.description else '' }}</textarea>
   </label>
 
   {# ── Confirmation warning ── #}
   {% if confirm_mode and flagged %}
   <div class="alert alert-warning" style="margin-top:1.5rem;">
-    <strong>The following schedules have changes that affect generated events.</strong>
+    <strong>{{ t('teams_form.changes_warning') }}</strong>
     <p class="recurrence-hint" style="margin:.25rem 0 .75rem;">
-      Check a box to delete all future events in that series (including manually
-      edited ones) and regenerate them. Leave unchecked to save schedule fields
-      but keep existing events.
+      {{ t('teams_form.changes_detail') }}
     </p>
     {% for item in flagged %}
     <div style="margin-bottom:.75rem;padding:.5rem;border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);">
@@ -49,14 +47,14 @@
         <input type="checkbox" name="{{ item.confirm_key }}" style="margin-top:.2rem;">
         <span>
           <strong>{{ item.title }}</strong>
-          {% if item.type == 'removed' %}&mdash; will be removed
-          {% else %}&mdash; schedule changed{% endif %}
+          {% if item.type == 'removed' %}&mdash; {{ t('teams_form.will_be_removed') }}
+          {% else %}&mdash; {{ t('teams_form.schedule_changed') }}{% endif %}
           <br>
           <small>
             {% if item.future_count %}
-              {{ item.future_count }} future event{{ 's' if item.future_count != 1 }} would be deleted
+              {{ item.future_count }} {{ t('teams_form.events_deleted') }}
             {% else %}
-              No future events to delete
+              {{ t('teams_form.no_future_events') }}
             {% endif %}
           </small>
         </span>
@@ -69,10 +67,9 @@
   {# ── Recurring Schedules (edit-only) ── #}
   {% if team %}
   <fieldset style="margin-top:1.5rem;">
-    <legend>Recurring Schedules</legend>
+    <legend>{{ t('teams_form.recurring_schedules') }}</legend>
     <p class="recurrence-hint">
-      Define recurring event patterns for this team. Events are auto-generated
-      on save. Leave <em>End Date</em> blank to use the season's end date.
+      {{ t('teams_form.schedule_help') }}
     </p>
 
     <div id="schedule-rows">
@@ -81,13 +78,13 @@
            style="border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);padding:1rem;margin-bottom:.75rem;">
         <input type="hidden" class="sched-id" value="{{ row.id }}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-          <strong style="font-size:.9rem;">Schedule</strong>
+          <strong style="font-size:.9rem;">{{ t('teams_form.schedule') }}</strong>
           <button type="button" class="btn btn-sm btn-danger"
-                  onclick="removeRow(this)">Remove</button>
+                  onclick="removeRow(this)">{{ t('teams_form.remove_schedule') }}</button>
         </div>
-        <label>Season
+        <label>{{ t('teams.season') }}
           <select class="sched-season">
-            <option value="">— No season —</option>
+            <option value="">{{ t('teams_form.no_season') }}</option>
             {% for s in seasons %}
               <option value="{{ s.id }}" {% if row.season_id == s.id|string %}selected{% endif %}>
                 {{ s.name }}{% if s.is_active %} ✓{% endif %}
@@ -95,76 +92,75 @@
             {% endfor %}
           </select>
         </label>
-        <label>Title *
+        <label>{{ t('teams_form.title_label') }} *
           <input type="text" class="sched-title" required value="{{ row.title }}"
                  oninput="this.dataset.auto=''"
                  {% if row.id %}data-auto=""{% endif %}
-                 placeholder="Team - Training Tuesday">
+                 placeholder="{{ t('teams_form.title_placeholder') }}">
         </label>
         <div class="form-grid-2">
-          <label>Event Type
+          <label>{{ t('teams_form.event_type') }}
             <select class="sched-event-type"
                     onchange="updateDefaultTitle(this.closest('.schedule-row'))">
-              {% for val, lbl in [('training','Training'),('match','Match'),('other','Other')] %}
-                <option value="{{ val }}"
-                        {% if row.event_type == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
+              <option value="training" {% if row.event_type == 'training' %}selected{% endif %}>{{ t('teams_form.type_training') }}</option>
+              <option value="match" {% if row.event_type == 'match' %}selected{% endif %}>{{ t('teams_form.type_match') }}</option>
+              <option value="other" {% if row.event_type == 'other' %}selected{% endif %}>{{ t('teams_form.type_other') }}</option>
             </select>
           </label>
-          <label>Recurrence
+          <label>{{ t('teams_form.recurrence') }}
             <select class="sched-rule"
                     onchange="updateDefaultTitle(this.closest('.schedule-row'))">
-              {% for val, lbl in [('weekly','Weekly'),('biweekly','Biweekly'),('monthly','Monthly')] %}
-                <option value="{{ val }}"
-                        {% if row.recurrence_rule == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
+              <option value="weekly" {% if row.recurrence_rule == 'weekly' %}selected{% endif %}>{{ t('teams_form.recurrence_weekly') }}</option>
+              <option value="biweekly" {% if row.recurrence_rule == 'biweekly' %}selected{% endif %}>{{ t('teams_form.recurrence_biweekly') }}</option>
+              <option value="monthly" {% if row.recurrence_rule == 'monthly' %}selected{% endif %}>{{ t('teams_form.recurrence_monthly') }}</option>
             </select>
           </label>
         </div>
         <div class="form-grid-2">
-          <label>Start Date *
+          <label>{{ t('teams_form.start_date') }} *
             <input type="date" class="sched-start" required value="{{ row.start_date }}"
                    onchange="updateDefaultTitle(this.closest('.schedule-row'))">
           </label>
-          <label>End Date <small>(blank = season end)</small>
+          <label>{{ t('teams_form.end_date') }} <small>{{ t('teams_form.end_date_hint') }}</small>
             <input type="date" class="sched-end" value="{{ row.end_date }}">
           </label>
         </div>
         <div class="form-grid-2">
-          <label>Start Time
+          <label>{{ t('teams_form.start_time') }}
             <input type="time" class="sched-time" value="{{ row.event_time }}">
           </label>
-          <label>End Time
+          <label>{{ t('teams_form.end_time') }}
             <input type="time" class="sched-end-time" value="{{ row.event_end_time }}">
           </label>
         </div>
-        <label>Location
+        <label>{{ t('teams_form.location') }}
           <input type="text" class="sched-location" value="{{ row.location }}">
         </label>
         <details style="margin-top:.5rem;">
           <summary style="cursor:pointer;font-size:.88rem;color:var(--tp-muted);">
-            Meeting details
+            {{ t('teams_form.meeting_details') }}
           </summary>
           <div style="margin-top:.5rem;" class="form-grid-2">
-            <label>Meeting Time
+            <label>{{ t('teams_form.meeting_time') }}
               <input type="time" class="sched-meeting-time"
                      value="{{ row.meeting_time }}">
             </label>
-            <label>Meeting Location
+            <label>{{ t('teams_form.meeting_location') }}
               <input type="text" class="sched-meeting-location"
                      value="{{ row.meeting_location }}">
             </label>
           </div>
         </details>
-        <label style="margin-top:.5rem;">Presence
+        <label style="margin-top:.5rem;">{{ t('teams_form.presence') }}
           <select class="sched-presence">
-            {% for val, lbl in [('normal','Normal'),('all','All'),('selection','Selection'),('available','Available'),('no_registration','No Registration')] %}
-              <option value="{{ val }}"
-                      {% if row.presence_type == val %}selected{% endif %}>{{ lbl }}</option>
-            {% endfor %}
+            <option value="normal" {% if row.presence_type == 'normal' %}selected{% endif %}>{{ t('teams_form.pt_normal') }}</option>
+            <option value="all" {% if row.presence_type == 'all' %}selected{% endif %}>{{ t('teams_form.pt_all') }}</option>
+            <option value="selection" {% if row.presence_type == 'selection' %}selected{% endif %}>{{ t('teams_form.pt_selection') }}</option>
+            <option value="available" {% if row.presence_type == 'available' %}selected{% endif %}>{{ t('teams_form.pt_available') }}</option>
+            <option value="no_registration" {% if row.presence_type == 'no_registration' %}selected{% endif %}>{{ t('teams_form.pt_no_reg') }}</option>
           </select>
         </label>
-        <label>Description
+        <label>{{ t('common.description') }}
           <textarea class="sched-desc">{{ row.description }}</textarea>
         </label>
       </div>
@@ -172,15 +168,15 @@
     </div>
 
     <div style="display:flex;gap:.5rem;margin-top:.75rem;">
-      <button type="button" class="btn btn-outline btn-sm" onclick="addScheduleRow()">+ Add Schedule</button>
-      <button type="submit" class="btn btn-primary btn-sm">Save</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addScheduleRow()">{{ t('teams_form.add_schedule') }}</button>
+      <button type="submit" class="btn btn-primary btn-sm">{{ t('common.save') }}</button>
     </div>
   </fieldset>
   {% endif %}
 
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">
-      {% if confirm_mode %}Confirm &amp; Save
+      {% if confirm_mode %}{{ t('teams_form.confirm_save') }}
       {% else %}{{ t('teams.save') }}{% endif %}
     </button>
     <a href="/teams" class="btn btn-outline">{{ t('teams.back') }}</a>
@@ -195,81 +191,81 @@
        style="border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);padding:1rem;margin-bottom:.75rem;">
     <input type="hidden" class="sched-id" value="">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-      <strong style="font-size:.9rem;">Schedule</strong>
+      <strong style="font-size:.9rem;">{{ t('teams_form.schedule') }}</strong>
       <button type="button" class="btn btn-sm btn-danger"
-              onclick="removeRow(this)">Remove</button>
+              onclick="removeRow(this)">{{ t('teams_form.remove_schedule') }}</button>
     </div>
-    <label>Season
+    <label>{{ t('teams.season') }}
       <select class="sched-season" id="tpl-season-placeholder">
-        <option value="">— No season —</option>
+        <option value="">{{ t('teams_form.no_season') }}</option>
       </select>
     </label>
-    <label>Title *
+    <label>{{ t('teams_form.title_label') }} *
       <input type="text" class="sched-title" required value=""
              oninput="this.dataset.auto=''"
-             placeholder="Team - Training Tuesday">
+             placeholder="{{ t('teams_form.title_placeholder') }}">
     </label>
     <div class="form-grid-2">
-      <label>Event Type
+      <label>{{ t('teams_form.event_type') }}
         <select class="sched-event-type"
                 onchange="updateDefaultTitle(this.closest('.schedule-row'))">
-          <option value="training">Training</option>
-          <option value="match">Match</option>
-          <option value="other">Other</option>
+          <option value="training">{{ t('teams_form.type_training') }}</option>
+          <option value="match">{{ t('teams_form.type_match') }}</option>
+          <option value="other">{{ t('teams_form.type_other') }}</option>
         </select>
       </label>
-      <label>Recurrence
+      <label>{{ t('teams_form.recurrence') }}
         <select class="sched-rule"
                 onchange="updateDefaultTitle(this.closest('.schedule-row'))">
-          <option value="weekly">Weekly</option>
-          <option value="biweekly">Biweekly</option>
-          <option value="monthly">Monthly</option>
+          <option value="weekly">{{ t('teams_form.recurrence_weekly') }}</option>
+          <option value="biweekly">{{ t('teams_form.recurrence_biweekly') }}</option>
+          <option value="monthly">{{ t('teams_form.recurrence_monthly') }}</option>
         </select>
       </label>
     </div>
     <div class="form-grid-2">
-      <label>Start Date *
+      <label>{{ t('teams_form.start_date') }} *
         <input type="date" class="sched-start" required value=""
                onchange="updateDefaultTitle(this.closest('.schedule-row'))">
       </label>
-      <label>End Date <small>(blank = season end)</small>
+      <label>{{ t('teams_form.end_date') }} <small>{{ t('teams_form.end_date_hint') }}</small>
         <input type="date" class="sched-end" value="">
       </label>
     </div>
     <div class="form-grid-2">
-      <label>Start Time
+      <label>{{ t('teams_form.start_time') }}
         <input type="time" class="sched-time" value="">
       </label>
-      <label>End Time
+      <label>{{ t('teams_form.end_time') }}
         <input type="time" class="sched-end-time" value="">
       </label>
     </div>
-    <label>Location
+    <label>{{ t('teams_form.location') }}
       <input type="text" class="sched-location" value="">
     </label>
     <details style="margin-top:.5rem;">
       <summary style="cursor:pointer;font-size:.88rem;color:var(--tp-muted);">
-        Meeting details
+        {{ t('teams_form.meeting_details') }}
       </summary>
       <div style="margin-top:.5rem;" class="form-grid-2">
-        <label>Meeting Time
+        <label>{{ t('teams_form.meeting_time') }}
           <input type="time" class="sched-meeting-time" value="">
         </label>
-        <label>Meeting Location
+        <label>{{ t('teams_form.meeting_location') }}
           <input type="text" class="sched-meeting-location" value="">
         </label>
       </div>
     </details>
-    <label style="margin-top:.5rem;">Presence
+    <label style="margin-top:.5rem;">{{ t('teams_form.presence') }}
       <select class="sched-presence">
-        <option value="normal">Normal</option>
-        <option value="all">All</option>
-        <option value="selection">Selection</option>
-        <option value="available">Available</option>
-        <option value="no_registration">No Registration</option>
+        <option value="normal">{{ t('teams_form.pt_normal') }}</option>
+        <option value="all">{{ t('teams_form.pt_all') }}</option>
+        <option value="selection">{{ t('teams_form.pt_selection') }}</option>
+        <option value="available">{{ t('teams_form.pt_available') }}</option>
+        <option value="no_registration">{{ t('teams_form.pt_no_reg') }}</option>
       </select>
     </label>
-    <label>Description
+    <label>{{ t('common.description') }}
       <textarea class="sched-desc"></textarea>
     </label>
   </div>

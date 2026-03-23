@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{% if event %}Edit Event{% else %}New Event{% endif %} — ProManager{% endblock %}
+{% block title %}{{ t('events.edit_title') if event else t('events.new_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
-  <span>{% if event %}Edit{% else %}New{% endif %}</span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/events">{{ t('events.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{% if event %}{{ t('events.edit_title') }}{% else %}{{ t('events.new_title') }}{% endif %}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -17,40 +17,38 @@
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
   <div class="form-grid-2">
-    <label>Title *
+    <label>{{ t('events_form.title_label') }} *
       <input type="text" name="title" required value="{{ event.title if event else "" }}">
     </label>
-    <label>Event Type
+    <label>{{ t('events_form.event_type') }}
       <select name="event_type">
-        {% for et in ["training","match","other"] %}
-          <option value="{{ et }}"
-            {% if event and event.event_type == et %}selected
-            {% elif not event and et == "training" %}selected{% endif %}>{{ et|capitalize }}</option>
-        {% endfor %}
+        <option value="training" {% if event and event.event_type == "training" %}selected{% elif not event %}selected{% endif %}>{{ t('events_form.type_training') }}</option>
+        <option value="match" {% if event and event.event_type == "match" %}selected{% endif %}>{{ t('events_form.type_match') }}</option>
+        <option value="other" {% if event and event.event_type == "other" %}selected{% endif %}>{{ t('events_form.type_other') }}</option>
       </select>
     </label>
   </div>
 
   <div class="form-grid-2">
-    <label>Season
+    <label>{{ t('events.season') }}
       <select name="season_id">
-        <option value="">— None —</option>
+        <option value="">{{ t('events_form.none_option') }}</option>
         {% for s in seasons %}
           <option value="{{ s.id }}"
             {% if event and event.season_id == s.id %}selected
             {% elif not event and s.is_active %}selected{% endif %}>
-            {{ s.name }}{% if s.is_active %} (active){% endif %}
+            {{ s.name }}{% if s.is_active %} {{ t('events_form.active_suffix') }}{% endif %}
           </option>
         {% endfor %}
       </select>
     </label>
-    <label>Team
+    <label>{{ t('events.team') }}
       {% if not user.is_admin and event %}
         <input type="hidden" name="team_id" value="{{ event.team_id }}">
         <p>{{ event.team.name if event.team else '—' }}</p>
       {% else %}
         <select name="team_id">
-          <option value="">— None —</option>
+          <option value="">{{ t('events_form.none_option') }}</option>
           {% for t in teams %}
             <option value="{{ t.id }}" {% if event and event.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
           {% endfor %}
@@ -60,19 +58,19 @@
   </div>
 
   <fieldset>
-    <legend>Event date &amp; time</legend>
+    <legend>{{ t('events_form.date_time') }}</legend>
     <div class="form-grid-2">
-      <label>Date *
+      <label>{{ t('events_form.date') }} *
         <input type="date" name="event_date" required
                value="{{ event.event_date.isoformat() if event else "" }}">
       </label>
-      <label>Start time
+      <label>{{ t('events_form.start_time') }}
         <input type="text" name="event_time" class="time-24h"
                placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
                value="{{ event.event_time.strftime("%H:%M") if event and event.event_time else "" }}">
       </label>
     </div>
-    <label>End time
+    <label>{{ t('events_form.end_time') }}
       <input type="text" name="event_end_time" class="time-24h"
              placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
              value="{{ event.event_end_time.strftime("%H:%M") if event and event.event_end_time else "" }}">
@@ -81,40 +79,40 @@
 
   {% if not event %}
   <fieldset id="recurrence-fieldset">
-    <legend>Recurring</legend>
+    <legend>{{ t('events_form.recurring_section') }}</legend>
     <label class="checkbox-inline">
       <input type="checkbox" name="is_recurring" id="id_is_recurring" value="1">
-      <span>Repeat this event</span>
+      <span>{{ t('events_form.repeat_event') }}</span>
     </label>
     <div id="recurrence-options" class="recurrence-options" style="display:none;">
       <div class="form-grid-2">
-        <label>Frequency
+        <label>{{ t('events_form.frequency') }}
           <select name="recurrence_rule" id="id_recurrence_rule">
-            <option value="weekly">Weekly (every week)</option>
-            <option value="biweekly">Bi-weekly (every 2 weeks)</option>
-            <option value="monthly">Monthly (same day each month)</option>
+            <option value="weekly">{{ t('events_form.freq_weekly') }}</option>
+            <option value="biweekly">{{ t('events_form.freq_biweekly') }}</option>
+            <option value="monthly">{{ t('events_form.freq_monthly') }}</option>
           </select>
         </label>
-        <label>Repeat until *
+        <label>{{ t('events_form.repeat_until') }} *
           <input type="date" name="recurrence_end_date" id="id_recurrence_end_date">
         </label>
       </div>
-      <p class="recurrence-hint">A separate event is created for each occurrence. Each can be edited individually afterwards.</p>
+      <p class="recurrence-hint">{{ t('events_form.recurrence_hint') }}</p>
     </div>
   </fieldset>
   {% elif event.recurrence_group_id %}
   <div class="alert alert-info">
-    &#8635; This event is part of a recurring series. Changes here only affect this occurrence.
+    &#8635; {{ t('events_form.recurring_series_note') }}
   </div>
   {% endif %}
 
   <fieldset>
-    <legend>Locations</legend>
-    <label>Event location
+    <legend>{{ t('events_form.locations') }}</legend>
+    <label>{{ t('events_form.event_location') }}
       <div class="location-search-wrap">
         <div class="location-input-row">
           <input type="text" name="location" id="id_location"
-                 placeholder="Start typing to search…"
+                 placeholder="{{ t('events_form.search_placeholder') }}"
                  autocomplete="off"
                  data-location-search
                  value="{{ event.location if event and event.location else "" }}">
@@ -123,16 +121,16 @@
       </div>
     </label>
     <div class="form-grid-2">
-      <label>Meeting time
+      <label>{{ t('events_form.meeting_time') }}
         <input type="text" name="meeting_time" class="time-24h"
                placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
                value="{{ event.meeting_time.strftime("%H:%M") if event and event.meeting_time else "" }}">
       </label>
-      <label>Meeting location
+      <label>{{ t('events_form.meeting_location') }}
         <div class="location-search-wrap">
           <div class="location-input-row">
             <input type="text" name="meeting_location" id="id_meeting_location"
-                   placeholder="Start typing to search…"
+                   placeholder="{{ t('events_form.search_placeholder') }}"
                    autocomplete="off"
                    data-location-search
                    value="{{ event.meeting_location if event and event.meeting_location else "" }}">
@@ -144,43 +142,43 @@
   </fieldset>
 
   <fieldset>
-    <legend>Presence type</legend>
+    <legend>{{ t('events_form.presence_type') }}</legend>
     <div class="presence-type-group">
       <label class="presence-option">
         <input type="radio" name="presence_type" value="normal"
                {{ "checked" if (event and event.presence_type == "normal") or (not event and "normal" == "normal") else "" }}>
-        <span class="presence-label"><strong>Normal</strong><br><small class="text-muted">Unknown by default — participants set their own presence/absence</small></span>
+        <span class="presence-label"><strong>{{ t('events_form.pt_normal') }}</strong><br><small class="text-muted">{{ t('events_form.pt_normal_desc') }}</small></span>
       </label>
       <label class="presence-option">
         <input type="radio" name="presence_type" value="all"
                {{ "checked" if (event and event.presence_type == "all") or (not event and "all" == "normal") else "" }}>
-        <span class="presence-label"><strong>All attendee</strong><br><small class="text-muted">Everyone is marked present by default</small></span>
+        <span class="presence-label"><strong>{{ t('events_form.pt_all') }}</strong><br><small class="text-muted">{{ t('events_form.pt_all_desc') }}</small></span>
       </label>
       <label class="presence-option">
         <input type="radio" name="presence_type" value="selection"
                {{ "checked" if (event and event.presence_type == "selection") or (not event and "selection" == "normal") else "" }}>
-        <span class="presence-label"><strong>Selection</strong><br><small class="text-muted">Only selected players can register absence; others cannot respond</small></span>
+        <span class="presence-label"><strong>{{ t('events_form.pt_selection') }}</strong><br><small class="text-muted">{{ t('events_form.pt_selection_desc') }}</small></span>
       </label>
       <label class="presence-option">
         <input type="radio" name="presence_type" value="available"
                {{ "checked" if (event and event.presence_type == "available") or (not event and "available" == "normal") else "" }}>
-        <span class="presence-label"><strong>Available</strong><br><small class="text-muted">Participants give availability first, then admin selects attendees</small></span>
+        <span class="presence-label"><strong>{{ t('events_form.pt_available') }}</strong><br><small class="text-muted">{{ t('events_form.pt_available_desc') }}</small></span>
       </label>
       <label class="presence-option">
         <input type="radio" name="presence_type" value="no_registration"
                {{ "checked" if (event and event.presence_type == "no_registration") or (not event and "no_registration" == "normal") else "" }}>
-        <span class="presence-label"><strong>No registration</strong><br><small class="text-muted">No attendance tracking for this event</small></span>
+        <span class="presence-label"><strong>{{ t('events_form.pt_no_reg') }}</strong><br><small class="text-muted">{{ t('events_form.pt_no_reg_desc') }}</small></span>
       </label>
     </div>
   </fieldset>
 
-  <label>Description
+  <label>{{ t('common.description') }}
     <textarea name="description">{{ event.description if event and event.description else "" }}</textarea>
   </label>
 
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
-    <a href="/events" class="btn btn-outline">Cancel</a>
+    <a href="/events" class="btn btn-outline">{{ t('common.cancel') }}</a>
   </div>
 </form>
 </div>

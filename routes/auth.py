@@ -12,7 +12,7 @@ from app.database import get_db
 from app.limiter import limiter
 from app.templates import render
 from models.user import User
-from routes._auth_helpers import require_admin
+from routes._auth_helpers import require_admin, rt
 from services.auth_service import (
     authenticate_user,
     create_session_cookie,
@@ -50,7 +50,10 @@ async def login_post(
     user = authenticate_user(db, username, password)
     if user is None:
         return render(
-            request, "auth/login.html", {"user": None, "error": "Invalid username or password."}, status_code=401
+            request,
+            "auth/login.html",
+            {"user": None, "error": rt(request, "errors.invalid_credentials")},
+            status_code=401,
         )
 
     cookie_val = create_session_cookie(user.id)
@@ -109,7 +112,7 @@ async def register_post(
             "auth/register.html",
             {
                 "user": user,
-                "error": "Invalid role selected.",
+                "error": rt(request, "errors.invalid_role"),
                 "flash": None,
             },
             status_code=400,
@@ -120,7 +123,7 @@ async def register_post(
             "auth/register.html",
             {
                 "user": user,
-                "error": f"Username '{username}' is already taken.",
+                "error": rt(request, "errors.username_taken", username=username),
                 "flash": None,
             },
             status_code=400,
@@ -131,7 +134,7 @@ async def register_post(
             "auth/register.html",
             {
                 "user": user,
-                "error": f"Email '{email}' is already registered.",
+                "error": rt(request, "errors.email_taken", email=email),
                 "flash": None,
             },
             status_code=400,
@@ -142,7 +145,7 @@ async def register_post(
             "auth/register.html",
             {
                 "user": user,
-                "error": "Password must be at least 8 characters.",
+                "error": rt(request, "errors.password_too_short"),
                 "flash": None,
             },
             status_code=400,

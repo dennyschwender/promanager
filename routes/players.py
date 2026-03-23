@@ -21,7 +21,7 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import check_team_access, require_admin, require_coach_or_admin, require_login
+from routes._auth_helpers import check_team_access, require_admin, require_coach_or_admin, require_login, rt
 from services.attendance_service import get_player_attendance_history
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
@@ -670,7 +670,7 @@ async def player_new_post(
                 "seasons": seasons,
                 "active_season_id": _active_season_id(db),
                 "all_memberships": {},
-                "error": "First name and last name are required.",
+                "error": rt(request, "errors.name_required"),
             },
             status_code=400,
         )
@@ -791,19 +791,19 @@ async def player_import_post(
             if not isinstance(rows, list):
                 raise ValueError("expected list")
         except (json.JSONDecodeError, ValueError):
-            error = "Invalid data submitted. Please try again."
+            error = rt(request, "errors.invalid_data")
             return _render(400)
         result = process_rows(rows, context_team_id=team_id, db=db, context_season_id=selected_season_id)
 
     elif import_source == "file":
         upload = form.get("import_file")
         if upload is None or not upload.filename:
-            error = "No file selected."
+            error = rt(request, "errors.no_file")
             return _render(400)
 
         content = await upload.read()
         if len(content) > MAX_UPLOAD_BYTES:
-            error = "File too large. Maximum size is 5 MB."
+            error = rt(request, "errors.file_too_large")
             return _render(400)
 
         filename = upload.filename.lower()
@@ -813,7 +813,7 @@ async def player_import_post(
             elif filename.endswith(".xlsx"):
                 rows = parse_xlsx(io.BytesIO(content))
             else:
-                error = "Unsupported file type. Please upload a .csv or .xlsx file."
+                error = rt(request, "errors.unsupported_file_type")
                 return _render(400)
         except ValueError as exc:
             error = f"Could not read the file: {exc}"
@@ -822,7 +822,7 @@ async def player_import_post(
         result = process_rows(rows, context_team_id=team_id, db=db, context_season_id=selected_season_id)
 
     else:
-        error = "Invalid submission."
+        error = rt(request, "errors.invalid_submission")
         return _render(400)
 
     return _render()
@@ -933,7 +933,7 @@ async def player_edit_post(
                 "seasons": seasons,
                 "active_season_id": active_season_id,
                 "all_memberships": _all_memberships_dict(player),
-                "error": "First name and last name are required.",
+                "error": rt(request, "errors.name_required"),
             },
             status_code=400,
         )

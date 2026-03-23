@@ -12,14 +12,14 @@
   <h2>{{ team.name }}</h2>
   {% if user.is_admin %}
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-    <a href="/teams/{{ team.id }}/edit" class="btn btn-outline">Edit</a>
-    <a href="/players?team_id={{ team.id }}" class="btn btn-outline">Players</a>
+    <a href="/teams/{{ team.id }}/edit" class="btn btn-outline">{{ t('common.edit') }}</a>
+    <a href="/players?team_id={{ team.id }}" class="btn btn-outline">{{ t('nav.players') }}</a>
   </div>
   {% endif %}
 </div>
 
 {% if saved %}
-<div class="alert alert-success" style="margin-bottom:1rem;">Changes saved.</div>
+<div class="alert alert-success" style="margin-bottom:1rem;">{{ t('common.changes_saved') }}</div>
 {% endif %}
 
 {% if team.description %}
@@ -27,7 +27,7 @@
 {% endif %}
 
 {% if schedules %}
-<h3 style="margin-bottom:.75rem;">Recurring Schedules</h3>
+<h3 style="margin-bottom:.75rem;">{{ t('teams_form.recurring_schedules') }}</h3>
 {% for s in schedules %}
 <div style="border:1px solid var(--muted-border-color);border-radius:var(--tp-radius);padding:1rem;margin-bottom:.75rem;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
@@ -43,13 +43,13 @@
   <div style="margin-top:.4rem;font-size:.85rem;color:var(--tp-muted);">
     {% if s.event_time %}{{ s.event_time.strftime('%H:%M') }}{% if s.event_end_time %} – {{ s.event_end_time.strftime('%H:%M') }}{% endif %}{% endif %}
     {% if s.location %} · {{ s.location }}{% endif %}
-    {% if s.meeting_time %} · Meet {{ s.meeting_time.strftime('%H:%M') }}{% if s.meeting_location %} @ {{ s.meeting_location }}{% endif %}{% endif %}
+    {% if s.meeting_time %} · {{ t('teams_detail.meet_prefix') }} {{ s.meeting_time.strftime('%H:%M') }}{% if s.meeting_location %} @ {{ s.meeting_location }}{% endif %}{% endif %}
   </div>
   {% if s.description %}<p style="margin:.4rem 0 0;font-size:.85rem;">{{ s.description }}</p>{% endif %}
 </div>
 {% endfor %}
 {% else %}
-<p class="text-muted">No recurring schedules defined. <a href="/teams/{{ team.id }}/edit">Edit the team</a> to add one.</p>
+<p class="text-muted">{{ t('teams_detail.no_schedules') }}</p>
 {% endif %}
 
 {% if user.is_admin %}
@@ -57,12 +57,12 @@
   <header><strong>{{ t('teams.coaches') }}</strong></header>
   {% if team.coaches %}
   <table>
-    <thead><tr><th>Coach</th><th>Season scope</th><th></th></tr></thead>
+    <thead><tr><th>{{ t('teams_detail.coach') }}</th><th>{{ t('teams_detail.season_scope') }}</th><th></th></tr></thead>
     <tbody>
     {% for ut in team.coaches %}
       <tr>
         <td>{{ ut.user.username }}</td>
-        <td>{{ ut.season.name if ut.season else 'All seasons' }}</td>
+        <td>{{ ut.season.name if ut.season else t('teams_detail.all_seasons') }}</td>
         <td>
           <form method="post" action="/teams/{{ team.id }}/coaches/{{ ut.id }}/delete">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
@@ -83,18 +83,18 @@
         style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:1rem;">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
     <label style="margin:0;">
-      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">Coach</span>
+      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">{{ t('teams_detail.coach') }}</span>
       <select name="user_id" class="sel-inline" required>
-        <option value="">— Select coach —</option>
+        <option value="">{{ t('teams_detail.select_coach') }}</option>
         {% for cu in coach_users %}
           <option value="{{ cu.id }}">{{ cu.username }}</option>
         {% endfor %}
       </select>
     </label>
     <label style="margin:0;">
-      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">Season (optional)</span>
+      <span style="display:block;font-size:.78rem;margin-bottom:.15rem;">{{ t('teams_detail.season_optional') }}</span>
       <select name="season_id" class="sel-inline">
-        <option value="">All seasons</option>
+        <option value="">{{ t('teams_detail.all_seasons') }}</option>
         {% for s in seasons %}
           <option value="{{ s.id }}">{{ s.name }}</option>
         {% endfor %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Attendance: {{ event.title }} — ProManager{% endblock %}
+{% block title %}{{ t('attendance.title') }}: {{ event.title }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/events">Events</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/events">{{ t('events.title') }}</a><span class="breadcrumb-sep"></span>
   <a href="/events/{{ event.id }}">{{ event.title }}</a><span class="breadcrumb-sep"></span>
-  <span>Attendance</span>
+  <span>{{ t('attendance.title') }}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -13,7 +13,7 @@
   <h2>{{ t('attendance.title') }} — {{ event.title }}</h2>
   <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
 </div>
-<p>{{ event.event_date }}{% if event.event_time %} at {{ event.event_time.strftime("%H:%M") }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
+<p>{{ event.event_date }}{% if event.event_time %} {{ t('attendance.at_time') }} {{ event.event_time.strftime("%H:%M") }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
 
 {% if flash %}
   <div class="alert alert-success">{{ flash }}</div>
@@ -23,7 +23,7 @@
   {% if attendances %}
   <div class="table-responsive">
   <table>
-    <thead><tr><th>{{ t('attendance.player') }}</th><th>{{ t('attendance.status') }}</th><th>{{ t('attendance.notes') }}</th><th>Update</th></tr></thead>
+    <thead><tr><th>{{ t('attendance.player') }}</th><th>{{ t('attendance.status') }}</th><th>{{ t('attendance.notes') }}</th><th>{{ t('attendance.update_header') }}</th></tr></thead>
     <tbody>
     {% for att in attendances %}
       <tr>
@@ -34,7 +34,7 @@
           <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <select name="status" class="select-sm">
-              {% for s, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe","Maybe"),("unknown", t('attendance.status_unknown'))] %}
+              {% for s, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('attendance.status_maybe')),("unknown", t('attendance.status_unknown'))] %}
                 <option value="{{ s }}" {% if att.status == s %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
@@ -59,7 +59,7 @@
         <form method="post" action="/attendance/{{ event.id }}/{{ player.id }}">
           <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
           <div class="radio-group">
-            {% for s, label in [("present", t('attendance.status_attend') ~ " ✓"),("absent", t('attendance.status_absent') ~ " ✗"),("maybe","Maybe ?"),("unknown", t('attendance.status_unknown'))] %}
+            {% for s, label in [("present", t('attendance.status_attend') ~ " ✓"),("absent", t('attendance.status_absent') ~ " ✗"),("maybe", t('attendance.status_maybe') ~ " ?"),("unknown", t('attendance.status_unknown'))] %}
             <label class="radio-option">
               <input type="radio" name="status" value="{{ s }}"
                      {% if att and att.status == s %}checked{% elif not att and s == "unknown" %}checked{% endif %}>
@@ -67,7 +67,7 @@
             </label>
             {% endfor %}
           </div>
-          <label>Note (optional)
+          <label>{{ t('attendance.note_optional') }}
             <input type="text" name="note" value="{{ att.note if att and att.note else "" }}">
           </label>
           <button type="submit" class="btn btn-primary">{{ t('attendance.save') }}</button>

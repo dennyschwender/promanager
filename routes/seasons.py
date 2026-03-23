@@ -14,7 +14,7 @@ from app.templates import render
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.user import User
-from routes._auth_helpers import require_admin, require_login
+from routes._auth_helpers import require_admin, require_login, rt
 
 router = APIRouter()
 
@@ -76,7 +76,7 @@ async def season_new_post(
             {
                 "user": user,
                 "season": None,
-                "error": "Season name is required.",
+                "error": rt(request, "errors.field_required", field="Season name"),
             },
             status_code=400,
         )
@@ -91,7 +91,7 @@ async def season_new_post(
             {
                 "user": user,
                 "season": None,
-                "error": "Invalid date format. Use YYYY-MM-DD.",
+                "error": rt(request, "errors.invalid_date_format"),
             },
             status_code=400,
         )
@@ -151,7 +151,7 @@ async def season_edit_post(
             {
                 "user": user,
                 "season": season,
-                "error": "Season name is required.",
+                "error": rt(request, "errors.field_required", field="Season name"),
             },
             status_code=400,
         )
@@ -166,7 +166,7 @@ async def season_edit_post(
             {
                 "user": user,
                 "season": season,
-                "error": "Invalid date format. Use YYYY-MM-DD.",
+                "error": rt(request, "errors.invalid_date_format"),
             },
             status_code=400,
         )
@@ -242,7 +242,7 @@ async def season_copy_roster(
             {
                 "user": _user,
                 "seasons": db.query(Season).order_by(Season.name).all(),
-                "error": "Source and target season must be different.",
+                "error": rt(request, "errors.same_season"),
             },
             status_code=400,
         )

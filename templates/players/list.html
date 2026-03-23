@@ -2,7 +2,7 @@
 {% block head_extra %}
 <meta name="csrf-token" content="{{ request.state.csrf_token }}">
 {% endblock %}
-{% block title %}Players — ProManager{% endblock %}
+{% block title %}{{ t('players.title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('players.title') }}</span></nav>
 {% endblock %}
@@ -20,9 +20,9 @@
 <form method="get" action="/players" id="player-filter-form"
       style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Season</span>
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.season_filter') }}</span>
     <select name="season_id" onchange="filterSubmit(this.form)" class="sel-inline">
-      <option value="">All Seasons</option>
+      <option value="">{{ t('players_list.all_seasons') }}</option>
       {% for s in seasons %}
         <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
           {{ s.name }}{% if s.is_active %} ✓{% endif %}
@@ -31,26 +31,26 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Team</span>
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.team_filter') }}</span>
     <select name="team_id" onchange="filterSubmit(this.form)" class="sel-inline">
-      <option value="">All Teams</option>
+      <option value="">{{ t('players_list.all_teams') }}</option>
       {% for t in teams %}
         <option value="{{ t.id }}" {% if selected_team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
       {% endfor %}
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">Archived</span>
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.archived_filter') }}</span>
     <select name="archived" onchange="filterSubmit(this.form)" class="sel-inline">
-      <option value="">Active only</option>
-      <option value="only" {% if archived_filter == 'only' %}selected{% endif %}>Archived only</option>
-      <option value="all" {% if archived_filter == 'all' %}selected{% endif %}>All</option>
+      <option value="">{{ t('players_list.active_only') }}</option>
+      <option value="only" {% if archived_filter == 'only' %}selected{% endif %}>{{ t('players_list.archived_only') }}</option>
+      <option value="all" {% if archived_filter == 'all' %}selected{% endif %}>{{ t('players_list.all') }}</option>
     </select>
   </label>
   <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-left:.25rem;">
     {% if user.is_admin %}
     <div style="position:relative;display:inline-block;">
-      <button type="button" class="btn btn-outline" id="columns-btn">Columns ▾</button>
+      <button type="button" class="btn btn-outline" id="columns-btn">{{ t('players_list.columns') }}</button>
       <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
         {% for col in ["Team","Email","Phone","Date of birth","Active","Role","Shirt number","Position","Status","Injured until","Absent by default","Priority","Actions"] %}
         <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
@@ -59,12 +59,12 @@
         {% endfor %}
       </div>
     </div>
-    <button type="button" class="btn btn-outline" id="adv-filter-btn">Filter ▾</button>
+    <button type="button" class="btn btn-outline" id="adv-filter-btn">{{ t('players_list.filter') }}</button>
     {% endif %}
     {% if user.is_admin or user.is_coach %}
-    <button type="button" class="btn btn-outline" id="edit-btn">Edit</button>
-    <button type="button" class="btn btn-primary" id="save-btn" style="display:none;" disabled>Save changes</button>
-    <button type="button" class="btn btn-outline" id="cancel-btn" style="display:none;">Cancel</button>
+    <button type="button" class="btn btn-outline" id="edit-btn">{{ t('players_list.edit_mode') }}</button>
+    <button type="button" class="btn btn-primary" id="save-btn" style="display:none;" disabled>{{ t('players_list.save_changes') }}</button>
+    <button type="button" class="btn btn-outline" id="cancel-btn" style="display:none;">{{ t('common.cancel') }}</button>
     {% endif %}
   </div>
 </form>
@@ -79,17 +79,17 @@
 
 <div id="adv-filter-panel" style="display:none;margin-bottom:.75rem;">
   <div class="adv-filter-header">
-    <strong>Advanced filter</strong>
+    <strong>{{ t('players_list.adv_filter') }}</strong>
     <label style="display:flex;align-items:center;gap:.3rem;font-size:.85rem;margin:0;">
-      Match
+      {{ t('players_list.match_label') }}
       <select id="adv-filter-logic" class="sel-inline">
-        <option value="and">ALL (AND)</option>
-        <option value="or">ANY (OR)</option>
+        <option value="and">{{ t('players_list.match_all') }}</option>
+        <option value="or">{{ t('players_list.match_any') }}</option>
       </select>
       of the following
     </label>
-    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-add">+ Add condition</button>
-    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-clear" style="margin-left:auto;">Clear all</button>
+    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-add">{{ t('players_list.add_condition') }}</button>
+    <button type="button" class="btn btn-sm btn-outline" id="adv-filter-clear" style="margin-left:auto;">{{ t('players_list.clear_all') }}</button>
   </div>
   <div id="adv-filter-rows" style="margin-top:.5rem;"></div>
   <div id="adv-filter-status" style="margin-top:.4rem;font-size:.82rem;color:var(--tp-muted,#6c757d);"></div>
@@ -100,7 +100,7 @@
   <span id="bulk-count" style="font-weight:600;"></span>
   <div style="display:flex;gap:.25rem;align-items:center;">
     <div style="position:relative;display:inline-block;">
-      <button type="button" class="btn btn-sm btn-outline" id="assign-btn">Assign to team ▾</button>
+      <button type="button" class="btn btn-sm btn-outline" id="assign-btn">{{ t('players_list.assign_to_team') }}</button>
       <div id="assign-picker" style="display:none;position:absolute;top:100%;left:0;margin-top:.25rem;z-index:50;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.35rem;padding:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.15);flex-direction:column;gap:.35rem;min-width:180px;">
         <select id="assign-team-select" class="sel-inline" style="width:100%;">
           <option value="">— Team —</option>
@@ -108,11 +108,11 @@
         <select id="assign-season-select" class="sel-inline" style="width:100%;">
           <option value="">— Season —</option>
         </select>
-        <button type="button" class="btn btn-sm btn-primary" id="assign-confirm-btn" style="width:100%;">Assign</button>
+        <button type="button" class="btn btn-sm btn-primary" id="assign-confirm-btn" style="width:100%;">{{ t('players_list.assign') }}</button>
       </div>
     </div>
     <div style="position:relative;display:inline-block;">
-      <button type="button" class="btn btn-sm btn-outline" id="remove-from-team-btn" style="border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Remove from team ▾</button>
+      <button type="button" class="btn btn-sm btn-outline" id="remove-from-team-btn" style="border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">{{ t('players_list.remove_from_team') }}</button>
       <div id="remove-picker" style="display:none;position:absolute;top:100%;left:0;margin-top:.25rem;z-index:50;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.35rem;padding:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.15);flex-direction:column;gap:.35rem;min-width:180px;">
         <select id="remove-team-select" class="sel-inline" style="width:100%;">
           <option value="">— Team —</option>
@@ -120,27 +120,26 @@
         <select id="remove-season-select" class="sel-inline" style="width:100%;">
           <option value="">— Season —</option>
         </select>
-        <button type="button" class="btn btn-sm btn-danger" id="remove-confirm-btn" style="width:100%;">Remove</button>
+        <button type="button" class="btn btn-sm btn-danger" id="remove-confirm-btn" style="width:100%;">{{ t('players_list.remove') }}</button>
       </div>
     </div>
   </div>
 <button type="button" class="btn btn-sm btn-outline" id="bulk-activate-btn"
-        style="display:none;">Activate</button>
+        style="display:none;">{{ t('common.activate') }}</button>
 <button type="button" class="btn btn-sm btn-outline" id="bulk-deactivate-btn"
-        style="display:none;">Deactivate</button>
+        style="display:none;">{{ t('common.deactivate') }}</button>
 <button type="button" class="btn btn-sm btn-outline" id="bulk-archive-btn"
-        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Archive</button>
+        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">{{ t('common.archive') }}</button>
 <button type="button" class="btn btn-sm btn-outline" id="bulk-unarchive-btn"
-        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">Unarchive</button>
-<button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">Clear selection</button>
+        style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">{{ t('common.unarchive') }}</button>
+<button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">{{ t('players_list.clear_selection') }}</button>
 </div>
 <div id="bulk-banner" style="display:none;margin-bottom:.5rem;" role="alert"></div>
 {% endif %}
 
 {% if players %}
 <div id="pt-edit-notice" style="display:none;" class="alert alert-warning" role="alert">
-  ⚠ <strong>Shirt #, Position, Injured until, Absent by default and Priority are team-specific.</strong>
-  To edit them, select a <strong>season + team</strong> using the filters above. Values shown in view mode are per-team.
+  ⚠ {{ t('players_list.edit_notice') }}
 </div>
 <div style="overflow-x:auto;">
 <table id="players-table">
@@ -150,10 +149,10 @@
       <th>{{ t('players.name') }}</th>
       <th data-col="Team">{{ t('players.team') }}</th>
       <th data-col="Email">{{ t('players.email') }}</th>
-      <th data-col="Phone">Phone</th>
-      <th data-col="Date of birth">Date of birth</th>
+      <th data-col="Phone">{{ t('players.phone') }}</th>
+      <th data-col="Date of birth">{{ t('players_list.date_of_birth') }}</th>
       <th data-col="Active">{{ t('players.active') }}</th>
-      <th data-col="Role">Role</th>
+      <th data-col="Role">{{ t('players_form.role') }}</th>
       <th data-col="Shirt number">Shirt #</th>
       <th data-col="Position">Position</th>
       <th data-col="Status">Status</th>
@@ -202,7 +201,7 @@
         <input type="date" class="cell-input" style="display:none;" value="{{ p.date_of_birth or '' }}">
       </td>
       <td data-col="Active" data-field="is_active" data-value="{{ 'true' if p.is_active else 'false' }}">
-        <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}</span>
+        <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}</span>
         <input type="checkbox" class="cell-input" style="display:none;" {% if p.is_active %}checked{% endif %}>
       </td>
       {% set season_mems_pt = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | sort(attribute='priority') | list if selected_season_id else [] %}
@@ -214,7 +213,7 @@
           {% else %}—{% endif %}
         </span>
         <select class="cell-input pt-field" style="display:none;" {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
-          {% for val, lbl in [('player','Player'),('coach','Coach'),('assistant','Assistant'),('team_leader','Team Leader')] %}
+          {% for val, lbl in [('player', t('players_form.role_player')),('coach', t('players_form.role_coach')),('assistant', t('players_form.role_assistant')),('team_leader', t('players_form.role_team_leader'))] %}
             <option value="{{ val }}" {% if pt and pt.role == val %}selected{% endif %}>{{ lbl }}</option>
           {% endfor %}
         </select>
@@ -240,7 +239,7 @@
         <select class="cell-input pt-field" style="display:none;"
                 {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
           <option value="">—</option>
-          {% for val, lbl in [('goalie','Goalie'),('defender','Defender'),('center','Center'),('forward','Forward')] %}
+          {% for val, lbl in [('goalie', t('players_form.pos_goalie')),('defender', t('players_form.pos_defender')),('center', t('players_form.pos_center')),('forward', t('players_form.pos_forward'))] %}
             <option value="{{ val }}" {% if pt and pt.position == val %}selected{% endif %}>{{ lbl }}</option>
           {% endfor %}
         </select>
@@ -248,16 +247,16 @@
       <td data-col="Status" class="pt-field" data-field="membership_status" data-value="{{ pt.membership_status or '' if pt else '' }}">
         <span class="cell-view">
           {% if pt %}
-            {% if pt.membership_status == 'injured' %}<span class="badge badge-absent">Injured</span>
-            {% elif pt.membership_status == 'inactive' %}<span class="badge">Inactive</span>
-            {% else %}<span class="badge badge-active">Active</span>{% endif %}
+            {% if pt.membership_status == 'injured' %}<span class="badge badge-absent">{{ t('common.injured') }}</span>
+            {% elif pt.membership_status == 'inactive' %}<span class="badge">{{ t('common.inactive') }}</span>
+            {% else %}<span class="badge badge-active">{{ t('common.active') }}</span>{% endif %}
           {% elif season_mems_pt %}
             {% for m in season_mems_pt %}<span class="text-muted" style="font-size:.8rem;white-space:nowrap;">{{ m.team.name }}: {{ m.membership_status | capitalize if m.membership_status else 'Active' }}</span><br>{% endfor %}
           {% else %}—{% endif %}
         </span>
         <select class="cell-input pt-field" style="display:none;"
                 {% if not selected_season_id or not selected_team_id %}disabled{% endif %}>
-          {% for val, lbl in [('active','Active'),('inactive','Inactive'),('injured','Injured')] %}
+          {% for val, lbl in [('active', t('common.active')),('inactive', t('common.inactive')),('injured', t('common.injured'))] %}
             <option value="{{ val }}" {% if pt and pt.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
           {% endfor %}
         </select>
@@ -300,26 +299,26 @@
           <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">&#8943;</button>
           <div class="action-dropdown-menu">
             {% if user.is_admin %}
-              <a href="/players/{{ p.id }}/edit">Edit</a>
-              <a href="/reports/player/{{ p.id }}">Report</a>
+              <a href="/players/{{ p.id }}/edit">{{ t('common.edit') }}</a>
+              <a href="/reports/player/{{ p.id }}">{{ t('common.report') }}</a>
               {% if p.is_active %}
-                <button type="button" class="row-deactivate-btn" data-id="{{ p.id }}">Deactivate</button>
+                <button type="button" class="row-deactivate-btn" data-id="{{ p.id }}">{{ t('common.deactivate') }}</button>
               {% else %}
-                <button type="button" class="row-activate-btn" data-id="{{ p.id }}">Activate</button>
+                <button type="button" class="row-activate-btn" data-id="{{ p.id }}">{{ t('common.activate') }}</button>
               {% endif %}
               {% if p.archived_at %}
                 <form method="post" action="/players/{{ p.id }}/unarchive">
                   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                  <button type="submit">Unarchive</button>
+                  <button type="submit">{{ t('common.unarchive') }}</button>
                 </form>
               {% else %}
                 <button type="button" class="row-archive-btn danger"
                         data-id="{{ p.id }}"
                         data-name="{{ p.full_name | e }}"
-                        data-dob="{{ p.date_of_birth or '' }}">Archive</button>
+                        data-dob="{{ p.date_of_birth or '' }}">{{ t('common.archive') }}</button>
               {% endif %}
             {% else %}
-              <a href="/reports/player/{{ p.id }}">Report</a>
+              <a href="/reports/player/{{ p.id }}">{{ t('common.report') }}</a>
             {% endif %}
           </div>
         </div>
@@ -357,17 +356,64 @@
     teamNames: {{ teams | map(attribute='name') | list | tojson }},
   };
 </script>
+<script>
+window.I18N = {
+  col_team: "{{ t('js_strings.col_team') }}",
+  col_email: "{{ t('js_strings.col_email') }}",
+  col_phone: "{{ t('js_strings.col_phone') }}",
+  col_dob: "{{ t('js_strings.col_dob') }}",
+  col_active: "{{ t('js_strings.col_active') }}",
+  col_role: "{{ t('js_strings.col_role') }}",
+  col_shirt: "{{ t('js_strings.col_shirt') }}",
+  col_position: "{{ t('js_strings.col_position') }}",
+  col_status: "{{ t('js_strings.col_status') }}",
+  col_injured: "{{ t('js_strings.col_injured') }}",
+  col_absent_default: "{{ t('js_strings.col_absent_default') }}",
+  col_priority: "{{ t('js_strings.col_priority') }}",
+  col_actions: "{{ t('js_strings.col_actions') }}",
+  filter_name: "{{ t('js_strings.filter_name') }}",
+  filter_email: "{{ t('js_strings.filter_email') }}",
+  filter_phone: "{{ t('js_strings.filter_phone') }}",
+  filter_dob: "{{ t('js_strings.filter_dob') }}",
+  filter_active: "{{ t('js_strings.filter_active') }}",
+  filter_shirt: "{{ t('js_strings.filter_shirt') }}",
+  filter_position: "{{ t('js_strings.filter_position') }}",
+  filter_priority: "{{ t('js_strings.filter_priority') }}",
+  filter_membership: "{{ t('js_strings.filter_membership') }}",
+  op_contains: "{{ t('js_strings.op_contains') }}",
+  op_not_contains: "{{ t('js_strings.op_not_contains') }}",
+  op_equals: "{{ t('js_strings.op_equals') }}",
+  op_starts_with: "{{ t('js_strings.op_starts_with') }}",
+  op_empty: "{{ t('js_strings.op_empty') }}",
+  op_not_empty: "{{ t('js_strings.op_not_empty') }}",
+  save_failed: "{{ t('js_strings.save_failed') }}",
+  network_error: "{{ t('js_strings.network_error') }}",
+  select_season_hint: "{{ t('js_strings.select_season_hint') }}",
+  errors_count: "{{ t('js_strings.errors_count') }}",
+  updated_count: "{{ t('js_strings.updated_count') }}",
+  assigned_count: "{{ t('js_strings.assigned_count') }}",
+  removed_count: "{{ t('js_strings.removed_count') }}",
+  bool_active: "{{ t('js_strings.bool_active') }}",
+  bool_inactive: "{{ t('js_strings.bool_inactive') }}",
+  bool_yes: "{{ t('js_strings.bool_yes') }}",
+  bool_no: "{{ t('js_strings.bool_no') }}",
+  bool_any: "{{ t('js_strings.bool_any') }}",
+  remove_btn: "{{ t('js_strings.remove_btn') }}",
+  player_fallback: "{{ t('js_strings.player_fallback') }}",
+  of: "{{ t('js_strings.of') }}"
+};
+</script>
 <script src="/static/js/players-table.js"></script>
 {% endif %}
 {% if user.is_admin %}
 <dialog id="archive-dialog">
   <article>
-    <h3>Archive players?</h3>
-    <p>The following players will be archived and hidden from day-to-day views:</p>
+    <h3>{{ t('players_list.archive_dialog_title') }}</h3>
+    <p>{{ t('players_list.archive_dialog_body') }}</p>
     <ul id="archive-dialog-list" style="margin:.5rem 0 1rem;padding-left:1.5rem;"></ul>
     <footer style="display:flex;gap:.5rem;justify-content:flex-end;">
-      <button type="button" class="btn btn-outline" id="archive-dialog-cancel">Cancel</button>
-      <button type="button" class="btn btn-danger" id="archive-dialog-confirm">Archive</button>
+      <button type="button" class="btn btn-outline" id="archive-dialog-cancel">{{ t('common.cancel') }}</button>
+      <button type="button" class="btn btn-danger" id="archive-dialog-confirm">{{ t('common.archive') }}</button>
     </footer>
   </article>
 </dialog>

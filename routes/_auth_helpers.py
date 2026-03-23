@@ -6,6 +6,8 @@ from fastapi import Depends, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session as _Session
 
+from app.i18n import DEFAULT_LOCALE
+from app.i18n import t as _i18n_t
 from models.user import User
 from models.user_team import UserTeam as _UserTeam
 
@@ -106,3 +108,9 @@ def require_coach_or_admin(request: Request, user: User = Depends(require_login)
     if not (user.is_admin or user.is_coach):
         raise NotAuthorized
     return user
+
+
+def rt(request: Request, key: str, **kwargs) -> str:
+    """Translate a key using the current request locale."""
+    locale = getattr(request.state, "locale", DEFAULT_LOCALE)
+    return _i18n_t(key, locale, **kwargs)

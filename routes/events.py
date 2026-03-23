@@ -24,6 +24,7 @@ from routes._auth_helpers import (
     optional_user,
     require_coach_or_admin,
     require_login,
+    rt,
 )
 from services.attendance_service import (
     ensure_attendance_records,
@@ -169,7 +170,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Event title is required.",
+                "error": rt(request, "errors.field_required", field="Event title"),
             },
             status_code=400,
         )
@@ -188,7 +189,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Invalid date or time format.",
+                "error": rt(request, "errors.invalid_date_or_time"),
             },
             status_code=400,
         )
@@ -202,7 +203,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Event date is required.",
+                "error": rt(request, "errors.field_required", field="Event date"),
             },
             status_code=400,
         )
@@ -223,7 +224,7 @@ async def event_new_post(
                     "event": None,
                     "seasons": seasons,
                     "teams": teams,
-                    "error": "Invalid recurrence end date.",
+                    "error": rt(request, "errors.recurrence_end_invalid"),
                 },
                 status_code=400,
             )
@@ -236,7 +237,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Please select a valid recurrence frequency.",
+                "error": rt(request, "errors.recurrence_freq_invalid"),
             },
             status_code=400,
         )
@@ -249,7 +250,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Recurrence end date is required for recurring events.",
+                "error": rt(request, "errors.recurrence_end_required"),
             },
             status_code=400,
         )
@@ -262,7 +263,7 @@ async def event_new_post(
                 "event": None,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Recurrence end date must be after the event start date.",
+                "error": rt(request, "errors.recurrence_end_after_start"),
             },
             status_code=400,
         )
@@ -500,7 +501,7 @@ async def event_edit_post(
                 "event": event,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Event title is required.",
+                "error": rt(request, "errors.field_required", field="Event title"),
             },
             status_code=400,
         )
@@ -517,7 +518,7 @@ async def event_edit_post(
                 "event": event,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Invalid date or time format.",
+                "error": rt(request, "errors.invalid_date_or_time"),
             },
             status_code=400,
         )
@@ -531,7 +532,7 @@ async def event_edit_post(
                 "event": event,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Event date is required.",
+                "error": rt(request, "errors.field_required", field="Event date"),
             },
             status_code=400,
         )
@@ -548,7 +549,7 @@ async def event_edit_post(
                 "event": event,
                 "seasons": seasons,
                 "teams": teams,
-                "error": "Invalid time format.",
+                "error": rt(request, "errors.invalid_time_format"),
             },
             status_code=400,
         )

@@ -2,27 +2,27 @@
 {% block title %}{{ player.full_name }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ player.full_name }}</span>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
   <h2>{{ player.full_name }}</h2>
-  {% if player.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}
+  {% if player.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}
 </div>
 
 {# ==================== TEAMS ==================== #}
 {% if player.team_memberships %}
 <section class="card" style="margin-bottom:1.25rem;">
-  <h3 style="margin-top:0">Teams</h3>
+  <h3 style="margin-top:0">{{ t('players_detail.teams') }}</h3>
   <div style="overflow-x:auto;">
   <table>
     <thead>
       <tr>
-        <th>Season</th><th>Team</th><th>Prio</th><th>Role</th><th>Position</th>
-        <th>Shirt #</th><th>Status</th><th>Injured until</th><th>Absent by default</th>
+        <th>{{ t('reports.season_title') }}</th><th>{{ t('players.team') }}</th><th>{{ t('players_form.priority') }}</th><th>{{ t('players_form.role') }}</th><th>{{ t('players_form.position') }}</th>
+        <th>{{ t('players_form.shirt_number') }}</th><th>{{ t('players_form.status') }}</th><th>{{ t('players_form.injured_until') }}</th><th>{{ t('players_form.absent_default') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -36,19 +36,19 @@
         <td>{{ m.shirt_number if m.shirt_number is not none else '—' }}</td>
         <td>
           {% if m.membership_status == 'injured' %}
-            <span class="badge badge-absent">Injured</span>
+            <span class="badge badge-absent">{{ t('common.injured') }}</span>
           {% elif m.membership_status == 'inactive' %}
-            <span class="badge">Inactive</span>
+            <span class="badge">{{ t('common.inactive') }}</span>
           {% else %}
-            <span class="badge badge-active">Active</span>
+            <span class="badge badge-active">{{ t('common.active') }}</span>
           {% endif %}
         </td>
         <td>{{ m.injured_until if m.injured_until else '—' }}</td>
         <td style="text-align:center;">
           {% if m.absent_by_default %}
-            <span class="badge badge-absent" title="Absent by default">Yes</span>
+            <span class="badge badge-absent" title="{{ t('players_form.absent_default') }}">{{ t('common.yes') }}</span>
           {% else %}
-            <span class="muted">No</span>
+            <span class="muted">{{ t('common.no') }}</span>
           {% endif %}
         </td>
       </tr>
@@ -61,21 +61,21 @@
 
 {# ================== PERSONAL INFO ================== #}
 <section class="card" style="margin-bottom:1.25rem;">
-  <h3 style="margin-top:0">Personal Info</h3>
+  <h3 style="margin-top:0">{{ t('players_detail.personal_info') }}</h3>
   <dl class="detail-dl">
-    <dt>Sex</dt>
+    <dt>{{ t('players_form.sex') }}</dt>
     <dd>{{ player.sex|capitalize if player.sex else '—' }}</dd>
-    <dt>Date of Birth</dt>
+    <dt>{{ t('players_form.date_of_birth') }}</dt>
     <dd>{{ player.date_of_birth if player.date_of_birth else '—' }}</dd>
-    <dt>E-mail</dt>
+    <dt>{{ t('players_detail.email') }}</dt>
     <dd>
       {% if player.email %}<a href="mailto:{{ player.email }}">{{ player.email }}</a>
       {% else %}&mdash;{% endif %}
     </dd>
-    <dt>Phone (primary)</dt>
+    <dt>{{ t('players_detail.phone_primary') }}</dt>
     <dd>{{ player.phone or '—' }}</dd>
     {% if player.phones %}
-    <dt>Phone numbers</dt>
+    <dt>{{ t('players_detail.phone_numbers') }}</dt>
     <dd>
       <ul style="margin:0;padding-left:1.2em;">
         {% for ph in player.phones %}
@@ -84,7 +84,7 @@
       </ul>
     </dd>
     {% endif %}
-    <dt>Address</dt>
+    <dt>{{ t('players_detail.address') }}</dt>
     <dd>
       {% if player.street or player.city %}
         {% if player.street %}{{ player.street }}<br>{% endif %}
@@ -97,26 +97,26 @@
 {# ================== EMERGENCY CONTACT ================== #}
 {% if player.contact %}
 <section class="card" style="margin-bottom:1.25rem;">
-  <h3 style="margin-top:0">Emergency Contact</h3>
+  <h3 style="margin-top:0">{{ t('players_detail.emergency_contact') }}</h3>
   <dl class="detail-dl">
-    <dt>Name</dt>
+    <dt>{{ t('players_detail.name_label') }}</dt>
     <dd>{{ player.contact.full_name }}
       {% if player.contact.relationship_label %}
         <small class="muted">({{ player.contact.relationship_label }})</small>
       {% endif %}
     </dd>
     {% if player.contact.email %}
-    <dt>E-mail</dt>
+    <dt>{{ t('players_detail.email') }}</dt>
     <dd><a href="mailto:{{ player.contact.email }}">{{ player.contact.email }}</a></dd>
     {% endif %}
     {% if player.contact.phone %}
-    <dt>Phone</dt><dd>{{ player.contact.phone }}</dd>
+    <dt>{{ t('players_form.phone') }}</dt><dd>{{ player.contact.phone }}</dd>
     {% endif %}
     {% if player.contact.phone2 %}
-    <dt>Phone 2</dt><dd>{{ player.contact.phone2 }}</dd>
+    <dt>{{ t('players_form.phone_2') }}</dt><dd>{{ player.contact.phone2 }}</dd>
     {% endif %}
     {% if player.contact.street or player.contact.city %}
-    <dt>Address</dt>
+    <dt>{{ t('players_detail.address') }}</dt>
     <dd>
       {% if player.contact.street %}{{ player.contact.street }}<br>{% endif %}
       {{ player.contact.postcode or '' }} {{ player.contact.city or '' }}
@@ -129,15 +129,15 @@
 {% if user.is_admin %}
 <div class="action-group" style="margin-bottom:1.5rem;">
   <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players.edit') }}</a>
-  <a href="/reports/player/{{ player.id }}" class="btn btn-outline">Attendance Report</a>
+  <a href="/reports/player/{{ player.id }}" class="btn btn-outline">{{ t('players_detail.attendance_report') }}</a>
 </div>
 {% endif %}
 
-<h3>Attendance History</h3>
+<h3>{{ t('players_detail.attendance_history') }}</h3>
 {% if history %}
 <table>
   <thead>
-    <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Note</th></tr>
+    <tr><th>{{ t('reports.date_col') }}</th><th>{{ t('reports.event_col') }}</th><th>{{ t('reports.type_col') }}</th><th>{{ t('reports.status_col') }}</th><th>{{ t('reports.note_col') }}</th></tr>
   </thead>
   <tbody>
   {% for item in history %}
@@ -152,6 +152,6 @@
   </tbody>
 </table>
 {% else %}
-  <p>No attendance records yet.</p>
+  <p>{{ t('players_detail.no_records') }}</p>
 {% endif %}
 {% endblock %}

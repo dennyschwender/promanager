@@ -13,7 +13,7 @@ from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
 from models.user import User
-from routes._auth_helpers import require_login
+from routes._auth_helpers import require_login, rt
 from services.attendance_service import get_event_attendance_summary, set_attendance
 
 router = APIRouter()
@@ -116,4 +116,7 @@ async def update_attendance(
         return RedirectResponse(f"/attendance/{event_id}", status_code=302)
 
     set_attendance(db, event_id, player_id, status, note)
-    return RedirectResponse(f"/attendance/{event_id}?flash=Saved", status_code=302)
+    from urllib.parse import quote
+
+    flash_msg = quote(rt(request, "common.changes_saved"))
+    return RedirectResponse(f"/attendance/{event_id}?flash={flash_msg}", status_code=302)

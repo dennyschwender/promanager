@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Player Report: {{ player.full_name }} — ProManager{% endblock %}
+{% block title %}{{ t('reports.player_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
   <a href="/players/{{ player.id }}">{{ player.full_name }}</a><span class="breadcrumb-sep"></span>
-  <span>Report</span>
+  <span>{{ t('common.report') }}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -40,14 +40,14 @@
 {% if total > 0 %}
 <div class="progress-bar-wrap" style="margin-bottom:1.5rem;">
   <progress value="{{ (present_count / total * 100) | round(0) | int }}" max="100"></progress>
-  <span>{{ (present_count / total * 100) | round(1) }}% attendance</span>
+  <span>{{ (present_count / total * 100) | round(1) }}% {{ t('reports.attendance_pct') }}</span>
 </div>
 {% endif %}
 
 {% if history %}
 <div class="table-responsive">
 <table>
-  <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Note</th></tr></thead>
+  <thead><tr><th>{{ t('reports.date_col') }}</th><th>{{ t('reports.event_col') }}</th><th>{{ t('reports.type_col') }}</th><th>{{ t('reports.status_col') }}</th><th>{{ t('reports.note_col') }}</th></tr></thead>
   <tbody>
   {% for item in history %}
     <tr>
@@ -62,7 +62,7 @@
 </table>
 </div>
 {% else %}
-  <p>No attendance records found.</p>
+  <p>{{ t('reports.no_records') }}</p>
 {% endif %}
 
 <p><a href="/players/{{ player.id }}" class="btn btn-outline btn-sm">← {{ t('reports.back') }}</a></p>

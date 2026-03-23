@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{% if player %}Edit Player{% else %}New Player{% endif %} — ProManager{% endblock %}
+{% block title %}{{ t('players.edit_title') if player else t('players.new_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
-  <span>{% if player %}Edit{% else %}New{% endif %}</span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('players.edit_title') if player else t('players.new_title') }}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -23,19 +23,19 @@
 
   {# 1. BASIC INFO #}
   <fieldset>
-    <legend>Basic Info</legend>
+    <legend>{{ t('players_form.basic_info') }}</legend>
     <div class="form-grid-2">
-      <label>First Name *
+      <label>{{ t('players_form.first_name') }} *
         <input type="text" name="first_name" required value="{{ player.first_name if player else '' }}">
       </label>
-      <label>Last Name *
+      <label>{{ t('players_form.last_name') }} *
         <input type="text" name="last_name" required value="{{ player.last_name if player else '' }}">
       </label>
     </div>
-    <label>Contact E-mail
+    <label>{{ t('players_form.contact_email') }}
       <input type="email" name="email" value="{{ player.email if player and player.email else '' }}">
     </label>
-    <label>Linked User Account
+    <label>{{ t('players_form.linked_user') }}
       <select name="user_id">
         <option value="">&#8212; None &#8212;</option>
         {% for u in users %}
@@ -48,38 +48,38 @@
     {% if player %}
     <label class="checkbox-inline" style="margin-top:.5rem;">
       <input type="checkbox" name="is_active" {% if player.is_active %}checked{% endif %}>
-      <span>Active</span>
+      <span>{{ t('players_form.active_label') }}</span>
     </label>
     {% endif %}
   </fieldset>
 
   {# 2. PERSONAL INFO #}
   <fieldset>
-    <legend>Personal Info</legend>
+    <legend>{{ t('players_form.personal_info') }}</legend>
     <div class="form-grid-2">
-      <label>Sex
+      <label>{{ t('players_form.sex') }}
         <select name="sex">
-          <option value="">&#8212; not specified &#8212;</option>
-          {% for val, lbl in [('male','Male'),('female','Female'),('other','Other')] %}
+          <option value="">&#8212; {{ t('players_form.sex_not_specified') }} &#8212;</option>
+          {% for val, lbl in [('male', t('players_form.sex_male')),('female', t('players_form.sex_female')),('other', t('players_form.sex_other'))] %}
             <option value="{{ val }}" {% if player and player.sex == val %}selected{% endif %}>{{ lbl }}</option>
           {% endfor %}
         </select>
       </label>
-      <label>Date of Birth
+      <label>{{ t('players_form.date_of_birth') }}
         <input type="date" name="date_of_birth"
                value="{{ player.date_of_birth.isoformat() if player and player.date_of_birth else '' }}">
       </label>
     </div>
-    <label>Street Address
+    <label>{{ t('players_form.street_address') }}
       <input type="text" name="street" placeholder="Bahnhofstrasse 1"
              value="{{ player.street if player and player.street else '' }}">
     </label>
     <div class="form-grid-2">
-      <label>Postcode
+      <label>{{ t('players_form.postcode') }}
         <input type="text" name="postcode" placeholder="8001"
                value="{{ player.postcode if player and player.postcode else '' }}">
       </label>
-      <label>City
+      <label>{{ t('players_form.city') }}
         <input type="text" name="city" placeholder="Zurich"
                value="{{ player.city if player and player.city else '' }}">
       </label>
@@ -88,21 +88,21 @@
 
   {# 3. PHONE NUMBERS #}
   <fieldset>
-    <legend>Phone Numbers</legend>
+    <legend>{{ t('players_form.phone_numbers') }}</legend>
     {% set existing_phones = player.phones if player else [] %}
     {% set ph1 = existing_phones[0] if existing_phones|length > 0 else none %}
     {% set ph2 = existing_phones[1] if existing_phones|length > 1 else none %}
-    <label>Phone
+    <label>{{ t('players_form.phone') }}
       <input type="text" name="phone" placeholder="+41 79 000 00 00"
              value="{{ player.phone if player and player.phone else '' }}">
     </label>
     <div id="phone-row-1" {% if not ph1 %}style="display:none;margin-top:.5rem"{% else %}style="margin-top:.5rem"{% endif %}>
       <div class="form-grid-2" style="align-items:end;">
-        <label>Phone 2
+        <label>{{ t('players_form.phone_2') }}
           <input type="text" name="phone_1" placeholder="+41 79 000 00 00"
                  value="{{ ph1.phone if ph1 else '' }}">
         </label>
-        <label>Label <small>(mobile, home, work)</small>
+        <label>{{ t('players_form.phone_label') }} <small>({{ t('players_form.phone_label_hint') }})</small>
           <input type="text" name="phone_label_1" placeholder="mobile"
                  value="{{ ph1.label if ph1 and ph1.label else '' }}">
         </label>
@@ -110,11 +110,11 @@
     </div>
     <div id="phone-row-2" {% if not ph2 %}style="display:none;margin-top:.5rem"{% else %}style="margin-top:.5rem"{% endif %}>
       <div class="form-grid-2" style="align-items:end;">
-        <label>Phone 3
+        <label>{{ t('players_form.phone_3') }}
           <input type="text" name="phone_2" placeholder="+41 79 000 00 00"
                  value="{{ ph2.phone if ph2 else '' }}">
         </label>
-        <label>Label
+        <label>{{ t('players_form.phone_label') }}
           <input type="text" name="phone_label_2" placeholder="mobile"
                  value="{{ ph2.label if ph2 and ph2.label else '' }}">
         </label>
@@ -123,23 +123,20 @@
     <button type="button" class="btn btn-outline btn-sm" style="margin-top:.5rem"
             id="add-phone-btn"
             {% if ph1 and ph2 %}style="display:none"{% endif %}
-            onclick="addPhone()">+ Add phone number</button>
+            onclick="addPhone()">{{ t('players_form.add_phone') }}</button>
   </fieldset>
 
   {# 4. SEASON MEMBERSHIPS — one collapsible section per season #}
   {% if seasons %}
   <fieldset>
-    <legend>Season Memberships</legend>
-    <p class="recurrence-hint">
-      Tick each team. <strong>Priority 1 = highest</strong> — players on lower-priority teams are auto-absent at conflicting events.
-      <strong>Absent by default</strong>: player starts absent for every new event of that team.
-    </p>
+    <legend>{{ t('players_form.season_memberships') }}</legend>
+    <p class="recurrence-hint">{{ t('players_form.membership_hint') }}</p>
     {% for s in seasons %}
       {% set s_mems = all_memberships.get(s.id, {}) %}
       {% set is_open = s.id == active_season_id %}
       <details {% if is_open %}open{% endif %} style="margin-bottom:.5rem;border:1px solid var(--pico-muted-border-color,#ddd);border-radius:var(--tp-radius);">
         <summary style="padding:.5rem .75rem;cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:.5rem;">
-          {{ s.name }}{% if s.is_active %} <span class="badge badge-active" style="font-size:.7rem;">Active</span>{% endif %}
+          {{ s.name }}{% if s.is_active %} <span class="badge badge-active" style="font-size:.7rem;">{{ t('common.active') }}</span>{% endif %}
           {% if s_mems %}<span class="text-muted" style="font-weight:400;font-size:.82rem;">({{ s_mems|length }} team{{ 's' if s_mems|length != 1 else '' }})</span>{% endif %}
         </summary>
         <div style="padding:.5rem .75rem .75rem;overflow-x:auto;">
@@ -147,9 +144,9 @@
         <table class="team-priority-table">
           <thead>
             <tr>
-              <th>Assign</th><th>Team</th><th>Priority</th><th>Role</th>
-              <th>Position</th><th>Shirt #</th><th>Status</th><th>Injured until</th>
-              <th title="Player starts absent for every new event in this team">Absent default</th>
+              <th>{{ t('players_form.assign') }}</th><th>{{ t('players.team') }}</th><th>{{ t('players_form.priority') }}</th><th>{{ t('players_form.role') }}</th>
+              <th>{{ t('players_form.position') }}</th><th>{{ t('players_form.shirt_number') }}</th><th>{{ t('players_form.status') }}</th><th>{{ t('players_form.injured_until') }}</th>
+              <th title="{{ t('players_form.absent_default') }}">{{ t('players_form.absent_default') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -170,7 +167,7 @@
               </td>
               <td>
                 <select name="role_{{ s.id }}_{{ t.id }}" id="role_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
-                  {% for val, lbl in [('player','Player'),('coach','Coach'),('assistant','Assistant'),('team_leader','Team Leader')] %}
+                  {% for val, lbl in [('player', t('players_form.role_player')),('coach', t('players_form.role_coach')),('assistant', t('players_form.role_assistant')),('team_leader', t('players_form.role_team_leader'))] %}
                     <option value="{{ val }}" {% if checked and mem.role == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
                 </select>
@@ -178,7 +175,7 @@
               <td>
                 <select name="position_{{ s.id }}_{{ t.id }}" id="position_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
                   <option value="">—</option>
-                  {% for val, lbl in [('goalie','Goalie'),('defender','Defender'),('center','Center'),('forward','Forward')] %}
+                  {% for val, lbl in [('goalie', t('players_form.pos_goalie')),('defender', t('players_form.pos_defender')),('center', t('players_form.pos_center')),('forward', t('players_form.pos_forward'))] %}
                     <option value="{{ val }}" {% if checked and mem.position == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
                 </select>
@@ -192,7 +189,7 @@
               <td>
                 <select name="status_{{ s.id }}_{{ t.id }}" id="status_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}
                         onchange="toggleInjuredUntil(this, {{ s.id }}, {{ t.id }})">
-                  {% for val, lbl in [('active','Active'),('inactive','Inactive'),('injured','Injured')] %}
+                  {% for val, lbl in [('active', t('common.active')),('inactive', t('common.inactive')),('injured', t('common.injured'))] %}
                     <option value="{{ val }}" {% if checked and mem.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
                 </select>
@@ -212,7 +209,7 @@
           </tbody>
         </table>
         {% else %}
-          <em class="text-muted">No teams defined yet.</em>
+          <em class="text-muted">{{ t('players_form.no_teams_defined') }}</em>
         {% endif %}
         </div>
       </details>
@@ -223,62 +220,62 @@
   {# 5. EMERGENCY CONTACT #}
   <fieldset>
     <legend>
-      Emergency / Contact Person
+      {{ t('players_form.emergency_contact') }}
       <button type="button" class="btn btn-outline btn-sm" style="margin-left:.75rem;"
               onclick="toggleContactSection()">
-        <span id="contact-toggle-label">{% if player and player.contact %}Hide{% else %}Show{% endif %}</span>
+        <span id="contact-toggle-label">{% if player and player.contact %}{{ t('common.hide') }}{% else %}{{ t('common.show') }}{% endif %}</span>
       </button>
     </legend>
     <div id="contact-section" {% if not (player and player.contact) %}style="display:none"{% endif %}>
       <div class="form-grid-2">
-        <label>First Name
+        <label>{{ t('players_form.first_name') }}
           <input type="text" name="contact_first_name"
                  value="{{ player.contact.first_name if player and player.contact else '' }}">
         </label>
-        <label>Last Name
+        <label>{{ t('players_form.last_name') }}
           <input type="text" name="contact_last_name"
                  value="{{ player.contact.last_name if player and player.contact else '' }}">
         </label>
       </div>
-      <label>Relationship <small>(e.g. Parent, Spouse)</small>
+      <label>{{ t('players_form.relationship') }} <small>({{ t('players_form.relationship_hint') }})</small>
         <input type="text" name="contact_relationship" placeholder="Parent"
                value="{{ player.contact.relationship_label if player and player.contact and player.contact.relationship_label else '' }}">
       </label>
       <div class="form-grid-2">
-        <label>E-mail
+        <label>{{ t('players_form.contact_email') }}
           <input type="email" name="contact_email"
                  value="{{ player.contact.email if player and player.contact and player.contact.email else '' }}">
         </label>
-        <label>Phone
+        <label>{{ t('players_form.phone') }}
           <input type="text" name="contact_phone" placeholder="+41 79 000 00 00"
                  value="{{ player.contact.phone if player and player.contact and player.contact.phone else '' }}">
         </label>
       </div>
-      <label>Phone 2
+      <label>{{ t('players_form.phone_2') }}
         <input type="text" name="contact_phone2" placeholder="+41 79 000 00 00"
                value="{{ player.contact.phone2 if player and player.contact and player.contact.phone2 else '' }}">
       </label>
-      <label>Street Address
+      <label>{{ t('players_form.street_address') }}
         <input type="text" name="contact_street"
                value="{{ player.contact.street if player and player.contact and player.contact.street else '' }}">
       </label>
       <div class="form-grid-2">
-        <label>Postcode
+        <label>{{ t('players_form.postcode') }}
           <input type="text" name="contact_postcode"
                  value="{{ player.contact.postcode if player and player.contact and player.contact.postcode else '' }}">
         </label>
-        <label>City
+        <label>{{ t('players_form.city') }}
           <input type="text" name="contact_city"
                  value="{{ player.contact.city if player and player.contact and player.contact.city else '' }}">
         </label>
       </div>
-      <p class="recurrence-hint">Leave first &amp; last name blank to remove the contact person.</p>
+      <p class="recurrence-hint">{{ t('players_form.remove_contact_hint') }}</p>
     </div>
   </fieldset>
 
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('players.save') }}</button>
-    <a href="/players" class="btn btn-outline">Cancel</a>
+    <a href="/players" class="btn btn-outline">{{ t('common.cancel') }}</a>
   </div>
 </form>
 </div>

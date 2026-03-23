@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Import Players — ProManager{% endblock %}
+{% block title %}{{ t('players.import_title') }} — ProManager{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="/static/css/jsuites.min.css">
@@ -88,7 +88,7 @@ table.jexcel tbody td.edition textarea {
 
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
   <a href="/players">Players</a><span class="breadcrumb-sep"></span>
   <span>Import Players{% if context_team %} — {{ context_team.name }}{% endif %}</span>
 </nav>
@@ -101,15 +101,15 @@ table.jexcel tbody td.edition textarea {
 
 <!-- Context selector: team + season -->
 <form method="get" action="/players/import" style="margin-bottom:1rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-  <label style="margin:0;">Team:</label>
+  <label style="margin:0;">{{ t('import_form.team_label') }}</label>
   <select name="team_id" onchange="this.form.submit()" style="width:auto;">
-    <option value="">— No team —</option>
+    <option value="">{{ t('import_form.no_team') }}</option>
     {% for t_obj in all_teams %}
       <option value="{{ t_obj.id }}" {% if context_team and t_obj.id == context_team.id %}selected{% endif %}>{{ t_obj.name }}</option>
     {% endfor %}
   </select>
   {% if context_team %}
-  <label style="margin:0;">Season:</label>
+  <label style="margin:0;">{{ t('import_form.season_label') }}</label>
   <select name="season_id" onchange="this.form.submit()" style="width:auto;">
     {% for s in seasons %}
       <option value="{{ s.id }}" {% if s.id == selected_season_id %}selected{% endif %}>
@@ -122,11 +122,11 @@ table.jexcel tbody td.edition textarea {
 
 {% if not context_team %}
 <div class="alert alert-warning" style="margin-bottom:1rem;">
-  <strong>No team/season selected.</strong> Players will be imported without any team or season membership. Select a team above to assign them directly on import.
+  <strong>{{ t('import_form.no_selection') }}</strong> Players will be imported without any team or season membership. Select a team above to assign them directly on import.
 </div>
 {% else %}
 <div class="alert" style="background:var(--card-sectionning-background-color);border:1px solid var(--muted-border-color);margin-bottom:1rem;">
-  Importing into <strong>{{ context_team.name }}</strong>
+  {{ t('import_form.importing_into') }} <strong>{{ context_team.name }}</strong>
   {% if selected_season_id %}{% for s in seasons %}{% if s.id == selected_season_id %} / <strong>{{ s.name }}</strong>{% endif %}{% endfor %}{% endif %}.
   Players will be assigned to this team and season automatically.
 </div>
@@ -140,22 +140,22 @@ table.jexcel tbody td.edition textarea {
   {% if result.imported %}
     <details class="alert alert-success" style="margin-bottom:1rem;">
       <summary style="cursor:pointer;font-weight:600;">
-        ✓ {{ result.imported|length }} player{{ 's' if result.imported|length != 1 else '' }} imported successfully
+        ✓ {{ result.imported|length }} {{ t('import_form.imported_count') }}
       </summary>
       <ul style="margin:.5rem 0 0 1rem;">
         {% for p in result.imported %}<li>{{ p.full_name }}</li>{% endfor %}
       </ul>
     </details>
   {% else %}
-    <div class="alert alert-error">No players were imported.</div>
+    <div class="alert alert-error">{{ t('import_form.no_imported') }}</div>
   {% endif %}
 
   {% if result.skipped %}
     <div class="alert alert-warning" style="margin-bottom:1rem;">
-      <strong>{{ result.skipped|length }} row{{ 's' if result.skipped|length != 1 else '' }} skipped or warned:</strong>
+      <strong>{{ result.skipped|length }} {{ t('import_form.skipped_count') }}</strong>
       <div class="table-responsive">
       <table style="margin-top:.5rem;width:100%;font-size:.88rem;">
-        <thead><tr><th>Row</th><th>Name</th><th>Reason</th></tr></thead>
+        <thead><tr><th>{{ t('import_form.row_col') }}</th><th>{{ t('import_form.name_col') }}</th><th>{{ t('import_form.reason_col') }}</th></tr></thead>
         <tbody>
           {% for s in result.skipped %}
             <tr>
@@ -174,15 +174,14 @@ table.jexcel tbody td.edition textarea {
 <!-- ── Tabs ─────────────────────────────────────────────────────────────── -->
 <div class="import-tabs">
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="paste">Paste from Excel</button>
-    <button class="tab-btn" data-tab="file">Upload File</button>
+    <button class="tab-btn active" data-tab="paste">{{ t('import_form.paste_tab') }}</button>
+    <button class="tab-btn" data-tab="file">{{ t('import_form.upload_tab') }}</button>
   </div>
 
   <!-- Tab 1: Paste -->
   <div class="tab-panel" id="tab-paste">
     <p class="text-muted" style="margin:.75rem 0;">
-      Paste rows copied from Excel, or type directly. Right-click any cell to remove that column.
-      Use the dropdown to add more columns.
+      {{ t('import_form.paste_help') }}
     </p>
 
     <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;">
@@ -190,7 +189,7 @@ table.jexcel tbody td.edition textarea {
         <option value="">— Add column —</option>
         {% for col in columns %}<option value="{{ col }}">{{ col }}</option>{% endfor %}
       </select>
-      <button type="button" class="btn btn-sm btn-outline" id="add-col-btn">Add</button>
+      <button type="button" class="btn btn-sm btn-outline" id="add-col-btn">{{ t('import_form.add_row') }}</button>
     </div>
 
     <div id="spreadsheet"></div>
@@ -201,29 +200,26 @@ table.jexcel tbody td.edition textarea {
       <input type="hidden" name="import_source" value="paste">
       <input type="hidden" name="rows_json" id="rows-json-input">
       <button type="submit" class="btn btn-primary" id="paste-submit-btn">{{ t('players.import_submit') }}</button>
-      <a href="/players" class="btn btn-outline" style="margin-left:.5rem;">Cancel</a>
+      <a href="/players" class="btn btn-outline" style="margin-left:.5rem;">{{ t('common.cancel') }}</a>
     </form>
   </div>
 
   <!-- Tab 2: File Upload -->
   <div class="tab-panel" id="tab-file" style="display:none;">
     <p class="text-muted" style="margin:.75rem 0;">
-      Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file (max 5 MB).
-      The first row must be column headers matching the supported names
-      (<code>first_name</code>, <code>last_name</code>, <code>email</code>, etc.).
-      Unknown columns are ignored.
+      {{ t('import_form.upload_help') }}
     </p>
     <form method="post" action="/players/import{% if context_team %}?team_id={{ context_team.id }}{% if selected_season_id %}&season_id={{ selected_season_id }}{% endif %}{% endif %}"
           enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
       <input type="hidden" name="import_source" value="file">
       <label>
-        File
+        {{ t('import_form.file_label') }}
         <input type="file" name="import_file" accept=".csv,.xlsx" required>
       </label>
       <div class="form-footer">
         <button type="submit" class="btn btn-primary">{{ t('players.import_submit') }}</button>
-        <a href="/players" class="btn btn-outline">Cancel</a>
+        <a href="/players" class="btn btn-outline">{{ t('common.cancel') }}</a>
       </div>
     </form>
   </div>

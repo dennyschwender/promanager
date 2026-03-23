@@ -12,10 +12,10 @@
   <h2>{{ event.title }}</h2>
   <div class="action-group">
     <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
-    {% set pt_labels = {"normal":"Normal","all":"All attendee","selection":"Selection","available":"Available","no_registration":"No registration"} %}
+    {% set pt_labels = {"normal": t('events_detail.pt_normal'), "all": t('events_detail.pt_all'), "selection": t('events_detail.pt_selection'), "available": t('events_detail.pt_available'), "no_registration": t('events_detail.pt_no_reg')} %}
     <span class="badge badge-outline">{{ pt_labels.get(event.presence_type, event.presence_type) }}</span>
     {% if event.recurrence_group_id %}
-    <span class="badge-recurring">&#8635; Recurring</span>
+    <span class="badge-recurring">&#8635; {{ t('events_detail.recurring_label') }}</span>
     {% endif %}
   </div>
 </div>
@@ -30,13 +30,13 @@
 {% endif %}
 
 <dl>
-  <dt>Season</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
-  <dt>Team</dt><dd>{{ event.team.name if event.team else "—" }}</dd>
+  <dt>{{ t('events_detail.season') }}</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
+  <dt>{{ t('events_detail.team') }}</dt><dd>{{ event.team.name if event.team else "—" }}</dd>
   <dt>{{ t('events.date') }}</dt>
   <dd>
     {{ event.event_date }}
     {% if event.event_time or event.event_end_time %}
-      · Start: {{ event.event_time.strftime("%H:%M") if event.event_time else "—" }}
+      · {{ t('events_detail.start') }} {{ event.event_time.strftime("%H:%M") if event.event_time else "—" }}
       {% if event.event_end_time %} → {{ event.event_end_time.strftime("%H:%M") }}{% endif %}
     {% endif %}
   </dd>
@@ -45,18 +45,18 @@
   <dd>{{ event.location }} <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a></dd>
   {% endif %}
   {% if event.meeting_time or event.meeting_location %}
-  <dt>Meeting point</dt>
+  <dt>{{ t('events_detail.meeting_point') }}</dt>
   <dd>
     {% if event.meeting_time %}{{ event.meeting_time.strftime("%H:%M") }}{% endif %}
     {% if event.meeting_time and event.meeting_location %} · {% endif %}
     {% if event.meeting_location %}{{ event.meeting_location }} <a href="https://www.openstreetmap.org/search?query={{ event.meeting_location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a>{% endif %}
   </dd>
   {% endif %}
-  {% if event.description %}<dt>Description</dt><dd>{{ event.description }}</dd>{% endif %}
-  <dt>Reminder sent</dt><dd>{% if event.reminder_sent %}<span class="badge badge-active">Yes</span>{% else %}No{% endif %}</dd>
+  {% if event.description %}<dt>{{ t('common.description') }}</dt><dd>{{ event.description }}</dd>{% endif %}
+  <dt>{{ t('events_detail.reminder_sent') }}</dt><dd>{% if event.reminder_sent %}<span class="badge badge-active">{{ t('common.yes') }}</span>{% else %}{{ t('common.no') }}{% endif %}</dd>
   {% if event.recurrence_group_id %}
   {% set rule_labels = {"weekly":"Weekly","biweekly":"Bi-weekly","monthly":"Monthly"} %}
-  <dt>Recurring</dt><dd><span class="badge-recurring">&#8635; {{ rule_labels.get(event.recurrence_rule, event.recurrence_rule or "") }}</span> — editing affects only this occurrence.</dd>
+  <dt>{{ t('events_detail.recurring_label') }}</dt><dd><span class="badge-recurring">&#8635; {{ rule_labels.get(event.recurrence_rule, event.recurrence_rule or "") }}</span> — {{ t('events_detail.recurring_edit_note') }}</dd>
   {% endif %}
 </dl>
 
@@ -84,7 +84,7 @@
 {% if event.presence_type != "no_registration" %}
 <h3>{{ t('events.attendance_summary') }}</h3>
 <div class="attendance-summary">
-  {% for bucket, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe","Maybe"),("unknown", t('attendance.status_unknown'))] %}
+  {% for bucket, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
   <div>
     <span class="badge badge-{{ bucket }}">{{ label }} ({{ summary[bucket]|length }})</span>
     <ul>

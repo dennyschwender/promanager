@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Season Report: {{ season.name }} — ProManager{% endblock %}
+{% block title %}{{ t('reports.season_title') }}: {{ season.name }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/reports">Reports</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/reports">{{ t('reports.season_title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ season.name }}</span>
 </nav>
 {% endblock %}
@@ -18,7 +18,7 @@
 {% endif %}
 
 <div class="filter-row">
-  <span>Seasons:</span>
+  <span>{{ t('reports.seasons_label') }}</span>
   {% for s in all_seasons %}
     <a href="/reports/season/{{ s.id }}" class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}">{{ s.name }}</a>
   {% endfor %}
@@ -32,7 +32,7 @@
       <th>{{ t('reports.player') }}</th>
       <th>{{ t('reports.attended') }}</th>
       <th>{{ t('reports.absent') }}</th>
-      <th>Maybe</th>
+      <th>{{ t('reports.maybe') }}</th>
       <th>{{ t('reports.unknown') }}</th>
       <th>{{ t('reports.total') }}</th>
       <th>{{ t('reports.attendance_rate') }}</th>
@@ -63,6 +63,6 @@
 </table>
 </div>
 {% else %}
-  <p>No attendance data for this season.</p>
+  <p>{{ t('reports.no_data') }}</p>
 {% endif %}
 {% endblock %}

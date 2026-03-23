@@ -7,14 +7,14 @@
   var _params = new URLSearchParams(window.location.search);
   var HAS_TEAM_FILTER = !!(_params.get('season_id') && _params.get('team_id'));
   var LS_ORDER_KEY = 'promanager_player_col_order';
-  var DEFAULT_COLS = ['Team', 'Email', 'Active', 'Actions'];
+  var DEFAULT_COLS = [window.I18N.col_team, window.I18N.col_email, window.I18N.col_active, window.I18N.col_actions];
   var ALL_COLS = [
-    'Team', 'Email', 'Phone', 'Date of birth', 'Active',
-    'Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default',
-    'Priority', 'Actions'
+    window.I18N.col_team, window.I18N.col_email, window.I18N.col_phone, window.I18N.col_dob, window.I18N.col_active,
+    window.I18N.col_role, window.I18N.col_shirt, window.I18N.col_position, window.I18N.col_status, window.I18N.col_injured, window.I18N.col_absent_default,
+    window.I18N.col_priority, window.I18N.col_actions
   ];
   // Columns that only contain meaningful data when a season is selected
-  var PT_COLS = ['Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority'];
+  var PT_COLS = [window.I18N.col_role, window.I18N.col_shirt, window.I18N.col_position, window.I18N.col_status, window.I18N.col_injured, window.I18N.col_absent_default, window.I18N.col_priority];
 
   var cfg = window.PLAYERS_CONFIG || {};
 
@@ -60,7 +60,7 @@
       if (!cfg.seasonId && PT_COLS.indexOf(cb.dataset.col) !== -1) {
         cb.disabled = true;
         cb.checked = false;
-        cb.parentElement.title = 'Select a season to enable this column';
+        cb.parentElement.title = window.I18N.select_season_hint;
         cb.parentElement.style.opacity = '0.45';
       }
     });
@@ -113,7 +113,7 @@
       var details = document.createElement('details');
       details.style.marginTop = '.5rem';
       var summary = document.createElement('summary');
-      summary.textContent = errors.length + ' error(s)';
+      summary.textContent = window.I18N.errors_count.replace('%{count}', errors.length);
       details.appendChild(summary);
       var ul = document.createElement('ul');
       ul.style.cssText = 'margin:.25rem 0 0 1rem;';
@@ -315,7 +315,7 @@
       if (data.errors.length === 0) exitEditMode(false);
     })
     .catch(function (err) {
-      showBanner('error', (err && err.message) || 'Save failed — network error. Please try again.', null);
+      showBanner('error', (err && err.message) || window.I18N.save_failed, null);
     });
   }
 
@@ -366,7 +366,7 @@
         count + ' ' + resultKey + ', ' + (data.skipped || 0) + ' skipped.', null);
       if (count > 0) setTimeout(function () { location.reload(); }, 800);
     })
-    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error.', null); });
+    .catch(function (err) { showBanner('error', (err && err.message) || window.I18N.network_error, null); });
   }
 
   function initBulkToolbar() {
@@ -498,10 +498,10 @@
         })
           .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.detail || 'Error'); }); })
           .then(function (data) {
-            showBanner('success', data.removed + ' removed, ' + data.skipped + ' skipped.', null);
+            showBanner('success', window.I18N.removed_count.replace('%{removed}', data.removed).replace('%{skipped}', data.skipped), null);
             if (data.removed > 0) setTimeout(function () { location.reload(); }, 800);
           })
-          .catch(function (err) { showBanner('error', (err && err.message) || 'Network error.', null); });
+          .catch(function (err) { showBanner('error', (err && err.message) || window.I18N.network_error, null); });
       }
     );
 
@@ -516,7 +516,7 @@
           rows.map(function (row) {
             return {
               id: parseInt(row.dataset.playerId, 10),
-              name: (row.querySelector('td:nth-child(2) a') || {}).textContent || 'Player',
+              name: (row.querySelector('td:nth-child(2) a') || {}).textContent || window.I18N.player_fallback,
               dob: row.dataset.dob || '',
             };
           })
@@ -542,7 +542,7 @@
       return r.json();
     })
     .then(function (data) {
-      var msg = data.saved.length + ' player(s) updated.';
+      var msg = window.I18N.updated_count.replace('%{count}', data.saved.length);
       showBanner(
         data.errors.length ? 'warning' : 'success',
         data.errors.length ? msg + ' ' + data.errors.length + ' failed.' : msg,
@@ -550,7 +550,7 @@
       );
       if (data.saved.length) setTimeout(function () { location.reload(); }, 800);
     })
-    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
+    .catch(function (err) { showBanner('error', (err && err.message) || window.I18N.network_error, null); });
   }
 
   function bulkAssign(teamId, seasonId) {
@@ -569,7 +569,7 @@
       return r.json();
     })
     .then(function (data) {
-      var msg = data.assigned + ' assigned, ' + data.skipped + ' skipped.';
+      var msg = window.I18N.assigned_count.replace('%{count}', data.assigned).replace('%{skipped}', data.skipped || 0);
       showBanner(
         data.errors.length ? 'warning' : 'success',
         msg,
@@ -577,7 +577,7 @@
       );
       if (data.assigned > 0) setTimeout(function () { location.reload(); }, 800);
     })
-    .catch(function (err) { showBanner('error', (err && err.message) || 'Network error. Please try again.', null); });
+    .catch(function (err) { showBanner('error', (err && err.message) || window.I18N.network_error, null); });
   }
 
   // ── Action dropdowns ───────────────────────────────────────────────────────
@@ -693,31 +693,31 @@
 
   // ── Advanced filter ───────────────────────────────────────────────────────
   var ADV_FILTER_FIELDS = [
-    { key: 'name',          label: 'Name',          type: 'text' },
-    { key: 'email',         label: 'Email',         type: 'text' },
-    { key: 'phone',         label: 'Phone',         type: 'text' },
-    { key: 'date_of_birth', label: 'Date of birth', type: 'daterange' },
-    { key: 'is_active',     label: 'Active',        type: 'boolean', boolLabels: ['Active', 'Inactive'] },
-    { key: 'shirt_number',  label: 'Shirt #',       type: 'number' },
-    { key: 'position',      label: 'Position',      type: 'text' },
-    { key: 'priority',      label: 'Priority',      type: 'number' },
-    { key: 'has_membership', label: 'Has membership', type: 'boolean', boolLabels: ['Yes', 'No'] },
+    { key: 'name',          label: window.I18N.filter_name,       type: 'text' },
+    { key: 'email',         label: window.I18N.filter_email,      type: 'text' },
+    { key: 'phone',         label: window.I18N.filter_phone,      type: 'text' },
+    { key: 'date_of_birth', label: window.I18N.filter_dob,        type: 'daterange' },
+    { key: 'is_active',     label: window.I18N.filter_active,     type: 'boolean', boolLabels: [window.I18N.bool_active, window.I18N.bool_inactive] },
+    { key: 'shirt_number',  label: window.I18N.filter_shirt,      type: 'number' },
+    { key: 'position',      label: window.I18N.filter_position,   type: 'text' },
+    { key: 'priority',      label: window.I18N.filter_priority,   type: 'number' },
+    { key: 'has_membership', label: window.I18N.filter_membership, type: 'boolean', boolLabels: [window.I18N.bool_yes, window.I18N.bool_no] },
   ];
   var ADV_TEXT_OPS = [
-    { value: 'contains',     label: 'contains' },
-    { value: 'not_contains', label: 'does not contain' },
-    { value: 'equals',       label: 'equals' },
-    { value: 'starts_with',  label: 'starts with' },
-    { value: 'is_empty',     label: 'is empty' },
-    { value: 'is_not_empty', label: 'is not empty' },
+    { value: 'contains',     label: window.I18N.op_contains },
+    { value: 'not_contains', label: window.I18N.op_not_contains },
+    { value: 'equals',       label: window.I18N.op_equals },
+    { value: 'starts_with',  label: window.I18N.op_starts_with },
+    { value: 'is_empty',     label: window.I18N.op_empty },
+    { value: 'is_not_empty', label: window.I18N.op_not_empty },
   ];
   var ADV_NUM_OPS = [
     { value: 'eq',           label: '=' },
     { value: 'neq',          label: '≠' },
     { value: 'lt',           label: '<' },
     { value: 'gt',           label: '>' },
-    { value: 'is_empty',     label: 'is empty' },
-    { value: 'is_not_empty', label: 'is not empty' },
+    { value: 'is_empty',     label: window.I18N.op_empty },
+    { value: 'is_not_empty', label: window.I18N.op_not_empty },
   ];
 
   function getRowValue(row, fieldKey) {
@@ -847,9 +847,9 @@
     var inputStyle = 'width:auto;padding:.2rem .4rem;font-size:.85rem;';
     if (def.type === 'boolean') {
       var sel = mk('select', { className: 'adv-bool-sel sel-inline' });
-      var trueLabel  = (def.boolLabels && def.boolLabels[0]) || 'Yes';
-      var falseLabel = (def.boolLabels && def.boolLabels[1]) || 'No';
-      [['any','Any'],['true', trueLabel],['false', falseLabel]].forEach(function (o) {
+      var trueLabel  = (def.boolLabels && def.boolLabels[0]) || window.I18N.bool_yes;
+      var falseLabel = (def.boolLabels && def.boolLabels[1]) || window.I18N.bool_no;
+      [['any', window.I18N.bool_any],['true', trueLabel],['false', falseLabel]].forEach(function (o) {
         sel.appendChild(mk('option', { value: o[0], textContent: o[1] }));
       });
       sel.addEventListener('change', applyAdvFilter);
@@ -910,7 +910,7 @@
     var removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.textContent = '\u2715';
-    removeBtn.title = 'Remove';
+    removeBtn.title = window.I18N.remove_btn;
     removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tp-muted,#6c757d);font-size:.9rem;padding:.1rem .3rem;line-height:1;';
     removeBtn.addEventListener('click', function () { rowEl.remove(); applyAdvFilter(); });
     rowEl.appendChild(fieldSel);
@@ -980,7 +980,7 @@
     if (!btn) return;
     openArchiveDialog([{
       id: parseInt(btn.dataset.id, 10),
-      name: btn.dataset.name || 'Player',
+      name: btn.dataset.name || window.I18N.player_fallback,
       dob:  btn.dataset.dob  || '',
     }]);
   });

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — ProManager{% endblock %}
+{% block title %}{{ t('dashboard.title') }} — ProManager{% endblock %}
 {% block content %}
 <div class="page-header">
   <h2>{{ t('dashboard.title') }}</h2>
@@ -59,7 +59,7 @@
 <div class="quick-actions">
   {% for s in all_seasons %}
     <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">
-      {{ s.name }}{% if s.is_active %} <span class="badge badge-active">Active</span>{% endif %}
+      {{ s.name }}{% if s.is_active %} <span class="badge badge-active">{{ t('common.active') }}</span>{% endif %}
     </a>
   {% endfor %}
 </div>

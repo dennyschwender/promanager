@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Register User — ProManager{% endblock %}
+{% block title %}{{ t('auth.register_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ t('nav.register_user') }}</span>
 </nav>
 {% endblock %}
@@ -23,19 +23,19 @@
   <label for="email">{{ t('auth.email') }}
     <input type="email" id="email" name="email" required>
   </label>
-  <label for="password">Password (min 8 chars)
+  <label for="password">{{ t('auth.password_hint') }}
     <input type="password" id="password" name="password" required minlength="8">
   </label>
-  <label for="role">Role
+  <label for="role">{{ t('auth.role') }}
     <select id="role" name="role">
-      <option value="member">Member</option>
+      <option value="member">{{ t('auth.member') }}</option>
       <option value="coach" {% if form_data and form_data.role == 'coach' %}selected{% endif %}>{{ t('auth.role_coach') }}</option>
-      <option value="admin">Admin</option>
+      <option value="admin">{{ t('auth.admin') }}</option>
     </select>
   </label>
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('auth.register_submit') }}</button>
-    <a href="/dashboard" class="btn btn-outline">Cancel</a>
+    <a href="/dashboard" class="btn btn-outline">{{ t('common.cancel') }}</a>
   </div>
 </form>
 </div>

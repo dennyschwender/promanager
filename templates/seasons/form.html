@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{% if season %}Edit Season{% else %}New Season{% endif %} — ProManager{% endblock %}
+{% block title %}{{ t('seasons.edit_title') if season else t('seasons.new_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/seasons">Seasons</a><span class="breadcrumb-sep"></span>
-  <span>{% if season %}Edit{% else %}New{% endif %}</span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/seasons">{{ t('seasons.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{% if season %}{{ t('seasons.edit_title') }}{% else %}{{ t('seasons.new_title') }}{% endif %}</span>
 </nav>
 {% endblock %}
 {% block content %}
@@ -15,15 +15,15 @@
 {% endif %}
 <form method="post" action="{% if season %}/seasons/{{ season.id }}/edit{% else %}/seasons/new{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-  <label for="name">Season Name *
+  <label for="name">{{ t('seasons.season_name') }} *
     <input type="text" id="name" name="name" required value="{{ season.name if season else "" }}">
   </label>
   <div class="form-grid-2">
-    <label for="start_date">Start Date
+    <label for="start_date">{{ t('seasons.start_date') }}
       <input type="date" id="start_date" name="start_date"
              value="{{ season.start_date.isoformat() if season and season.start_date else "" }}">
     </label>
-    <label for="end_date">End Date
+    <label for="end_date">{{ t('seasons.end_date') }}
       <input type="date" id="end_date" name="end_date"
              value="{{ season.end_date.isoformat() if season and season.end_date else "" }}">
     </label>

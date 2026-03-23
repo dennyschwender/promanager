@@ -17,7 +17,7 @@ from models.team import Team
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
 from models.user_team import UserTeam
-from routes._auth_helpers import require_admin, require_login
+from routes._auth_helpers import require_admin, require_login, rt
 from services.schedule_service import (
     count_future_events,
     delete_future_events,
@@ -178,7 +178,7 @@ async def team_new_post(
             {
                 "user": user,
                 "team": None,
-                "error": "Team name is required.",
+                "error": rt(request, "errors.field_required", field="Team name"),
                 "schedule_rows": [],
                 "saved": False,
                 "confirm_mode": False,
@@ -305,7 +305,7 @@ async def team_edit_post(
         )
 
     if not name.strip():
-        return _render(error="Team name is required.")
+        return _render(error=rt(request, "errors.field_required", field="Team name"))
 
     # Apply core team fields
     team.name = name.strip()
@@ -317,11 +317,11 @@ async def team_edit_post(
         try:
             payload = verify_payload(raw_json)
         except ValueError:
-            return _render(error="Invalid confirmation payload. Please try again.")
+            return _render(error=rt(request, "errors.invalid_payload"))
 
         # Verify team_id binding — prevents cross-team replay of a signed payload
         if payload.get("team_id") != team_id:
-            return _render(error="Invalid confirmation payload. Please try again.")
+            return _render(error=rt(request, "errors.invalid_payload"))
 
         submitted_rows = payload.get("rows", [])
         stored_map = {s.id: s for s in team.recurring_schedules}
@@ -401,7 +401,7 @@ async def team_edit_post(
             db.rollback()
             # Note: db.rollback() cannot undo commits already made by ensure_attendance_records
             # inside generate_events_for_schedule. This is an accepted limitation.
-            return _render(error="An error occurred saving the schedules. Please try again.")
+            return _render(error=rt(request, "errors.save_error"))
         return RedirectResponse(f"/teams/{int(team_id)}?saved=1", status_code=302)
 
     # ── FIRST POST ───────────────────────────────────────────────────────────

@@ -18,14 +18,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.i18n import SUPPORTED_LOCALES
+from app.i18n import DEFAULT_LOCALE, SUPPORTED_LOCALES
 
 SUPPORTED_THEMES = {"light", "dark"}
 
 
 class LocaleMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
-        locale = "en"
+        locale = DEFAULT_LOCALE
 
         # 1. Authenticated user preference
         user = getattr(request.state, "user", None)
@@ -37,7 +37,7 @@ class LocaleMiddleware(BaseHTTPMiddleware):
         # 2. Cookie fallback — only for unauthenticated users.
         # Authenticated users always use their DB locale (even if it is "en").
         # To change locale, authenticated users must POST to /set-locale.
-        if locale == "en" and user is None:
+        if locale == DEFAULT_LOCALE and user is None:
             cookie_locale = request.cookies.get("locale", "")
             if cookie_locale in SUPPORTED_LOCALES:
                 locale = cookie_locale
