@@ -122,7 +122,7 @@
                    onchange="updateDefaultTitle(this.closest('.schedule-row'))">
           </label>
           <label>{{ t('teams_form.end_date') }} <small>{{ t('teams_form.end_date_hint') }}</small>
-            <input type="date" class="sched-end" value="{{ row.end_date }}">
+            <input type="date" class="sched-end" value="{{ row.end_date }}" required>
           </label>
         </div>
         <div class="form-grid-2">
@@ -229,7 +229,7 @@
                onchange="updateDefaultTitle(this.closest('.schedule-row'))">
       </label>
       <label>{{ t('teams_form.end_date') }} <small>{{ t('teams_form.end_date_hint') }}</small>
-        <input type="date" class="sched-end" value="">
+        <input type="date" class="sched-end" value="" required>
       </label>
     </div>
     <div class="form-grid-2">
