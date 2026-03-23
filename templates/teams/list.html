@@ -13,13 +13,13 @@
 <div class="table-responsive">
 <table>
   <thead>
-    <tr><th>{{ t('teams.name') }}</th><th>{{ t('teams_list.description') }}</th><th>{{ t('teams.actions') }}</th></tr>
+    <tr><th>{{ t('teams.name') }}</th><th class="col-hide-mobile">{{ t('teams_list.description') }}</th><th>{{ t('teams.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for team in teams %}
     <tr>
       <td><a href="/teams/{{ team.id }}"><strong>{{ team.name }}</strong></a></td>
-      <td>{{ team.description or "—" }}</td>
+      <td class="col-hide-mobile">{{ team.description or "—" }}</td>
       <td>
         <div class="action-group">
           <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>

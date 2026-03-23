@@ -13,14 +13,14 @@
 <div class="table-responsive">
 <table>
   <thead>
-    <tr><th>{{ t('seasons.name') }}</th><th>{{ t('seasons.start_date') }}</th><th>{{ t('seasons.end_date') }}</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
+    <tr><th>{{ t('seasons.name') }}</th><th class="col-hide-mobile">{{ t('seasons.start_date') }}</th><th class="col-hide-mobile">{{ t('seasons.end_date') }}</th><th>{{ t('seasons.active') }}</th><th>{{ t('seasons.actions') }}</th></tr>
   </thead>
   <tbody>
   {% for s in seasons %}
     <tr>
       <td>{{ s.name }}</td>
-      <td>{{ s.start_date or '—' }}</td>
-      <td>{{ s.end_date or '—' }}</td>
+      <td class="col-hide-mobile">{{ s.start_date or '—' }}</td>
+      <td class="col-hide-mobile">{{ s.end_date or '—' }}</td>
       <td>{% if s.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">—</span>{% endif %}</td>
       <td>
         <div class="action-group">

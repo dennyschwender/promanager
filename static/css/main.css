@@ -917,3 +917,25 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   gap: .5rem;
   justify-content: flex-end;
 }
+
+/* ── Responsive table utilities ─────────────────────────────────── */
+@media (max-width: 600px) {
+  .col-hide-mobile { display: none; }
+
+  /* Attendance admin form: stack vertically on mobile */
+  .inline-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .input-sm { width: 100%; }
+
+  /* Filter row: stack on mobile */
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 900px) {
+  .col-hide-tablet { display: none; }
+}
