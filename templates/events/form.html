@@ -49,8 +49,8 @@
       {% else %}
         <select name="team_id">
           <option value="">{{ t('events_form.none_option') }}</option>
-          {% for t in teams %}
-            <option value="{{ t.id }}" {% if event and event.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+          {% for team_opt in teams %}
+            <option value="{{ team_opt.id }}" {% if event and event.team_id == team_opt.id %}selected{% endif %}>{{ team_opt.name }}</option>
           {% endfor %}
         </select>
       {% endif %}

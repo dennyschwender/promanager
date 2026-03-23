@@ -150,23 +150,23 @@
             </tr>
           </thead>
           <tbody>
-          {% for t in teams %}
-            {% set mem = s_mems.get(t.id) %}
+          {% for team_opt in teams %}
+            {% set mem = s_mems.get(team_opt.id) %}
             {% set checked = mem is not none %}
             <tr>
               <td>
-                <input type="checkbox" name="team_ids_{{ s.id }}" value="{{ t.id }}"
+                <input type="checkbox" name="team_ids_{{ s.id }}" value="{{ team_opt.id }}"
                        {% if checked %}checked{% endif %}
-                       onchange="toggleTeamRow(this, {{ s.id }}, {{ t.id }})">
+                       onchange="toggleTeamRow(this, {{ s.id }}, {{ team_opt.id }})">
               </td>
-              <td>{{ t.name }}</td>
+              <td>{{ team_opt.name }}</td>
               <td>
-                <input type="number" id="prio_{{ s.id }}_{{ t.id }}" name="priority_{{ s.id }}_{{ t.id }}"
+                <input type="number" id="prio_{{ s.id }}_{{ team_opt.id }}" name="priority_{{ s.id }}_{{ team_opt.id }}"
                        min="1" max="99" value="{{ mem.priority if checked else 1 }}"
                        style="width:4.5rem;" {% if not checked %}disabled{% endif %}>
               </td>
               <td>
-                <select name="role_{{ s.id }}_{{ t.id }}" id="role_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
+                <select name="role_{{ s.id }}_{{ team_opt.id }}" id="role_{{ s.id }}_{{ team_opt.id }}" {% if not checked %}disabled{% endif %}>
                   {% for val, lbl in [('player', t('players_form.role_player')),('coach', t('players_form.role_coach')),('assistant', t('players_form.role_assistant')),('team_leader', t('players_form.role_team_leader'))] %}
                     <option value="{{ val }}" {% if checked and mem.role == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}

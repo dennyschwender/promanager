@@ -34,8 +34,8 @@
     <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.team_filter') }}</span>
     <select name="team_id" onchange="filterSubmit(this.form)" class="sel-inline">
       <option value="">{{ t('players_list.all_teams') }}</option>
-      {% for t in teams %}
-        <option value="{{ t.id }}" {% if selected_team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+      {% for team_opt in teams %}
+        <option value="{{ team_opt.id }}" {% if selected_team_id == team_opt.id %}selected{% endif %}>{{ team_opt.name }}</option>
       {% endfor %}
     </select>
   </label>

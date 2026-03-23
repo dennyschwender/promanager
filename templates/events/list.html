@@ -21,8 +21,8 @@
   <label>{{ t('events.team') }}
     <select name="team_id" onchange="this.form.submit()">
       <option value="">{{ t('events.all_teams') }}</option>
-      {% for t in teams %}
-        <option value="{{ t.id }}" {% if selected_team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+      {% for team in teams %}
+        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
       {% endfor %}
     </select>
   </label>
