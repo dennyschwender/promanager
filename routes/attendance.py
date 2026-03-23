@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.csrf import require_csrf
 from app.database import get_db
@@ -37,7 +37,12 @@ async def attendance_page(
         return RedirectResponse("/events", status_code=302)
 
     if user.is_admin:
-        attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
+        attendances = (
+            db.query(Attendance)
+            .options(joinedload(Attendance.borrowed_from_team))
+            .filter(Attendance.event_id == event_id)
+            .all()
+        )
         my_players: list[Player] = []
         summary = get_event_attendance_summary(db, event_id)
         is_admin_view = True
@@ -45,7 +50,12 @@ async def attendance_page(
         from routes._auth_helpers import check_team_access  # noqa: PLC0415
 
         check_team_access(user, event.team_id, db, season_id=event.season_id)
-        attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
+        attendances = (
+            db.query(Attendance)
+            .options(joinedload(Attendance.borrowed_from_team))
+            .filter(Attendance.event_id == event_id)
+            .all()
+        )
         my_players = []
         summary = get_event_attendance_summary(db, event_id)
         is_admin_view = True
@@ -104,11 +114,7 @@ async def borrow_player(
     if player is None or not player.is_active:
         return JSONResponse({"ok": False, "error": "player_not_found"}, status_code=404)
 
-    existing = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event_id, Attendance.player_id == player_id)
-        .first()
-    )
+    existing = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.player_id == player_id).first()
     if existing:
         return JSONResponse({"ok": False, "error": "already_attending"}, status_code=409)
 
@@ -139,12 +145,14 @@ async def borrow_player(
     db.add(att)
     db.commit()
 
-    return JSONResponse({
-        "ok": True,
-        "player_id": player_id,
-        "full_name": f"{player.first_name} {player.last_name}",
-        "team_name": team_name,
-    })
+    return JSONResponse(
+        {
+            "ok": True,
+            "player_id": player_id,
+            "full_name": f"{player.first_name} {player.last_name}",
+            "team_name": team_name,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -36,6 +36,8 @@ from services.notification_service import send_notifications
 from services.notification_templates import TEMPLATES
 from services.schedule_service import (
     advance_date as _advance_date,
+)
+from services.schedule_service import (
     count_future_events,
     delete_future_events,
 )
@@ -412,11 +414,7 @@ async def event_detail(
 
     summary = get_event_attendance_detail(db, event_id)
 
-    future_count = (
-        count_future_events(db, event.recurrence_group_id)
-        if event.recurrence_group_id
-        else 0
-    )
+    future_count = count_future_events(db, event.recurrence_group_id) if event.recurrence_group_id else 0
 
     return render(
         request,

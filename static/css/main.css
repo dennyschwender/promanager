@@ -976,3 +976,31 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   overflow: visible;
   margin-bottom: 0;
 }
+
+/* ── Borrowed player indicator ─────────────────────────────────── */
+.borrow-icon {
+  display: inline-block;
+  cursor: default;
+  font-size: .85em;
+  margin-left: .3rem;
+  position: relative;
+}
+.borrow-icon .borrow-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--contrast);
+  color: var(--contrast-inverse);
+  font-size: .78rem;
+  padding: .3rem .6rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+.borrow-icon:hover .borrow-tooltip,
+.borrow-icon:focus .borrow-tooltip {
+  display: block;
+}

@@ -20,6 +20,11 @@
 {% endif %}
 
 {% if is_admin_view %}
+  <div style="margin-bottom:1rem;">
+    <button type="button" class="btn btn-outline btn-sm" onclick="openBorrowDialog()">
+      + {{ t('attendance.borrow_btn') }}
+    </button>
+  </div>
   {% if attendances %}
   <div class="table-responsive">
   <table>
@@ -34,7 +39,14 @@
     <tbody>
     {% for att in attendances %}
       <tr data-player-id="{{ att.player_id }}">
-        <td>{{ att.player.full_name if att.player else att.player_id }}</td>
+        <td>
+          {{ att.player.full_name if att.player else att.player_id }}
+          {% if att.borrowed_from_team_id is not none %}
+          <span class="borrow-icon" tabindex="0">⟳<span class="borrow-tooltip">
+            {% if att.borrowed_from_team %}{{ t('attendance.borrow_tooltip', team=att.borrowed_from_team.name) }}{% else %}{{ t('attendance.borrow_tooltip_no_team') }}{% endif %}
+          </span></span>
+          {% endif %}
+        </td>
         <td>
           <span class="badge badge-{{ att.status }} att-status-badge">
             {{ enums.status.get(att.status, att.status|capitalize) }}
@@ -139,6 +151,189 @@
       form.submit();
     });
   });
+  </script>
+
+  {# ── Borrow dialog ───────────────────────────────────────────── #}
+  <dialog id="borrow-dialog" class="att-dialog">
+    <article>
+      <header>
+        <h3>{{ t('attendance.borrow_title') }}</h3>
+      </header>
+      <input type="text" id="borrow-search-input"
+             placeholder="{{ t('attendance.borrow_search_placeholder') }}"
+             autocomplete="off">
+      <div id="borrow-results" style="margin-top:.5rem;max-height:200px;overflow-y:auto;"></div>
+      <p id="borrow-error" style="color:var(--tp-danger,#c0392b);display:none;margin-top:.5rem;"></p>
+      <footer class="att-dialog-actions">
+        <button type="button" class="btn btn-outline"
+                onclick="document.getElementById('borrow-dialog').close()">
+          {{ t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn-primary" id="borrow-add-btn" disabled
+                onclick="submitBorrow()">
+          {{ t('attendance.borrow_add') }}
+        </button>
+      </footer>
+    </article>
+  </dialog>
+
+  <script>
+  (function() {
+    var _sel = null;
+    var _debounce = null;
+    var _csrf = '{{ request.state.csrf_token }}';
+    var _eventId = {{ event.id }};
+    var _i18n = {
+      noTeam: {{ t('attendance.borrow_no_team') | tojson }},
+      tooltipTpl: {{ t('attendance.borrow_tooltip', team='__TEAM__') | tojson }},
+      tooltipNoTeam: {{ t('attendance.borrow_tooltip_no_team') | tojson }},
+      errDuplicate: {{ t('attendance.borrow_err_duplicate') | tojson }},
+      errNotFound: {{ t('attendance.borrow_err_not_found') | tojson }},
+      errEventNotFound: {{ t('attendance.borrow_err_event_not_found') | tojson }},
+      errGeneric: {{ t('attendance.borrow_err_generic') | tojson }},
+      statusLabels: {{ enums.status | tojson }},
+      editLabel: {{ t('common.edit') | tojson }}
+    };
+
+    window.openBorrowDialog = function() {
+      _sel = null;
+      document.getElementById('borrow-search-input').value = '';
+      document.getElementById('borrow-results').textContent = '';
+      document.getElementById('borrow-error').style.display = 'none';
+      document.getElementById('borrow-add-btn').disabled = true;
+      document.getElementById('borrow-dialog').showModal();
+      setTimeout(function() { document.getElementById('borrow-search-input').focus(); }, 50);
+    };
+
+    document.getElementById('borrow-search-input').addEventListener('input', function() {
+      clearTimeout(_debounce);
+      var q = this.value;
+      _debounce = setTimeout(function() { doSearch(q); }, 300);
+    });
+
+    function doSearch(q) {
+      var container = document.getElementById('borrow-results');
+      container.textContent = '';
+      if (q.length < 2) return;
+      fetch('/players/search?q=' + encodeURIComponent(q) + '&exclude_event_id=' + _eventId)
+        .then(function(r) { return r.json(); })
+        .then(function(players) {
+          if (!players.length) {
+            var p = document.createElement('p');
+            p.className = 'text-muted';
+            p.style.padding = '.4rem .6rem';
+            p.textContent = 'No results';
+            container.appendChild(p);
+            return;
+          }
+          players.forEach(function(player) {
+            var row = document.createElement('div');
+            row.className = 'borrow-result';
+            row.style.cssText = 'padding:.4rem .6rem;cursor:pointer;border-radius:4px;';
+
+            var strong = document.createElement('strong');
+            strong.textContent = player.full_name;
+            row.appendChild(strong);
+
+            var muted = document.createElement('span');
+            muted.className = 'text-muted';
+            muted.textContent = ' — ' + (player.team_name || _i18n.noTeam);
+            row.appendChild(muted);
+
+            row.addEventListener('click', function() {
+              document.querySelectorAll('.borrow-result').forEach(function(r) {
+                r.style.background = '';
+              });
+              row.style.background = 'var(--primary-focus, rgba(0,0,0,.1))';
+              _sel = { id: player.id, fullName: player.full_name, teamName: player.team_name };
+              document.getElementById('borrow-add-btn').disabled = false;
+              document.getElementById('borrow-error').style.display = 'none';
+            });
+            container.appendChild(row);
+          });
+        });
+    }
+
+    window.submitBorrow = function() {
+      if (!_sel) return;
+      var form = new FormData();
+      form.append('player_id', _sel.id);
+      form.append('csrf_token', _csrf);
+      fetch('/attendance/' + _eventId + '/borrow', { method: 'POST', body: form })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            document.getElementById('borrow-dialog').close();
+            addBorrowRow(data);
+          } else {
+            var msg = data.error === 'already_attending' ? _i18n.errDuplicate
+                    : data.error === 'player_not_found' ? _i18n.errNotFound
+                    : data.error === 'event_not_found' ? _i18n.errEventNotFound
+                    : _i18n.errGeneric;
+            var errEl = document.getElementById('borrow-error');
+            errEl.textContent = msg;
+            errEl.style.display = 'block';
+          }
+        })
+        .catch(function() {
+          var errEl = document.getElementById('borrow-error');
+          errEl.textContent = _i18n.errGeneric;
+          errEl.style.display = 'block';
+        });
+    };
+
+    function addBorrowRow(data) {
+      var tbody = document.querySelector('table tbody');
+      if (!tbody) { location.reload(); return; }
+
+      var statusLabel = _i18n.statusLabels['unknown'] || 'Unknown';
+      var tooltipText = data.team_name
+        ? _i18n.tooltipTpl.replace('__TEAM__', data.team_name)
+        : _i18n.tooltipNoTeam;
+
+      var tr = document.createElement('tr');
+      tr.dataset.playerId = data.player_id;
+
+      var tdName = document.createElement('td');
+      tdName.textContent = data.full_name;
+      var icon = document.createElement('span');
+      icon.className = 'borrow-icon';
+      icon.tabIndex = 0;
+      icon.textContent = '⟳';
+      var tip = document.createElement('span');
+      tip.className = 'borrow-tooltip';
+      tip.textContent = tooltipText;
+      icon.appendChild(tip);
+      tdName.appendChild(icon);
+      tr.appendChild(tdName);
+
+      var tdStatus = document.createElement('td');
+      var badge = document.createElement('span');
+      badge.className = 'badge badge-unknown att-status-badge';
+      badge.textContent = statusLabel;
+      tdStatus.appendChild(badge);
+      tr.appendChild(tdStatus);
+
+      var tdNote = document.createElement('td');
+      tdNote.className = 'col-hide-mobile att-note-cell';
+      tr.appendChild(tdNote);
+
+      var tdEdit = document.createElement('td');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-sm btn-outline';
+      btn.dataset.playerId = data.player_id;
+      btn.dataset.playerName = data.full_name;
+      btn.dataset.status = 'unknown';
+      btn.dataset.note = '';
+      btn.textContent = _i18n.editLabel;
+      btn.addEventListener('click', function() { openAttDialog(this); });
+      tdEdit.appendChild(btn);
+      tr.appendChild(tdEdit);
+
+      tbody.appendChild(tr);
+    }
+  })();
   </script>
 
   {% else %}
