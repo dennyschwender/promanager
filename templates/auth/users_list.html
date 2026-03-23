@@ -30,7 +30,7 @@
   <tr>
     <td>{{ u.username }}</td>
     <td>{{ u.email }}</td>
-    <td><span class="badge badge-{{ u.role }}">{{ u.role|capitalize }}</span></td>
+    <td><span class="badge badge-{{ u.role }}">{{ enums.role.get(u.role, u.role|capitalize) }}</span></td>
     <td>
       {% set p = player_by_user.get(u.id) %}
       {% if p %}<a href="/players/{{ p.id }}">{{ p.full_name }}</a>{% else %}—{% endif %}
@@ -50,7 +50,7 @@
             </button>
           </form>
           <form method="post" action="/auth/users/{{ u.id }}/delete"
-                onsubmit="return confirm('Delete user {{ u.username }}?')">
+                onsubmit="return confirm('{{ t('users.delete_confirm_user', username=u.username) }}')">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="danger">{{ t('users.delete') }}</button>
           </form>

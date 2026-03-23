@@ -89,8 +89,8 @@ table.jexcel tbody td.edition textarea {
 {% block breadcrumb %}
 <nav class="breadcrumb">
   <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
-  <a href="/players">Players</a><span class="breadcrumb-sep"></span>
-  <span>Import Players{% if context_team %} — {{ context_team.name }}{% endif %}</span>
+  <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('players.import_title') }}{% if context_team %} — {{ context_team.name }}{% endif %}</span>
 </nav>
 {% endblock %}
 
@@ -122,13 +122,13 @@ table.jexcel tbody td.edition textarea {
 
 {% if not context_team %}
 <div class="alert alert-warning" style="margin-bottom:1rem;">
-  <strong>{{ t('import_form.no_selection') }}</strong> Players will be imported without any team or season membership. Select a team above to assign them directly on import.
+  <strong>{{ t('import_form.no_selection') }}</strong> {{ t('import_form.no_team_membership') }}
 </div>
 {% else %}
 <div class="alert" style="background:var(--card-sectionning-background-color);border:1px solid var(--muted-border-color);margin-bottom:1rem;">
   {{ t('import_form.importing_into') }} <strong>{{ context_team.name }}</strong>
   {% if selected_season_id %}{% for s in seasons %}{% if s.id == selected_season_id %} / <strong>{{ s.name }}</strong>{% endif %}{% endfor %}{% endif %}.
-  Players will be assigned to this team and season automatically.
+  {{ t('import_form.auto_assign') }}
 </div>
 {% endif %}
 
@@ -186,7 +186,7 @@ table.jexcel tbody td.edition textarea {
 
     <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;">
       <select id="add-col-select" class="select-sm">
-        <option value="">— Add column —</option>
+        <option value="" data-label="{{ t('import_form.add_column') }}">{{ t('import_form.add_column') }}</option>
         {% for col in columns %}<option value="{{ col }}">{{ col }}</option>{% endfor %}
       </select>
       <button type="button" class="btn btn-sm btn-outline" id="add-col-btn">{{ t('import_form.add_row') }}</button>
@@ -295,7 +295,7 @@ table.jexcel tbody td.edition textarea {
     while (sel.firstChild) { sel.removeChild(sel.firstChild); }
     var placeholder = document.createElement("option");
     placeholder.value = "";
-    placeholder.textContent = "— Add column —";
+    placeholder.textContent = document.querySelector('#add-col-select option[value=""]')?.dataset.label || "{{ t('import_form.add_column') }}";
     sel.appendChild(placeholder);
     ALL_COLS.forEach(function(col) {
       if (activeCols.indexOf(col) === -1) {

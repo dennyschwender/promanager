@@ -2,8 +2,8 @@
 {% block title %}{{ team.name }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
-  <a href="/teams">Teams</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/teams">{{ t('teams.title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ team.name }}</span>
 </nav>
 {% endblock %}
@@ -33,7 +33,7 @@
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
     <div>
       <strong>{{ s.title }}</strong>
-      <span class="text-muted" style="font-size:.82rem;margin-left:.5rem;">{{ s.event_type | capitalize }} · {{ s.recurrence_rule | capitalize }}</span>
+      <span class="text-muted" style="font-size:.82rem;margin-left:.5rem;">{{ enums.event_type.get(s.event_type, s.event_type|capitalize) }} · {{ enums.recurrence.get(s.recurrence_rule, s.recurrence_rule|capitalize) }}</span>
       {% if s.season %}<span class="text-muted" style="font-size:.82rem;margin-left:.5rem;">— {{ s.season.name }}</span>{% endif %}
     </div>
     <span class="text-muted" style="font-size:.82rem;white-space:nowrap;">
@@ -68,7 +68,7 @@
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="btn btn-sm btn-outline"
                     style="color:var(--tp-danger,#dc3545);"
-                    onclick="return confirm('Remove this coach?')">{{ t('teams.remove_coach') }}</button>
+                    onclick="return confirm('{{ t('teams_detail.remove_coach_confirm') }}')">{{ t('teams.remove_coach') }}</button>
           </form>
         </td>
       </tr>

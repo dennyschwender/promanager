@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t('seasons.title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('seasons.title') }}</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('seasons.title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
@@ -34,7 +34,7 @@
             {% endif %}
             <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">{{ t('seasons.report') }}</a>
             <form method="post" action="/seasons/{{ s.id }}/delete" style="display:contents;"
-                  onsubmit="return confirm('Delete season {{ s.name }}?')">
+                  onsubmit="return confirm('{{ t('seasons.delete_confirm', name=s.name) }}')">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
               <button type="submit" class="btn btn-sm btn-danger">{{ t('common.delete') }}</button>
             </form>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Events — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">Home</a><span class="breadcrumb-sep"></span><span>{{ t('events.title') }}</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('events.title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
@@ -56,7 +56,7 @@
         <a href="/events/{{ e.id }}">{% if section == 'upcoming' %}<strong>{{ e.title }}</strong>{% else %}{{ e.title }}{% endif %}</a>
         {% if e.recurrence_group_id %}<span class="badge-recurring" title="Recurring event">&#8635;{% if section == 'upcoming' %} {{ t('events.recurring') }}{% endif %}</span>{% endif %}
       </td>
-      <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type|capitalize }}</span></td>
+      <td><span class="badge badge-{{ e.event_type }}">{{ enums.event_type.get(e.event_type, e.event_type|capitalize) }}</span></td>
       <td>{{ e.location or '—' }}</td>
       {% if user %}
       <td>

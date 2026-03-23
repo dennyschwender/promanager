@@ -173,7 +173,8 @@
     "end_date": "End Date",
     "season_name": "Season Name",
     "activate": "Activate",
-    "report": "Report"
+    "report": "Report",
+    "delete_confirm": "Delete season %{name}?"
   },
   "reports": {
     "season_title": "Season Report",
@@ -319,7 +320,8 @@
     "email_failed_count": "{count} email delivery failure(s)",
     "back_to_users": "Back to users",
     "email_subject": "Your ProManager account",
-    "delete_confirm": "Delete user %{username}?"
+    "delete_confirm": "Delete user %{username}?",
+    "delete_confirm_user": "Delete user %{username}?"
   },
   "players_form": {
     "basic_info": "Basic Info",
@@ -578,7 +580,10 @@
     "skip_duplicate_batch": "duplicate (in batch)",
     "skip_invalid_dob": "invalid date_of_birth",
     "skip_team_not_found": "team not found: %{name}",
-    "skip_db_error": "database error"
+    "skip_db_error": "database error",
+    "no_team_membership": "Players will be imported without any team or season membership. Select a team above to assign them directly on import.",
+    "auto_assign": "Players will be assigned to this team and season automatically.",
+    "add_column": "— Add column —"
   },
   "js_strings": {
     "op_contains": "contains",
@@ -624,5 +629,33 @@
     "remove_btn": "Remove",
     "player_fallback": "Player",
     "of": "of"
+  },
+  "enums": {
+    "event_type_training": "Training",
+    "event_type_match": "Match",
+    "event_type_other": "Other",
+    "status_attend": "Attending",
+    "status_absent": "Absent",
+    "status_unknown": "Unknown",
+    "status_maybe": "Maybe",
+    "role_admin": "Admin",
+    "role_member": "Member",
+    "role_player": "Player",
+    "role_coach": "Coach",
+    "role_assistant": "Assistant",
+    "role_team_leader": "Team Leader",
+    "pos_goalie": "Goalie",
+    "pos_defender": "Defender",
+    "pos_center": "Center",
+    "pos_forward": "Forward",
+    "sex_male": "Male",
+    "sex_female": "Female",
+    "sex_other": "Other",
+    "recurrence_weekly": "Weekly",
+    "recurrence_biweekly": "Biweekly",
+    "recurrence_monthly": "Monthly",
+    "membership_active": "Active",
+    "membership_inactive": "Inactive",
+    "membership_injured": "Injured"
   }
 }

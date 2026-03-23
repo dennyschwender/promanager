@@ -2,7 +2,7 @@
 {% block title %}{{ event.title }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
-  <a href="/dashboard">Home</a><span class="breadcrumb-sep"></span>
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
   <a href="/events">{{ t('events.title') }}</a><span class="breadcrumb-sep"></span>
   <span>{{ event.title }}</span>
 </nav>
@@ -11,7 +11,7 @@
 <div class="page-header">
   <h2>{{ event.title }}</h2>
   <div class="action-group">
-    <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
+    <span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span>
     {% set pt_labels = {"normal": t('events_detail.pt_normal'), "all": t('events_detail.pt_all'), "selection": t('events_detail.pt_selection'), "available": t('events_detail.pt_available'), "no_registration": t('events_detail.pt_no_reg')} %}
     <span class="badge badge-outline">{{ pt_labels.get(event.presence_type, event.presence_type) }}</span>
     {% if event.recurrence_group_id %}
@@ -21,11 +21,11 @@
 </div>
 
 {% if request.query_params.get("reminders_sent") %}
-  <div class="alert alert-success">Reminders sent to {{ request.query_params.get("reminders_sent") }} player(s).</div>
+  <div class="alert alert-success">{{ t('events_detail.reminders_sent_msg', count=request.query_params.get("reminders_sent")) }}</div>
 {% endif %}
 {% if request.query_params.get("notified") %}
   <div class="alert alert-success">
-    Notification queued for {{ request.query_params.get("notified") }} player(s).
+    {{ t('events_detail.notified_msg', count=request.query_params.get("notified")) }}
   </div>
 {% endif %}
 

@@ -11,7 +11,7 @@
 {% block content %}
 <div class="page-header">
   <h2>{{ t('attendance.title') }} — {{ event.title }}</h2>
-  <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
+  <span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span>
 </div>
 <p>{{ event.event_date }}{% if event.event_time %} {{ t('attendance.at_time') }} {{ event.event_time.strftime("%H:%M") }}{% endif %}{% if event.location %} · {{ event.location }}{% endif %}</p>
 
@@ -28,7 +28,7 @@
     {% for att in attendances %}
       <tr>
         <td>{{ att.player.full_name if att.player else att.player_id }}</td>
-        <td><span class="badge badge-{{ att.status }}">{{ att.status|capitalize }}</span></td>
+        <td><span class="badge badge-{{ att.status }}">{{ enums.status.get(att.status, att.status|capitalize) }}</span></td>
         <td>{{ att.note or "" }}</td>
         <td>
           <form method="post" action="/attendance/{{ event.id }}/{{ att.player_id }}" class="inline-form">

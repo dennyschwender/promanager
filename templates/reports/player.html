@@ -53,8 +53,8 @@
     <tr>
       <td>{{ item.event.event_date }}</td>
       <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
-      <td><span class="badge badge-{{ item.event.event_type }}">{{ item.event.event_type|capitalize }}</span></td>
-      <td><span class="badge badge-{{ item.attendance.status }}">{{ item.attendance.status|capitalize }}</span></td>
+      <td><span class="badge badge-{{ item.event.event_type }}">{{ enums.event_type.get(item.event.event_type, item.event.event_type|capitalize) }}</span></td>
+      <td><span class="badge badge-{{ item.attendance.status }}">{{ enums.status.get(item.attendance.status, item.attendance.status|capitalize) }}</span></td>
       <td>{{ item.attendance.note or "" }}</td>
     </tr>
   {% endfor %}

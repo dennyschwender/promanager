@@ -31,8 +31,8 @@
         <td>{{ m.season.name if m.season else '?' }}</td>
         <td>{{ m.team.name if m.team else '?' }}</td>
         <td>{{ m.priority }}</td>
-        <td>{{ m.role|replace('_',' ')|capitalize if m.role else '—' }}</td>
-        <td>{{ m.position|capitalize if m.position else '—' }}</td>
+        <td>{{ enums.role.get(m.role, m.role|replace('_',' ')|capitalize) if m.role else '—' }}</td>
+        <td>{{ enums.position.get(m.position, m.position|capitalize) if m.position else '—' }}</td>
         <td>{{ m.shirt_number if m.shirt_number is not none else '—' }}</td>
         <td>
           {% if m.membership_status == 'injured' %}
@@ -64,7 +64,7 @@
   <h3 style="margin-top:0">{{ t('players_detail.personal_info') }}</h3>
   <dl class="detail-dl">
     <dt>{{ t('players_form.sex') }}</dt>
-    <dd>{{ player.sex|capitalize if player.sex else '—' }}</dd>
+    <dd>{{ enums.sex.get(player.sex, player.sex|capitalize) if player.sex else '—' }}</dd>
     <dt>{{ t('players_form.date_of_birth') }}</dt>
     <dd>{{ player.date_of_birth if player.date_of_birth else '—' }}</dd>
     <dt>{{ t('players_detail.email') }}</dt>
@@ -144,8 +144,8 @@
     <tr>
       <td>{{ item.event.event_date }}</td>
       <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
-      <td><span class="badge badge-{{ item.event.event_type }}">{{ item.event.event_type|capitalize }}</span></td>
-      <td><span class="badge badge-{{ item.attendance.status }}">{{ item.attendance.status|capitalize }}</span></td>
+      <td><span class="badge badge-{{ item.event.event_type }}">{{ enums.event_type.get(item.event.event_type, item.event.event_type|capitalize) }}</span></td>
+      <td><span class="badge badge-{{ item.attendance.status }}">{{ enums.status.get(item.attendance.status, item.attendance.status|capitalize) }}</span></td>
       <td>{{ item.attendance.note or '' }}</td>
     </tr>
   {% endfor %}

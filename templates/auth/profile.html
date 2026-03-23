@@ -15,7 +15,7 @@
 <dl>
   <dt>{{ t('auth.username') }}</dt><dd>{{ user.username }}</dd>
   <dt>{{ t('auth.email') }}</dt><dd>{{ user.email }}</dd>
-  <dt>{{ t('auth.role') }}</dt><dd>{{ user.role|capitalize }}</dd>
+  <dt>{{ t('auth.role') }}</dt><dd>{{ enums.role.get(user.role, user.role|capitalize) }}</dd>
 </dl>
 
 <!-- ── Notification Preferences ─────────────────────────────────────────── -->

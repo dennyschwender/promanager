@@ -173,7 +173,8 @@
     "end_date": "Data fine",
     "season_name": "Nome stagione",
     "activate": "Attiva",
-    "report": "Report"
+    "report": "Report",
+    "delete_confirm": "Eliminare la stagione %{name}?"
   },
   "reports": {
     "season_title": "Report Stagione",
@@ -319,7 +320,8 @@
     "email_failed_count": "{count} errore/i di consegna email",
     "back_to_users": "Torna agli utenti",
     "email_subject": "Il tuo account ProManager",
-    "delete_confirm": "Eliminare l'utente %{username}?"
+    "delete_confirm": "Eliminare l'utente %{username}?",
+    "delete_confirm_user": "Eliminare l'utente %{username}?"
   },
   "players_form": {
     "basic_info": "Informazioni di base",
@@ -578,7 +580,10 @@
     "skip_duplicate_batch": "duplicato (nel batch)",
     "skip_invalid_dob": "data_di_nascita non valida",
     "skip_team_not_found": "squadra non trovata: %{name}",
-    "skip_db_error": "errore database"
+    "skip_db_error": "errore database",
+    "no_team_membership": "I giocatori verranno importati senza appartenenza a squadra o stagione. Seleziona una squadra per assegnarli direttamente.",
+    "auto_assign": "I giocatori verranno assegnati automaticamente a questa squadra e stagione.",
+    "add_column": "— Aggiungi colonna —"
   },
   "js_strings": {
     "op_contains": "contiene",
@@ -624,5 +629,33 @@
     "remove_btn": "Rimuovi",
     "player_fallback": "Giocatore",
     "of": "di"
+  },
+  "enums": {
+    "event_type_training": "Allenamento",
+    "event_type_match": "Partita",
+    "event_type_other": "Altro",
+    "status_attend": "Presente",
+    "status_absent": "Assente",
+    "status_unknown": "Sconosciuto",
+    "status_maybe": "Forse",
+    "role_admin": "Admin",
+    "role_member": "Membro",
+    "role_player": "Giocatore",
+    "role_coach": "Allenatore",
+    "role_assistant": "Assistente",
+    "role_team_leader": "Capitano",
+    "pos_goalie": "Portiere",
+    "pos_defender": "Difensore",
+    "pos_center": "Centrocampista",
+    "pos_forward": "Attaccante",
+    "sex_male": "Maschio",
+    "sex_female": "Femmina",
+    "sex_other": "Altro",
+    "recurrence_weekly": "Settimanale",
+    "recurrence_biweekly": "Bisettimanale",
+    "recurrence_monthly": "Mensile",
+    "membership_active": "Attivo",
+    "membership_inactive": "Inattivo",
+    "membership_injured": "Infortunato"
   }
 }

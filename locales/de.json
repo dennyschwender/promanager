@@ -173,7 +173,8 @@
     "end_date": "Enddatum",
     "season_name": "Saisonname",
     "activate": "Aktivieren",
-    "report": "Bericht"
+    "report": "Bericht",
+    "delete_confirm": "Saison %{name} löschen?"
   },
   "reports": {
     "season_title": "Saisonbericht",
@@ -319,7 +320,8 @@
     "email_failed_count": "{count} E-Mail-Zustellungsfehler",
     "back_to_users": "Zurück zu Benutzern",
     "email_subject": "Ihr ProManager-Konto",
-    "delete_confirm": "Benutzer %{username} löschen?"
+    "delete_confirm": "Benutzer %{username} löschen?",
+    "delete_confirm_user": "Benutzer %{username} löschen?"
   },
   "players_form": {
     "basic_info": "Grunddaten",
@@ -578,7 +580,10 @@
     "skip_duplicate_batch": "Duplikat (im Batch)",
     "skip_invalid_dob": "ungültiges Geburtsdatum",
     "skip_team_not_found": "Mannschaft nicht gefunden: %{name}",
-    "skip_db_error": "Datenbankfehler"
+    "skip_db_error": "Datenbankfehler",
+    "no_team_membership": "Spieler werden ohne Mannschafts- oder Saisonzugehörigkeit importiert. Wählen Sie eine Mannschaft, um sie direkt zuzuweisen.",
+    "auto_assign": "Spieler werden automatisch dieser Mannschaft und Saison zugewiesen.",
+    "add_column": "— Spalte hinzufügen —"
   },
   "js_strings": {
     "op_contains": "enthält",
@@ -624,5 +629,33 @@
     "remove_btn": "Entfernen",
     "player_fallback": "Spieler",
     "of": "von"
+  },
+  "enums": {
+    "event_type_training": "Training",
+    "event_type_match": "Spiel",
+    "event_type_other": "Sonstiges",
+    "status_attend": "Anwesend",
+    "status_absent": "Abwesend",
+    "status_unknown": "Unbekannt",
+    "status_maybe": "Vielleicht",
+    "role_admin": "Admin",
+    "role_member": "Mitglied",
+    "role_player": "Spieler",
+    "role_coach": "Trainer",
+    "role_assistant": "Assistent",
+    "role_team_leader": "Mannschaftsführer",
+    "pos_goalie": "Torwart",
+    "pos_defender": "Verteidiger",
+    "pos_center": "Mittelfeld",
+    "pos_forward": "Stürmer",
+    "sex_male": "Männlich",
+    "sex_female": "Weiblich",
+    "sex_other": "Divers",
+    "recurrence_weekly": "Wöchentlich",
+    "recurrence_biweekly": "Zweiwöchentlich",
+    "recurrence_monthly": "Monatlich",
+    "membership_active": "Aktiv",
+    "membership_inactive": "Inaktiv",
+    "membership_injured": "Verletzt"
   }
 }

@@ -33,10 +33,26 @@ def render(
     """Render a template with i18n context (t, current_locale) auto-injected."""
     locale = getattr(request.state, "locale", DEFAULT_LOCALE)
     theme = getattr(request.state, "theme", "light")
+
+    def _te(key: str) -> str:
+        return _t(f"enums.{key}", locale)
+
+    # Lookup dicts for DB enum values → translated labels
+    enums = {
+        "event_type": {v: _te(f"event_type_{v}") for v in ("training", "match", "other")},
+        "status": {v: _te(f"status_{v}") for v in ("attend", "absent", "unknown", "maybe")},
+        "role": {v: _te(f"role_{v}") for v in ("admin", "member", "player", "coach", "assistant", "team_leader")},
+        "position": {v: _te(f"pos_{v}") for v in ("goalie", "defender", "center", "forward")},
+        "sex": {v: _te(f"sex_{v}") for v in ("male", "female", "other")},
+        "recurrence": {v: _te(f"recurrence_{v}") for v in ("weekly", "biweekly", "monthly")},
+        "membership_status": {v: _te(f"membership_{v}") for v in ("active", "inactive", "injured")},
+    }
+
     i18n_ctx = {
         "t": lambda key, **kw: _t(key, locale, **kw),
         "current_locale": locale,
         "current_theme": theme,
+        "enums": enums,
     }
     return templates.TemplateResponse(
         request,
