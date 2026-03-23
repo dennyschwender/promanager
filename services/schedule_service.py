@@ -87,6 +87,7 @@ def generate_events_for_schedule(
             presence_type=schedule.presence_type,
             description=schedule.description,
             team_id=team.id,
+            season_id=schedule.season_id,
             recurrence_group_id=schedule.recurrence_group_id,
             recurrence_rule=schedule.recurrence_rule,
         )
