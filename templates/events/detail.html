@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block head_extra %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endblock %}
 {% block title %}{{ event.title }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
@@ -8,94 +9,235 @@
 </nav>
 {% endblock %}
 {% block content %}
+
+{# ── Header ────────────────────────────────────────────────────── #}
 <div class="page-header">
   <h2>{{ event.title }}</h2>
-  <div class="action-group">
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
     <span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span>
     {% set pt_labels = {"normal": t('events_detail.pt_normal'), "all": t('events_detail.pt_all'), "selection": t('events_detail.pt_selection'), "available": t('events_detail.pt_available'), "no_registration": t('events_detail.pt_no_reg')} %}
     <span class="badge badge-outline">{{ pt_labels.get(event.presence_type, event.presence_type) }}</span>
-    {% if event.recurrence_group_id %}
-    <span class="badge-recurring">&#8635; {{ t('events_detail.recurring_label') }}</span>
+    {% if event.recurrence_group_id %}<span class="badge-recurring">&#8635; {{ t('events_detail.recurring_label') }}</span>{% endif %}
+  </div>
+</div>
+
+{# ── Compact info strip ────────────────────────────────────────── #}
+<p class="text-muted" style="margin-bottom:1rem;font-size:.92rem;">
+  📅 {{ event.event_date }}
+  {% if event.event_time %} · {{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}{% endif %}
+  {% if event.location %} · 📍 <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a>{% endif %}
+  {% if event.meeting_time %} · {{ t('events_detail.meeting_point') }}: {{ event.meeting_time.strftime('%H:%M') }}{% if event.meeting_location %} @ {{ event.meeting_location }}{% endif %}{% endif %}
+  {% if event.description %} · {{ event.description }}{% endif %}
+</p>
+
+{# ── Action bar ────────────────────────────────────────────────── #}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
+  <a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a>
+  <div style="display:flex;gap:.5rem;align-items:center;">
+    {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
+      <a href="/events/{{ event.id }}/edit" class="btn btn-outline btn-sm">{{ t('events.edit') }}</a>
+      <div class="action-dropdown">
+        <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+        <div class="action-dropdown-menu">
+          <a href="/events/{{ event.id }}/notify">{{ t('events.notify_players') }}</a>
+          <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('events.send_reminders') }}</button>
+          </form>
+          <hr style="margin:.25rem 0;">
+          <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
+                onsubmit="return confirm('{{ t('events.confirm_delete') }}')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit" style="color:var(--tp-danger,#dc3545);">{{ t('events.delete') }}</button>
+          </form>
+        </div>
+      </div>
     {% endif %}
   </div>
 </div>
 
+{# ── Flash / alert messages ────────────────────────────────────── #}
 {% if request.query_params.get("reminders_sent") %}
   <div class="alert alert-success">{{ t('events_detail.reminders_sent_msg', count=request.query_params.get("reminders_sent")) }}</div>
 {% endif %}
 {% if request.query_params.get("notified") %}
-  <div class="alert alert-success">
-    {{ t('events_detail.notified_msg', count=request.query_params.get("notified")) }}
-  </div>
+  <div class="alert alert-success">{{ t('events_detail.notified_msg', count=request.query_params.get("notified")) }}</div>
 {% endif %}
 
-<dl>
-  <dt>{{ t('events_detail.season') }}</dt><dd>{{ event.season.name if event.season else "—" }}</dd>
-  <dt>{{ t('events_detail.team') }}</dt><dd>{{ event.team.name if event.team else "—" }}</dd>
-  <dt>{{ t('events.date') }}</dt>
-  <dd>
-    {{ event.event_date }}
-    {% if event.event_time or event.event_end_time %}
-      · {{ t('events_detail.start') }} {{ event.event_time.strftime("%H:%M") if event.event_time else "—" }}
-      {% if event.event_end_time %} → {{ event.event_end_time.strftime("%H:%M") }}{% endif %}
-    {% endif %}
-  </dd>
-  {% if event.location %}
-  <dt>{{ t('events.location') }}</dt>
-  <dd>{{ event.location }} <a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a></dd>
-  {% endif %}
-  {% if event.meeting_time or event.meeting_location %}
-  <dt>{{ t('events_detail.meeting_point') }}</dt>
-  <dd>
-    {% if event.meeting_time %}{{ event.meeting_time.strftime("%H:%M") }}{% endif %}
-    {% if event.meeting_time and event.meeting_location %} · {% endif %}
-    {% if event.meeting_location %}{{ event.meeting_location }} <a href="https://www.openstreetmap.org/search?query={{ event.meeting_location | urlencode }}" target="_blank" rel="noopener" class="text-muted" style="font-size:0.8rem;">📍 Map</a>{% endif %}
-  </dd>
-  {% endif %}
-  {% if event.description %}<dt>{{ t('common.description') }}</dt><dd>{{ event.description }}</dd>{% endif %}
-  <dt>{{ t('events_detail.reminder_sent') }}</dt><dd>{% if event.reminder_sent %}<span class="badge badge-active">{{ t('common.yes') }}</span>{% else %}{{ t('common.no') }}{% endif %}</dd>
-  {% if event.recurrence_group_id %}
-  {% set rule_labels = {"weekly":"Weekly","biweekly":"Bi-weekly","monthly":"Monthly"} %}
-  <dt>{{ t('events_detail.recurring_label') }}</dt><dd><span class="badge-recurring">&#8635; {{ rule_labels.get(event.recurrence_rule, event.recurrence_rule or "") }}</span> — {{ t('events_detail.recurring_edit_note') }}</dd>
-  {% endif %}
-</dl>
-
-<div class="action-group" style="margin-bottom:1.5rem;">
-  {% if event.presence_type != "no_registration" %}
-    <a href="/attendance/{{ event.id }}" class="btn btn-primary">{{ t('events.attendance') }}</a>
-  {% endif %}
-  {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
-    <a href="/events/{{ event.id }}/edit" class="btn btn-outline">{{ t('events.edit') }}</a>
-    <a href="/events/{{ event.id }}/notify" class="btn btn-sm btn-outline">{{ t('events.notify_players') }}</a>
-    <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
-      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-outline">{{ t('events.send_reminders') }}</button>
-    </form>
-    <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
-          onsubmit="return confirm('{{ t('events.confirm_delete') }}')">
-      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-      <button type="submit" class="btn btn-danger">{{ t('events.delete') }}</button>
-    </form>
-  {% endif %}
-</div>
-
-<p><a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a></p>
-
-{% if event.presence_type != "no_registration" %}
+{# ── Attendance columns ────────────────────────────────────────── #}
+{% if event.presence_type == "no_registration" %}
+  <p class="text-muted">{{ t('events_detail.no_registration_note') }}</p>
+{% else %}
 <h3>{{ t('events.attendance_summary') }}</h3>
-<div class="attendance-summary">
-  {% for bucket, label in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
-  <div>
-    <span class="badge badge-{{ bucket }}">{{ label }} ({{ summary[bucket]|length }})</span>
-    <ul>
-      {% for player in summary[bucket] %}
-        <li>{{ player.full_name }}</li>
-      {% else %}
-        <li><em>—</em></li>
+<div id="attendance-columns" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+  {% for bucket, label in [
+    ("present",  t('attendance.status_attend')),
+    ("absent",   t('attendance.status_absent')),
+    ("maybe",    t('events_detail.maybe')),
+    ("unknown",  t('attendance.status_unknown'))
+  ] %}
+  <div class="att-col" data-bucket="{{ bucket }}"
+       style="flex:1;min-width:160px;{% if not summary[bucket] %}display:none;{% endif %}">
+    <div class="att-col-header">
+      <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length }}</span>)</span>
+    </div>
+    <ul class="att-player-list" style="list-style:none;padding:0;margin:.5rem 0 0;">
+      {% for entry in summary[bucket] %}
+      <li>
+        <button type="button" class="att-player-btn"
+                data-player-id="{{ entry.player.id }}"
+                data-player-name="{{ entry.player.full_name | e }}"
+                data-status="{{ bucket }}"
+                data-note="{{ entry.note | e }}"
+                style="background:none;border:none;padding:.2rem 0;cursor:pointer;text-align:left;width:100%;color:inherit;text-decoration:underline dotted;">
+          {{ entry.player.full_name }}
+        </button>
+      </li>
       {% endfor %}
     </ul>
   </div>
   {% endfor %}
 </div>
+
+{# ── Shared popover (single DOM node, reused for each player) ──── #}
+{% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
+<div id="att-popover" style="display:none;position:absolute;z-index:200;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.5rem;padding:1rem;box-shadow:0 4px 16px rgba(0,0,0,.2);min-width:240px;">
+  <strong id="pop-name" style="display:block;margin-bottom:.75rem;"></strong>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;">
+    {% for s, lbl in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
+    <button type="button" class="btn btn-sm btn-outline pop-status-btn" data-status="{{ s }}">{{ lbl }}</button>
+    {% endfor %}
+  </div>
+  <textarea id="pop-note" rows="2" style="width:100%;margin-bottom:.75rem;font-size:.88rem;" placeholder="{{ t('attendance.note_optional') }}"></textarea>
+  <div id="pop-error" style="display:none;color:var(--tp-danger,#dc3545);font-size:.82rem;margin-bottom:.5rem;"></div>
+  <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+    <button type="button" class="btn btn-sm btn-outline" id="pop-cancel">{{ t('common.cancel') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" id="pop-save">{{ t('common.save') }}</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var EVENT_ID = {{ event.id }};
+  var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var popover = document.getElementById('att-popover');
+  var popName = document.getElementById('pop-name');
+  var popNote = document.getElementById('pop-note');
+  var popError = document.getElementById('pop-error');
+  var popSave = document.getElementById('pop-save');
+  var activePlayerId = null;
+  var activeStatus = null;
+
+  function highlightStatus(status) {
+    popover.querySelectorAll('.pop-status-btn').forEach(function (btn) {
+      btn.classList.toggle('btn-primary', btn.dataset.status === status);
+      btn.classList.toggle('btn-outline', btn.dataset.status !== status);
+    });
+    activeStatus = status;
+  }
+
+  function openPopover(btn) {
+    var rect = btn.getBoundingClientRect();
+    popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    popover.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 260) + 'px';
+    popName.textContent = btn.dataset.playerName;
+    popNote.value = btn.dataset.note || '';
+    popError.style.display = 'none';
+    highlightStatus(btn.dataset.status);
+    activePlayerId = parseInt(btn.dataset.playerId, 10);
+    popSave.disabled = false;
+    popover.style.display = 'block';
+  }
+
+  function closePopover() {
+    popover.style.display = 'none';
+    activePlayerId = null;
+    activeStatus = null;
+  }
+
+  function movePlayer(playerId, newStatus, note) {
+    var btn = document.querySelector('.att-player-btn[data-player-id="' + playerId + '"]');
+    if (!btn) return;
+    var oldStatus = btn.dataset.status;
+    btn.dataset.status = newStatus;
+    btn.dataset.note = note;
+    var li = btn.closest('li');
+    var targetList = document.querySelector('.att-col[data-bucket="' + newStatus + '"] .att-player-list');
+    targetList.appendChild(li);
+    updateColumn(oldStatus);
+    updateColumn(newStatus);
+  }
+
+  function updateColumn(bucket) {
+    var col = document.querySelector('.att-col[data-bucket="' + bucket + '"]');
+    var count = col.querySelectorAll('.att-player-btn').length;
+    col.querySelector('.att-count').textContent = count;
+    col.style.display = count === 0 ? 'none' : '';
+  }
+
+  popSave.addEventListener('click', function () {
+    if (!activePlayerId || !activeStatus) return;
+    popSave.disabled = true;
+    popError.style.display = 'none';
+    var note = popNote.value;
+    var body = new FormData();
+    body.append('status', activeStatus);
+    body.append('note', note);
+    body.append('csrf_token', CSRF);
+    fetch('/attendance/' + EVENT_ID + '/' + activePlayerId, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: body,
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          movePlayer(activePlayerId, data.status, data.note);
+          closePopover();
+        } else {
+          popError.textContent = {{ t('common.save_error') | tojson }};
+          popError.style.display = 'block';
+          popSave.disabled = false;
+        }
+      })
+      .catch(function () {
+        popError.textContent = {{ t('common.save_error') | tojson }};
+        popError.style.display = 'block';
+        popSave.disabled = false;
+      });
+  });
+
+  popover.querySelectorAll('.pop-status-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { highlightStatus(btn.dataset.status); });
+  });
+
+  document.getElementById('pop-cancel').addEventListener('click', closePopover);
+
+  document.getElementById('attendance-columns').addEventListener('click', function (e) {
+    var btn = e.target.closest('.att-player-btn');
+    if (btn) { e.stopPropagation(); openPopover(btn); }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (popover.style.display !== 'none' && !popover.contains(e.target)) {
+      closePopover();
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('.action-dropdown-toggle');
+    if (toggle) {
+      e.stopPropagation();
+      var menu = toggle.nextElementSibling;
+      var isOpen = menu.classList.contains('open');
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+      if (!isOpen) menu.classList.add('open');
+      return;
+    }
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
+  });
+})();
+</script>
+{% endif %}
 {% endif %}
 {% endblock %}

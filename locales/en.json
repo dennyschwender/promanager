@@ -243,7 +243,8 @@
     "changes_saved": "Changes saved.",
     "search_unavailable": "Search unavailable",
     "no_results": "No results found",
-    "searching": "Searching..."
+    "searching": "Searching...",
+    "save_error": "Could not save. Please try again."
   },
   "errors": {
     "404_title": "Page Not Found",
@@ -535,7 +536,8 @@
     "pt_all": "All attendee",
     "pt_selection": "Selection",
     "pt_available": "Available",
-    "pt_no_reg": "No registration"
+    "pt_no_reg": "No registration",
+    "no_registration_note": "Attendance tracking is disabled for this event."
   },
   "notify_form": {
     "template": "Template",

@@ -243,7 +243,8 @@
     "changes_saved": "Modifications enregistrées.",
     "search_unavailable": "Recherche indisponible",
     "no_results": "Aucun résultat",
-    "searching": "Recherche..."
+    "searching": "Recherche...",
+    "save_error": "Impossible de sauvegarder. Veuillez réessayer."
   },
   "errors": {
     "404_title": "Page introuvable",
@@ -535,7 +536,8 @@
     "pt_all": "Tous présents",
     "pt_selection": "Sélection",
     "pt_available": "Disponible",
-    "pt_no_reg": "Sans inscription"
+    "pt_no_reg": "Sans inscription",
+    "no_registration_note": "Le suivi des présences est désactivé pour cet événement."
   },
   "notify_form": {
     "template": "Modèle",

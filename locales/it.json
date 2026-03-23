@@ -243,7 +243,8 @@
     "changes_saved": "Modifiche salvate.",
     "search_unavailable": "Ricerca non disponibile",
     "no_results": "Nessun risultato",
-    "searching": "Ricerca in corso..."
+    "searching": "Ricerca in corso...",
+    "save_error": "Salvataggio non riuscito. Riprova."
   },
   "errors": {
     "404_title": "Pagina Non Trovata",
@@ -535,7 +536,8 @@
     "pt_all": "Tutti presenti",
     "pt_selection": "Selezione",
     "pt_available": "Disponibile",
-    "pt_no_reg": "Nessuna registrazione"
+    "pt_no_reg": "Nessuna registrazione",
+    "no_registration_note": "Il tracciamento delle presenze è disabilitato per questo evento."
   },
   "notify_form": {
     "template": "Modello",

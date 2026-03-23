@@ -243,7 +243,8 @@
     "changes_saved": "Änderungen gespeichert.",
     "search_unavailable": "Suche nicht verfügbar",
     "no_results": "Keine Ergebnisse",
-    "searching": "Suche..."
+    "searching": "Suche...",
+    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen."
   },
   "errors": {
     "404_title": "Seite nicht gefunden",
@@ -535,7 +536,8 @@
     "pt_all": "Alle anwesend",
     "pt_selection": "Auswahl",
     "pt_available": "Verfügbar",
-    "pt_no_reg": "Keine Registrierung"
+    "pt_no_reg": "Keine Registrierung",
+    "no_registration_note": "Die Anwesenheitsverfolgung ist für dieses Ereignis deaktiviert."
   },
   "notify_form": {
     "template": "Vorlage",
