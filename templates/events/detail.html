@@ -104,7 +104,7 @@
     </div>
     <ul class="att-player-list" style="list-style:none;padding:0;margin:0;">
       {% for entry in summary[bucket] %}
-      <li style="border-top:1px solid var(--muted-border-color,#eee);{% if loop.first %}border-top:none;{% endif %}">
+      <li style="list-style:none;border-top:1px solid var(--muted-border-color,#eee);{% if loop.first %}border-top:none;{% endif %}">
         <button type="button" class="att-player-btn"
                 data-player-id="{{ entry.player.id }}"
                 data-player-name="{{ entry.player.full_name | e }}"
