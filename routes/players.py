@@ -7,8 +7,9 @@ import json
 from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf, require_csrf_header
@@ -847,6 +848,83 @@ async def player_import_post(
         return _render(400)
 
     return _render()
+
+
+# ---------------------------------------------------------------------------
+# Search (must be before /{player_id} to avoid routing conflict)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/search")
+async def player_search(
+    request: Request,
+    q: str = "",
+    exclude_event_id: int | None = None,
+    user: User = Depends(require_coach_or_admin),
+    db: Session = Depends(get_db),
+):
+    """Return up to 20 active non-archived players matching `q` (name search).
+
+    Excludes players who already have an Attendance row for `exclude_event_id`.
+    Response: [{id, full_name, team_name}]
+    """
+    from models.attendance import Attendance  # noqa: PLC0415
+
+    if len(q.strip()) < 2:
+        return JSONResponse([])
+
+    # Resolve season_id and existing attendees from the event
+    season_id: int | None = None
+    excluded_player_ids: set[int] = set()
+    if exclude_event_id is not None:
+        from models.event import Event as Ev  # noqa: PLC0415
+
+        ev = db.get(Ev, exclude_event_id)
+        if ev:
+            season_id = ev.season_id
+            excluded_player_ids = {
+                row.player_id
+                for row in db.query(Attendance.player_id)
+                .filter(Attendance.event_id == exclude_event_id)
+                .all()
+            }
+
+    term = f"%{q.strip()}%"
+    query = (
+        db.query(Player)
+        .filter(
+            Player.is_active.is_(True),
+            Player.archived_at.is_(None),
+            or_(Player.first_name.ilike(term), Player.last_name.ilike(term)),
+        )
+    )
+    # Apply exclusion at the DB level so the LIMIT applies to valid candidates only
+    if excluded_player_ids:
+        query = query.filter(~Player.id.in_(excluded_player_ids))
+    players = query.limit(20).all()
+
+    # Resolve team_name per player in the event's season
+    results = []
+    for p in players:
+        team_name = None
+        if season_id is not None:
+            mem = (
+                db.query(PlayerTeam)
+                .filter(PlayerTeam.player_id == p.id, PlayerTeam.season_id == season_id)
+                .order_by(PlayerTeam.priority.asc())
+                .first()
+            )
+            if mem is not None:
+                team = db.get(Team, mem.team_id)
+                if team:
+                    team_name = team.name
+        results.append({
+            "id": p.id,
+            "full_name": f"{p.first_name} {p.last_name}",
+            "team_name": team_name,
+        })
+
+    return JSONResponse(results)
 
 
 # ---------------------------------------------------------------------------
