@@ -33,26 +33,28 @@ def _make_player(db, first="Player", last="One"):
 
 
 # ---------------------------------------------------------------------------
-# Attendance page (GET)
+# Attendance page (GET) — route removed, now returns 404
 # ---------------------------------------------------------------------------
 
 
-def test_mark_attendance_page(admin_client, db):
+def test_attendance_page_no_longer_exists(admin_client, db):
+    """GET /attendance/{id} returns 404 after route deletion."""
     event = _make_event(db)
     resp = admin_client.get(f"/attendance/{event.id}", follow_redirects=False)
-    assert resp.status_code == 200
+    assert resp.status_code == 404
 
 
-def test_mark_attendance_redirects_for_missing_event(admin_client):
+def test_attendance_missing_event_no_longer_exists(admin_client):
+    """GET /attendance/99999 returns 404 after route deletion."""
     resp = admin_client.get("/attendance/99999", follow_redirects=False)
-    assert resp.status_code == 302
+    assert resp.status_code == 404
 
 
-def test_attendance_requires_login(client, db):
+def test_attendance_login_redirect_no_longer_exists(client, db):
+    """GET /attendance/{id} returns 404 (route gone, not a login redirect)."""
     event = _make_event(db, title="Auth Test Event")
     resp = client.get(f"/attendance/{event.id}", follow_redirects=False)
-    assert resp.status_code == 302
-    assert "/auth/login" in resp.headers["location"]
+    assert resp.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -389,12 +391,12 @@ def test_backfill_future_events_use_default_status(db):
     count = backfill_attendance_for_player(db, player.id, team.id, season.id)
 
     assert count == 2
-    att_u = db.query(Attendance).filter(
-        Attendance.event_id == future_unknown.id, Attendance.player_id == player.id
-    ).first()
-    att_p = db.query(Attendance).filter(
-        Attendance.event_id == future_present.id, Attendance.player_id == player.id
-    ).first()
+    att_u = (
+        db.query(Attendance).filter(Attendance.event_id == future_unknown.id, Attendance.player_id == player.id).first()
+    )
+    att_p = (
+        db.query(Attendance).filter(Attendance.event_id == future_present.id, Attendance.player_id == player.id).first()
+    )
     assert att_u.status == "unknown"
     assert att_p.status == "present"
 
@@ -510,9 +512,7 @@ def test_borrow_creates_attendance_with_team(admin_client, db):
     assert body["ok"] is True
     assert body["team_name"] == "Other Team"
 
-    att = db.query(Attendance).filter(
-        Attendance.event_id == event.id, Attendance.player_id == player.id
-    ).first()
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.borrowed_from_team_id == other_team.id
     assert att.status == "unknown"
@@ -571,9 +571,7 @@ def test_borrow_no_season_stores_null_team(admin_client, db):
     assert body["ok"] is True
     assert body["team_name"] is None
 
-    att = db.query(Attendance).filter(
-        Attendance.event_id == event.id, Attendance.player_id == player.id
-    ).first()
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.borrowed_from_team_id is None
 
