@@ -453,6 +453,12 @@ async def event_edit_get(
     else:
         managed_ids = get_coach_teams(user, db)
         teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
+    future_count = (
+        count_future_events(db, event.recurrence_group_id)
+        if event.recurrence_group_id
+        else 0
+    )
+
     return render(
         request,
         "events/form.html",
@@ -462,6 +468,8 @@ async def event_edit_get(
             "seasons": seasons,
             "teams": teams,
             "error": None,
+            "future_count": future_count,
+            "coach_team_ids": get_coach_teams(user, db) if user.is_coach else set(),
         },
     )
 

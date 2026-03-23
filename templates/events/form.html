@@ -179,9 +179,66 @@
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
     <a href="/events" class="btn btn-outline">{{ t('common.cancel') }}</a>
+    {% if event and (user.is_admin or (user.is_coach and event.team_id in coach_team_ids)) %}
+    <button type="button" class="btn btn-outline btn-danger-text" onclick="openDeleteDialog()" style="margin-left:auto;">{{ t('events.delete') }}</button>
+    {% endif %}
   </div>
 </form>
 </div>
+
+{# ── Delete dialog (edit mode only) ────────────────────────────── #}
+{% if event and (user.is_admin or (user.is_coach and event.team_id in coach_team_ids)) %}
+<dialog id="delete-dialog" class="att-dialog">
+  <article>
+    <header>
+      <h3>{{ t('events.delete_title') }}</h3>
+    </header>
+    <form method="post" action="/events/{{ event.id }}/delete" id="delete-dialog-form">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      {% if future_count > 0 %}
+      <fieldset>
+        <label class="att-dialog-radio">
+          <input type="radio" name="scope" value="single" checked>
+          {{ t('events.delete_scope_single') }}
+        </label>
+        <label class="att-dialog-radio">
+          <input type="radio" name="scope" value="future">
+          {{ t('events.delete_scope_future', count=future_count) }}
+        </label>
+      </fieldset>
+      <p id="delete-future-warning" class="text-muted" style="display:none;font-size:.9rem;">
+        {{ t('events.delete_future_confirm', count=future_count) }}
+      </p>
+      {% else %}
+      <input type="hidden" name="scope" value="single">
+      <p>{{ t('events.confirm_delete') }}</p>
+      {% endif %}
+      <footer class="att-dialog-actions">
+        <button type="button" class="btn btn-outline"
+                onclick="document.getElementById('delete-dialog').close()">
+          {{ t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-outline btn-danger-text">
+          {{ t('events.delete') }}
+        </button>
+      </footer>
+    </form>
+  </article>
+</dialog>
+<script>
+function openDeleteDialog() {
+  document.getElementById('delete-dialog').showModal();
+}
+{% if future_count > 0 %}
+document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    document.getElementById('delete-future-warning').style.display =
+      this.value === 'future' ? 'block' : 'none';
+  });
+});
+{% endif %}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
