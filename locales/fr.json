@@ -92,7 +92,13 @@
     "edit_title": "Modifier l'événement",
     "save": "Enregistrer",
     "attendance_summary": "Résumé des présences",
-    "send_reminders": "Envoyer des rappels"
+    "send_reminders": "Envoyer des rappels",
+    "delete_title": "Supprimer l'événement",
+    "delete_scope_single": "Supprimer seulement cet événement",
+    "delete_scope_future": "Supprimer cet événement et les %{count} de la série (aujourd'hui inclus)",
+    "delete_future_confirm": "Cela supprimera définitivement %{count} événement(s). Êtes-vous sûr ?",
+    "deleted_single": "Événement supprimé.",
+    "deleted_series": "%{count} événements de la série supprimés."
   },
   "attendance": {
     "title": "Marquer les présences",

@@ -92,7 +92,13 @@
     "edit_title": "Modifica Evento",
     "save": "Salva Evento",
     "attendance_summary": "Riepilogo presenze",
-    "send_reminders": "Invia promemoria"
+    "send_reminders": "Invia promemoria",
+    "delete_title": "Elimina evento",
+    "delete_scope_single": "Elimina solo questo evento",
+    "delete_scope_future": "Elimina questo e tutti i %{count} eventi della serie (incluso oggi)",
+    "delete_future_confirm": "Verranno eliminati definitivamente %{count} evento/i. Confermi?",
+    "deleted_single": "Evento eliminato.",
+    "deleted_series": "%{count} eventi della serie eliminati."
   },
   "attendance": {
     "title": "Registra Presenze",

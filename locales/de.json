@@ -92,7 +92,13 @@
     "edit_title": "Termin bearbeiten",
     "save": "Termin speichern",
     "attendance_summary": "Anwesenheitszusammenfassung",
-    "send_reminders": "Erinnerungen senden"
+    "send_reminders": "Erinnerungen senden",
+    "delete_title": "Ereignis löschen",
+    "delete_scope_single": "Nur dieses Ereignis löschen",
+    "delete_scope_future": "Dieses und alle %{count} Ereignisse der Serie löschen (heute eingeschlossen)",
+    "delete_future_confirm": "Es werden %{count} Ereignis(se) dauerhaft gelöscht. Sind Sie sicher?",
+    "deleted_single": "Ereignis gelöscht.",
+    "deleted_series": "%{count} Ereignisse der Serie gelöscht."
   },
   "attendance": {
     "title": "Anwesenheit erfassen",
