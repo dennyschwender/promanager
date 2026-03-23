@@ -22,7 +22,7 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import check_team_access, require_admin, require_coach_or_admin, require_login, rt
-from services.attendance_service import get_player_attendance_history
+from services.attendance_service import backfill_attendance_for_player, get_player_attendance_history
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
 router = APIRouter()
@@ -79,11 +79,23 @@ def _sync_memberships(
 ) -> None:
     """Replace PlayerTeam rows for *player* in *season* with *memberships*.
     Memberships from other seasons are untouched.
+    Backfills attendance records for newly added teams.
     """
+    # Capture existing team_ids before deletion so we know what's new
+    existing_team_ids = {
+        pt.team_id
+        for pt in db.query(PlayerTeam).filter(
+            PlayerTeam.player_id == player.id,
+            PlayerTeam.season_id == season_id,
+        ).all()
+    }
+
     db.query(PlayerTeam).filter(
         PlayerTeam.player_id == player.id,
         PlayerTeam.season_id == season_id,
     ).delete()
+
+    new_team_ids: list[int] = []
     for team_id, priority, extra in memberships:
         db.add(
             PlayerTeam(
@@ -99,6 +111,14 @@ def _sync_memberships(
                 absent_by_default=bool(extra.get("absent_by_default", False)),
             )
         )
+        if team_id not in existing_team_ids:
+            new_team_ids.append(team_id)
+
+    # Flush so the new PlayerTeam rows are visible for the backfill queries
+    db.flush()
+
+    for team_id in new_team_ids:
+        backfill_attendance_for_player(db, player.id, team_id, season_id)
 
 
 def _parse_date(value: str) -> date | None:
@@ -241,6 +261,7 @@ async def player_bulk_assign(
             )
             sp.commit()
             assigned += 1
+            backfill_attendance_for_player(db, pid, body.team_id, body.season_id)
         except Exception:
             sp.rollback()
             errors.append({"id": pid, "message": "Could not assign player (database error)."})

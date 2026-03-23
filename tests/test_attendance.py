@@ -309,3 +309,152 @@ def test_get_event_attendance_detail_includes_notes(db):
     assert entry["note"] == "On time"
     assert len(detail["absent"]) == 0
     assert len(detail["unknown"]) == 0
+
+
+# ---------------------------------------------------------------------------
+# backfill_attendance_for_player
+# ---------------------------------------------------------------------------
+
+
+def _setup_team_season(db):
+    """Return (team, season, player, mem) with PlayerTeam row committed."""
+    from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
+
+    season = Season(name="Backfill Season", is_active=True)
+    team = Team(name="Backfill Team")
+    db.add_all([season, team])
+    db.flush()
+    player = Player(first_name="Back", last_name="Fill", is_active=True)
+    db.add(player)
+    db.flush()
+    mem = PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, priority=1)
+    db.add(mem)
+    db.commit()
+    return team, season, player
+
+
+def test_backfill_past_events_set_absent(db):
+    """Past events (event_date < today) are always set to 'absent'."""
+    from datetime import date, timedelta
+
+    from services.attendance_service import backfill_attendance_for_player
+
+    team, season, player = _setup_team_season(db)
+    past_event = Event(
+        title="Past Training",
+        event_type="training",
+        event_date=date.today() - timedelta(days=7),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(past_event)
+    db.commit()
+
+    count = backfill_attendance_for_player(db, player.id, team.id, season.id)
+
+    assert count == 1
+    att = db.query(Attendance).filter(Attendance.event_id == past_event.id, Attendance.player_id == player.id).first()
+    assert att is not None
+    assert att.status == "absent"
+
+
+def test_backfill_future_events_use_default_status(db):
+    """Future events use _default_status (presence_type='all' → present, else → unknown)."""
+    from datetime import date, timedelta
+
+    from services.attendance_service import backfill_attendance_for_player
+
+    team, season, player = _setup_team_season(db)
+    future_unknown = Event(
+        title="Future Training",
+        event_type="training",
+        event_date=date.today() + timedelta(days=7),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="normal",
+    )
+    future_present = Event(
+        title="Future All",
+        event_type="training",
+        event_date=date.today() + timedelta(days=14),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="all",
+    )
+    db.add_all([future_unknown, future_present])
+    db.commit()
+
+    count = backfill_attendance_for_player(db, player.id, team.id, season.id)
+
+    assert count == 2
+    att_u = db.query(Attendance).filter(
+        Attendance.event_id == future_unknown.id, Attendance.player_id == player.id
+    ).first()
+    att_p = db.query(Attendance).filter(
+        Attendance.event_id == future_present.id, Attendance.player_id == player.id
+    ).first()
+    assert att_u.status == "unknown"
+    assert att_p.status == "present"
+
+
+def test_backfill_does_not_overwrite_existing(db):
+    """Existing Attendance rows are never overwritten."""
+    from datetime import date, timedelta
+
+    from services.attendance_service import backfill_attendance_for_player
+
+    team, season, player = _setup_team_season(db)
+    event = Event(
+        title="Existing Att Event",
+        event_type="training",
+        event_date=date.today() + timedelta(days=3),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+    existing = Attendance(event_id=event.id, player_id=player.id, status="maybe")
+    db.add(existing)
+    db.commit()
+
+    count = backfill_attendance_for_player(db, player.id, team.id, season.id)
+
+    assert count == 0
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
+    assert att.status == "maybe"
+
+
+def test_backfill_skips_inactive_player(db):
+    """Inactive players get no attendance records created."""
+    from datetime import date, timedelta
+
+    from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
+    from services.attendance_service import backfill_attendance_for_player
+
+    season = Season(name="Inactive Season", is_active=False)
+    team = Team(name="Inactive Team")
+    db.add_all([season, team])
+    db.flush()
+    inactive = Player(first_name="In", last_name="Active", is_active=False)
+    db.add(inactive)
+    db.flush()
+    db.add(PlayerTeam(player_id=inactive.id, team_id=team.id, season_id=season.id, priority=1))
+    event = Event(
+        title="Skip Inactive",
+        event_type="training",
+        event_date=date.today() + timedelta(days=1),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+
+    count = backfill_attendance_for_player(db, inactive.id, team.id, season.id)
+
+    assert count == 0
+    att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == inactive.id).first()
+    assert att is None

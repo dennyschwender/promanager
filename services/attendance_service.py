@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -260,6 +260,80 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
     if new_records:
         db.add_all(new_records)
         db.commit()
+
+
+def backfill_attendance_for_player(
+    db: Session,
+    player_id: int,
+    team_id: int,
+    season_id: int,
+) -> int:
+    """Create missing Attendance rows for an existing player newly added to a team.
+
+    Called after a PlayerTeam row is inserted so the player appears on all
+    existing events for that (team, season).
+
+    Rules:
+    - Past events (event_date < today): always set to "absent" so the coach
+      can review and correct manually. Past records are never auto-set to
+      "present" regardless of presence_type.
+    - Future events: use _default_status(event) — "present" for all-attendee
+      events, "unknown" otherwise. Respects absent_by_default and priority
+      conflicts.
+    - Never overwrites an existing Attendance row.
+
+    Returns the number of new records created.
+    """
+    today = date.today()
+
+    events = (
+        db.query(Event)
+        .filter(Event.team_id == team_id, Event.season_id == season_id)
+        .all()
+    )
+    if not events:
+        return 0
+
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if player is None or not player.is_active:
+        return 0
+
+    mem = (
+        db.query(PlayerTeam)
+        .filter_by(player_id=player_id, team_id=team_id, season_id=season_id)
+        .first()
+    )
+
+    event_ids = [e.id for e in events]
+    existing_event_ids = {
+        att.event_id
+        for att in db.query(Attendance.event_id)
+        .filter(Attendance.event_id.in_(event_ids), Attendance.player_id == player_id)
+        .all()
+    }
+
+    new_records = []
+    for event in events:
+        if event.id in existing_event_ids:
+            continue
+
+        if event.event_date < today:
+            # Past event — always absent, no auto-present regardless of presence_type
+            status = "absent"
+        else:
+            status = _default_status(event)
+            if status != "absent" and mem is not None and mem.absent_by_default:
+                status = "absent"
+            if status != "absent" and _has_higher_prio_conflict(db, player, event):
+                status = "absent"
+
+        new_records.append(Attendance(event_id=event.id, player_id=player_id, status=status))
+
+    if new_records:
+        db.add_all(new_records)
+        db.commit()
+
+    return len(new_records)
 
 
 def sync_attendance_defaults(db: Session, event: Event) -> None:
