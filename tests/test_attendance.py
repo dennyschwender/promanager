@@ -458,3 +458,156 @@ def test_backfill_skips_inactive_player(db):
     assert count == 0
     att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == inactive.id).first()
     assert att is None
+
+
+# ---------------------------------------------------------------------------
+# Player borrowing
+# ---------------------------------------------------------------------------
+
+
+def _make_team_season(db):
+    """Return (team, season) committed to db."""
+    from models.season import Season
+    from models.team import Team
+
+    season = Season(name="Borrow Season", is_active=True)
+    team = Team(name="Borrow Team")
+    db.add_all([season, team])
+    db.commit()
+    return team, season
+
+
+def test_borrow_creates_attendance_with_team(admin_client, db):
+    """Borrowing an active player creates an Attendance row with borrowed_from_team_id set."""
+    from models.player_team import PlayerTeam
+    from models.team import Team
+
+    team, season = _make_team_season(db)
+    event = Event(
+        title="Borrow Event",
+        event_type="training",
+        event_date=date(2026, 6, 1),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+
+    other_team = Team(name="Other Team")
+    db.add(other_team)
+    db.flush()
+    player = _make_player(db, "Guest", "Player")
+    db.add(PlayerTeam(player_id=player.id, team_id=other_team.id, season_id=season.id, priority=1))
+    db.commit()
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/borrow",
+        data={"player_id": player.id},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ok"] is True
+    assert body["team_name"] == "Other Team"
+
+    att = db.query(Attendance).filter(
+        Attendance.event_id == event.id, Attendance.player_id == player.id
+    ).first()
+    assert att is not None
+    assert att.borrowed_from_team_id == other_team.id
+    assert att.status == "unknown"
+
+
+def test_borrow_duplicate_rejected(admin_client, db):
+    """Borrowing a player already attending returns already_attending error."""
+    event = _make_event(db, title="Dup Event")
+    player = _make_player(db, "Dup", "Player")
+    db.add(Attendance(event_id=event.id, player_id=player.id, status="present"))
+    db.commit()
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/borrow",
+        data={"player_id": player.id},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 409
+    body = resp.json()
+    assert body["ok"] is False
+    assert body["error"] == "already_attending"
+
+
+def test_borrow_inactive_player_rejected(admin_client, db):
+    """Borrowing an inactive player returns player_not_found error."""
+    event = _make_event(db, title="Inactive Borrow Event")
+    inactive = Player(first_name="In", last_name="Active", is_active=False)
+    db.add(inactive)
+    db.commit()
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/borrow",
+        data={"player_id": inactive.id},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 404
+    body = resp.json()
+    assert body["ok"] is False
+    assert body["error"] == "player_not_found"
+
+
+def test_borrow_no_season_stores_null_team(admin_client, db):
+    """Event with season_id=None: borrow succeeds with borrowed_from_team_id=None."""
+    event = Event(title="No Season Borrow", event_type="training", event_date=date(2026, 7, 1), season_id=None)
+    db.add(event)
+    db.commit()
+    player = _make_player(db, "NoSeason", "Guest")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/borrow",
+        data={"player_id": player.id},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ok"] is True
+    assert body["team_name"] is None
+
+    att = db.query(Attendance).filter(
+        Attendance.event_id == event.id, Attendance.player_id == player.id
+    ).first()
+    assert att is not None
+    assert att.borrowed_from_team_id is None
+
+
+def test_player_search_excludes_existing_attendees(admin_client, db):
+    """GET /players/search?q=&exclude_event_id= excludes players already attending."""
+    from models.season import Season
+    from models.team import Team
+
+    season = Season(name="Search Season", is_active=True)
+    team = Team(name="Search Team")
+    db.add_all([season, team])
+    db.flush()
+
+    event = Event(
+        title="Search Event",
+        event_type="training",
+        event_date=date(2026, 6, 3),
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+
+    already = _make_player(db, "Already", "There")
+    not_yet = _make_player(db, "Notyet", "Player")
+
+    db.add(Attendance(event_id=event.id, player_id=already.id, status="present"))
+    db.commit()
+
+    resp = admin_client.get(
+        f"/players/search?q=player&exclude_event_id={event.id}",
+        follow_redirects=False,
+    )
+    assert resp.status_code == 200
+    ids = [r["id"] for r in resp.json()]
+    assert already.id not in ids
+    assert not_yet.id in ids
