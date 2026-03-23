@@ -96,12 +96,26 @@ async def update_attendance(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
+    from fastapi.responses import JSONResponse  # noqa: PLC0415
+
+    # Detect AJAX caller — must happen first so all error paths can branch
+    wants_json = "application/json" in request.headers.get("accept", "")
+
+    # Validate status early so JSON callers get a proper error
+    valid_statuses = {"present", "absent", "maybe", "unknown"}
+    if status not in valid_statuses:
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "invalid_status"}, status_code=400)
+        return RedirectResponse(f"/attendance/{event_id}", status_code=302)
+
     # Authorization check
     if user.is_admin:
         pass  # full access
     elif user.is_coach:
         event = db.get(Event, event_id)
         if event is None:
+            if wants_json:
+                return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
             return RedirectResponse(f"/attendance/{event_id}", status_code=302)
         from routes._auth_helpers import check_team_access  # noqa: PLC0415
 
@@ -109,14 +123,16 @@ async def update_attendance(
     else:
         player = db.get(Player, player_id)
         if player is None or player.user_id != user.id:
+            if wants_json:
+                return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=403)
             return RedirectResponse(f"/attendance/{event_id}", status_code=302)
 
-    valid_statuses = {"present", "absent", "maybe", "unknown"}
-    if status not in valid_statuses:
-        return RedirectResponse(f"/attendance/{event_id}", status_code=302)
-
     set_attendance(db, event_id, player_id, status, note)
-    from urllib.parse import quote
+
+    if wants_json:
+        return JSONResponse({"ok": True, "status": status, "note": note})
+
+    from urllib.parse import quote  # noqa: PLC0415
 
     flash_msg = quote(rt(request, "common.changes_saved"))
     return RedirectResponse(f"/attendance/{event_id}?flash={flash_msg}", status_code=302)

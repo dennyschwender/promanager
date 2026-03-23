@@ -244,6 +244,55 @@ def test_ensure_attendance_no_season_creates_no_records(db):
     assert count == 0
 
 
+def test_update_attendance_json_response(admin_client, db):
+    """POST with Accept: application/json returns JSON success response."""
+    event = _make_event(db, title="JSON Test Event")
+    player = _make_player(db, "Json", "Player")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "present", "note": "via ajax"},
+        headers={"Accept": "application/json"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ok"] is True
+    assert body["status"] == "present"
+    assert body["note"] == "via ajax"
+
+
+def test_update_attendance_json_invalid_status(admin_client, db):
+    """POST with invalid status + Accept header returns ok=false."""
+    event = _make_event(db, title="Invalid Status Event")
+    player = _make_player(db, "Bad", "Status")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "flying", "note": ""},
+        headers={"Accept": "application/json"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+    body = resp.json()
+    assert body["ok"] is False
+    assert body["error"] == "invalid_status"
+
+
+def test_update_attendance_form_redirect_unchanged(admin_client, db):
+    """POST without Accept: application/json still redirects (regression guard)."""
+    event = _make_event(db, title="Redirect Guard Event")
+    player = _make_player(db, "Redirect", "Guard")
+
+    resp = admin_client.post(
+        f"/attendance/{event.id}/{player.id}",
+        data={"status": "absent", "note": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert f"/attendance/{event.id}" in resp.headers["location"]
+
+
 def test_get_event_attendance_detail_includes_notes(db):
     """get_event_attendance_detail returns player + note per bucket."""
     from services.attendance_service import get_event_attendance_detail
