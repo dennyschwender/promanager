@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.csrf import require_csrf
@@ -12,8 +12,9 @@ from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
+from models.player_team import PlayerTeam
 from models.user import User
-from routes._auth_helpers import require_login, rt
+from routes._auth_helpers import require_coach_or_admin, require_login, rt
 from services.attendance_service import get_event_attendance_summary, set_attendance
 
 router = APIRouter()
@@ -78,6 +79,72 @@ async def attendance_page(
             "flash": request.query_params.get("flash"),
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Borrow a player for a single event
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{event_id}/borrow")
+async def borrow_player(
+    event_id: int,
+    request: Request,
+    player_id: int = Form(...),
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    """Add a player from another team to this event's attendance."""
+    event = db.get(Event, event_id)
+    if event is None:
+        return JSONResponse({"ok": False, "error": "event_not_found"}, status_code=404)
+
+    player = db.get(Player, player_id)
+    if player is None or not player.is_active:
+        return JSONResponse({"ok": False, "error": "player_not_found"}, status_code=404)
+
+    existing = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event_id, Attendance.player_id == player_id)
+        .first()
+    )
+    if existing:
+        return JSONResponse({"ok": False, "error": "already_attending"}, status_code=409)
+
+    # Resolve player's home team for this event's season
+    borrowed_from_team_id: int | None = None
+    team_name: str | None = None
+    if event.season_id is not None:
+        mem = (
+            db.query(PlayerTeam)
+            .filter(PlayerTeam.player_id == player_id, PlayerTeam.season_id == event.season_id)
+            .order_by(PlayerTeam.priority.asc())
+            .first()
+        )
+        if mem is not None:
+            from models.team import Team  # noqa: PLC0415
+
+            team = db.get(Team, mem.team_id)
+            if team:
+                borrowed_from_team_id = team.id
+                team_name = team.name
+
+    att = Attendance(
+        event_id=event_id,
+        player_id=player_id,
+        status="unknown",
+        borrowed_from_team_id=borrowed_from_team_id,
+    )
+    db.add(att)
+    db.commit()
+
+    return JSONResponse({
+        "ok": True,
+        "player_id": player_id,
+        "full_name": f"{player.first_name} {player.last_name}",
+        "team_name": team_name,
+    })
 
 
 # ---------------------------------------------------------------------------
