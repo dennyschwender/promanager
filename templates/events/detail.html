@@ -1,10 +1,5 @@
 {% extends "base.html" %}
-{% block head_extra %}
-<meta name="csrf-token" content="{{ request.state.csrf_token }}">
-<style>
-.att-player-btn:hover { background: var(--primary-focus, rgba(0,0,0,.06)) !important; }
-</style>
-{% endblock %}
+{% block head_extra %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endblock %}
 {% block title %}{{ event.title }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
@@ -18,7 +13,7 @@
 {# ── Header ────────────────────────────────────────────────────── #}
 <div class="page-header">
   <h2>{{ event.title }}</h2>
-  <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+  <div class="event-badges">
     <span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span>
     {% set pt_labels = {"normal": t('events_detail.pt_normal'), "all": t('events_detail.pt_all'), "selection": t('events_detail.pt_selection'), "available": t('events_detail.pt_available'), "no_registration": t('events_detail.pt_no_reg')} %}
     <span class="badge badge-outline">{{ pt_labels.get(event.presence_type, event.presence_type) }}</span>
@@ -27,48 +22,48 @@
 </div>
 
 {# ── Info card ─────────────────────────────────────────────────── #}
-<article style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
-  <dl style="display:grid;grid-template-columns:max-content 1fr;gap:.3rem .75rem;margin:0;">
-    <dt class="text-muted" style="white-space:nowrap;">📅 {{ t('events.form.date') }}</dt>
-    <dd style="margin:0;">{{ event.event_date }}</dd>
+<article class="event-info-card">
+  <dl class="event-info-dl">
+    <dt class="text-muted">📅 {{ t('events.form.date') }}</dt>
+    <dd>{{ event.event_date }}</dd>
     {% if event.event_time %}
-    <dt class="text-muted" style="white-space:nowrap;">🕐 {{ t('events.form.start_time') }}</dt>
-    <dd style="margin:0;">{{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}</dd>
+    <dt class="text-muted">🕐 {{ t('events.form.start_time') }}</dt>
+    <dd>{{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}</dd>
     {% endif %}
     {% if event.location %}
-    <dt class="text-muted" style="white-space:nowrap;">📍 {{ t('events.form.event_location') }}</dt>
-    <dd style="margin:0;"><a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a></dd>
+    <dt class="text-muted">📍 {{ t('events.form.event_location') }}</dt>
+    <dd><a href="https://www.openstreetmap.org/search?query={{ event.location | urlencode }}" target="_blank" rel="noopener">{{ event.location }}</a></dd>
     {% endif %}
     {% if event.meeting_time %}
-    <dt class="text-muted" style="white-space:nowrap;">🤝 {{ t('events_detail.meeting_point') }}</dt>
-    <dd style="margin:0;">{{ event.meeting_time.strftime('%H:%M') }}{% if event.meeting_location %} @ {{ event.meeting_location }}{% endif %}</dd>
+    <dt class="text-muted">🤝 {{ t('events_detail.meeting_point') }}</dt>
+    <dd>{{ event.meeting_time.strftime('%H:%M') }}{% if event.meeting_location %} @ {{ event.meeting_location }}{% endif %}</dd>
     {% endif %}
     {% if event.description %}
-    <dt class="text-muted" style="white-space:nowrap;">📝</dt>
-    <dd style="margin:0;">{{ event.description }}</dd>
+    <dt class="text-muted">📝</dt>
+    <dd>{{ event.description }}</dd>
     {% endif %}
   </dl>
 </article>
 
 {# ── Action bar ────────────────────────────────────────────────── #}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;">
+<div class="event-action-bar">
   <a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a>
-  <div style="display:flex;gap:.5rem;align-items:center;">
+  <div class="event-action-bar-right">
     {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
       <a href="/events/{{ event.id }}/edit" class="btn btn-outline btn-sm">{{ t('events.edit') }}</a>
       <div class="action-dropdown">
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
         <div class="action-dropdown-menu">
           <a href="/events/{{ event.id }}/notify">{{ t('events.notify_players') }}</a>
-          <form method="post" action="/events/{{ event.id }}/send-reminders" style="display:contents;">
+          <form method="post" action="/events/{{ event.id }}/send-reminders" class="form-contents">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit">{{ t('events.send_reminders') }}</button>
           </form>
-          <hr style="margin:.25rem 0;">
-          <form method="post" action="/events/{{ event.id }}/delete" style="display:contents;"
+          <hr class="dropdown-divider">
+          <form method="post" action="/events/{{ event.id }}/delete" class="form-contents"
                 onsubmit="return confirm('{{ t('events.confirm_delete') }}')">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <button type="submit" style="color:var(--tp-danger,#dc3545);">{{ t('events.delete') }}</button>
+            <button type="submit" class="btn-danger-text">{{ t('events.delete') }}</button>
           </form>
         </div>
       </div>
@@ -89,33 +84,31 @@
   <p class="text-muted">{{ t('events_detail.no_registration_note') }}</p>
 {% else %}
 <h3>{{ t('events.attendance_summary') }}</h3>
-<div id="attendance-columns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;align-items:flex-start;">
+<div id="attendance-columns" class="att-columns">
   {% for bucket, label in [
     ("present",  t('attendance.status_attend')),
     ("absent",   t('attendance.status_absent')),
     ("maybe",    t('events_detail.maybe')),
     ("unknown",  t('attendance.status_unknown'))
   ] %}
-  <div class="att-col" data-bucket="{{ bucket }}"
-       style="{% if not summary[bucket] %}display:none;{% endif %}">
-    <div style="border:1px solid var(--muted-border-color,#ddd);border-radius:.5rem;padding:.75rem;">
-    <div class="att-col-header" style="margin-bottom:.5rem;">
-      <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length }}</span>)</span>
-    </div>
-    <ul class="att-player-list" style="list-style:none;padding:0;margin:0;">
-      {% for entry in summary[bucket] %}
-      <li style="list-style:none;border-top:1px solid var(--muted-border-color,#eee);{% if loop.first %}border-top:none;{% endif %}">
-        <button type="button" class="att-player-btn"
-                data-player-id="{{ entry.player.id }}"
-                data-player-name="{{ entry.player.full_name | e }}"
-                data-status="{{ bucket }}"
-                data-note="{{ entry.note | e }}"
-                style="background:none;border:none;padding:.35rem .25rem;cursor:pointer;text-align:left;width:100%;color:inherit;font-size:.88rem;border-radius:.25rem;transition:background .15s;">
-          {{ entry.player.full_name }}
-        </button>
-      </li>
-      {% endfor %}
-    </ul>
+  <div class="att-col{% if not summary[bucket] %} att-col-hidden{% endif %}" data-bucket="{{ bucket }}">
+    <div class="att-col-box">
+      <div class="att-col-header">
+        <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length }}</span>)</span>
+      </div>
+      <ul class="att-player-list">
+        {% for entry in summary[bucket] %}
+        <li class="att-player-item{% if loop.first %} att-player-item-first{% endif %}">
+          <button type="button" class="att-player-btn"
+                  data-player-id="{{ entry.player.id }}"
+                  data-player-name="{{ entry.player.full_name | e }}"
+                  data-status="{{ bucket }}"
+                  data-note="{{ entry.note | e }}">
+            {{ entry.player.full_name }}
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
   </div>
   {% endfor %}
@@ -123,16 +116,16 @@
 
 {# ── Shared popover (single DOM node, reused for each player) ──── #}
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
-<div id="att-popover" style="display:none;position:absolute;z-index:200;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.5rem;padding:1rem;box-shadow:0 4px 16px rgba(0,0,0,.2);min-width:240px;">
-  <strong id="pop-name" style="display:block;margin-bottom:.75rem;"></strong>
-  <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;">
+<div id="att-popover" class="att-popover att-popover-hidden">
+  <strong id="pop-name" class="pop-name"></strong>
+  <div class="pop-status-row">
     {% for s, lbl in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
     <button type="button" class="btn btn-sm btn-outline pop-status-btn" data-status="{{ s }}">{{ lbl }}</button>
     {% endfor %}
   </div>
-  <textarea id="pop-note" rows="2" style="width:100%;margin-bottom:.75rem;font-size:.88rem;" placeholder="{{ t('attendance.note_optional') }}"></textarea>
-  <div id="pop-error" style="display:none;color:var(--tp-danger,#dc3545);font-size:.82rem;margin-bottom:.5rem;"></div>
-  <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+  <textarea id="pop-note" class="pop-note" rows="2" placeholder="{{ t('attendance.note_optional') }}"></textarea>
+  <div id="pop-error" class="pop-error pop-error-hidden"></div>
+  <div class="pop-actions">
     <button type="button" class="btn btn-sm btn-outline" id="pop-cancel">{{ t('common.cancel') }}</button>
     <button type="button" class="btn btn-sm btn-primary" id="pop-save">{{ t('common.save') }}</button>
   </div>
@@ -164,15 +157,15 @@
     popover.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 260) + 'px';
     popName.textContent = btn.dataset.playerName;
     popNote.value = btn.dataset.note || '';
-    popError.style.display = 'none';
+    popError.classList.add('pop-error-hidden');
     highlightStatus(btn.dataset.status);
     activePlayerId = parseInt(btn.dataset.playerId, 10);
     popSave.disabled = false;
-    popover.style.display = 'block';
+    popover.classList.remove('att-popover-hidden');
   }
 
   function closePopover() {
-    popover.style.display = 'none';
+    popover.classList.add('att-popover-hidden');
     activePlayerId = null;
     activeStatus = null;
   }
@@ -194,13 +187,13 @@
     var col = document.querySelector('.att-col[data-bucket="' + bucket + '"]');
     var count = col.querySelectorAll('.att-player-btn').length;
     col.querySelector('.att-count').textContent = count;
-    col.style.display = count === 0 ? 'none' : '';
+    col.classList.toggle('att-col-hidden', count === 0);
   }
 
   popSave.addEventListener('click', function () {
     if (!activePlayerId || !activeStatus) return;
     popSave.disabled = true;
-    popError.style.display = 'none';
+    popError.classList.add('pop-error-hidden');
     var note = popNote.value;
     var body = new FormData();
     body.append('status', activeStatus);
@@ -218,13 +211,13 @@
           closePopover();
         } else {
           popError.textContent = {{ t('common.save_error') | tojson }};
-          popError.style.display = 'block';
+          popError.classList.remove('pop-error-hidden');
           popSave.disabled = false;
         }
       })
       .catch(function () {
         popError.textContent = {{ t('common.save_error') | tojson }};
-        popError.style.display = 'block';
+        popError.classList.remove('pop-error-hidden');
         popSave.disabled = false;
       });
   });
@@ -241,7 +234,7 @@
   });
 
   document.addEventListener('click', function (e) {
-    if (popover.style.display !== 'none' && !popover.contains(e.target)) {
+    if (!popover.classList.contains('att-popover-hidden') && !popover.contains(e.target)) {
       closePopover();
     }
   });

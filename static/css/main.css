@@ -742,3 +742,162 @@ footer.site-footer a:hover { text-decoration: underline; }
 
 /* Force 24-hour time format regardless of browser locale */
 input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
+
+/* ── Event detail page ──────────────────────────────────────────── */
+.event-badges {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.event-info-card {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.event-info-dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: .3rem .75rem;
+  margin: 0;
+}
+
+.event-info-dl dt {
+  white-space: nowrap;
+}
+
+.event-info-dl dd {
+  margin: 0;
+}
+
+.event-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.event-action-bar-right {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+
+.form-contents {
+  display: contents;
+}
+
+.dropdown-divider {
+  margin: .25rem 0;
+}
+
+.btn-danger-text {
+  color: var(--tp-danger, #dc3545);
+}
+
+/* ── Attendance columns ─────────────────────────────────────────── */
+.att-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.att-col-hidden {
+  display: none;
+}
+
+.att-col-box {
+  border: 1px solid var(--muted-border-color, #ddd);
+  border-radius: .5rem;
+  padding: .75rem;
+}
+
+.att-col-header {
+  margin-bottom: .5rem;
+}
+
+.att-player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.att-player-item {
+  list-style: none;
+  border-top: 1px solid var(--muted-border-color, #eee);
+}
+
+.att-player-item-first {
+  border-top: none;
+}
+
+.att-player-btn {
+  background: none;
+  border: none;
+  padding: .35rem .25rem;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  font-size: .88rem;
+  border-radius: .25rem;
+  transition: background .15s;
+}
+
+.att-player-btn:hover {
+  background: var(--primary-focus, rgba(0, 0, 0, .06));
+}
+
+/* ── Attendance popover ─────────────────────────────────────────── */
+.att-popover {
+  position: absolute;
+  z-index: 200;
+  background: var(--card-background-color, #fff);
+  border: 1px solid var(--muted-border-color, #ddd);
+  border-radius: .5rem;
+  padding: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+  min-width: 240px;
+}
+
+.att-popover-hidden {
+  display: none;
+}
+
+.pop-name {
+  display: block;
+  margin-bottom: .75rem;
+}
+
+.pop-status-row {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.pop-note {
+  width: 100%;
+  margin-bottom: .75rem;
+  font-size: .88rem;
+}
+
+.pop-error {
+  color: var(--tp-danger, #dc3545);
+  font-size: .82rem;
+  margin-bottom: .5rem;
+}
+
+.pop-error-hidden {
+  display: none;
+}
+
+.pop-actions {
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
