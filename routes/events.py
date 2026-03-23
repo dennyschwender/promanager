@@ -28,6 +28,7 @@ from routes._auth_helpers import (
 )
 from services.attendance_service import (
     ensure_attendance_records,
+    get_event_attendance_detail,
     get_event_attendance_summary,
     sync_attendance_defaults,
 )
@@ -405,7 +406,7 @@ async def event_detail(
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
-    summary = get_event_attendance_summary(db, event_id)
+    summary = get_event_attendance_detail(db, event_id)
 
     return render(
         request,
