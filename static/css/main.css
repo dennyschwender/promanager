@@ -739,3 +739,6 @@ footer.site-footer a:hover { text-decoration: underline; }
     align-items: center;
   }
 }
+
+/* Force 24-hour time format regardless of browser locale */
+input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }

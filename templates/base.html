@@ -16,6 +16,8 @@
     font-size: .65rem; font-weight: 700; line-height: 1;
     padding: 2px 4px; border-radius: 10px; white-space: nowrap;
   }
+  /* Force 24-hour time format regardless of browser locale */
+  input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   </style>
 </head>
 <body>
