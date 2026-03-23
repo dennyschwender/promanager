@@ -79,10 +79,7 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
     attendances = (
-        db.query(Attendance)
-        .options(joinedload(Attendance.player))
-        .filter(Attendance.event_id == event_id)
-        .all()
+        db.query(Attendance).options(joinedload(Attendance.player)).filter(Attendance.event_id == event_id).all()
     )
     detail: dict[str, list[dict]] = {
         "present": [],

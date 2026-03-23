@@ -29,7 +29,6 @@ from routes._auth_helpers import (
 from services.attendance_service import (
     ensure_attendance_records,
     get_event_attendance_detail,
-    get_event_attendance_summary,
     sync_attendance_defaults,
 )
 from services.email_service import send_event_reminder
