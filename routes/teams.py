@@ -214,7 +214,7 @@ async def team_detail(
     team = db.get(Team, team_id)
     if team is None:
         return RedirectResponse("/teams", status_code=302)
-    coach_users = db.query(User).filter(User.role == "coach").all()
+    coach_users = db.query(User).filter(User.role.in_(["coach", "admin"])).order_by(User.username).all()
     seasons = db.query(Season).order_by(Season.start_date.desc()).all()
     return render(
         request,
