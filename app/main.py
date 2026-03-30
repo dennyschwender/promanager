@@ -94,9 +94,41 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting up — initialising database …")
     init_db()
     logger.info("Database ready.")
+
+    # ── Telegram Bot ──────────────────────────────────────────────────────
+    if settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_WEBHOOK_URL and settings.TELEGRAM_WEBHOOK_SECRET:
+        try:
+            import bot as _bot  # noqa: PLC0415
+
+            tg_app = await _bot.init_application(settings.TELEGRAM_BOT_TOKEN)
+            webhook_url = f"{settings.TELEGRAM_WEBHOOK_URL.rstrip('/')}/telegram/webhook"
+            await tg_app.bot.set_webhook(
+                url=webhook_url,
+                secret_token=settings.TELEGRAM_WEBHOOK_SECRET,
+            )
+            logger.info("Telegram webhook registered at %s", webhook_url)
+        except Exception:
+            logger.exception("Failed to initialise Telegram bot — continuing without it.")
+    else:
+        logger.info(
+            "Telegram bot not configured (TELEGRAM_BOT_TOKEN/TELEGRAM_WEBHOOK_URL/TELEGRAM_WEBHOOK_SECRET not set)."
+        )
+
     yield
+
     logger.info("Shutting down.")
     shutdown_event.set()
+
+    # ── Telegram Bot shutdown ─────────────────────────────────────────────
+    try:
+        import bot as _bot  # noqa: PLC0415
+
+        if _bot.telegram_app is not None:
+            await _bot.telegram_app.bot.delete_webhook()
+            await _bot.shutdown_application()
+            logger.info("Telegram webhook deregistered.")
+    except Exception:
+        logger.debug("Telegram bot not active on shutdown.")
 
 
 # ---------------------------------------------------------------------------
