@@ -32,6 +32,8 @@ def find_user_by_phone(db: Session, telegram_phone: str) -> User | None:
     Returns None if no match or if the matched player has no linked user.
     """
     norm = normalize_phone(telegram_phone)
+    if not norm:
+        return None
 
     # Search legacy Player.phone
     players = db.query(Player).filter(Player.phone.isnot(None)).all()
