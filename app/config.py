@@ -44,6 +44,14 @@ class Settings(BaseSettings):
     # Must be a mailto: or https: URI — required by the Web Push protocol
     VAPID_SUBJECT: str = "mailto:admin@promanager.local"
 
+    # ── Telegram Bot ──────────────────────────────────────────────────────
+    # Get token from @BotFather on Telegram
+    TELEGRAM_BOT_TOKEN: str = ""
+    # Public base URL of this app (e.g. https://myserver.com) — used to register webhook
+    TELEGRAM_WEBHOOK_URL: str = ""
+    # Random secret to validate incoming webhook requests from Telegram
+    TELEGRAM_WEBHOOK_SECRET: str = ""
+
     @field_validator("SMTP_PORT")
     @classmethod
     def smtp_port_range(cls, v: int) -> int:
