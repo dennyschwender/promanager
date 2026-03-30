@@ -235,6 +235,17 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         data = query.data or ""
 
+        # Clean up any pending note prompt if the user navigated away
+        pending_note = context.user_data.pop("awaiting_note", None)
+        if pending_note:
+            prompt_msg_id = pending_note.get("prompt_message_id")
+            note_chat_id = pending_note.get("chat_id")
+            if prompt_msg_id and note_chat_id:
+                try:
+                    await context.bot.delete_message(chat_id=note_chat_id, message_id=prompt_msg_id)
+                except Exception:
+                    pass
+
         if data == "noop":
             await query.answer()
             return
