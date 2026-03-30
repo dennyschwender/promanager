@@ -32,6 +32,7 @@ from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
 from models.player_team import PlayerTeam
+from models.user_team import UserTeam
 from services.attendance_service import set_attendance
 from services.telegram_service import (
     AuthResult,
@@ -52,16 +53,41 @@ def _locale(user) -> str:
     return user.locale if user and user.locale else "en"
 
 
+def _visible_team_ids(user, db) -> set[int] | None:
+    """Return the set of team IDs the user should see events for.
+
+    - Admin: None (no filter — sees everything)
+    - Coach: teams they manage via UserTeam
+    - Member: teams their linked player belongs to via PlayerTeam
+    Returns an empty set if the user has no team associations (shows nothing).
+    """
+    if user.is_admin:
+        return None
+    if user.is_coach:
+        rows = db.query(UserTeam.team_id).filter(UserTeam.user_id == user.id).all()
+        return {r[0] for r in rows}
+    # Member — find linked player's teams
+    player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
+    if player is None:
+        return set()
+    rows = db.query(PlayerTeam.team_id).filter(PlayerTeam.player_id == player.id).all()
+    return {r[0] for r in rows}
+
+
+def _upcoming_events(db, user):
+    """Return upcoming events visible to the user, ordered by date."""
+    today = datetime.today().date()
+    q = db.query(Event).filter(Event.event_date >= today)
+    team_ids = _visible_team_ids(user, db)
+    if team_ids is not None:
+        q = q.filter(Event.team_id.in_(team_ids))
+    return q.order_by(Event.event_date.asc()).all()
+
+
 async def _send_events_list(message, user, db) -> None:
     """Send the upcoming events list as a new message with inline keyboard."""
     locale = _locale(user)
-    today = datetime.today().date()
-    all_upcoming = (
-        db.query(Event)
-        .filter(Event.event_date >= today)
-        .order_by(Event.event_date.asc())
-        .all()
-    )
+    all_upcoming = _upcoming_events(db, user)
     if not all_upcoming:
         await message.reply_text(t("telegram.no_events", locale))
         return
@@ -262,8 +288,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def _show_events(query, user, db, page: int) -> None:
     locale = _locale(user)
-    today = datetime.today().date()
-    all_upcoming = db.query(Event).filter(Event.event_date >= today).order_by(Event.event_date.asc()).all()
+    all_upcoming = _upcoming_events(db, user)
     total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
     page = max(0, min(page, total_pages - 1))
     page_events = all_upcoming[page * PAGE_SIZE : (page + 1) * PAGE_SIZE]
