@@ -515,6 +515,17 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 pos_lines.append(f"{icon} {p.full_name}")
         text += "\n" + "\n".join(pos_lines)
 
+        # Append externals if any
+        ext_rows = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+        if ext_rows:
+            text += f"\n\n*{t('telegram.externals_header', locale)}*"
+            for ext in ext_rows:
+                icon = STATUS_ICON.get(ext.status, "?")
+                ext_line = f"{icon} _{ext.full_name}_"
+                if ext.note:
+                    ext_line += f" — {ext.note}"
+                text += f"\n{ext_line}"
+
         if edit_mode:
             total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
             player_page = max(0, min(player_page, total_player_pages - 1))

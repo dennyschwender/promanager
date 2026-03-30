@@ -332,6 +332,12 @@ input.time-24h {
 }
 .filter-row label { margin: 0; }
 
+/* ── External participant badge in attendance columns ───────── */
+.att-external-btn {
+  font-style: italic;
+  opacity: 0.85;
+}
+
 /* ── Pagination ──────────────────────────────────────────── */
 .pagination {
   display: flex;

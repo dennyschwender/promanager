@@ -83,9 +83,12 @@
   <p class="text-muted">{{ t('events_detail.no_registration_note') }}</p>
 {% else %}
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
-  <div style="margin-bottom:1rem;">
+  <div style="margin-bottom:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
     <button type="button" class="btn btn-outline btn-sm" onclick="openBorrowDialog()">
       + {{ t('attendance.borrow_btn') }}
+    </button>
+    <button type="button" class="btn btn-outline btn-sm" onclick="openExtDialog(null,'','','unknown','')">
+      + {{ t('externals.add') }}
     </button>
   </div>
 {% endif %}
@@ -97,10 +100,11 @@
     ("maybe",    t('events_detail.maybe')),
     ("unknown",  t('attendance.status_unknown'))
   ] %}
-  <div class="att-col{% if not summary[bucket] %} att-col-hidden{% endif %}" data-bucket="{{ bucket }}">
+  {% set ext_in_bucket = externals | selectattr('status', 'equalto', bucket) | list %}
+  <div class="att-col{% if not summary[bucket] and not ext_in_bucket %} att-col-hidden{% endif %}" data-bucket="{{ bucket }}">
     <div class="att-col-box">
       <div class="att-col-header">
-        <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length }}</span>)</span>
+        <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length + ext_in_bucket|length }}</span>)</span>
       </div>
       <ul class="att-player-list">
         {% for entry in summary[bucket] %}
@@ -120,6 +124,20 @@
           </button>
         </li>
         {% endfor %}
+        {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
+        {% for ext in ext_in_bucket %}
+        <li class="att-player-item">
+          <button type="button" class="att-player-btn att-external-btn"
+                  data-ext-id="{{ ext.id }}"
+                  data-player-name="{{ ext.full_name | e }}"
+                  data-status="{{ bucket }}"
+                  data-note="{{ (ext.note or '') | e }}"
+                  onclick="openExtDialog({{ ext.id }}, {{ ext.first_name|tojson }}, {{ ext.last_name|tojson }}, {{ ext.status|tojson }}, {{ (ext.note or '')|tojson }})">
+            👤 {{ ext.full_name }}{% if ext.note %} <span class="note-indicator" title="{{ ext.note | e }}">📝</span>{% endif %}
+          </button>
+        </li>
+        {% endfor %}
+        {% endif %}
       </ul>
     </div>
   </div>
@@ -433,40 +451,8 @@
 </script>
 {% endif %}
 
-{# ── Externals section ──────────────────────────────────────────── #}
+{# ── External dialog (edit/add) ─────────────────────────────────── #}
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
-<h3>{{ t('externals.title') }}</h3>
-<div id="externals-list">
-{% if externals %}
-<div class="table-responsive">
-<table id="externals-table">
-  <thead><tr>
-    <th>{{ t('externals.name') }}</th>
-    <th>{{ t('events.attendance_summary') }}</th>
-    <th>{{ t('attendance.note_optional') }}</th>
-    <th></th>
-  </tr></thead>
-  <tbody>
-  {% for ext in externals %}
-  <tr id="ext-row-{{ ext.id }}">
-    <td>{{ ext.full_name }}</td>
-    <td><span class="badge badge-{{ ext.status }}">{{ t('attendance.status_' ~ ext.status) }}</span></td>
-    <td>{{ ext.note or '—' }}</td>
-    <td>
-      <button type="button" class="btn btn-sm btn-outline" onclick="openExtDialog({{ ext.id }}, {{ ext.first_name|tojson }}, {{ ext.last_name|tojson }}, {{ ext.status|tojson }}, {{ (ext.note or '')|tojson }})">{{ t('common.edit') }}</button>
-      <button type="button" class="btn btn-sm btn-outline btn-danger-text" onclick="deleteExternal({{ ext.id }})">{{ t('common.delete') }}</button>
-    </td>
-  </tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
-{% else %}
-<p id="ext-empty" class="text-muted">{{ t('externals.none') }}</p>
-{% endif %}
-</div>
-<button type="button" class="btn btn-outline btn-sm" style="margin-top:.5rem;" onclick="openExtDialog(null,'','','unknown','')">+ {{ t('externals.add') }}</button>
-
 <dialog id="ext-dialog" class="att-dialog">
   <article>
     <header><h3 id="ext-dialog-title">{{ t('externals.add') }}</h3></header>
