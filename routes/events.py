@@ -15,6 +15,7 @@ from app.database import get_db
 from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
+from models.event_external import EventExternal
 from models.player import Player
 from models.season import Season
 from models.team import Team
@@ -454,6 +455,8 @@ async def event_detail(
     else:
         user_player_ids = set()
 
+    externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+
     return render(
         request,
         "events/detail.html",
@@ -465,6 +468,7 @@ async def event_detail(
             "future_count": future_count,
             "att_by_player": att_by_player,
             "user_player_ids": user_player_ids,
+            "externals": externals,
             "flash": request.query_params.get("flash"),
         },
     )

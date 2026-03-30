@@ -103,6 +103,7 @@
   "attendance": {
     "title": "Marquer les présences",
     "status_attend": "Présent",
+    "status_present": "Présent",
     "status_absent": "Absent",
     "status_unknown": "Inconnu",
     "save": "Enregistrer",
@@ -130,6 +131,13 @@
     "borrow_err_not_found": "Joueur introuvable ou inactif.",
     "borrow_err_event_not_found": "Événement introuvable.",
     "borrow_err_generic": "Impossible d'ajouter le joueur. Veuillez réessayer."
+  },
+  "externals": {
+    "title": "Externes",
+    "add": "Ajouter un externe",
+    "none": "Aucun externe pour cet événement.",
+    "name": "Nom",
+    "name_required": "Le prénom et le nom sont requis."
   },
   "players": {
     "title": "Joueurs",
@@ -712,6 +720,13 @@
     "note_button": "📝 Note",
     "notes_button": "📝 Voir les notes",
     "no_notes": "Aucune note pour cet événement.",
+    "externals_button": "👤 Externes",
+    "externals_header": "Externes",
+    "no_externals": "Aucun externe pour cet événement.",
+    "external_name_prompt": "Entrez le nom complet de l'externe (Prénom Nom):",
+    "external_select_status": "Sélectionnez le statut pour {name}:",
+    "external_added": "Externe ajouté.",
+    "external_cancelled": "Annulé.",
     "note_prompt": "Tapez votre note pour cet événement (ou envoyez /cancel pour annuler):",
     "note_saved": "Note enregistrée.",
     "note_label": "Note",

@@ -10,6 +10,7 @@ from app.csrf import require_csrf
 from app.database import get_db
 from models.attendance import Attendance
 from models.event import Event
+from models.event_external import EventExternal
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.user import User
@@ -139,3 +140,81 @@ async def update_attendance(
 
     flash_msg = quote(rt(request, "common.changes_saved"))
     return RedirectResponse(f"/events/{event_id}?flash={flash_msg}", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Event externals (non-registered participants)
+# ---------------------------------------------------------------------------
+
+_VALID_STATUSES = {"present", "absent", "maybe", "unknown"}
+
+
+@router.post("/{event_id}/externals")
+async def add_external(
+    event_id: int,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    status: str = Form("unknown"),
+    note: str = Form(""),
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    event = db.get(Event, event_id)
+    if event is None:
+        return JSONResponse({"ok": False, "error": "event_not_found"}, status_code=404)
+    if status not in _VALID_STATUSES:
+        status = "unknown"
+    ext = EventExternal(
+        event_id=event_id,
+        first_name=first_name.strip(),
+        last_name=last_name.strip(),
+        status=status,
+        note=note.strip() or None,
+    )
+    db.add(ext)
+    db.commit()
+    db.refresh(ext)
+    return JSONResponse({
+        "ok": True,
+        "id": ext.id,
+        "full_name": ext.full_name,
+        "status": ext.status,
+        "note": ext.note or "",
+    })
+
+
+@router.post("/{event_id}/externals/{ext_id}")
+async def update_external(
+    event_id: int,
+    ext_id: int,
+    status: str = Form("unknown"),
+    note: str = Form(""),
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    ext = db.query(EventExternal).filter(EventExternal.id == ext_id, EventExternal.event_id == event_id).first()
+    if ext is None:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if status in _VALID_STATUSES:
+        ext.status = status
+    ext.note = note.strip() or None
+    db.commit()
+    return JSONResponse({"ok": True, "status": ext.status, "note": ext.note or ""})
+
+
+@router.post("/{event_id}/externals/{ext_id}/delete")
+async def delete_external(
+    event_id: int,
+    ext_id: int,
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    ext = db.query(EventExternal).filter(EventExternal.id == ext_id, EventExternal.event_id == event_id).first()
+    if ext is None:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    db.delete(ext)
+    db.commit()
+    return JSONResponse({"ok": True})

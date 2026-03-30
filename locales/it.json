@@ -103,6 +103,7 @@
   "attendance": {
     "title": "Registra Presenze",
     "status_attend": "Presente",
+    "status_present": "Presente",
     "status_absent": "Assente",
     "status_unknown": "Sconosciuto",
     "save": "Salva",
@@ -130,6 +131,13 @@
     "borrow_err_not_found": "Giocatore non trovato o non attivo.",
     "borrow_err_event_not_found": "Evento non trovato.",
     "borrow_err_generic": "Impossibile aggiungere il giocatore. Riprovare."
+  },
+  "externals": {
+    "title": "Esterni",
+    "add": "Aggiungi esterno",
+    "none": "Nessun esterno per questo evento.",
+    "name": "Nome",
+    "name_required": "Nome e cognome sono obbligatori."
   },
   "players": {
     "title": "Giocatori",
@@ -712,6 +720,13 @@
     "note_button": "📝 Nota",
     "notes_button": "📝 Vedi note",
     "no_notes": "Nessuna nota per questo evento.",
+    "externals_button": "👤 Esterni",
+    "externals_header": "Esterni",
+    "no_externals": "Nessun esterno per questo evento.",
+    "external_name_prompt": "Inserisci il nome completo dell'esterno (Nome Cognome):",
+    "external_select_status": "Seleziona lo stato per {name}:",
+    "external_added": "Esterno aggiunto.",
+    "external_cancelled": "Annullato.",
     "note_prompt": "Scrivi la tua nota per questo evento (o invia /cancel per annullare):",
     "note_saved": "Nota salvata.",
     "note_label": "Nota",

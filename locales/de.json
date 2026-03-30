@@ -103,6 +103,7 @@
   "attendance": {
     "title": "Anwesenheit erfassen",
     "status_attend": "Anwesend",
+    "status_present": "Anwesend",
     "status_absent": "Abwesend",
     "status_unknown": "Unbekannt",
     "save": "Speichern",
@@ -130,6 +131,13 @@
     "borrow_err_not_found": "Spieler nicht gefunden oder inaktiv.",
     "borrow_err_event_not_found": "Ereignis nicht gefunden.",
     "borrow_err_generic": "Spieler konnte nicht hinzugefügt werden. Bitte erneut versuchen."
+  },
+  "externals": {
+    "title": "Externe",
+    "add": "Extern hinzufügen",
+    "none": "Keine externen Teilnehmer für dieses Event.",
+    "name": "Name",
+    "name_required": "Vor- und Nachname sind erforderlich."
   },
   "players": {
     "title": "Spieler",
@@ -712,6 +720,13 @@
     "note_button": "📝 Notiz",
     "notes_button": "📝 Notizen ansehen",
     "no_notes": "Keine Notizen für dieses Event.",
+    "externals_button": "👤 Externe",
+    "externals_header": "Externe",
+    "no_externals": "Keine externen Teilnehmer.",
+    "external_name_prompt": "Vollständigen Namen des Externen eingeben (Vorname Nachname):",
+    "external_select_status": "Anwesenheitsstatus für {name} auswählen:",
+    "external_added": "Externer hinzugefügt.",
+    "external_cancelled": "Abgebrochen.",
     "note_prompt": "Gib deine Notiz für dieses Event ein (oder sende /cancel zum Abbrechen):",
     "note_saved": "Notiz gespeichert.",
     "note_label": "Notiz",

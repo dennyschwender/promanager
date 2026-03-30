@@ -30,6 +30,7 @@ from bot.keyboards import (
 )
 from models.attendance import Attendance
 from models.event import Event
+from models.event_external import EventExternal
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.user_team import UserTeam
@@ -235,16 +236,19 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         data = query.data or ""
 
-        # Clean up any pending note prompt if the user navigated away
-        pending_note = context.user_data.pop("awaiting_note", None)
-        if pending_note:
-            prompt_msg_id = pending_note.get("prompt_message_id")
-            note_chat_id = pending_note.get("chat_id")
-            if prompt_msg_id and note_chat_id:
-                try:
-                    await context.bot.delete_message(chat_id=note_chat_id, message_id=prompt_msg_id)
-                except Exception:
-                    pass
+        # Clean up any pending prompts if the user navigated away via a button
+        # Don't clean up awaiting_external when user is selecting the status (extsta: callbacks)
+        _skip_ext_cleanup = data.startswith("extsta:")
+        for _key in ("awaiting_note",) + (() if _skip_ext_cleanup else ("awaiting_external",)):
+            _pending = context.user_data.pop(_key, None)
+            if _pending:
+                _pmid = _pending.get("prompt_message_id")
+                _pcid = _pending.get("chat_id")
+                if _pmid and _pcid:
+                    try:
+                        await context.bot.delete_message(chat_id=_pcid, message_id=_pmid)
+                    except Exception:
+                        pass
 
         if data == "noop":
             await query.answer()
@@ -291,6 +295,53 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # evtn:{event_id}:{back_page}
             parts = data.split(":")
             await _show_event_notes(query, user, db, int(parts[1]), back_page=int(parts[2]))
+
+        elif data.startswith("evtx:"):
+            await query.answer()
+            # evtx:{event_id}:{back_page}
+            parts = data.split(":")
+            await _show_event_externals(query, user, db, int(parts[1]), back_page=int(parts[2]))
+
+        elif data.startswith("extadd:"):
+            await query.answer()
+            # extadd:{event_id}:{back_page} — start add-external flow
+            parts = data.split(":")
+            event_id_x, back_page_x = int(parts[1]), int(parts[2])
+            prompt_msg = await query.message.reply_text(t("telegram.external_name_prompt", _locale(user)))
+            context.user_data["awaiting_external"] = {
+                "event_id": event_id_x,
+                "back_page": back_page_x,
+                "prompt_message_id": prompt_msg.message_id,
+                "chat_id": query.message.chat_id,
+                "step": "name",
+            }
+
+        elif data.startswith("extsta:"):
+            await query.answer()
+            # extsta:{status} — select status for pending external
+            pending_ext = context.user_data.get("awaiting_external")
+            if pending_ext and pending_ext.get("step") == "status":
+                status_char = data.split(":")[1]
+                status_map = {"p": "present", "a": "absent", "u": "unknown"}
+                status = status_map.get(status_char, "unknown")
+                ext = EventExternal(
+                    event_id=pending_ext["event_id"],
+                    first_name=pending_ext["first_name"],
+                    last_name=pending_ext["last_name"],
+                    status=status,
+                )
+                db.add(ext)
+                db.commit()
+                context.user_data.pop("awaiting_external", None)
+                locale_x = _locale(user)
+                conf = await query.message.reply_text(t("telegram.external_added", locale_x))
+                import asyncio  # noqa: PLC0415
+                await asyncio.sleep(2)
+                try:
+                    await conf.delete()
+                except Exception:
+                    pass
+                await _show_event_externals(query, user, db, pending_ext["event_id"], back_page=pending_ext["back_page"])
 
         elif data.startswith("note:"):
             await query.answer()
@@ -500,6 +551,46 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = str(update.effective_chat.id)
+
+    # Handle external name input
+    pending_ext = context.user_data.get("awaiting_external")
+    if pending_ext and pending_ext.get("step") == "name":
+        name_text = (update.message.text or "").strip()
+        parts = name_text.split(None, 1)
+        first = parts[0] if parts else name_text
+        last = parts[1] if len(parts) > 1 else ""
+        pending_ext["first_name"] = first
+        pending_ext["last_name"] = last
+        pending_ext["step"] = "status"
+        # Delete prompt + user message
+        prompt_msg_id = pending_ext.get("prompt_message_id")
+        ext_chat_id = pending_ext.get("chat_id")
+        if prompt_msg_id and ext_chat_id:
+            try:
+                await context.bot.delete_message(chat_id=ext_chat_id, message_id=prompt_msg_id)
+            except Exception:
+                pass
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+        # Ask for status
+        with SessionLocal() as db:
+            user = get_user_by_chat_id(db, chat_id)
+            locale = _locale(user) if user else "en"
+        status_keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("✓ Present", callback_data="extsta:p"),
+            InlineKeyboardButton("✗ Absent", callback_data="extsta:a"),
+            InlineKeyboardButton("? Unknown", callback_data="extsta:u"),
+        ]])
+        full_name = f"{first} {last}".strip()
+        prompt2 = await update.message.reply_text(
+            t("telegram.external_select_status", locale, name=full_name),
+            reply_markup=status_keyboard,
+        )
+        pending_ext["prompt_message_id"] = prompt2.message_id
+        return
+
     pending = context.user_data.get("awaiting_note")
     if not pending:
         return  # ignore unrecognised text
@@ -546,6 +637,34 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await confirmation.delete()
     except Exception:
         pass
+
+
+# ---------------------------------------------------------------------------
+# Event externals (coach/admin)
+# ---------------------------------------------------------------------------
+
+
+async def _show_event_externals(query, user, db, event_id: int, back_page: int = 0) -> None:
+    locale = _locale(user)
+    externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+
+    if externals:
+        lines = [f"*{t('telegram.externals_header', locale)}*"]
+        for ext in externals:
+            icon = STATUS_ICON.get(ext.status, "?")
+            line = f"{icon} {ext.full_name}"
+            if ext.note:
+                line += f" — _{ext.note}_"
+            lines.append(line)
+        text = "\n".join(lines)
+    else:
+        text = t("telegram.no_externals", locale)
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton(f"+ {t('externals.add', locale)}", callback_data=f"extadd:{event_id}:{back_page}")],
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")],
+    ])
+    await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
 
 # ---------------------------------------------------------------------------

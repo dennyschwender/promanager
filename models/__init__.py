@@ -1,6 +1,7 @@
 """models/__init__.py — Import all models so Base.metadata is fully populated."""
 
 from .attendance import Attendance
+from .event_external import EventExternal
 from .event import Event
 from .notification import Notification
 from .notification_preference import NotificationPreference
@@ -25,6 +26,7 @@ __all__ = [
     "PlayerContact",
     "Event",
     "Attendance",
+    "EventExternal",
     "TeamRecurringSchedule",
     "Notification",
     "NotificationPreference",

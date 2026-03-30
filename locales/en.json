@@ -103,6 +103,7 @@
   "attendance": {
     "title": "Mark Attendance",
     "status_attend": "Attending",
+    "status_present": "Attending",
     "status_absent": "Absent",
     "status_unknown": "Unknown",
     "save": "Save",
@@ -130,6 +131,13 @@
     "borrow_err_not_found": "Player not found or inactive.",
     "borrow_err_event_not_found": "Event not found.",
     "borrow_err_generic": "Could not add player. Please try again."
+  },
+  "externals": {
+    "title": "Externals",
+    "add": "Add External",
+    "none": "No externals for this event.",
+    "name": "Name",
+    "name_required": "First name and last name are required."
   },
   "players": {
     "title": "Players",
@@ -712,6 +720,13 @@
     "note_button": "📝 Note",
     "notes_button": "📝 See notes",
     "no_notes": "No notes for this event.",
+    "externals_button": "👤 Externals",
+    "externals_header": "Externals",
+    "no_externals": "No externals for this event.",
+    "external_name_prompt": "Enter the external's full name (First Last):",
+    "external_select_status": "Select attendance status for {name}:",
+    "external_added": "External added.",
+    "external_cancelled": "Cancelled.",
     "note_prompt": "Type your note for this event (or send /cancel to abort):",
     "note_saved": "Note saved.",
     "note_label": "Note",

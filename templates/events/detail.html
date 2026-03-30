@@ -433,6 +433,116 @@
 </script>
 {% endif %}
 
+{# ── Externals section ──────────────────────────────────────────── #}
+{% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
+<h3>{{ t('externals.title') }}</h3>
+<div id="externals-list">
+{% if externals %}
+<div class="table-responsive">
+<table id="externals-table">
+  <thead><tr>
+    <th>{{ t('externals.name') }}</th>
+    <th>{{ t('events.attendance_summary') }}</th>
+    <th>{{ t('attendance.note_optional') }}</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for ext in externals %}
+  <tr id="ext-row-{{ ext.id }}">
+    <td>{{ ext.full_name }}</td>
+    <td><span class="badge badge-{{ ext.status }}">{{ t('attendance.status_' ~ ext.status) }}</span></td>
+    <td>{{ ext.note or '—' }}</td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline" onclick="openExtDialog({{ ext.id }}, {{ ext.first_name|tojson }}, {{ ext.last_name|tojson }}, {{ ext.status|tojson }}, {{ (ext.note or '')|tojson }})">{{ t('common.edit') }}</button>
+      <button type="button" class="btn btn-sm btn-outline btn-danger-text" onclick="deleteExternal({{ ext.id }})">{{ t('common.delete') }}</button>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p id="ext-empty" class="text-muted">{{ t('externals.none') }}</p>
+{% endif %}
+</div>
+<button type="button" class="btn btn-outline btn-sm" style="margin-top:.5rem;" onclick="openExtDialog(null,'','','unknown','')">+ {{ t('externals.add') }}</button>
+
+<dialog id="ext-dialog" class="att-dialog">
+  <article>
+    <header><h3 id="ext-dialog-title">{{ t('externals.add') }}</h3></header>
+    <div class="form-grid-2">
+      <label>{{ t('users.first_name') }}<input type="text" id="ext-first-name"></label>
+      <label>{{ t('users.last_name') }}<input type="text" id="ext-last-name"></label>
+    </div>
+    <label>{{ t('events.type') }}
+      <select id="ext-status">
+        {% for s, lbl in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
+        <option value="{{ s }}">{{ lbl }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>{{ t('attendance.note_optional') }}<textarea id="ext-note" rows="2"></textarea></label>
+    <p id="ext-error" style="color:var(--tp-danger,#c0392b);display:none;"></p>
+    <footer class="att-dialog-actions">
+      <button type="button" class="btn btn-outline" onclick="document.getElementById('ext-dialog').close()">{{ t('common.cancel') }}</button>
+      <button type="button" class="btn btn-primary" id="ext-save-btn" onclick="saveExternal()">{{ t('common.save') }}</button>
+    </footer>
+  </article>
+</dialog>
+<script>
+(function() {
+  var _csrf = '{{ request.state.csrf_token }}';
+  var _eventId = {{ event.id }};
+  var _editingId = null;
+
+  window.openExtDialog = function(id, firstName, lastName, status, note) {
+    _editingId = id;
+    document.getElementById('ext-dialog-title').textContent = id ? {{ t('common.edit')|tojson }} : {{ t('externals.add')|tojson }};
+    document.getElementById('ext-first-name').value = firstName;
+    document.getElementById('ext-last-name').value = lastName;
+    document.getElementById('ext-status').value = status;
+    document.getElementById('ext-note').value = note;
+    document.getElementById('ext-error').style.display = 'none';
+    document.getElementById('ext-dialog').showModal();
+  };
+
+  window.saveExternal = function() {
+    var firstName = document.getElementById('ext-first-name').value.trim();
+    var lastName = document.getElementById('ext-last-name').value.trim();
+    var status = document.getElementById('ext-status').value;
+    var note = document.getElementById('ext-note').value.trim();
+    var errEl = document.getElementById('ext-error');
+    if (!firstName || !lastName) { errEl.textContent = {{ t('externals.name_required')|tojson }}; errEl.style.display = 'block'; return; }
+    var url = _editingId
+      ? '/attendance/' + _eventId + '/externals/' + _editingId
+      : '/attendance/' + _eventId + '/externals';
+    var body = new FormData();
+    body.append('csrf_token', _csrf);
+    body.append('first_name', firstName);
+    body.append('last_name', lastName);
+    body.append('status', status);
+    body.append('note', note);
+    fetch(url, {method:'POST', body: body})
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok) { errEl.textContent = data.error || 'Error'; errEl.style.display = 'block'; return; }
+        document.getElementById('ext-dialog').close();
+        location.reload();
+      });
+  };
+
+  window.deleteExternal = function(id) {
+    if (!confirm({{ t('common.confirm')|tojson }})) return;
+    var body = new FormData();
+    body.append('csrf_token', _csrf);
+    fetch('/attendance/' + _eventId + '/externals/' + id + '/delete', {method:'POST', body: body})
+      .then(function(r) { return r.json(); })
+      .then(function(data) { if (data.ok) location.reload(); });
+  };
+})();
+</script>
+{% endif %}
+
 {# ── Delete dialog ─────────────────────────────────────────────── #}
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
 <dialog id="delete-dialog" class="att-dialog">

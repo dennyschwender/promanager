@@ -41,7 +41,10 @@ def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", i
         [InlineKeyboardButton(t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}")],
     ]
     if is_privileged:
-        rows.append([InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}")])
+        rows.append([
+            InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
+            InlineKeyboardButton(t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"),
+        ])
     rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")])
     return InlineKeyboardMarkup(rows)
 

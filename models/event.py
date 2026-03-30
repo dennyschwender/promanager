@@ -67,6 +67,9 @@ class Event(Base):
         cascade="save-update, merge",  # NOT delete-orphan — DB uses ondelete="SET NULL"
         lazy="select",
     )
+    externals: Mapped[list[EventExternal]] = relationship(  # noqa: F821
+        "EventExternal", back_populates="event", lazy="select", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Event id={self.id} title={self.title!r} date={self.event_date}>"
