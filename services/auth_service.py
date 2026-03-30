@@ -81,6 +81,10 @@ def create_user(
     email: str,
     password: str,
     role: str = "member",
+    phone: str | None = None,
+    locale: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
 ) -> User:
     user = User(
         username=username,
@@ -88,6 +92,10 @@ def create_user(
         hashed_password=hash_password(password),
         role=role,
         is_active=True,
+        phone=phone,
+        locale=locale,
+        first_name=first_name,
+        last_name=last_name,
     )
     db.add(user)
     db.commit()

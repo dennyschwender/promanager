@@ -23,7 +23,7 @@ def upgrade() -> None:
     if "telegram_chat_id" not in existing_cols:
         op.add_column(
             "users",
-            sa.Column("telegram_chat_id", sa.String(64), nullable=True, unique=True),
+            sa.Column("telegram_chat_id", sa.String(64), nullable=True),
         )
     existing_indexes = [i["name"] for i in sa.inspect(conn).get_indexes("users")]
     if "ix_users_telegram_chat_id_unique" not in existing_indexes:

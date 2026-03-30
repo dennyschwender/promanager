@@ -255,6 +255,8 @@ def create_app() -> FastAPI:
         email: str = _Form(...),
         locale: str = _Form("en"),
         phone: str = _Form(""),
+        first_name: str = _Form(""),
+        last_name: str = _Form(""),
         current_password: str = _Form(""),
         new_password: str = _Form(""),
     ):
@@ -290,8 +292,16 @@ def create_app() -> FastAPI:
         db_user.email = email
         db_user.locale = locale
         db_user.phone = phone.strip() or None
+        db_user.first_name = first_name.strip() or None
+        db_user.last_name = last_name.strip() or None
         if new_password:
             db_user.hashed_password = _hash_password(new_password)
+        # Sync name to linked player if present
+        for player in db_user.players:
+            if db_user.first_name:
+                player.first_name = db_user.first_name
+            if db_user.last_name:
+                player.last_name = db_user.last_name
         db.commit()
         from urllib.parse import quote as _quote  # noqa: PLC0415
         from routes._auth_helpers import rt as _rt2  # noqa: PLC0415

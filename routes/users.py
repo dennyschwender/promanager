@@ -214,6 +214,8 @@ async def user_edit_post(
     role: str = Form(...),
     locale: str = Form("en"),
     phone: str = Form(""),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
     new_password: str = Form(""),
 ):
     target = db.get(User, user_id)
@@ -244,8 +246,16 @@ async def user_edit_post(
     target.role = role
     target.locale = locale
     target.phone = phone.strip() or None
+    target.first_name = first_name.strip() or None
+    target.last_name = last_name.strip() or None
     if new_password:
         target.hashed_password = hash_password(new_password)
+    # Sync name to linked player if present
+    for player in target.players:
+        if target.first_name:
+            player.first_name = target.first_name
+        if target.last_name:
+            player.last_name = target.last_name
     db.commit()
     return RedirectResponse("/auth/users", status_code=302)
 

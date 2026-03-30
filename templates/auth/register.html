@@ -17,21 +17,44 @@
 {% endif %}
 <form method="post" action="/auth/register">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-  <label for="username">{{ t('auth.username') }}
-    <input type="text" id="username" name="username" required>
-  </label>
-  <label for="email">{{ t('auth.email') }}
-    <input type="email" id="email" name="email" required>
-  </label>
+  <div class="form-grid-2">
+    <label for="first_name">{{ t('users.first_name') }}
+      <input type="text" id="first_name" name="first_name" value="{{ form_data.first_name if form_data else '' }}">
+    </label>
+    <label for="last_name">{{ t('users.last_name') }}
+      <input type="text" id="last_name" name="last_name" value="{{ form_data.last_name if form_data else '' }}">
+    </label>
+  </div>
+  <div class="form-grid-2">
+    <label for="username">{{ t('auth.username') }}
+      <input type="text" id="username" name="username" required value="{{ form_data.username if form_data else '' }}">
+    </label>
+    <label for="email">{{ t('auth.email') }}
+      <input type="email" id="email" name="email" required value="{{ form_data.email if form_data else '' }}">
+    </label>
+  </div>
   <label for="password">{{ t('auth.password_hint') }}
     <input type="password" id="password" name="password" required minlength="8">
   </label>
-  <label for="role">{{ t('auth.role') }}
-    <select id="role" name="role">
-      <option value="member">{{ t('auth.member') }}</option>
-      <option value="coach" {% if form_data and form_data.role == 'coach' %}selected{% endif %}>{{ t('auth.role_coach') }}</option>
-      <option value="admin">{{ t('auth.admin') }}</option>
-    </select>
+  <div class="form-grid-2">
+    <label for="role">{{ t('auth.role') }}
+      <select id="role" name="role">
+        <option value="member" {% if not form_data or form_data.role == 'member' %}selected{% endif %}>{{ t('auth.member') }}</option>
+        <option value="coach" {% if form_data and form_data.role == 'coach' %}selected{% endif %}>{{ t('auth.role_coach') }}</option>
+        <option value="admin" {% if form_data and form_data.role == 'admin' %}selected{% endif %}>{{ t('auth.admin') }}</option>
+      </select>
+    </label>
+    <label for="locale">{{ t('users.locale_label') }}
+      <select id="locale" name="locale">
+        <option value="en" {% if not form_data or form_data.locale == 'en' %}selected{% endif %}>English</option>
+        <option value="it" {% if form_data and form_data.locale == 'it' %}selected{% endif %}>Italiano</option>
+        <option value="fr" {% if form_data and form_data.locale == 'fr' %}selected{% endif %}>Français</option>
+        <option value="de" {% if form_data and form_data.locale == 'de' %}selected{% endif %}>Deutsch</option>
+      </select>
+    </label>
+  </div>
+  <label for="phone">{{ t('users.phone_label') }}
+    <input type="tel" id="phone" name="phone" value="{{ form_data.phone if form_data else '' }}">
   </label>
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('auth.register_submit') }}</button>
