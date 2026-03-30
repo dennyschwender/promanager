@@ -146,3 +146,46 @@ def test_get_user_by_chat_id_found(db):
 
 def test_get_user_by_chat_id_not_found(db):
     assert get_user_by_chat_id(db, "999") is None
+
+
+# ── find_user_by_phone — direct user.phone match ──────────────────────────────
+
+
+def test_find_user_by_direct_phone_on_user(db):
+    """Admin/coach with phone set directly on User should be found without a player."""
+    user = User(username="coach1", email="coach1@x.com", hashed_password="x", role="admin", phone="+39 111 222 3333")
+    db.add(user)
+    db.commit()
+
+    found = find_user_by_phone(db, "391112223333")
+    assert found is not None
+    assert found.id == user.id
+
+
+def test_user_phone_takes_priority_over_player_phone(db):
+    """If both user.phone and a player phone match, user.phone wins."""
+    user_a = User(username="ua", email="ua@x.com", hashed_password="x", role="admin", phone="+39 555 000 0000")
+    user_b = User(username="ub", email="ub@x.com", hashed_password="x", role="member")
+    db.add_all([user_a, user_b])
+    db.flush()
+    player = Player(first_name="X", last_name="Y", phone="+39 555 000 0000", user_id=user_b.id)
+    db.add(player)
+    db.commit()
+
+    found = find_user_by_phone(db, "395550000000")
+    assert found is not None
+    assert found.id == user_a.id
+
+
+def test_find_user_by_phone_no_match_on_user_falls_through(db):
+    """user.phone set but different number — should still find via player."""
+    user = User(username="uc", email="uc@x.com", hashed_password="x", role="member", phone="+39 999 999 9999")
+    db.add(user)
+    db.flush()
+    player = Player(first_name="P", last_name="Q", phone="+39 111 111 1111", user_id=user.id)
+    db.add(player)
+    db.commit()
+
+    found = find_user_by_phone(db, "391111111111")
+    assert found is not None
+    assert found.id == user.id

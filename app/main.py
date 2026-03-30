@@ -254,6 +254,7 @@ def create_app() -> FastAPI:
         username: str = _Form(...),
         email: str = _Form(...),
         locale: str = _Form("en"),
+        phone: str = _Form(""),
         current_password: str = _Form(""),
         new_password: str = _Form(""),
     ):
@@ -288,6 +289,7 @@ def create_app() -> FastAPI:
         db_user.username = username
         db_user.email = email
         db_user.locale = locale
+        db_user.phone = phone.strip() or None
         if new_password:
             db_user.hashed_password = _hash_password(new_password)
         db.commit()

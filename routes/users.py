@@ -213,6 +213,7 @@ async def user_edit_post(
     email: str = Form(...),
     role: str = Form(...),
     locale: str = Form("en"),
+    phone: str = Form(""),
     new_password: str = Form(""),
 ):
     target = db.get(User, user_id)
@@ -242,6 +243,7 @@ async def user_edit_post(
     target.email = email
     target.role = role
     target.locale = locale
+    target.phone = phone.strip() or None
     if new_password:
         target.hashed_password = hash_password(new_password)
     db.commit()

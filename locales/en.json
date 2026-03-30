@@ -347,7 +347,9 @@
     "current_password": "Current Password",
     "new_password": "New Password",
     "edit_user": "Edit",
-    "profile_saved": "Profile updated."
+    "profile_saved": "Profile updated.",
+    "phone": "Phone",
+    "phone_hint": "e.g. +39 123 456 7890"
   },
   "players_form": {
     "basic_info": "Basic Info",

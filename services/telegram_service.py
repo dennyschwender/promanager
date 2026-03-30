@@ -25,15 +25,24 @@ def normalize_phone(phone: str) -> str:
 
 
 def find_user_by_phone(db: Session, telegram_phone: str) -> User | None:
-    """Return the User whose linked player has a matching phone number.
+    """Return the User whose phone matches telegram_phone.
 
     `telegram_phone` is already normalized (digits only, no +).
-    Searches both Player.phone (legacy) and PlayerPhone rows.
-    Returns None if no match or if the matched player has no linked user.
+    Search order:
+    1. User.phone directly (covers admins/coaches without a player record)
+    2. Player.phone legacy column
+    3. PlayerPhone table
+    Returns None if no match found.
     """
     norm = normalize_phone(telegram_phone)
     if not norm:
         return None
+
+    # 1. Direct user phone match
+    users_with_phone = db.query(User).filter(User.phone.isnot(None)).all()
+    for user in users_with_phone:
+        if normalize_phone(user.phone) == norm:
+            return user
 
     # Search legacy Player.phone
     players = db.query(Player).filter(Player.phone.isnot(None)).all()

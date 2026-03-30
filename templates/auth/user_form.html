@@ -27,6 +27,9 @@
       <input type="email" id="email" name="email" required value="{{ target.email }}">
     </label>
   </div>
+  <label for="phone">{{ t('users.phone') }}
+    <input type="tel" id="phone" name="phone" value="{{ target.phone or '' }}" placeholder="{{ t('users.phone_hint') }}">
+  </label>
 
   {% if is_admin_edit %}
   <div class="form-grid-2">
