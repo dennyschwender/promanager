@@ -24,6 +24,23 @@ def normalize_phone(phone: str) -> str:
     return re.sub(r"\D", "", phone)
 
 
+def phones_match(stored: str, telegram_norm: str) -> bool:
+    """Compare a stored phone number against a Telegram-normalized number.
+
+    Handles local format (single leading 0) by stripping it and checking
+    whether the international number ends with the remaining digits.
+    Example: stored '0791288804', telegram '41791288804' → match.
+    """
+    stored_norm = normalize_phone(stored)
+    if stored_norm == telegram_norm:
+        return True
+    if stored_norm.startswith("0"):
+        local_digits = stored_norm[1:]
+        if local_digits and telegram_norm.endswith(local_digits):
+            return True
+    return False
+
+
 def find_user_by_phone(db: Session, telegram_phone: str) -> User | None:
     """Return the User whose phone matches telegram_phone.
 
@@ -41,19 +58,19 @@ def find_user_by_phone(db: Session, telegram_phone: str) -> User | None:
     # 1. Direct user phone match
     users_with_phone = db.query(User).filter(User.phone.isnot(None)).all()
     for user in users_with_phone:
-        if normalize_phone(user.phone) == norm:
+        if phones_match(user.phone, norm):
             return user
 
     # Search legacy Player.phone
     players = db.query(Player).filter(Player.phone.isnot(None)).all()
     for player in players:
-        if normalize_phone(player.phone) == norm and player.user_id is not None:
+        if phones_match(player.phone, norm) and player.user_id is not None:
             return db.get(User, player.user_id)
 
     # Search PlayerPhone table
     phone_rows = db.query(PlayerPhone).all()
     for row in phone_rows:
-        if normalize_phone(row.phone) == norm:
+        if phones_match(row.phone, norm):
             player = db.get(Player, row.player_id)
             if player and player.user_id is not None:
                 return db.get(User, player.user_id)
