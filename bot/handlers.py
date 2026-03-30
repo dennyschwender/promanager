@@ -522,7 +522,13 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     except Exception:
         pass
 
-    await update.message.reply_text(t("telegram.note_saved", locale))
+    import asyncio  # noqa: PLC0415
+    confirmation = await update.message.reply_text(t("telegram.note_saved", locale))
+    await asyncio.sleep(2)
+    try:
+        await confirmation.delete()
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
