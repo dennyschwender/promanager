@@ -736,6 +736,7 @@
     "pos_center": "Milieux",
     "pos_forward": "Attaquants",
     "pos_other": "Autre",
+    "edit_attendance_button": "✏️ Modifier les présences",
     "unknown_error": "Une erreur s'est produite. Veuillez réessayer."
   }
 }

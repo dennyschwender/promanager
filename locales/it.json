@@ -736,6 +736,7 @@
     "pos_center": "Centrocampisti",
     "pos_forward": "Attaccanti",
     "pos_other": "Altro",
+    "edit_attendance_button": "✏️ Modifica Presenze",
     "unknown_error": "Si è verificato un errore. Riprova."
   }
 }

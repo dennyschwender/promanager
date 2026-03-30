@@ -736,6 +736,7 @@
     "pos_center": "Mittelfeldspieler",
     "pos_forward": "Stürmer",
     "pos_other": "Andere",
+    "edit_attendance_button": "✏️ Anwesenheit bearbeiten",
     "unknown_error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
   }
 }

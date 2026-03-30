@@ -35,6 +35,14 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     return InlineKeyboardMarkup(rows)
 
 
+def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en") -> InlineKeyboardMarkup:
+    """Read-only event detail keyboard: Modify Attendance + Back."""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}")],
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")],
+    ])
+
+
 def event_status_keyboard(
     event_id: int, player_id: int, back_page: int = 0, locale: str = "en"
 ) -> InlineKeyboardMarkup:
@@ -88,17 +96,18 @@ def event_admin_keyboard(
     if page > 0:
         nav.append(
             InlineKeyboardButton(
-                t("telegram.prev_button", locale), callback_data=f"evtp:{event_id}:{page - 1}:{back_page}"
+                t("telegram.prev_button", locale), callback_data=f"evte:{event_id}:{page - 1}:{back_page}"
             )
         )
     if page < total_pages - 1:
         nav.append(
             InlineKeyboardButton(
-                t("telegram.next_button", locale), callback_data=f"evtp:{event_id}:{page + 1}:{back_page}"
+                t("telegram.next_button", locale), callback_data=f"evte:{event_id}:{page + 1}:{back_page}"
             )
         )
     if nav:
         rows.append(nav)
 
-    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")])
+    # Back returns to view mode (not the events list)
+    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")])
     return InlineKeyboardMarkup(rows)

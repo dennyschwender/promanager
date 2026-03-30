@@ -25,6 +25,7 @@ from bot.keyboards import (
     STATUS_ICON,
     event_admin_keyboard,
     event_status_keyboard,
+    event_view_keyboard,
     events_keyboard,
 )
 from models.attendance import Attendance
@@ -216,6 +217,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             await _show_event_detail(query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2]))
 
+        elif data.startswith("evte:"):
+            await query.answer()
+            # evte:{event_id}:{player_page}:{back_page}
+            parts = data.split(":")
+            await _show_event_detail(query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2]), edit_mode=True)
+
         elif data.startswith("sta:"):
             # _set_status calls query.answer() itself with the status toast
             parts = data.split(":")
@@ -249,7 +256,7 @@ async def _show_events(query, user, db, page: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0, player_page: int = 0) -> None:
+async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0, player_page: int = 0, edit_mode: bool = False) -> None:
     locale = _locale(user)
     event = db.get(Event, event_id)
     if event is None:
@@ -371,13 +378,15 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 pos_lines.append(f"{icon} {p.full_name}")
         text += "\n" + "\n".join(pos_lines)
 
-        total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
-        player_page = max(0, min(player_page, total_player_pages - 1))
-        page_players = players[player_page * PLAYER_PAGE_SIZE : (player_page + 1) * PLAYER_PAGE_SIZE]
-
-        keyboard = event_admin_keyboard(
-            event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
-        )
+        if edit_mode:
+            total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
+            player_page = max(0, min(player_page, total_player_pages - 1))
+            page_players = players[player_page * PLAYER_PAGE_SIZE : (player_page + 1) * PLAYER_PAGE_SIZE]
+            keyboard = event_admin_keyboard(
+                event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
+            )
+        else:
+            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale)
 
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
@@ -403,5 +412,5 @@ async def _set_status(query, user, db, event_id: int, player_id: int, status_cha
     status_label = t(f"telegram.status_{status}", locale)
     await query.answer(t("telegram.status_updated", locale, status=status_label), show_alert=False)
 
-    # Re-render the event detail in place
-    await _show_event_detail(query, user, db, event_id, back_page=0)
+    # Re-render the event detail in edit mode
+    await _show_event_detail(query, user, db, event_id, back_page=0, edit_mode=True)

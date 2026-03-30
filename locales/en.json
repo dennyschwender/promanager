@@ -736,6 +736,7 @@
     "pos_center": "Centers",
     "pos_forward": "Forwards",
     "pos_other": "Other",
+    "edit_attendance_button": "✏️ Modify Attendance",
     "unknown_error": "An error occurred. Please try again."
   }
 }
