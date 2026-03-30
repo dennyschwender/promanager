@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ t('users.edit_title') }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  {% if is_admin_edit %}
+    <a href="/auth/users">{{ t('users.title') }}</a><span class="breadcrumb-sep"></span>
+  {% else %}
+    <a href="/profile">{{ t('auth.profile_title') }}</a><span class="breadcrumb-sep"></span>
+  {% endif %}
+  <span>{{ t('users.edit_title') }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+<h2>{{ t('users.edit_title') }}: {{ target.username }}</h2>
+{% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+<form method="post" action="{% if is_admin_edit %}/auth/users/{{ target.id }}/edit{% else %}/profile/edit{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  <div class="form-grid-2">
+    <label for="username">{{ t('auth.username') }} *
+      <input type="text" id="username" name="username" required value="{{ target.username }}">
+    </label>
+    <label for="email">{{ t('auth.email') }} *
+      <input type="email" id="email" name="email" required value="{{ target.email }}">
+    </label>
+  </div>
+
+  {% if is_admin_edit %}
+  <div class="form-grid-2">
+    <label for="role">{{ t('auth.role') }}
+      <select id="role" name="role">
+        <option value="member" {% if target.role == 'member' %}selected{% endif %}>{{ t('auth.member') }}</option>
+        <option value="coach" {% if target.role == 'coach' %}selected{% endif %}>{{ t('auth.role_coach') }}</option>
+        <option value="admin" {% if target.role == 'admin' %}selected{% endif %}>{{ t('auth.admin') }}</option>
+      </select>
+    </label>
+    <label for="locale">{{ t('auth.language_preference') }}
+      <select id="locale" name="locale">
+        <option value="en" {% if target.locale == 'en' %}selected{% endif %}>English</option>
+        <option value="it" {% if target.locale == 'it' %}selected{% endif %}>Italiano</option>
+        <option value="fr" {% if target.locale == 'fr' %}selected{% endif %}>Français</option>
+        <option value="de" {% if target.locale == 'de' %}selected{% endif %}>Deutsch</option>
+      </select>
+    </label>
+  </div>
+  {% else %}
+  <label for="locale">{{ t('auth.language_preference') }}
+    <select id="locale" name="locale">
+      <option value="en" {% if target.locale == 'en' %}selected{% endif %}>English</option>
+      <option value="it" {% if target.locale == 'it' %}selected{% endif %}>Italiano</option>
+      <option value="fr" {% if target.locale == 'fr' %}selected{% endif %}>Français</option>
+      <option value="de" {% if target.locale == 'de' %}selected{% endif %}>Deutsch</option>
+    </select>
+  </label>
+  {% endif %}
+
+  <fieldset>
+    <legend>{{ t('users.change_password') }}</legend>
+    {% if not is_admin_edit %}
+    <label for="current_password">{{ t('users.current_password') }}
+      <input type="password" id="current_password" name="current_password" autocomplete="current-password">
+    </label>
+    {% endif %}
+    <label for="new_password">{{ t('users.new_password') }}
+      <input type="password" id="new_password" name="new_password" autocomplete="new-password"
+             placeholder="{{ t('auth.password_hint') }}">
+    </label>
+  </fieldset>
+
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+    <a href="{% if is_admin_edit %}/auth/users{% else %}/profile{% endif %}" class="btn btn-outline">{{ t('common.cancel') }}</a>
+  </div>
+</form>
+</div>
+{% endblock %}

@@ -301,3 +301,224 @@ def test_bulk_create_post_skips_existing_email(admin_client, db):
     assert resp.status_code == 200
     db.expire_all()
     assert db.get(Player, p.id).user_id is None  # not linked
+
+
+# ---------------------------------------------------------------------------
+# Admin edit user
+# ---------------------------------------------------------------------------
+
+
+def test_admin_edit_user_get_200(admin_client, db):
+    target = _make_user(db, "editme", "editme@test.com")
+    db.commit()
+    resp = admin_client.get(f"/auth/users/{target.id}/edit", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_admin_edit_user_get_404_redirects(admin_client):
+    resp = admin_client.get("/auth/users/99999/edit", follow_redirects=False)
+    assert resp.status_code == 302
+
+
+def test_admin_edit_user_member_403(member_client, db):
+    target = _make_user(db, "editme2", "editme2@test.com")
+    db.commit()
+    resp = member_client.get(f"/auth/users/{target.id}/edit", follow_redirects=False)
+    assert resp.status_code in (302, 403)
+
+
+def test_admin_edit_updates_username_email_role(admin_client, db):
+    target = _make_user(db, "oldname", "old@test.com", role="member")
+    db.commit()
+    resp = admin_client.post(
+        f"/auth/users/{target.id}/edit",
+        data={
+            "username": "newname",
+            "email": "new@test.com",
+            "role": "admin",
+            "locale": "en",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    db.refresh(target)
+    assert target.username == "newname"
+    assert target.email == "new@test.com"
+    assert target.role == "admin"
+
+
+def test_admin_edit_sets_new_password(admin_client, db):
+    from services.auth_service import verify_password
+
+    target = _make_user(db, "pwuser", "pwuser@test.com")
+    db.commit()
+    resp = admin_client.post(
+        f"/auth/users/{target.id}/edit",
+        data={
+            "username": "pwuser",
+            "email": "pwuser@test.com",
+            "role": "member",
+            "locale": "en",
+            "new_password": "NewPass99!",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    db.refresh(target)
+    assert verify_password("NewPass99!", target.hashed_password)
+
+
+def test_admin_edit_rejects_duplicate_username(admin_client, db):
+    _make_user(db, "taken", "taken@test.com")
+    target = _make_user(db, "other", "other@test.com")
+    db.commit()
+    resp = admin_client.post(
+        f"/auth/users/{target.id}/edit",
+        data={
+            "username": "taken",
+            "email": "other@test.com",
+            "role": "member",
+            "locale": "en",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+
+def test_admin_edit_rejects_duplicate_email(admin_client, db):
+    _make_user(db, "alpha", "taken@test.com")
+    target = _make_user(db, "beta", "beta@test.com")
+    db.commit()
+    resp = admin_client.post(
+        f"/auth/users/{target.id}/edit",
+        data={
+            "username": "beta",
+            "email": "taken@test.com",
+            "role": "member",
+            "locale": "en",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+
+def test_admin_edit_short_password_rejected(admin_client, db):
+    target = _make_user(db, "shortpw", "shortpw@test.com")
+    db.commit()
+    resp = admin_client.post(
+        f"/auth/users/{target.id}/edit",
+        data={
+            "username": "shortpw",
+            "email": "shortpw@test.com",
+            "role": "member",
+            "locale": "en",
+            "new_password": "abc",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Self-edit profile
+# ---------------------------------------------------------------------------
+
+
+def test_profile_edit_get_200(member_client):
+    resp = member_client.get("/profile/edit", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_profile_edit_get_unauthenticated_redirects(client):
+    resp = client.get("/profile/edit", follow_redirects=False)
+    assert resp.status_code == 302
+
+
+def test_profile_edit_updates_username_email_locale(member_client, db, member_user):
+    resp = member_client.post(
+        "/profile/edit",
+        data={
+            "username": "updatedname",
+            "email": "updated@test.com",
+            "locale": "it",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    db.refresh(member_user)
+    assert member_user.username == "updatedname"
+    assert member_user.email == "updated@test.com"
+    assert member_user.locale == "it"
+
+
+def test_profile_edit_changes_password_with_correct_current(member_client, db, member_user):
+    from services.auth_service import verify_password
+
+    resp = member_client.post(
+        "/profile/edit",
+        data={
+            "username": member_user.username,
+            "email": member_user.email,
+            "locale": "en",
+            "current_password": "memberpass",
+            "new_password": "NewPass99!",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    db.refresh(member_user)
+    assert verify_password("NewPass99!", member_user.hashed_password)
+
+
+def test_profile_edit_rejects_wrong_current_password(member_client, db, member_user):
+    resp = member_client.post(
+        "/profile/edit",
+        data={
+            "username": member_user.username,
+            "email": member_user.email,
+            "locale": "en",
+            "current_password": "wrongpass",
+            "new_password": "NewPass99!",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+
+def test_profile_edit_rejects_new_password_without_current(member_client, db, member_user):
+    resp = member_client.post(
+        "/profile/edit",
+        data={
+            "username": member_user.username,
+            "email": member_user.email,
+            "locale": "en",
+            "new_password": "NewPass99!",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+
+def test_profile_edit_rejects_duplicate_username(member_client, db, member_user):
+    _make_user(db, "takenuser", "takenuser@test.com")
+    db.commit()
+    resp = member_client.post(
+        "/profile/edit",
+        data={
+            "username": "takenuser",
+            "email": member_user.email,
+            "locale": "en",
+            "csrf_token": "test",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400

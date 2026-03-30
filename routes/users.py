@@ -196,6 +196,58 @@ async def bulk_create_post(
     )
 
 
+@router.get("/{user_id}/edit", dependencies=[Depends(require_admin)])
+async def user_edit_get(user_id: int, request: Request, db: Session = Depends(get_db)):
+    target = db.get(User, user_id)
+    if target is None:
+        return RedirectResponse("/auth/users", status_code=302)
+    return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": None})
+
+
+@router.post("/{user_id}/edit", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def user_edit_post(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    username: str = Form(...),
+    email: str = Form(...),
+    role: str = Form(...),
+    locale: str = Form("en"),
+    new_password: str = Form(""),
+):
+    target = db.get(User, user_id)
+    if target is None:
+        return RedirectResponse("/auth/users", status_code=302)
+
+    username = username.strip()
+    email = email.strip()
+
+    if not username:
+        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.field_required", field="Username")}, status_code=400)
+    if not email:
+        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.field_required", field="Email")}, status_code=400)
+    if role not in ("admin", "coach", "member"):
+        role = "member"
+    if new_password and len(new_password) < 8:
+        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.password_too_short")}, status_code=400)
+
+    dup_user = db.query(User).filter(User.username == username, User.id != user_id).first()
+    if dup_user:
+        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.username_taken", username=username)}, status_code=400)
+    dup_email = db.query(User).filter(User.email == email, User.id != user_id).first()
+    if dup_email:
+        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.email_taken", email=email)}, status_code=400)
+
+    target.username = username
+    target.email = email
+    target.role = role
+    target.locale = locale
+    if new_password:
+        target.hashed_password = hash_password(new_password)
+    db.commit()
+    return RedirectResponse("/auth/users", status_code=302)
+
+
 @router.post("/{user_id}/toggle-active", dependencies=[Depends(require_admin), Depends(require_csrf)])
 async def toggle_active(
     user_id: int,

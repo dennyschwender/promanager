@@ -295,7 +295,9 @@
     "shirt_number_taken": "Shirt number %{n} is already taken in this team/season.",
     "player_not_found": "Player not found.",
     "save_error": "An error occurred while saving. Please try again.",
-    "name_required": "First name and last name are required."
+    "name_required": "First name and last name are required.",
+    "current_password_required": "Current password is required to set a new password.",
+    "current_password_wrong": "Current password is incorrect."
   },
   "notify": {
     "title": "Notify Players",
@@ -339,7 +341,13 @@
     "back_to_users": "Back to users",
     "email_subject": "Your ProManager account",
     "delete_confirm": "Delete user %{username}?",
-    "delete_confirm_user": "Delete user %{username}?"
+    "delete_confirm_user": "Delete user %{username}?",
+    "edit_title": "Edit User",
+    "change_password": "Change Password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "edit_user": "Edit",
+    "profile_saved": "Profile updated."
   },
   "players_form": {
     "basic_info": "Basic Info",

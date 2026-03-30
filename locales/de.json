@@ -295,7 +295,9 @@
     "shirt_number_taken": "Trikotnummer %{n} ist in dieser Mannschaft/Saison bereits vergeben.",
     "player_not_found": "Spieler nicht gefunden.",
     "save_error": "Beim Speichern ist ein Fehler aufgetreten. Bitte erneut versuchen.",
-    "name_required": "Vor- und Nachname sind erforderlich."
+    "name_required": "Vor- und Nachname sind erforderlich.",
+    "current_password_required": "Das aktuelle Passwort wird benötigt, um ein neues festzulegen.",
+    "current_password_wrong": "Das aktuelle Passwort ist falsch."
   },
   "notify": {
     "title": "Spieler benachrichtigen",
@@ -339,7 +341,13 @@
     "back_to_users": "Zurück zu Benutzern",
     "email_subject": "Ihr ProManager-Konto",
     "delete_confirm": "Benutzer %{username} löschen?",
-    "delete_confirm_user": "Benutzer %{username} löschen?"
+    "delete_confirm_user": "Benutzer %{username} löschen?",
+    "edit_title": "Benutzer bearbeiten",
+    "change_password": "Passwort ändern",
+    "current_password": "Aktuelles Passwort",
+    "new_password": "Neues Passwort",
+    "edit_user": "Bearbeiten",
+    "profile_saved": "Profil aktualisiert."
   },
   "players_form": {
     "basic_info": "Grunddaten",
