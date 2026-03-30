@@ -173,7 +173,7 @@
                 </select>
               </td>
               <td>
-                <select name="position_{{ s.id }}_{{ t.id }}" id="position_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}>
+                <select name="position_{{ s.id }}_{{ team_opt.id }}" id="position_{{ s.id }}_{{ team_opt.id }}" {% if not checked %}disabled{% endif %}>
                   <option value="">—</option>
                   {% for val, lbl in [('goalie', t('players_form.pos_goalie')),('defender', t('players_form.pos_defender')),('center', t('players_form.pos_center')),('forward', t('players_form.pos_forward'))] %}
                     <option value="{{ val }}" {% if checked and mem.position == val %}selected{% endif %}>{{ lbl }}</option>
