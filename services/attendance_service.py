@@ -32,12 +32,17 @@ def set_attendance(
     event_id: int,
     player_id: int,
     status: str,
-    note: str = "",
+    note: str | None = None,
 ) -> Attendance:
-    """Set (or create) the attendance record for a player/event pair."""
+    """Set (or create) the attendance record for a player/event pair.
+
+    Pass `note` to update the note; omit it (or pass None) to preserve the existing note.
+    Pass `note=""` to explicitly clear it.
+    """
     att = get_or_create_attendance(db, event_id, player_id)
     att.status = status
-    att.note = note or None
+    if note is not None:
+        att.note = note or None
     att.updated_at = datetime.now(timezone.utc)
     db.add(att)
     db.commit()
