@@ -239,7 +239,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Clean up any pending prompts if the user navigated away via a button
         # Don't clean up awaiting_external when user is selecting the status (extsta: callbacks)
         _skip_ext_cleanup = data.startswith("extsta:")
-        for _key in ("awaiting_note",) + (() if _skip_ext_cleanup else ("awaiting_external",)):
+        _skip_extn_cleanup = data.startswith("extn:")
+        for _key in ("awaiting_note",) + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
             _pending = context.user_data.pop(_key, None)
             if _pending:
                 _pmid = _pending.get("prompt_message_id")
@@ -314,6 +315,67 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 "prompt_message_id": prompt_msg.message_id,
                 "chat_id": query.message.chat_id,
                 "step": "name",
+            }
+
+        elif data.startswith("extdel:"):
+            await query.answer()
+            # extdel:{ext_id}:{event_id}:{back_page}
+            parts = data.split(":")
+            ext_id_d, event_id_d, back_page_d = int(parts[1]), int(parts[2]), int(parts[3])
+            ext = db.get(EventExternal, ext_id_d)
+            if ext and ext.event_id == event_id_d:
+                db.delete(ext)
+                db.commit()
+            await _show_event_externals(query, user, db, event_id_d, back_page=back_page_d)
+
+        elif data.startswith("extedit:"):
+            await query.answer()
+            # extedit:{ext_id}:{event_id}:{back_page} — show status keyboard for existing external
+            parts = data.split(":")
+            ext_id_e, event_id_e, back_page_e = int(parts[1]), int(parts[2]), int(parts[3])
+            ext = db.get(EventExternal, ext_id_e)
+            if ext:
+                locale_e = _locale(user)
+                keyboard_e = InlineKeyboardMarkup([
+                    [
+                        InlineKeyboardButton("✓", callback_data=f"exts:{ext_id_e}:p:{event_id_e}:{back_page_e}"),
+                        InlineKeyboardButton("✗", callback_data=f"exts:{ext_id_e}:a:{event_id_e}:{back_page_e}"),
+                        InlineKeyboardButton("?", callback_data=f"exts:{ext_id_e}:u:{event_id_e}:{back_page_e}"),
+                    ],
+                    [InlineKeyboardButton(t("telegram.note_button", locale_e) + (" ✓" if ext.note else ""), callback_data=f"extn:{ext_id_e}:{event_id_e}:{back_page_e}")],
+                    [InlineKeyboardButton(t("telegram.back_button", locale_e), callback_data=f"evtx:{event_id_e}:{back_page_e}")],
+                ])
+                icon = STATUS_ICON.get(ext.status, "?")
+                await query.edit_message_text(
+                    f"*{ext.full_name}* {icon}\n_{ext.note or ''}_" if ext.note else f"*{ext.full_name}* {icon}",
+                    reply_markup=keyboard_e,
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+
+        elif data.startswith("exts:"):
+            await query.answer()
+            # exts:{ext_id}:{status_char}:{event_id}:{back_page} — update existing external status
+            parts = data.split(":")
+            ext_id_s, status_char_s, event_id_s, back_page_s = int(parts[1]), parts[2], int(parts[3]), int(parts[4])
+            ext = db.get(EventExternal, ext_id_s)
+            if ext:
+                status_map = {"p": "present", "a": "absent", "u": "unknown"}
+                ext.status = status_map.get(status_char_s, "unknown")
+                db.commit()
+            await _show_event_externals(query, user, db, event_id_s, back_page=back_page_s)
+
+        elif data.startswith("extn:"):
+            await query.answer()
+            # extn:{ext_id}:{event_id}:{back_page} — add/edit note for existing external
+            parts = data.split(":")
+            ext_id_n2, event_id_n2, back_page_n2 = int(parts[1]), int(parts[2]), int(parts[3])
+            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
+            context.user_data["awaiting_ext_note"] = {
+                "ext_id": ext_id_n2,
+                "event_id": event_id_n2,
+                "back_page": back_page_n2,
+                "prompt_message_id": prompt_msg.message_id,
+                "chat_id": query.message.chat_id,
             }
 
         elif data.startswith("extsta:"):
@@ -546,7 +608,8 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
 
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = str(update.effective_chat.id)
-    if context.user_data.pop("awaiting_note", None):
+    cancelled = context.user_data.pop("awaiting_note", None) or context.user_data.pop("awaiting_ext_note", None) or context.user_data.pop("awaiting_external", None)
+    if cancelled:
         with SessionLocal() as db:
             user = get_user_by_chat_id(db, chat_id)
             locale = _locale(user) if user else "en"
@@ -600,6 +663,38 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             reply_markup=status_keyboard,
         )
         pending_ext["prompt_message_id"] = prompt2.message_id
+        return
+
+    # Handle external note input
+    pending_ext_note = context.user_data.get("awaiting_ext_note")
+    if pending_ext_note:
+        note_text = (update.message.text or "").strip()
+        prompt_msg_id = pending_ext_note.get("prompt_message_id")
+        note_chat_id = pending_ext_note.get("chat_id")
+        if prompt_msg_id and note_chat_id:
+            try:
+                await context.bot.delete_message(chat_id=note_chat_id, message_id=prompt_msg_id)
+            except Exception:
+                pass
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+        with SessionLocal() as db:
+            user = get_user_by_chat_id(db, chat_id)
+            if user:
+                ext = db.get(EventExternal, pending_ext_note["ext_id"])
+                if ext:
+                    ext.note = note_text or None
+                    db.commit()
+        context.user_data.pop("awaiting_ext_note", None)
+        import asyncio as _asyncio  # noqa: PLC0415
+        conf = await update.message.reply_text(t("telegram.note_saved", _locale(user) if user else "en"))
+        await _asyncio.sleep(2)
+        try:
+            await conf.delete()
+        except Exception:
+            pass
         return
 
     pending = context.user_data.get("awaiting_note")
@@ -659,23 +754,26 @@ async def _show_event_externals(query, user, db, event_id: int, back_page: int =
     locale = _locale(user)
     externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
 
+    rows = []
     if externals:
         lines = [f"*{t('telegram.externals_header', locale)}*"]
         for ext in externals:
             icon = STATUS_ICON.get(ext.status, "?")
-            line = f"{icon} {ext.full_name}"
+            line = f"{icon} _{ext.full_name}_"
             if ext.note:
-                line += f" — _{ext.note}_"
+                line += f" — {ext.note}"
             lines.append(line)
+            rows.append([
+                InlineKeyboardButton(f"✎ {ext.full_name}", callback_data=f"extedit:{ext.id}:{event_id}:{back_page}"),
+                InlineKeyboardButton("🗑", callback_data=f"extdel:{ext.id}:{event_id}:{back_page}"),
+            ])
         text = "\n".join(lines)
     else:
         text = t("telegram.no_externals", locale)
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"+ {t('externals.add', locale)}", callback_data=f"extadd:{event_id}:{back_page}")],
-        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")],
-    ])
-    await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+    rows.append([InlineKeyboardButton(f"+ {t('externals.add', locale)}", callback_data=f"extadd:{event_id}:{back_page}")])
+    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")])
+    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows), parse_mode=ParseMode.MARKDOWN)
 
 
 # ---------------------------------------------------------------------------
