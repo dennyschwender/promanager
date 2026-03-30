@@ -29,7 +29,7 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
         nav.append(InlineKeyboardButton(t("telegram.prev_button", locale), callback_data=f"evts:{page - 1}"))
     nav.append(InlineKeyboardButton(t("telegram.refresh_button", locale), callback_data=f"ref:{page}"))
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(t("telegram.next_button", locale), callback_data=f"evts:{page + 1}"))
+        nav.append(InlineKeyboardButton(t("telegram.view_more_button", locale), callback_data=f"evts:{page + 1}"))
     rows.append(nav)
 
     return InlineKeyboardMarkup(rows)

@@ -720,6 +720,7 @@
     "view_button": "View",
     "prev_button": "← Prev",
     "next_button": "Next →",
+    "view_more_button": "View more →",
     "back_button": "← Back",
     "refresh_button": "🔄 Refresh",
     "event_type_training": "Training",
