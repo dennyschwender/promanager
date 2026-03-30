@@ -312,8 +312,8 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             )
     else:
         # Coach/Admin: show players for this event's team/season
-        if event.team_id and event.season_id and not user.is_admin:
-            # Coach: only players in the event's team for this season
+        if event.team_id and event.season_id:
+            # Filter to players assigned to this event's team+season
             pt_rows = (
                 db.query(PlayerTeam)
                 .filter(
