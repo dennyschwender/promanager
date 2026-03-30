@@ -708,6 +708,8 @@
     "auth_not_found": "Kein ProManager-Konto für diese Telefonnummer gefunden. Kontaktiere deinen Admin.",
     "start_over_button": "🔄 Erneut versuchen",
     "note_button": "📝 Notiz",
+    "notes_button": "📝 Notizen ansehen",
+    "no_notes": "Keine Notizen für dieses Event.",
     "note_prompt": "Gib deine Notiz für dieses Event ein (oder sende /cancel zum Abbrechen):",
     "note_saved": "Notiz gespeichert.",
     "note_label": "Notiz",

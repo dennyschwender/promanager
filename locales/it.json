@@ -708,6 +708,8 @@
     "auth_not_found": "Nessun account ProManager trovato per questo numero. Contatta il tuo admin.",
     "start_over_button": "🔄 Riprova",
     "note_button": "📝 Nota",
+    "notes_button": "📝 Vedi note",
+    "no_notes": "Nessuna nota per questo evento.",
     "note_prompt": "Scrivi la tua nota per questo evento (o invia /cancel per annullare):",
     "note_saved": "Nota salvata.",
     "note_label": "Nota",

@@ -110,7 +110,7 @@
                   data-player-name="{{ entry.player.full_name | e }}"
                   data-status="{{ bucket }}"
                   data-note="{{ entry.note | e }}">
-            {{ entry.player.full_name }}
+            {{ entry.player.full_name }}{% if entry.note %} <span class="note-indicator" title="{{ entry.note | e }}">📝</span>{% endif %}
             {% set att = att_by_player.get(entry.player.id) %}
             {% if att and att.borrowed_from_team_id is not none %}
             <span class="borrow-icon" tabindex="0">⟳<span class="borrow-tooltip">

@@ -275,6 +275,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             await _show_event_detail(query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2]), edit_mode=True)
 
+        elif data.startswith("evtn:"):
+            await query.answer()
+            # evtn:{event_id}:{back_page}
+            parts = data.split(":")
+            await _show_event_notes(query, user, db, int(parts[1]), back_page=int(parts[2]))
+
         elif data.startswith("note:"):
             await query.answer()
             # note:{event_id}:{player_id}:{back_page}
@@ -455,7 +461,7 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
             )
         else:
-            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale)
+            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale, is_privileged=True)
 
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
@@ -529,6 +535,35 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await confirmation.delete()
     except Exception:
         pass
+
+
+# ---------------------------------------------------------------------------
+# Event notes (coach/admin)
+# ---------------------------------------------------------------------------
+
+
+async def _show_event_notes(query, user, db, event_id: int, back_page: int = 0) -> None:
+    locale = _locale(user)
+    atts = (
+        db.query(Attendance)
+        .filter(Attendance.event_id == event_id, Attendance.note.isnot(None))
+        .all()
+    )
+    if not atts:
+        text = t("telegram.no_notes", locale)
+    else:
+        lines = []
+        for att in atts:
+            player = db.get(Player, att.player_id)
+            name = player.full_name if player else f"#{att.player_id}"
+            icon = STATUS_ICON.get(att.status, "?")
+            lines.append(f"{icon} *{name}*: {att.note}")
+        text = "\n".join(lines)
+
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")]]
+    )
+    await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
 
 # ---------------------------------------------------------------------------
