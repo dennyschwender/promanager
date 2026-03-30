@@ -18,11 +18,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "users",
-        sa.Column("telegram_chat_id", sa.String(64), nullable=True, unique=True),
-    )
-    op.create_index("ix_users_telegram_chat_id_unique", "users", ["telegram_chat_id"], unique=True)
+    conn = op.get_bind()
+    existing_cols = [c["name"] for c in sa.inspect(conn).get_columns("users")]
+    if "telegram_chat_id" not in existing_cols:
+        op.add_column(
+            "users",
+            sa.Column("telegram_chat_id", sa.String(64), nullable=True, unique=True),
+        )
+    existing_indexes = [i["name"] for i in sa.inspect(conn).get_indexes("users")]
+    if "ix_users_telegram_chat_id_unique" not in existing_indexes:
+        op.create_index("ix_users_telegram_chat_id_unique", "users", ["telegram_chat_id"], unique=True)
 
 
 def downgrade() -> None:
