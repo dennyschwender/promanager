@@ -280,12 +280,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # note:{event_id}:{player_id}:{back_page}
             parts = data.split(":")
             event_id_n, player_id_n, back_page_n = int(parts[1]), int(parts[2]), int(parts[3])
+            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
             context.user_data["awaiting_note"] = {
                 "event_id": event_id_n,
                 "player_id": player_id_n,
                 "back_page": back_page_n,
+                "prompt_message_id": prompt_msg.message_id,
+                "chat_id": query.message.chat_id,
             }
-            await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
             return
 
         elif data.startswith("sta:"):
@@ -505,7 +507,21 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         att.note = note_text or None
         db.commit()
 
+    prompt_message_id = pending.get("prompt_message_id")
+    chat_id = pending.get("chat_id")
     context.user_data.pop("awaiting_note", None)
+
+    # Delete the prompt message and the user's note message to keep chat clean
+    if prompt_message_id and chat_id:
+        try:
+            await context.bot.delete_message(chat_id=chat_id, message_id=prompt_message_id)
+        except Exception:
+            pass
+    try:
+        await update.message.delete()
+    except Exception:
+        pass
+
     await update.message.reply_text(t("telegram.note_saved", locale))
 
 
