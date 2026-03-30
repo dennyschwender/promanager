@@ -471,6 +471,7 @@
     <p id="ext-error" style="color:var(--tp-danger,#c0392b);display:none;"></p>
     <footer class="att-dialog-actions">
       <button type="button" class="btn btn-outline" onclick="document.getElementById('ext-dialog').close()">{{ t('common.cancel') }}</button>
+      <button type="button" class="btn btn-outline btn-danger-text" id="ext-delete-btn" style="display:none;" onclick="deleteExternalFromDialog()">{{ t('common.delete') }}</button>
       <button type="button" class="btn btn-primary" id="ext-save-btn" onclick="saveExternal()">{{ t('common.save') }}</button>
     </footer>
   </article>
@@ -489,7 +490,12 @@
     document.getElementById('ext-status').value = status;
     document.getElementById('ext-note').value = note;
     document.getElementById('ext-error').style.display = 'none';
+    document.getElementById('ext-delete-btn').style.display = id ? 'inline-block' : 'none';
     document.getElementById('ext-dialog').showModal();
+  };
+
+  window.deleteExternalFromDialog = function() {
+    if (_editingId) { document.getElementById('ext-dialog').close(); deleteExternal(_editingId); }
   };
 
   window.saveExternal = function() {
