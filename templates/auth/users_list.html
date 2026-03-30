@@ -38,7 +38,7 @@
     <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
     <td>
       {% if u.id == user.id %}
-        <span class="text-muted" style="font-size:.82rem;">{{ t('users.cannot_edit_self') }}</span>
+        <a href="/profile/edit" class="btn btn-sm btn-outline">{{ t('users.edit_user') }}</a>
       {% else %}
       <div class="action-dropdown">
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
