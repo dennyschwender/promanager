@@ -349,7 +349,11 @@
     "edit_user": "Modifier",
     "profile_saved": "Profil mis à jour.",
     "phone": "Téléphone",
-    "phone_hint": "ex. +39 123 456 7890"
+    "phone_hint": "ex. +39 123 456 7890",
+    "phone_label": "Téléphone",
+    "locale_label": "Langue",
+    "first_name": "Prénom",
+    "last_name": "Nom"
   },
   "players_form": {
     "basic_info": "Informations de base",
