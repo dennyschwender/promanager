@@ -44,18 +44,22 @@ def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en") -
 
 
 def event_status_keyboard(
-    event_id: int, player_id: int, back_page: int = 0, locale: str = "en"
+    event_id: int, player_id: int, back_page: int = 0, locale: str = "en", note: str = ""
 ) -> InlineKeyboardMarkup:
     """Status buttons for a single player (member self-service).
 
     Offers present/absent/unknown — "maybe" is intentionally omitted for simplicity.
     """
+    note_label = t("telegram.note_button", locale)
+    if note:
+        note_label += " ✓"
     rows = [
         [
             InlineKeyboardButton(t("telegram.status_present", locale), callback_data=f"sta:{event_id}:{player_id}:p"),
             InlineKeyboardButton(t("telegram.status_absent", locale), callback_data=f"sta:{event_id}:{player_id}:a"),
             InlineKeyboardButton(t("telegram.status_unknown", locale), callback_data=f"sta:{event_id}:{player_id}:u"),
         ],
+        [InlineKeyboardButton(note_label, callback_data=f"note:{event_id}:{player_id}:{back_page}")],
         [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")],
     ]
     return InlineKeyboardMarkup(rows)

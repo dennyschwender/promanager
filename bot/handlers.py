@@ -275,6 +275,19 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             await _show_event_detail(query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2]), edit_mode=True)
 
+        elif data.startswith("note:"):
+            await query.answer()
+            # note:{event_id}:{player_id}:{back_page}
+            parts = data.split(":")
+            event_id_n, player_id_n, back_page_n = int(parts[1]), int(parts[2]), int(parts[3])
+            context.user_data["awaiting_note"] = {
+                "event_id": event_id_n,
+                "player_id": player_id_n,
+                "back_page": back_page_n,
+            }
+            await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
+            return
+
         elif data.startswith("sta:"):
             # _set_status calls query.answer() itself with the status toast
             parts = data.split(":")
@@ -361,9 +374,12 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
         if own_player:
             own_att = att_by_player.get(own_player.id)
             own_status = own_att.status if own_att else "unknown"
+            own_note = own_att.note if own_att else ""
             status_label = t(f"telegram.status_{own_status}", locale)
             text += f"\n\n{t('telegram.your_status_label', locale)}: {status_label}"
-            keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale)
+            if own_note:
+                text += f"\n_{t('telegram.note_label', locale)}: {own_note}_"
+            keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "")
         else:
             keyboard = InlineKeyboardMarkup(
                 [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]]
@@ -440,6 +456,57 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale)
 
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+
+
+# ---------------------------------------------------------------------------
+# /cancel — abort pending note input
+# ---------------------------------------------------------------------------
+
+
+async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = str(update.effective_chat.id)
+    if context.user_data.pop("awaiting_note", None):
+        with SessionLocal() as db:
+            user = get_user_by_chat_id(db, chat_id)
+            locale = _locale(user) if user else "en"
+        await update.message.reply_text(t("telegram.note_cancelled", locale))
+    else:
+        await update.message.reply_text("OK.")
+
+
+# ---------------------------------------------------------------------------
+# Free-text message handler — captures note input
+# ---------------------------------------------------------------------------
+
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = str(update.effective_chat.id)
+    pending = context.user_data.get("awaiting_note")
+    if not pending:
+        return  # ignore unrecognised text
+
+    event_id = pending["event_id"]
+    player_id = pending["player_id"]
+    back_page = pending["back_page"]
+    note_text = (update.message.text or "").strip()
+
+    with SessionLocal() as db:
+        user = get_user_by_chat_id(db, chat_id)
+        if user is None:
+            return
+        locale = _locale(user)
+        att = db.query(Attendance).filter(
+            Attendance.event_id == event_id,
+            Attendance.player_id == player_id,
+        ).first()
+        if att is None:
+            from services.attendance_service import get_or_create_attendance  # noqa: PLC0415
+            att = get_or_create_attendance(db, event_id, player_id)
+        att.note = note_text or None
+        db.commit()
+
+    context.user_data.pop("awaiting_note", None)
+    await update.message.reply_text(t("telegram.note_saved", locale))
 
 
 # ---------------------------------------------------------------------------

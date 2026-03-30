@@ -19,17 +19,21 @@ def build_application(token: str) -> Application:
     """Build and wire the Application with all handlers."""
     from bot.handlers import (  # noqa: PLC0415
         handle_callback,
+        handle_cancel,
         handle_contact,
         handle_logout,
         handle_refresh,
         handle_start,
+        handle_text,
     )
 
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", handle_start))
     app.add_handler(CommandHandler("logout", handle_logout))
     app.add_handler(CommandHandler("refresh", handle_refresh))
+    app.add_handler(CommandHandler("cancel", handle_cancel))
     app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(CallbackQueryHandler(handle_callback))
     return app
 
