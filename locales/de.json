@@ -706,6 +706,7 @@
     "auth_conflict_chat": "Dieses Telegram-Konto ist bereits mit einem anderen ProManager-Benutzer verknüpft. Kontaktiere deinen Admin.",
     "auth_conflict_user": "Dieses ProManager-Konto ist bereits mit einem anderen Telegram-Benutzer verknüpft. Kontaktiere deinen Admin.",
     "auth_not_found": "Kein ProManager-Konto für diese Telefonnummer gefunden. Kontaktiere deinen Admin.",
+    "start_over_button": "🔄 Erneut versuchen",
     "auth_no_user": "Dieses Telefon gehört einem Spieler ohne Benutzerkonto. Kontaktiere deinen Admin.",
     "not_authenticated": "Bitte /start verwenden um dich anzumelden.",
     "logout_success": "Du wurdest abgemeldet.",

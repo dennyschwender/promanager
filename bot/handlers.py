@@ -72,6 +72,20 @@ async def _send_events_list(message, user, db) -> None:
     await message.reply_text(header, reply_markup=keyboard)
 
 
+def _phone_request_keyboard(locale: str = "en") -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(t("telegram.share_phone_button", locale), request_contact=True)]],
+        one_time_keyboard=True,
+        resize_keyboard=True,
+    )
+
+
+def _start_over_keyboard(locale: str = "en") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton(t("telegram.start_over_button", locale), callback_data="restart:")]]
+    )
+
+
 # ---------------------------------------------------------------------------
 # /start
 # ---------------------------------------------------------------------------
@@ -90,15 +104,9 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await _send_events_list(update.message, user, db)
             return
 
-    # Not authenticated — ask for phone
-    keyboard = ReplyKeyboardMarkup(
-        [[KeyboardButton(t("telegram.share_phone_button", "en"), request_contact=True)]],
-        one_time_keyboard=True,
-        resize_keyboard=True,
-    )
     await update.message.reply_text(
         t("telegram.welcome", "en"),
-        reply_markup=keyboard,
+        reply_markup=_phone_request_keyboard(),
     )
 
 
@@ -152,22 +160,31 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 t("telegram.auth_not_found", "en"),
                 reply_markup=ReplyKeyboardRemove(),
             )
+            await update.message.reply_text(
+                "\u200b",  # zero-width space — placeholder for the inline button
+                reply_markup=_start_over_keyboard("en"),
+            )
             return
 
         locale = _locale(user)
         result = link_telegram(db, user, chat_id)
 
-    reply_markup = ReplyKeyboardRemove()
     if result == AuthResult.SUCCESS:
         msg = t("telegram.auth_success", locale, username=user.username)
+        await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())
     elif result == AuthResult.ALREADY_THIS:
         msg = t("telegram.auth_already_this", locale, username=user.username)
-    elif result == AuthResult.CONFLICT_CHAT:
-        msg = t("telegram.auth_conflict_chat", locale)
-    else:  # CONFLICT_USER
-        msg = t("telegram.auth_conflict_user", locale)
-
-    await update.message.reply_text(msg, reply_markup=reply_markup)
+        await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())
+    else:
+        if result == AuthResult.CONFLICT_CHAT:
+            msg = t("telegram.auth_conflict_chat", locale)
+        else:  # CONFLICT_USER
+            msg = t("telegram.auth_conflict_user", locale)
+        await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text(
+            "\u200b",
+            reply_markup=_start_over_keyboard(locale),
+        )
 
     if result in (AuthResult.SUCCESS, AuthResult.ALREADY_THIS):
         with SessionLocal() as db:
@@ -194,6 +211,15 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data == "noop":
             await query.answer()
+            return
+
+        if data == "restart:":
+            await query.answer()
+            await query.edit_message_reply_markup(reply_markup=None)
+            await query.message.reply_text(
+                t("telegram.welcome", "en"),
+                reply_markup=_phone_request_keyboard(),
+            )
             return
 
         if data.startswith("ref:"):

@@ -706,6 +706,7 @@
     "auth_conflict_chat": "This Telegram account is already linked to another ProManager user. Contact your admin.",
     "auth_conflict_user": "This ProManager account is already linked to another Telegram user. Contact your admin.",
     "auth_not_found": "No ProManager account found for this phone number. Contact your admin.",
+    "start_over_button": "🔄 Try again",
     "auth_no_user": "This phone is registered to a player with no linked user account. Contact your admin.",
     "not_authenticated": "Please use /start to authenticate first.",
     "logout_success": "You have been logged out.",
