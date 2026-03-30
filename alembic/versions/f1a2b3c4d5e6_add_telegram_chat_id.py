@@ -22,7 +22,9 @@ def upgrade() -> None:
         "users",
         sa.Column("telegram_chat_id", sa.String(64), nullable=True, unique=True),
     )
+    op.create_index("ix_users_telegram_chat_id_unique", "users", ["telegram_chat_id"], unique=True)
 
 
 def downgrade() -> None:
+    op.drop_index("ix_users_telegram_chat_id_unique", table_name="users")
     op.drop_column("users", "telegram_chat_id")
