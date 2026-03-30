@@ -49,6 +49,26 @@ def _locale(user) -> str:
     return user.locale if user and user.locale else "en"
 
 
+async def _send_events_list(message, user, db) -> None:
+    """Send the upcoming events list as a new message with inline keyboard."""
+    locale = _locale(user)
+    today = datetime.today().date()
+    all_upcoming = (
+        db.query(Event)
+        .filter(Event.event_date >= today)
+        .order_by(Event.event_date.asc())
+        .all()
+    )
+    if not all_upcoming:
+        await message.reply_text(t("telegram.no_events", locale))
+        return
+    total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
+    page_events = all_upcoming[:PAGE_SIZE]
+    header = t("telegram.events_header", locale, page=1)
+    keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
+    await message.reply_text(header, reply_markup=keyboard)
+
+
 # ---------------------------------------------------------------------------
 # /start
 # ---------------------------------------------------------------------------
@@ -64,6 +84,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 t("telegram.auth_already_this", locale, username=user.username),
                 reply_markup=ReplyKeyboardRemove(),
             )
+            await _send_events_list(update.message, user, db)
             return
 
     # Not authenticated — ask for phone
@@ -129,6 +150,10 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         msg = t("telegram.auth_conflict_user", locale)
 
     await update.message.reply_text(msg, reply_markup=reply_markup)
+
+    if result in (AuthResult.SUCCESS, AuthResult.ALREADY_THIS):
+        with SessionLocal() as db:
+            await _send_events_list(update.message, user, db)
 
 
 # ---------------------------------------------------------------------------
