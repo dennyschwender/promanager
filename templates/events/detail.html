@@ -129,10 +129,10 @@
         <li class="att-player-item">
           <button type="button" class="att-player-btn att-external-btn"
                   data-ext-id="{{ ext.id }}"
-                  data-player-name="{{ ext.full_name | e }}"
-                  data-status="{{ bucket }}"
-                  data-note="{{ (ext.note or '') | e }}"
-                  onclick="openExtDialog({{ ext.id }}, {{ ext.first_name|tojson }}, {{ ext.last_name|tojson }}, {{ ext.status|tojson }}, {{ (ext.note or '')|tojson }})">
+                  data-first-name="{{ ext.first_name | e }}"
+                  data-last-name="{{ ext.last_name | e }}"
+                  data-status="{{ ext.status }}"
+                  data-note="{{ (ext.note or '') | e }}">
             👤 {{ ext.full_name }}{% if ext.note %} <span class="note-indicator" title="{{ ext.note | e }}">📝</span>{% endif %}
           </button>
         </li>
@@ -262,6 +262,12 @@
   document.getElementById('attendance-columns').addEventListener('click', function (e) {
     var btn = e.target.closest('.att-player-btn');
     if (!btn) return;
+    if (btn.classList.contains('att-external-btn')) {
+      if (!IS_PRIVILEGED) return;
+      e.stopPropagation();
+      openExtDialog(parseInt(btn.dataset.extId, 10), btn.dataset.firstName, btn.dataset.lastName, btn.dataset.status, btn.dataset.note);
+      return;
+    }
     var pid = parseInt(btn.dataset.playerId, 10);
     if (!IS_PRIVILEGED && !USER_PLAYER_IDS.has(pid)) return;
     e.stopPropagation();
