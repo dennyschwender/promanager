@@ -69,9 +69,13 @@ async def events_list(
     request: Request,
     season_id: str | None = None,
     team_id: str | None = None,
+    upcoming_page: int = 1,
+    past_page: int = 1,
     user: "User | None" = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
+    import math  # noqa: PLC0415
+    PAGE_SIZE = 10
     season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]
     team_id = int(team_id) if team_id and team_id.strip() else None  # type: ignore[assignment]
     today = datetime.today().date()
@@ -82,9 +86,17 @@ async def events_list(
     if team_id is not None:
         q = q.filter(Event.team_id == team_id)
 
-    all_events = q.order_by(Event.event_date.desc()).all()
-    upcoming = [e for e in all_events if e.event_date >= today]
-    past = [e for e in all_events if e.event_date < today]
+    all_events = q.order_by(Event.event_date.asc()).all()
+    all_upcoming = [e for e in all_events if e.event_date >= today]
+    all_past = sorted([e for e in all_events if e.event_date < today], key=lambda e: e.event_date, reverse=True)
+
+    upcoming_total = math.ceil(len(all_upcoming) / PAGE_SIZE) or 1
+    past_total = math.ceil(len(all_past) / PAGE_SIZE) or 1
+    upcoming_page = max(1, min(upcoming_page, upcoming_total))
+    past_page = max(1, min(past_page, past_total))
+
+    upcoming = all_upcoming[(upcoming_page - 1) * PAGE_SIZE : upcoming_page * PAGE_SIZE]
+    past = all_past[(past_page - 1) * PAGE_SIZE : past_page * PAGE_SIZE]
 
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
@@ -96,6 +108,10 @@ async def events_list(
             "user": user,
             "upcoming": upcoming,
             "past": past,
+            "upcoming_page": upcoming_page,
+            "upcoming_total": upcoming_total,
+            "past_page": past_page,
+            "past_total": past_total,
             "seasons": seasons,
             "teams": teams,
             "selected_season_id": season_id,

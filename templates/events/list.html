@@ -77,9 +77,28 @@
 </div>
 {% endmacro %}
 
+{% macro pagination(page, total, page_param, other_params) %}
+{% if total > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="?{{ other_params }}&{{ page_param }}={{ page - 1 }}" class="btn btn-sm btn-outline">← {{ t('common.prev') }}</a>
+  {% endif %}
+  <span class="pagination-info">{{ page }} / {{ total }}</span>
+  {% if page < total %}
+    <a href="?{{ other_params }}&{{ page_param }}={{ page + 1 }}" class="btn btn-sm btn-outline">{{ t('common.next') }} →</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% set base_params = '' %}
+{% if selected_season_id %}{% set base_params = base_params ~ 'season_id=' ~ selected_season_id %}{% endif %}
+{% if selected_team_id %}{% set base_params = base_params ~ ('&' if base_params else '') ~ 'team_id=' ~ selected_team_id %}{% endif %}
+
 <h3>{{ t('events.upcoming') }}</h3>
 {% if upcoming %}
   {{ events_table(upcoming, 'upcoming') }}
+  {{ pagination(upcoming_page, upcoming_total, 'upcoming_page', base_params ~ ('&past_page=' ~ past_page if past_page > 1 else '')) }}
 {% else %}
   <p>{{ t('events.no_upcoming') }}</p>
 {% endif %}
@@ -87,6 +106,7 @@
 <h3>{{ t('events.past') }}</h3>
 {% if past %}
   {{ events_table(past, 'past') }}
+  {{ pagination(past_page, past_total, 'past_page', base_params ~ ('&upcoming_page=' ~ upcoming_page if upcoming_page > 1 else '')) }}
 {% else %}
   <p>{{ t('events.no_past') }}</p>
 {% endif %}

@@ -223,6 +223,8 @@
   },
   "common": {
     "save": "Speichern",
+    "prev": "Zurück",
+    "next": "Weiter",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "confirm": "Sind Sie sicher?",
