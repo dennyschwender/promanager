@@ -43,6 +43,7 @@
       <div class="action-dropdown">
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
         <div class="action-dropdown-menu">
+          <a href="/auth/users/{{ u.id }}/edit" class="btn-link">{{ t('users.edit_user') }}</a>
           <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="{% if not u.is_active %}reactivate{% endif %}">

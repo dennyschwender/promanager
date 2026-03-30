@@ -204,6 +204,7 @@ def create_app() -> FastAPI:
         request: Request,
         user=_Depends(_require_login),
         db: _Session = _Depends(_get_db),
+        flash: str = "",
     ):
         from models.notification_preference import NotificationPreference  # noqa: PLC0415
         from models.player import Player as _Player  # noqa: PLC0415
@@ -227,8 +228,74 @@ def create_app() -> FastAPI:
                 "player_prefs": player_prefs,
                 "push_device_count": push_device_count,
                 "vapid_public_key": settings.VAPID_PUBLIC_KEY or None,
+                "flash": flash,
             },
         )
+
+    # ── Profile edit ──────────────────────────────────────────────────────
+    from fastapi import Form as _Form  # noqa: PLC0415
+
+    from app.csrf import require_csrf as _require_csrf  # noqa: PLC0415
+    from services.auth_service import hash_password as _hash_password, verify_password as _verify_password  # noqa: PLC0415
+
+    @app.get("/profile/edit", include_in_schema=False)
+    async def profile_edit_get(
+        request: Request,
+        user=_Depends(_require_login),
+    ):
+        return render(request, "auth/user_form.html", {"user": user, "target": user, "is_admin_edit": False, "error": None})
+
+    @app.post("/profile/edit", include_in_schema=False)
+    async def profile_edit_post(
+        request: Request,
+        user=_Depends(_require_login),
+        _csrf=_Depends(_require_csrf),
+        db: _Session = _Depends(_get_db),
+        username: str = _Form(...),
+        email: str = _Form(...),
+        locale: str = _Form("en"),
+        current_password: str = _Form(""),
+        new_password: str = _Form(""),
+    ):
+        from models.user import User as _User  # noqa: PLC0415
+        from routes._auth_helpers import rt as _rt  # noqa: PLC0415
+
+        username = username.strip()
+        email = email.strip()
+
+        def _error(msg: str):
+            return render(request, "auth/user_form.html", {"user": user, "target": user, "is_admin_edit": False, "error": msg}, status_code=400)
+
+        if not username:
+            return _error(_rt(request, "errors.field_required", field="Username"))
+        if not email:
+            return _error(_rt(request, "errors.field_required", field="Email"))
+        if new_password and not current_password:
+            return _error(_rt(request, "errors.current_password_required"))
+        if new_password and not _verify_password(current_password, user.hashed_password):
+            return _error(_rt(request, "errors.current_password_wrong"))
+        if new_password and len(new_password) < 8:
+            return _error(_rt(request, "errors.password_too_short"))
+
+        dup_user = db.query(_User).filter(_User.username == username, _User.id != user.id).first()
+        if dup_user:
+            return _error(_rt(request, "errors.username_taken", username=username))
+        dup_email = db.query(_User).filter(_User.email == email, _User.id != user.id).first()
+        if dup_email:
+            return _error(_rt(request, "errors.email_taken", email=email))
+
+        db_user = db.get(_User, user.id)
+        db_user.username = username
+        db_user.email = email
+        db_user.locale = locale
+        if new_password:
+            db_user.hashed_password = _hash_password(new_password)
+        db.commit()
+        from urllib.parse import quote as _quote  # noqa: PLC0415
+        from routes._auth_helpers import rt as _rt2  # noqa: PLC0415
+        flash = _quote(_rt2(request, "users.profile_saved"))
+        from fastapi.responses import RedirectResponse as _RedirectResponse  # noqa: PLC0415
+        return _RedirectResponse(f"/profile?flash={flash}", status_code=302)
 
     # ── Health check ──────────────────────────────────────────────────────
     from fastapi.responses import JSONResponse  # noqa: PLC0415
