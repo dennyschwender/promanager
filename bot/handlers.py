@@ -100,6 +100,21 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 # ---------------------------------------------------------------------------
+# /refresh
+# ---------------------------------------------------------------------------
+
+
+async def handle_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = str(update.effective_chat.id)
+    with SessionLocal() as db:
+        user = get_user_by_chat_id(db, chat_id)
+        if user is None:
+            await update.message.reply_text(t("telegram.not_authenticated", "en"))
+            return
+        await _send_events_list(update.message, user, db)
+
+
+# ---------------------------------------------------------------------------
 # /logout
 # ---------------------------------------------------------------------------
 
@@ -178,7 +193,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             return
 
-        if data.startswith("evts:"):
+        if data.startswith("ref:"):
+            await query.answer()
+            page = int(data.split(":")[1])
+            await _show_events(query, user, db, page)
+
+        elif data.startswith("evts:"):
             await query.answer()
             page = int(data.split(":")[1])
             await _show_events(query, user, db, page)

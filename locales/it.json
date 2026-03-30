@@ -715,6 +715,7 @@
     "prev_button": "← Prec",
     "next_button": "Succ →",
     "back_button": "← Indietro",
+    "refresh_button": "🔄 Aggiorna",
     "event_type_training": "Allenamento",
     "event_type_match": "Partita",
     "event_type_other": "Evento",

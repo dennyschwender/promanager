@@ -715,6 +715,7 @@
     "prev_button": "← Préc",
     "next_button": "Suiv →",
     "back_button": "← Retour",
+    "refresh_button": "🔄 Actualiser",
     "event_type_training": "Entraînement",
     "event_type_match": "Match",
     "event_type_other": "Événement",

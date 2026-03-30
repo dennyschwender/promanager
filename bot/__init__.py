@@ -21,12 +21,14 @@ def build_application(token: str) -> Application:
         handle_callback,
         handle_contact,
         handle_logout,
+        handle_refresh,
         handle_start,
     )
 
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", handle_start))
     app.add_handler(CommandHandler("logout", handle_logout))
+    app.add_handler(CommandHandler("refresh", handle_refresh))
     app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
     app.add_handler(CallbackQueryHandler(handle_callback))
     return app

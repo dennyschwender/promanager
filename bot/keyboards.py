@@ -18,7 +18,7 @@ STATUS_ICON: dict[str, str] = {"present": "✓", "absent": "✗", "unknown": "?"
 
 
 def events_keyboard(events: list[Event], page: int, total_pages: int, locale: str = "en") -> InlineKeyboardMarkup:
-    """One row per event with a View button, plus Prev/Next navigation."""
+    """One row per event with a View button, plus Prev/Next/Refresh navigation."""
     rows = []
     for event in events:
         label = f"{event.event_date} — {event.title}"
@@ -27,10 +27,10 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     nav = []
     if page > 0:
         nav.append(InlineKeyboardButton(t("telegram.prev_button", locale), callback_data=f"evts:{page - 1}"))
+    nav.append(InlineKeyboardButton(t("telegram.refresh_button", locale), callback_data=f"ref:{page}"))
     if page < total_pages - 1:
         nav.append(InlineKeyboardButton(t("telegram.next_button", locale), callback_data=f"evts:{page + 1}"))
-    if nav:
-        rows.append(nav)
+    rows.append(nav)
 
     return InlineKeyboardMarkup(rows)
 
