@@ -20,6 +20,14 @@
 <form method="post" action="{% if is_admin_edit %}/auth/users/{{ target.id }}/edit{% else %}/profile/edit{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
   <div class="form-grid-2">
+    <label for="first_name">{{ t('users.first_name') }}
+      <input type="text" id="first_name" name="first_name" value="{{ target.first_name or '' }}">
+    </label>
+    <label for="last_name">{{ t('users.last_name') }}
+      <input type="text" id="last_name" name="last_name" value="{{ target.last_name or '' }}">
+    </label>
+  </div>
+  <div class="form-grid-2">
     <label for="username">{{ t('auth.username') }} *
       <input type="text" id="username" name="username" required value="{{ target.username }}">
     </label>

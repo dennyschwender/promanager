@@ -101,57 +101,35 @@ async def register_post(
     email: str = Form(...),
     password: str = Form(...),
     role: str = Form("member"),
+    phone: str = Form(""),
+    locale: str = Form("en"),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    # Validation
-    if role not in {"admin", "coach", "member"}:
+    form_data = {"username": username, "email": email, "role": role, "phone": phone, "locale": locale, "first_name": first_name, "last_name": last_name}
+
+    def error(msg: str):
         return render(
             request,
             "auth/register.html",
-            {
-                "user": user,
-                "error": rt(request, "errors.invalid_role"),
-                "flash": None,
-            },
-            status_code=400,
-        )
-    if get_user_by_username(db, username):
-        return render(
-            request,
-            "auth/register.html",
-            {
-                "user": user,
-                "error": rt(request, "errors.username_taken", username=username),
-                "flash": None,
-            },
-            status_code=400,
-        )
-    if get_user_by_email(db, email):
-        return render(
-            request,
-            "auth/register.html",
-            {
-                "user": user,
-                "error": rt(request, "errors.email_taken", email=email),
-                "flash": None,
-            },
-            status_code=400,
-        )
-    if len(password) < 8:
-        return render(
-            request,
-            "auth/register.html",
-            {
-                "user": user,
-                "error": rt(request, "errors.password_too_short"),
-                "flash": None,
-            },
+            {"user": user, "error": msg, "flash": None, "form_data": form_data},
             status_code=400,
         )
 
-    create_user(db, username=username, email=email, password=password, role=role)
+    # Validation
+    if role not in {"admin", "coach", "member"}:
+        return error(rt(request, "errors.invalid_role"))
+    if get_user_by_username(db, username):
+        return error(rt(request, "errors.username_taken", username=username))
+    if get_user_by_email(db, email):
+        return error(rt(request, "errors.email_taken", email=email))
+    if len(password) < 8:
+        return error(rt(request, "errors.password_too_short"))
+
+    create_user(db, username=username, email=email, password=password, role=role, phone=phone or None, locale=locale or None, first_name=first_name or None, last_name=last_name or None)
     return render(
         request,
         "auth/register.html",

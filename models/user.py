@@ -31,6 +31,10 @@ class User(Base):
     # Optional hashed API token for machine-to-machine auth
     api_token_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
+    # Real name — synced to linked player record when present
+    first_name: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    last_name: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+
     # Phone number — used for Telegram bot matching when no player record is linked
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True, default=None)
 
