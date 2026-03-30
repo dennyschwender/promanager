@@ -6,9 +6,16 @@ import logging
 
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
-from telegram import Update
 
 from app.config import settings
+
+try:
+    from telegram import Update
+except ModuleNotFoundError:
+    class Update:  # type: ignore[no-redef]
+        @staticmethod
+        def de_json(data, bot):
+            return None
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -38,6 +45,6 @@ async def telegram_webhook(
         return JSONResponse({"ok": True})
 
     data = await request.json()
-    update = Update.de_json(data, app.bot)
+    update = Update.de_json(data, app.bot)  # type: ignore[union-attr]
     await app.process_update(update)
     return JSONResponse({"ok": True})
