@@ -486,12 +486,15 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
     if event.description:
         lines.append(f"\n{event.description}")
 
-    # Attendance summary
+    # Attendance summary (players + externals)
     atts = db.query(Attendance).filter(Attendance.event_id == event_id).all()
     att_by_player: dict[int, Attendance] = {a.player_id: a for a in atts}
+    ext_rows = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
     counts: dict[str, int] = {"present": 0, "absent": 0, "unknown": 0, "maybe": 0}
     for a in atts:
         counts[a.status] = counts.get(a.status, 0) + 1
+    for ext in ext_rows:
+        counts[ext.status] = counts.get(ext.status, 0) + 1
     lines.append(
         f"\n{t('telegram.attendance_label', locale)}: ✓ {counts['present']} | ✗ {counts['absent']} | ? {counts['unknown']}"
     )
@@ -575,18 +578,15 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 att = att_by_player.get(p.id)
                 icon = STATUS_ICON.get(att.status if att else "unknown", "?")
                 pos_lines.append(f"{icon} {p.full_name}")
-        text += "\n" + "\n".join(pos_lines)
-
-        # Append externals if any
-        ext_rows = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
         if ext_rows:
-            text += f"\n\n*{t('telegram.externals_header', locale)}*"
+            pos_lines.append(f"\n*{t('telegram.externals_header', locale)}*")
             for ext in ext_rows:
                 icon = STATUS_ICON.get(ext.status, "?")
-                ext_line = f"{icon} _{ext.full_name}_"
+                ext_line = f"{icon} 👤 _{ext.full_name}_"
                 if ext.note:
                     ext_line += f" — {ext.note}"
-                text += f"\n{ext_line}"
+                pos_lines.append(ext_line)
+        text += "\n" + "\n".join(pos_lines)
 
         if edit_mode:
             total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
