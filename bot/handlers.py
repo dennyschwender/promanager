@@ -6,7 +6,14 @@ import logging
 import math
 from datetime import datetime
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+    Update,
+)
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
@@ -15,7 +22,6 @@ from app.i18n import t
 from bot.keyboards import (
     PAGE_SIZE,
     PLAYER_PAGE_SIZE,
-    STATUS_ICON,
     event_admin_keyboard,
     event_status_keyboard,
     events_keyboard,
@@ -132,38 +138,39 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()
-
     chat_id = str(update.effective_chat.id)
 
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
         if user is None:
+            await query.answer()
             await query.edit_message_text(t("telegram.not_authenticated", "en"))
             return
 
         data = query.data or ""
 
         if data == "noop":
+            await query.answer()
             return
 
         if data.startswith("evts:"):
+            await query.answer()
             page = int(data.split(":")[1])
             await _show_events(query, user, db, page)
 
         elif data.startswith("evt:"):
+            await query.answer()
             event_id = int(data.split(":")[1])
             await _show_event_detail(query, user, db, event_id, back_page=0)
 
         elif data.startswith("evtp:"):
+            await query.answer()
             # evtp:{event_id}:{player_page}:{back_page}
             parts = data.split(":")
-            await _show_event_detail(
-                query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2])
-            )
+            await _show_event_detail(query, user, db, int(parts[1]), back_page=int(parts[3]), player_page=int(parts[2]))
 
         elif data.startswith("sta:"):
-            # sta:{event_id}:{player_id}:{status_char}
+            # _set_status calls query.answer() itself with the status toast
             parts = data.split(":")
             await _set_status(query, user, db, int(parts[1]), int(parts[2]), parts[3])
 
@@ -176,12 +183,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def _show_events(query, user, db, page: int) -> None:
     locale = _locale(user)
     today = datetime.today().date()
-    all_upcoming = (
-        db.query(Event)
-        .filter(Event.event_date >= today)
-        .order_by(Event.event_date.asc())
-        .all()
-    )
+    all_upcoming = db.query(Event).filter(Event.event_date >= today).order_by(Event.event_date.asc()).all()
     total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
     page = max(0, min(page, total_pages - 1))
     page_events = all_upcoming[page * PAGE_SIZE : (page + 1) * PAGE_SIZE]
@@ -258,14 +260,13 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             text += f"\n\n{t('telegram.your_status_label', locale)}: {status_label}"
             keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale)
         else:
-            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]])
+            keyboard = InlineKeyboardMarkup(
+                [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]]
+            )
     else:
         # Coach/Admin: show full player list with status buttons
         players = (
-            db.query(Player)
-            .filter(Player.archived_at.is_(None))
-            .order_by(Player.last_name, Player.first_name)
-            .all()
+            db.query(Player).filter(Player.archived_at.is_(None)).order_by(Player.last_name, Player.first_name).all()
         )
         total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
         player_page = max(0, min(player_page, total_player_pages - 1))
