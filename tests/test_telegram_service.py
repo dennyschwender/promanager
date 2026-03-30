@@ -1,6 +1,4 @@
 """tests/test_telegram_service.py"""
-import pytest
-from sqlalchemy.orm import Session
 
 from models.player import Player
 from models.player_phone import PlayerPhone
@@ -13,7 +11,6 @@ from services.telegram_service import (
     normalize_phone,
     unlink_telegram,
 )
-
 
 # ── normalize_phone ───────────────────────────────────────────────────────────
 
