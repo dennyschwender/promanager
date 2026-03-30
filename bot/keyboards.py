@@ -35,7 +35,9 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     return InlineKeyboardMarkup(rows)
 
 
-def event_status_keyboard(event_id: int, player_id: int, back_page: int = 0, locale: str = "en") -> InlineKeyboardMarkup:
+def event_status_keyboard(
+    event_id: int, player_id: int, back_page: int = 0, locale: str = "en"
+) -> InlineKeyboardMarkup:
     """Status buttons for a single player (member self-service).
 
     Offers present/absent/unknown — "maybe" is intentionally omitted for simplicity.
@@ -73,18 +75,28 @@ def event_admin_keyboard(
             f"{icon} {player.full_name}",
             callback_data="noop",
         )
-        rows.append([
-            name_btn,
-            InlineKeyboardButton("✓", callback_data=f"sta:{event_id}:{player.id}:p"),
-            InlineKeyboardButton("✗", callback_data=f"sta:{event_id}:{player.id}:a"),
-            InlineKeyboardButton("?", callback_data=f"sta:{event_id}:{player.id}:u"),
-        ])
+        rows.append(
+            [
+                name_btn,
+                InlineKeyboardButton("✓", callback_data=f"sta:{event_id}:{player.id}:p"),
+                InlineKeyboardButton("✗", callback_data=f"sta:{event_id}:{player.id}:a"),
+                InlineKeyboardButton("?", callback_data=f"sta:{event_id}:{player.id}:u"),
+            ]
+        )
 
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton(t("telegram.prev_button", locale), callback_data=f"evtp:{event_id}:{page - 1}:{back_page}"))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.prev_button", locale), callback_data=f"evtp:{event_id}:{page - 1}:{back_page}"
+            )
+        )
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(t("telegram.next_button", locale), callback_data=f"evtp:{event_id}:{page + 1}:{back_page}"))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.next_button", locale), callback_data=f"evtp:{event_id}:{page + 1}:{back_page}"
+            )
+        )
     if nav:
         rows.append(nav)
 

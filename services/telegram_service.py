@@ -14,7 +14,7 @@ from models.user import User
 
 class AuthResult(Enum):
     SUCCESS = auto()
-    ALREADY_THIS = auto()   # same chat_id already linked to this user
+    ALREADY_THIS = auto()  # same chat_id already linked to this user
     CONFLICT_CHAT = auto()  # chat_id linked to a different user
     CONFLICT_USER = auto()  # user already linked to a different chat_id
 

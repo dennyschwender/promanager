@@ -18,6 +18,7 @@ def _get_app():
     """Return the telegram Application instance (or None if not initialised)."""
     try:
         import bot as _bot  # noqa: PLC0415
+
         return _bot.telegram_app
     except Exception:
         return None

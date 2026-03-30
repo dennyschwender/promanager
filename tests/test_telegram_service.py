@@ -14,6 +14,7 @@ from services.telegram_service import (
 
 # ── normalize_phone ───────────────────────────────────────────────────────────
 
+
 def test_normalize_strips_spaces_and_dashes():
     assert normalize_phone("+39 123-456-7890") == "391234567890"
 
@@ -31,6 +32,7 @@ def test_normalize_digits_only_unchanged():
 
 
 # ── find_user_by_phone ────────────────────────────────────────────────────────
+
 
 def test_find_user_by_legacy_phone(db):
     user = User(username="u1", email="u1@x.com", hashed_password="x", role="member")
@@ -73,6 +75,7 @@ def test_find_user_returns_none_when_player_has_no_user(db):
 
 
 # ── link_telegram ─────────────────────────────────────────────────────────────
+
 
 def test_link_telegram_success(db):
     user = User(username="u3", email="u3@x.com", hashed_password="x", role="member")
@@ -117,6 +120,7 @@ def test_link_telegram_conflict_user_already_linked(db):
 
 # ── unlink_telegram ───────────────────────────────────────────────────────────
 
+
 def test_unlink_telegram(db):
     user = User(username="u8", email="u8@x.com", hashed_password="x", role="member", telegram_chat_id="666")
     db.add(user)
@@ -128,6 +132,7 @@ def test_unlink_telegram(db):
 
 
 # ── get_user_by_chat_id ───────────────────────────────────────────────────────
+
 
 def test_get_user_by_chat_id_found(db):
     user = User(username="u9", email="u9@x.com", hashed_password="x", role="member", telegram_chat_id="777")
