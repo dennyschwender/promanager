@@ -731,6 +731,11 @@
     "status_maybe": "~ Maybe",
     "status_updated": "Status updated to %{status}.",
     "players_header": "Players:",
+    "pos_goalie": "Goalies",
+    "pos_defender": "Defenders",
+    "pos_center": "Centers",
+    "pos_forward": "Forwards",
+    "pos_other": "Other",
     "unknown_error": "An error occurred. Please try again."
   }
 }

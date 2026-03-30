@@ -731,6 +731,11 @@
     "status_maybe": "~ Vielleicht",
     "status_updated": "Status aktualisiert: %{status}.",
     "players_header": "Spieler:",
+    "pos_goalie": "Torhüter",
+    "pos_defender": "Verteidiger",
+    "pos_center": "Mittelfeldspieler",
+    "pos_forward": "Stürmer",
+    "pos_other": "Andere",
     "unknown_error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
   }
 }

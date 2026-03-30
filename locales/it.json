@@ -731,6 +731,11 @@
     "status_maybe": "~ Forse",
     "status_updated": "Stato aggiornato a %{status}.",
     "players_header": "Giocatori:",
+    "pos_goalie": "Portieri",
+    "pos_defender": "Difensori",
+    "pos_center": "Centrocampisti",
+    "pos_forward": "Attaccanti",
+    "pos_other": "Altro",
     "unknown_error": "Si è verificato un errore. Riprova."
   }
 }

@@ -22,6 +22,7 @@ from app.i18n import t
 from bot.keyboards import (
     PAGE_SIZE,
     PLAYER_PAGE_SIZE,
+    STATUS_ICON,
     event_admin_keyboard,
     event_status_keyboard,
     events_keyboard,
@@ -29,6 +30,7 @@ from bot.keyboards import (
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
+from models.player_team import PlayerTeam
 from services.attendance_service import set_attendance
 from services.telegram_service import (
     AuthResult,
@@ -309,15 +311,70 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]]
             )
     else:
-        # Coach/Admin: show full player list with status buttons
-        players = (
-            db.query(Player).filter(Player.archived_at.is_(None)).order_by(Player.last_name, Player.first_name).all()
-        )
+        # Coach/Admin: show players for this event's team/season
+        if event.team_id and event.season_id and not user.is_admin:
+            # Coach: only players in the event's team for this season
+            pt_rows = (
+                db.query(PlayerTeam)
+                .filter(
+                    PlayerTeam.team_id == event.team_id,
+                    PlayerTeam.season_id == event.season_id,
+                )
+                .all()
+            )
+            player_ids = {pt.player_id: pt.position for pt in pt_rows}
+            players_q = (
+                db.query(Player)
+                .filter(Player.id.in_(player_ids.keys()), Player.archived_at.is_(None))
+                .order_by(Player.last_name, Player.first_name)
+                .all()
+            )
+            # Attach position from PlayerTeam for grouping
+            for p in players_q:
+                p._bot_position = player_ids.get(p.id)  # type: ignore[attr-defined]
+            players = players_q
+        else:
+            players = (
+                db.query(Player)
+                .filter(Player.archived_at.is_(None))
+                .order_by(Player.last_name, Player.first_name)
+                .all()
+            )
+            for p in players:
+                p._bot_position = None  # type: ignore[attr-defined]
+
+        # Group players by position in the message text
+        _POS_ORDER = ["goalie", "defender", "center", "forward", None]
+        _POS_LABEL = {
+            "goalie": t("telegram.pos_goalie", locale),
+            "defender": t("telegram.pos_defender", locale),
+            "center": t("telegram.pos_center", locale),
+            "forward": t("telegram.pos_forward", locale),
+            None: t("telegram.pos_other", locale),
+        }
+        grouped: dict[str | None, list[Player]] = {pos: [] for pos in _POS_ORDER}
+        for p in players:
+            pos = getattr(p, "_bot_position", None)
+            if pos not in grouped:
+                pos = None
+            grouped[pos].append(p)
+
+        pos_lines: list[str] = []
+        for pos in _POS_ORDER:
+            group = grouped[pos]
+            if not group:
+                continue
+            pos_lines.append(f"\n*{_POS_LABEL[pos]}*")
+            for p in group:
+                att = att_by_player.get(p.id)
+                icon = STATUS_ICON.get(att.status if att else "unknown", "?")
+                pos_lines.append(f"{icon} {p.full_name}")
+        text += "\n" + "\n".join(pos_lines)
+
         total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
         player_page = max(0, min(player_page, total_player_pages - 1))
         page_players = players[player_page * PLAYER_PAGE_SIZE : (player_page + 1) * PLAYER_PAGE_SIZE]
 
-        text += f"\n\n{t('telegram.players_header', locale)}"
         keyboard = event_admin_keyboard(
             event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
         )
