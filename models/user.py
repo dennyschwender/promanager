@@ -31,6 +31,11 @@ class User(Base):
     # Optional hashed API token for machine-to-machine auth
     api_token_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
+    # Telegram chat ID — set when the user authenticates via the bot
+    telegram_chat_id: Mapped[str | None] = mapped_column(
+        String(64), unique=True, nullable=True, default=None
+    )
+
     # Preferred UI locale — one of: en, it, fr, de
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
 
