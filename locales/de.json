@@ -307,7 +307,8 @@
     "save_error": "Beim Speichern ist ein Fehler aufgetreten. Bitte erneut versuchen.",
     "name_required": "Vor- und Nachname sind erforderlich.",
     "current_password_required": "Das aktuelle Passwort wird benötigt, um ein neues festzulegen.",
-    "current_password_wrong": "Das aktuelle Passwort ist falsch."
+    "current_password_wrong": "Das aktuelle Passwort ist falsch.",
+    "user_already_linked": "Dieser Benutzer ist bereits mit einem anderen Spieler verknüpft."
   },
   "notify": {
     "title": "Spieler benachrichtigen",
@@ -363,7 +364,10 @@
     "phone_label": "Telefon",
     "locale_label": "Sprache",
     "first_name": "Vorname",
-    "last_name": "Nachname"
+    "last_name": "Nachname",
+    "link_player": "Spieler verknüpfen",
+    "unlink_player": "Spieler trennen",
+    "select_player": "— Spieler auswählen —"
   },
   "players_form": {
     "basic_info": "Grunddaten",

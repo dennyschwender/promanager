@@ -35,7 +35,7 @@ class Player(Base):
         Integer, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True, index=True
     )
     user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True, unique=True
     )
 
     # ── Relationships ──────────────────────────────────────────────────────

@@ -307,7 +307,8 @@
     "save_error": "Une erreur s'est produite lors de l'enregistrement. Veuillez réessayer.",
     "name_required": "Prénom et nom sont requis.",
     "current_password_required": "Le mot de passe actuel est requis pour en définir un nouveau.",
-    "current_password_wrong": "Le mot de passe actuel est incorrect."
+    "current_password_wrong": "Le mot de passe actuel est incorrect.",
+    "user_already_linked": "Cet utilisateur est déjà lié à un autre joueur."
   },
   "notify": {
     "title": "Notifier les joueurs",
@@ -363,7 +364,10 @@
     "phone_label": "Téléphone",
     "locale_label": "Langue",
     "first_name": "Prénom",
-    "last_name": "Nom"
+    "last_name": "Nom",
+    "link_player": "Lier un joueur",
+    "unlink_player": "Délier le joueur",
+    "select_player": "— Sélectionner un joueur —"
   },
   "players_form": {
     "basic_info": "Informations de base",

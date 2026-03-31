@@ -307,7 +307,8 @@
     "save_error": "An error occurred while saving. Please try again.",
     "name_required": "First name and last name are required.",
     "current_password_required": "Current password is required to set a new password.",
-    "current_password_wrong": "Current password is incorrect."
+    "current_password_wrong": "Current password is incorrect.",
+    "user_already_linked": "This user is already linked to another player."
   },
   "notify": {
     "title": "Notify Players",
@@ -363,7 +364,10 @@
     "phone_label": "Phone",
     "locale_label": "Language",
     "first_name": "First Name",
-    "last_name": "Last Name"
+    "last_name": "Last Name",
+    "link_player": "Link Player",
+    "unlink_player": "Unlink Player",
+    "select_player": "— Select a player —"
   },
   "players_form": {
     "basic_info": "Basic Info",

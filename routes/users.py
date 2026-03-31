@@ -27,8 +27,15 @@ router = APIRouter()
 async def users_list(request: Request, db: Session = Depends(get_db)):
     users = db.query(User).order_by(User.created_at.desc()).all()
     # Build player lookup: user_id -> Player
-    players = db.query(Player).filter(Player.user_id.isnot(None)).all()
-    player_by_user: dict[int, Player] = {p.user_id: p for p in players}
+    linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
+    player_by_user: dict[int, Player] = {p.user_id: p for p in linked_players}
+    # Unlinked active players available for linking
+    unlinked_players = (
+        db.query(Player)
+        .filter(Player.user_id.is_(None), Player.archived_at.is_(None))
+        .order_by(Player.last_name, Player.first_name)
+        .all()
+    )
     return render(
         request,
         "auth/users_list.html",
@@ -36,6 +43,7 @@ async def users_list(request: Request, db: Session = Depends(get_db)):
             "user": request.state.user,
             "users": users,
             "player_by_user": player_by_user,
+            "unlinked_players": unlinked_players,
         },
     )
 
@@ -257,6 +265,44 @@ async def user_edit_post(
         if target.last_name:
             player.last_name = target.last_name
     db.commit()
+    return RedirectResponse("/auth/users", status_code=302)
+
+
+@router.post("/{user_id}/link-player", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def link_player(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    player_id: int = Form(...),
+):
+    target = db.get(User, user_id)
+    if target is None:
+        return RedirectResponse("/auth/users", status_code=302)
+
+    player = db.get(Player, player_id)
+    if player is None or player.user_id is not None:
+        return RedirectResponse("/auth/users", status_code=302)
+
+    # Unlink any existing player linked to this user first
+    existing = db.query(Player).filter(Player.user_id == user_id).first()
+    if existing:
+        existing.user_id = None
+
+    player.user_id = user_id
+    db.commit()
+    return RedirectResponse("/auth/users", status_code=302)
+
+
+@router.post("/{user_id}/unlink-player", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def unlink_player(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    player = db.query(Player).filter(Player.user_id == user_id).first()
+    if player:
+        player.user_id = None
+        db.commit()
     return RedirectResponse("/auth/users", status_code=302)
 
 

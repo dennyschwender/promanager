@@ -699,12 +699,32 @@ async def player_new_post(
             status_code=400,
         )
 
+    parsed_user_id = int(user_id_s) if user_id_s else None
+    if parsed_user_id is not None:
+        conflict = db.query(Player).filter(Player.user_id == parsed_user_id).first()
+        if conflict:
+            return render(
+                request,
+                "players/form.html",
+                {
+                    "user": user,
+                    "player": None,
+                    "teams": teams,
+                    "users": users,
+                    "seasons": seasons,
+                    "active_season_id": _active_season_id(db),
+                    "all_memberships": {},
+                    "error": rt(request, "errors.user_already_linked"),
+                },
+                status_code=400,
+            )
+
     player = Player(
         first_name=first_name,
         last_name=last_name,
         email=email or None,
         phone=phone or None,
-        user_id=int(user_id_s) if user_id_s else None,
+        user_id=parsed_user_id,
         is_active=True,
     )
     _apply_personal_fields(player, form)
@@ -1036,11 +1056,31 @@ async def player_edit_post(
             status_code=400,
         )
 
+    parsed_user_id = int(user_id_s) if user_id_s else None
+    if parsed_user_id is not None and parsed_user_id != player.user_id:
+        conflict = db.query(Player).filter(Player.user_id == parsed_user_id).first()
+        if conflict:
+            return render(
+                request,
+                "players/form.html",
+                {
+                    "user": user,
+                    "player": player,
+                    "teams": teams,
+                    "users": users,
+                    "seasons": seasons,
+                    "active_season_id": active_season_id,
+                    "all_memberships": _all_memberships_dict(player),
+                    "error": rt(request, "errors.user_already_linked"),
+                },
+                status_code=400,
+            )
+
     player.first_name = first_name
     player.last_name = last_name
     player.email = email or None
     player.phone = phone or None
-    player.user_id = int(user_id_s) if user_id_s else None
+    player.user_id = parsed_user_id
     player.is_active = is_active in ("on", "true", "1", "yes")
     _apply_personal_fields(player, form)
 

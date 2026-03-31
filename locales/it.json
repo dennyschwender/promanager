@@ -307,7 +307,8 @@
     "save_error": "Si è verificato un errore durante il salvataggio. Riprova.",
     "name_required": "Nome e cognome sono obbligatori.",
     "current_password_required": "La password attuale è obbligatoria per impostarne una nuova.",
-    "current_password_wrong": "La password attuale non è corretta."
+    "current_password_wrong": "La password attuale non è corretta.",
+    "user_already_linked": "Questo utente è già collegato a un altro giocatore."
   },
   "notify": {
     "title": "Notifica Giocatori",
@@ -363,7 +364,10 @@
     "phone_label": "Telefono",
     "locale_label": "Lingua",
     "first_name": "Nome",
-    "last_name": "Cognome"
+    "last_name": "Cognome",
+    "link_player": "Collega giocatore",
+    "unlink_player": "Scollega giocatore",
+    "select_player": "— Seleziona un giocatore —"
   },
   "players_form": {
     "basic_info": "Informazioni di base",
