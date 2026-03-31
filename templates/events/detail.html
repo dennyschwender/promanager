@@ -45,8 +45,27 @@
 </article>
 
 {# ── Action bar ────────────────────────────────────────────────── #}
+{% if user_player_ids and event.presence_type != 'no_registration' %}
+  {% set _my_pid = user_player_ids | list | first %}
+  {% set _my_att = att_by_player.get(_my_pid) %}
+  {% set _my_status = _my_att.status if _my_att else 'unknown' %}
+  {% set _status_labels = {'present': t('attendance.status_attend'), 'absent': t('attendance.status_absent'), 'maybe': t('events_detail.maybe'), 'unknown': t('attendance.status_unknown')} %}
+<style>
+.att-active-present { background: var(--tp-success, #27ae60); color: #fff; border-color: var(--tp-success, #27ae60); }
+.att-active-absent  { background: var(--tp-danger,  #c0392b); color: #fff; border-color: var(--tp-danger,  #c0392b); }
+.att-active-maybe   { background: var(--tp-warning, #f39c12); color: #fff; border-color: var(--tp-warning, #f39c12); }
+.att-active-unknown { background: var(--tp-secondary, #95a5a6); color: #fff; border-color: var(--tp-secondary, #95a5a6); }
+</style>
+{% endif %}
 <div class="event-action-bar">
-  <a href="/events" class="btn btn-outline btn-sm">← {{ t('events.back_to_events') }}</a>
+  {% if user_player_ids and event.presence_type != 'no_registration' %}
+  <button type="button" id="my-att-btn"
+          class="btn btn-sm att-active-{{ _my_status }}"
+          data-player-id="{{ _my_pid }}"
+          data-status="{{ _my_status }}">
+    {{ _status_labels.get(_my_status, _my_status) }}
+  </button>
+  {% endif %}
   <div class="event-action-bar-right">
     {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
       <a href="/events/{{ event.id }}/edit" class="btn btn-outline btn-sm">{{ t('events.edit') }}</a>
@@ -183,6 +202,8 @@
     activeStatus = status;
   }
 
+  window._detailOpenPopover = openPopover;
+
   function openPopover(btn) {
     var rect = btn.getBoundingClientRect();
     popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
@@ -240,6 +261,14 @@
       .then(function (data) {
         if (data.ok) {
           movePlayer(activePlayerId, data.status, data.note);
+          var myBtn = document.getElementById('my-att-btn');
+          if (myBtn && parseInt(myBtn.dataset.playerId, 10) === activePlayerId) {
+            myBtn.className = myBtn.className.replace(/att-active-\w+/g, '').trim();
+            myBtn.classList.add('att-active-' + data.status);
+            var lblMap = { present: {{ t('attendance.status_attend')|tojson }}, absent: {{ t('attendance.status_absent')|tojson }}, maybe: {{ t('events_detail.maybe')|tojson }}, unknown: {{ t('attendance.status_unknown')|tojson }} };
+            myBtn.textContent = lblMap[data.status] || data.status;
+            myBtn.dataset.status = data.status;
+          }
           closePopover();
         } else {
           popError.textContent = {{ t('common.save_error') | tojson }};
@@ -281,6 +310,16 @@
       closePopover();
     }
   });
+
+  var myAttBtn = document.getElementById('my-att-btn');
+  if (myAttBtn) {
+    myAttBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var pid = myAttBtn.dataset.playerId;
+      var playerBtn = document.querySelector('.att-player-btn[data-player-id="' + pid + '"]');
+      if (playerBtn) { openPopover(playerBtn); }
+    });
+  }
 
   document.addEventListener('click', function (e) {
     var toggle = e.target.closest('.action-dropdown-toggle');
