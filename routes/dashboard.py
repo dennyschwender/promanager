@@ -77,6 +77,23 @@ async def dashboard(
             .count()
         )
 
+    # For members: fetch their attendance records for the top events
+    my_attendance: dict[int, Attendance] = {}
+    my_player_id: int | None = None
+    if not user.is_admin and not user.is_coach and top_events:
+        my_player = db.query(Player).filter(
+            Player.user_id == user.id,
+            Player.archived_at.is_(None),
+        ).first()
+        if my_player:
+            my_player_id = my_player.id
+            top_event_ids = [e.id for e in top_events]
+            records = db.query(Attendance).filter(
+                Attendance.event_id.in_(top_event_ids),
+                Attendance.player_id == my_player.id,
+            ).all()
+            my_attendance = {a.event_id: a for a in records}
+
     # Admin extras
     all_teams = []
     all_seasons = []
@@ -95,5 +112,7 @@ async def dashboard(
             "top_events": top_events,
             "all_teams": all_teams,
             "all_seasons": all_seasons,
+            "my_attendance": my_attendance,
+            "my_player_id": my_player_id,
         },
     )

@@ -25,15 +25,38 @@
 {% if top_events %}
 <div class="table-responsive">
 <table>
-  <thead><tr><th>{{ t('events.date') }}</th><th>{{ t('events.title_col') }}</th><th>{{ t('events.type') }}</th><th>{{ t('events.location') }}</th><th></th></tr></thead>
+  <thead><tr>
+    <th>{{ t('events.date') }}</th>
+    <th>{{ t('events.title_col') }}</th>
+    <th>{{ t('events.type') }}</th>
+    <th>{{ t('events.location') }}</th>
+    {% if my_player_id %}<th>{{ t('dashboard.my_status') }}</th>{% endif %}
+    <th></th>
+  </tr></thead>
   <tbody>
   {% for event in top_events %}
+    {% set att = my_attendance.get(event.id) %}
     <tr>
       <td>{{ event.event_date }}</td>
       <td><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
       <td><span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span></td>
       <td>{{ event.location or "—" }}</td>
-      <td><a href="/events/{{ event.id }}" class="btn btn-sm btn-primary">{{ t('events.attendance') }}</a></td>
+      {% if my_player_id %}
+      <td>
+        <div class="att-inline" data-event-id="{{ event.id }}" data-player-id="{{ my_player_id }}" data-csrf="{{ request.state.csrf_token }}">
+          <div class="att-buttons">
+            {% for s, label in [('present', t('attendance.status_present')), ('absent', t('attendance.status_absent')), ('maybe', t('attendance.status_maybe'))] %}
+            <button type="button" class="btn btn-sm att-btn {% if att and att.status == s %}att-active-{{ s }}{% else %}btn-outline{% endif %}"
+                    data-status="{{ s }}">{{ label }}</button>
+            {% endfor %}
+          </div>
+          <input type="text" class="att-note" placeholder="{{ t('attendance.note_placeholder') }}"
+                 value="{{ att.note if att and att.note else '' }}"
+                 style="margin-top:.3rem;font-size:.82rem;" maxlength="512">
+        </div>
+      </td>
+      {% endif %}
+      <td><a href="/events/{{ event.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>
@@ -64,5 +87,59 @@
   {% endfor %}
 </div>
 {% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if my_player_id %}
+<style>
+.att-active-present { background: var(--tp-success, #27ae60); color: #fff; border-color: var(--tp-success, #27ae60); }
+.att-active-absent  { background: var(--tp-danger,  #c0392b); color: #fff; border-color: var(--tp-danger,  #c0392b); }
+.att-active-maybe   { background: var(--tp-warning, #f39c12); color: #fff; border-color: var(--tp-warning, #f39c12); }
+.att-note { width: 100%; box-sizing: border-box; }
+</style>
+<script>
+(function () {
+  var debounceTimers = {};
+
+  function saveAttendance(container, status, note) {
+    var eventId = container.dataset.eventId;
+    var playerId = container.dataset.playerId;
+    var csrf = container.dataset.csrf;
+    fetch('/attendance/' + eventId + '/' + playerId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
+      body: 'csrf_token=' + encodeURIComponent(csrf) + '&status=' + encodeURIComponent(status) + '&note=' + encodeURIComponent(note)
+    });
+  }
+
+  document.querySelectorAll('.att-inline').forEach(function (container) {
+    var buttons = container.querySelectorAll('.att-btn');
+    var noteInput = container.querySelector('.att-note');
+    var activeBtn = container.querySelector('.att-btn[class*="att-active-"]');
+    var currentStatus = activeBtn ? activeBtn.dataset.status : 'unknown';
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        currentStatus = btn.dataset.status;
+        buttons.forEach(function (b) {
+          b.className = b.className.replace(/att-active-\w+/g, '').trim();
+          if (!b.className.includes('btn-outline')) b.classList.add('btn-outline');
+        });
+        btn.classList.remove('btn-outline');
+        btn.classList.add('att-active-' + currentStatus);
+        saveAttendance(container, currentStatus, noteInput.value);
+      });
+    });
+
+    noteInput.addEventListener('input', function () {
+      var eventId = container.dataset.eventId;
+      clearTimeout(debounceTimers[eventId]);
+      debounceTimers[eventId] = setTimeout(function () {
+        saveAttendance(container, currentStatus, noteInput.value);
+      }, 800);
+    });
+  });
+})();
+</script>
 {% endif %}
 {% endblock %}
