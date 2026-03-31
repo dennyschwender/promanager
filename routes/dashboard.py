@@ -14,7 +14,7 @@ from models.event import Event
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import require_login
+from routes._auth_helpers import get_coach_teams, require_login
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ async def dashboard(
     if active_season:
         events_q = events_q.filter(Event.season_id == active_season.id)
     if not user.is_admin:
-        team_ids = [ut.team_id for ut in user.managed_teams]
+        team_ids = get_coach_teams(user, db)
         events_q = events_q.filter(Event.team_id.in_(team_ids))
     upcoming_events = events_q.order_by(Event.event_date.asc()).all()
 
