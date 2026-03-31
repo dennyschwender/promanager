@@ -21,6 +21,7 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import (
+    NotAuthorized,
     check_team_access,
     get_coach_teams,
     optional_user,
@@ -86,10 +87,6 @@ async def events_list(
         q = q.filter(Event.season_id == season_id)
     if team_id is not None:
         q = q.filter(Event.team_id == team_id)
-    if user and not user.is_admin:
-        coach_ids = get_coach_teams(user, db)
-        q = q.filter(Event.team_id.in_(coach_ids))
-
     all_events = q.order_by(Event.event_date.asc()).all()
     all_upcoming = [e for e in all_events if e.event_date >= today]
     all_past = sorted([e for e in all_events if e.event_date < today], key=lambda e: e.event_date, reverse=True)
@@ -445,6 +442,19 @@ async def event_detail(
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
+
+    if not user.is_admin:
+        if user.is_coach:
+            check_team_access(user, event.team_id, db, season_id=event.season_id)
+        else:
+            # member: must have a player linked to this event's team
+            has_access = db.query(Player).filter(
+                Player.user_id == user.id,
+                Player.team_id == event.team_id,
+                Player.archived_at.is_(None),
+            ).first() is not None
+            if not has_access:
+                raise NotAuthorized
 
     summary = get_event_attendance_detail(db, event_id)
 
