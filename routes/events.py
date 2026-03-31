@@ -187,6 +187,7 @@ async def event_new_post(
     meeting_time: str = Form(""),
     meeting_location: str = Form(""),
     presence_type: str = Form("normal"),
+    hide_attendance: str = Form(""),
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
@@ -338,6 +339,7 @@ async def event_new_post(
         meeting_time=m_time,
         meeting_location=meeting_location.strip() or None,
         presence_type=presence_type,
+        hide_attendance=bool(hide_attendance),
         description=description.strip() or None,
         season_id=int(season_id) if season_id.strip() else None,
         team_id=parsed_team_id,
@@ -580,6 +582,7 @@ async def event_edit_post(
     meeting_time: str = Form(""),
     meeting_location: str = Form(""),
     presence_type: str = Form("normal"),
+    hide_attendance: str = Form(""),
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
@@ -674,6 +677,7 @@ async def event_edit_post(
     event.meeting_time = m_time
     event.meeting_location = meeting_location.strip() or None
     event.presence_type = presence_type
+    event.hide_attendance = bool(hide_attendance)
     event.description = description.strip() or None
     event.season_id = int(season_id) if season_id.strip() else None
     event.team_id = int(team_id) if team_id.strip() else None

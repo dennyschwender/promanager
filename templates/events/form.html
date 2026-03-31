@@ -176,6 +176,13 @@
     <textarea name="description">{{ event.description if event and event.description else "" }}</textarea>
   </label>
 
+  <label class="checkbox-label">
+    <input type="checkbox" name="hide_attendance" value="1"
+           {{ "checked" if event and event.hide_attendance else "" }}>
+    {{ t('events_form.hide_attendance') }}
+    <small class="text-muted">{{ t('events_form.hide_attendance_desc') }}</small>
+  </label>
+
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
     <a href="/events" class="btn btn-outline">{{ t('common.cancel') }}</a>

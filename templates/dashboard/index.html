@@ -42,18 +42,15 @@
       <td><span class="badge badge-{{ event.event_type }}">{{ enums.event_type.get(event.event_type, event.event_type|capitalize) }}</span></td>
       <td>{{ event.location or "—" }}</td>
       {% if my_player_id %}
+      {% set att_status = att.status if att else 'unknown' %}
+      {% set att_note = att.note if att and att.note else '' %}
+      {% set status_labels = {'present': t('attendance.status_present'), 'absent': t('attendance.status_absent'), 'maybe': t('attendance.status_maybe'), 'unknown': t('attendance.status_unknown')} %}
       <td>
-        <div class="att-inline" data-event-id="{{ event.id }}" data-player-id="{{ my_player_id }}" data-csrf="{{ request.state.csrf_token }}">
-          <div class="att-buttons">
-            {% for s, label in [('present', t('attendance.status_present')), ('absent', t('attendance.status_absent')), ('maybe', t('attendance.status_maybe'))] %}
-            <button type="button" class="btn btn-sm att-btn {% if att and att.status == s %}att-active-{{ s }}{% else %}btn-outline{% endif %}"
-                    data-status="{{ s }}">{{ label }}</button>
-            {% endfor %}
-          </div>
-          <input type="text" class="att-note" placeholder="{{ t('attendance.note_placeholder') }}"
-                 value="{{ att.note if att and att.note else '' }}"
-                 style="margin-top:.3rem;font-size:.82rem;" maxlength="512">
-        </div>
+        <button type="button" class="btn btn-sm dash-att-btn att-active-{{ att_status }}"
+                data-event-id="{{ event.id }}"
+                data-player-id="{{ my_player_id }}"
+                data-status="{{ att_status }}"
+                data-note="{{ att_note | e }}">{{ status_labels.get(att_status, att_status) }}</button>
       </td>
       {% endif %}
       <td><a href="/events/{{ event.id }}" class="btn btn-sm btn-outline">{{ t('events.view') }}</a></td>
@@ -91,52 +88,115 @@
 {% endblock %}
 {% block scripts %}
 {% if my_player_id %}
+<meta name="csrf-token" content="{{ request.state.csrf_token }}">
 <style>
 .att-active-present { background: var(--tp-success, #27ae60); color: #fff; border-color: var(--tp-success, #27ae60); }
 .att-active-absent  { background: var(--tp-danger,  #c0392b); color: #fff; border-color: var(--tp-danger,  #c0392b); }
 .att-active-maybe   { background: var(--tp-warning, #f39c12); color: #fff; border-color: var(--tp-warning, #f39c12); }
-.att-note { width: 100%; box-sizing: border-box; }
+.att-active-unknown { background: var(--tp-secondary, #95a5a6); color: #fff; border-color: var(--tp-secondary, #95a5a6); }
 </style>
+
+{# Shared popover #}
+<div id="dash-att-popover" class="att-popover att-popover-hidden">
+  <div class="pop-status-row">
+    {% for s, lbl in [('present', t('attendance.status_present')), ('absent', t('attendance.status_absent')), ('maybe', t('attendance.status_maybe')), ('unknown', t('attendance.status_unknown'))] %}
+    <button type="button" class="btn btn-sm btn-outline pop-status-btn" data-status="{{ s }}">{{ lbl }}</button>
+    {% endfor %}
+  </div>
+  <textarea id="dash-pop-note" class="pop-note" rows="2" placeholder="{{ t('attendance.note_placeholder') }}"></textarea>
+  <div id="dash-pop-error" class="pop-error pop-error-hidden"></div>
+  <div class="pop-actions">
+    <button type="button" class="btn btn-sm btn-outline" id="dash-pop-cancel">{{ t('common.cancel') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" id="dash-pop-save">{{ t('common.save') }}</button>
+  </div>
+</div>
+
 <script>
 (function () {
-  var debounceTimers = {};
+  var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var STATUS_LABELS = {
+    'present': '{{ t("attendance.status_present") | e }}',
+    'absent':  '{{ t("attendance.status_absent") | e }}',
+    'maybe':   '{{ t("attendance.status_maybe") | e }}',
+    'unknown': '{{ t("attendance.status_unknown") | e }}'
+  };
+  var popover = document.getElementById('dash-att-popover');
+  var popNote = document.getElementById('dash-pop-note');
+  var popError = document.getElementById('dash-pop-error');
+  var popSave = document.getElementById('dash-pop-save');
+  var activeBtn = null;
 
-  function saveAttendance(container, status, note) {
-    var eventId = container.dataset.eventId;
-    var playerId = container.dataset.playerId;
-    var csrf = container.dataset.csrf;
-    fetch('/attendance/' + eventId + '/' + playerId, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
-      body: 'csrf_token=' + encodeURIComponent(csrf) + '&status=' + encodeURIComponent(status) + '&note=' + encodeURIComponent(note)
+  function highlightStatus(status) {
+    popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+      b.classList.toggle('btn-primary', b.dataset.status === status);
+      b.classList.toggle('btn-outline', b.dataset.status !== status);
     });
   }
 
-  document.querySelectorAll('.att-inline').forEach(function (container) {
-    var buttons = container.querySelectorAll('.att-btn');
-    var noteInput = container.querySelector('.att-note');
-    var activeBtn = container.querySelector('.att-btn[class*="att-active-"]');
-    var currentStatus = activeBtn ? activeBtn.dataset.status : 'unknown';
+  function openPopover(btn) {
+    var rect = btn.getBoundingClientRect();
+    popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    popover.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 260) + 'px';
+    popNote.value = btn.dataset.note || '';
+    popError.classList.add('pop-error-hidden');
+    highlightStatus(btn.dataset.status);
+    activeBtn = btn;
+    popSave.disabled = false;
+    popover.classList.remove('att-popover-hidden');
+  }
 
-    buttons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        currentStatus = btn.dataset.status;
-        buttons.forEach(function (b) {
-          b.className = b.className.replace(/att-active-\w+/g, '').trim();
-          if (!b.className.includes('btn-outline')) b.classList.add('btn-outline');
-        });
-        btn.classList.remove('btn-outline');
-        btn.classList.add('att-active-' + currentStatus);
-        saveAttendance(container, currentStatus, noteInput.value);
-      });
+  function closePopover() {
+    popover.classList.add('att-popover-hidden');
+    activeBtn = null;
+  }
+
+  document.querySelectorAll('.dash-att-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (activeBtn === btn && !popover.classList.contains('att-popover-hidden')) {
+        closePopover();
+      } else {
+        openPopover(btn);
+      }
     });
+  });
 
-    noteInput.addEventListener('input', function () {
-      var eventId = container.dataset.eventId;
-      clearTimeout(debounceTimers[eventId]);
-      debounceTimers[eventId] = setTimeout(function () {
-        saveAttendance(container, currentStatus, noteInput.value);
-      }, 800);
+  document.addEventListener('click', function (e) {
+    if (!popover.classList.contains('att-popover-hidden') && !popover.contains(e.target)) {
+      closePopover();
+    }
+  });
+
+  document.getElementById('dash-pop-cancel').addEventListener('click', closePopover);
+
+  popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+    b.addEventListener('click', function () { highlightStatus(b.dataset.status); });
+  });
+
+  popSave.addEventListener('click', function () {
+    if (!activeBtn) return;
+    var newStatus = popover.querySelector('.btn-primary.pop-status-btn');
+    if (!newStatus) return;
+    var status = newStatus.dataset.status;
+    var note = popNote.value;
+    var eventId = activeBtn.dataset.eventId;
+    var playerId = activeBtn.dataset.playerId;
+    popSave.disabled = true;
+    fetch('/attendance/' + eventId + '/' + playerId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': CSRF },
+      body: 'csrf_token=' + encodeURIComponent(CSRF) + '&status=' + encodeURIComponent(status) + '&note=' + encodeURIComponent(note)
+    }).then(function (r) { return r.json(); }).then(function () {
+      activeBtn.dataset.status = status;
+      activeBtn.dataset.note = note;
+      activeBtn.className = activeBtn.className.replace(/att-active-\w+/g, '').trim();
+      activeBtn.classList.add('att-active-' + status);
+      activeBtn.textContent = STATUS_LABELS[status] || status;
+      closePopover();
+    }).catch(function () {
+      popError.textContent = 'Error saving';
+      popError.classList.remove('pop-error-hidden');
+      popSave.disabled = false;
     });
   });
 })();

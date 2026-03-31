@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "events": "Termine",
+    "events": "Alle Termine",
     "players": "Spieler",
     "teams": "Teams",
     "seasons": "Saisons",
@@ -568,7 +568,9 @@
     "select_team": "— Team auswählen —",
     "active_suffix": "(aktiv)",
     "time_validation": "Gültige Uhrzeit eingeben (00:00 - 23:59)",
-    "time_format_hint": "Uhrzeit im Format HH:MM eingeben (z.B. 19:30)"
+    "time_format_hint": "Uhrzeit im Format HH:MM eingeben (z.B. 19:30)",
+    "hide_attendance": "Anwesenheitsliste vor Spielern verbergen",
+    "hide_attendance_desc": "(Nur Admin und Coach können die Anwesenheitsliste sehen, wenn aktiviert)"
   },
   "events_detail": {
     "season": "Saison",

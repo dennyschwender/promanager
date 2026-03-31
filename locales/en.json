@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "events": "Events",
+    "events": "All Events",
     "players": "Players",
     "teams": "Teams",
     "seasons": "Seasons",
@@ -568,7 +568,9 @@
     "select_team": "— Select a team —",
     "active_suffix": "(active)",
     "time_validation": "Enter a valid time (00:00 - 23:59)",
-    "time_format_hint": "Enter time as HH:MM (e.g. 19:30)"
+    "time_format_hint": "Enter time as HH:MM (e.g. 19:30)",
+    "hide_attendance": "Hide attendance list from players",
+    "hide_attendance_desc": "(Only Admin and Coach can see the attendance list when enabled)"
   },
   "events_detail": {
     "season": "Season",

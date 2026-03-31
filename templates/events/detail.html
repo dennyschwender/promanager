@@ -91,6 +91,7 @@
     </button>
   </div>
 {% endif %}
+{% if not event.hide_attendance or (user and (user.is_admin or user.is_coach)) %}
 <h3>{{ t('events.attendance_summary') }}</h3>
 <div id="attendance-columns" class="att-columns">
   {% for bucket, label in [
@@ -142,6 +143,7 @@
   </div>
   {% endfor %}
 </div>
+{% endif %}
 
 {# ── Shared popover (single DOM node, reused for each player) ──── #}
 <div id="att-popover" class="att-popover att-popover-hidden">
@@ -258,7 +260,8 @@
 
   document.getElementById('pop-cancel').addEventListener('click', closePopover);
 
-  document.getElementById('attendance-columns').addEventListener('click', function (e) {
+  var attCols = document.getElementById('attendance-columns');
+  if (attCols) attCols.addEventListener('click', function (e) {
     var btn = e.target.closest('.att-player-btn');
     if (!btn) return;
     if (btn.classList.contains('att-external-btn')) {

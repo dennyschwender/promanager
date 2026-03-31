@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Tableau de bord",
-    "events": "Événements",
+    "events": "Tous les événements",
     "players": "Joueurs",
     "teams": "Équipes",
     "seasons": "Saisons",
@@ -568,7 +568,9 @@
     "select_team": "— Sélectionner une équipe —",
     "active_suffix": "(active)",
     "time_validation": "Entrez une heure valide (00:00 - 23:59)",
-    "time_format_hint": "Entrez l'heure au format HH:MM (ex. 19:30)"
+    "time_format_hint": "Entrez l'heure au format HH:MM (ex. 19:30)",
+    "hide_attendance": "Masquer la liste de présence aux joueurs",
+    "hide_attendance_desc": "(Seuls l'Admin et le Coach peuvent voir la liste de présence lorsque activé)"
   },
   "events_detail": {
     "season": "Saison",

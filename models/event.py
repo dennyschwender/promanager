@@ -52,6 +52,7 @@ class Event(Base):
     # "weekly" | "biweekly" | "monthly" — set on every event in the series.
     recurrence_rule: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
+    hide_attendance: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     reminder_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
