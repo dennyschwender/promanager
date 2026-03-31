@@ -28,9 +28,11 @@
   </ul>
   {% set path = request.url.path %}
   <ul id="nav-links">
-    <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
     {% if user %}
     <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
+    {% endif %}
+    <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
+    {% if user %}
     <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
     <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
     {% if user.is_admin %}
