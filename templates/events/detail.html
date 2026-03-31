@@ -640,4 +640,202 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 {% endif %}
 </script>
 {% endif %}
+
+{# ── Chat panel ────────────────────────────────────────────────── #}
+<details id="chat-panel" class="chat-panel">
+  <summary>{{ t('chat.title') }}</summary>
+  <div class="chat-tabs">
+    <button type="button" class="chat-tab-btn active" data-lane="announcement">{{ t('chat.announcements') }}</button>
+    <button type="button" class="chat-tab-btn" data-lane="discussion">{{ t('chat.discussion') }}</button>
+  </div>
+
+  <div id="chat-lane-announcement" class="chat-lane">
+    <div class="chat-messages" id="chat-messages-announcement"></div>
+    {% if user.is_admin or user.is_coach %}
+    <div class="chat-input-row">
+      <textarea id="chat-input-announcement" class="chat-input" rows="2" placeholder="{{ t('chat.post_placeholder_announcement') }}"></textarea>
+      <button type="button" class="btn btn-sm btn-primary chat-send-btn" data-lane="announcement">{{ t('chat.send') }}</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <div id="chat-lane-discussion" class="chat-lane" style="display:none">
+    <div class="chat-messages" id="chat-messages-discussion"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input-discussion" class="chat-input" rows="2" placeholder="{{ t('chat.post_placeholder_discussion') }}"></textarea>
+      <button type="button" class="btn btn-sm btn-primary chat-send-btn" data-lane="discussion">{{ t('chat.send') }}</button>
+    </div>
+  </div>
+</details>
+
+<style>
+.chat-panel { margin-top: 2rem; }
+.chat-panel > summary { cursor: pointer; font-weight: 600; padding: .5rem 0; user-select: none; }
+.chat-tabs { display: flex; gap: .5rem; margin: .75rem 0 .5rem; }
+.chat-tab-btn { padding: .25rem .85rem; border-radius: 999px; border: 1px solid var(--tp-border, #ccc); background: none; cursor: pointer; font-size: .9rem; }
+.chat-tab-btn.active { background: var(--tp-primary, #3498db); color: #fff; border-color: var(--tp-primary, #3498db); }
+.chat-messages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: .4rem; margin-bottom: .5rem; padding: .25rem 0; }
+.chat-msg { padding: .5rem .75rem; border-radius: 6px; background: var(--tp-surface, #f4f4f4); }
+.chat-msg-announcement { background: var(--tp-warning-light, #fff8e1); border-left: 3px solid var(--tp-warning, #f39c12); }
+.chat-msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .2rem; }
+.chat-msg-meta { display: flex; align-items: center; gap: .4rem; }
+.chat-msg-author { font-weight: 600; font-size: .875rem; }
+.chat-msg-time { font-size: .75rem; color: var(--tp-muted, #888); }
+.chat-msg-body { white-space: pre-wrap; word-break: break-word; font-size: .9rem; }
+.chat-msg-del { background: none; border: none; cursor: pointer; color: var(--tp-danger, #c0392b); font-size: .8rem; padding: 0 .2rem; opacity: .6; }
+.chat-msg-del:hover { opacity: 1; }
+.chat-input-row { display: flex; gap: .5rem; align-items: flex-end; }
+.chat-input { flex: 1; resize: vertical; min-height: 2.5rem; }
+</style>
+
+<script>
+(function () {
+  var EVENT_ID = {{ event.id }};
+  var USER_ID = {{ user.id }};
+  var IS_PRIVILEGED = {{ 'true' if (user.is_admin or user.is_coach) else 'false' }};
+  var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var DELETE_CONFIRM = {{ t('chat.delete_confirm') | tojson }};
+
+  var panel = document.getElementById('chat-panel');
+  var loaded = false;
+  var _renderedIds = new Set();
+
+  function formatTime(isoStr) {
+    if (!isoStr) return '';
+    try { return new Date(isoStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (_) { return ''; }
+  }
+
+  function renderMessage(msg) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg' + (msg.lane === 'announcement' ? ' chat-msg-announcement' : '');
+    div.dataset.msgId = msg.id;
+
+    var header = document.createElement('div');
+    header.className = 'chat-msg-header';
+    var meta = document.createElement('div');
+    meta.className = 'chat-msg-meta';
+
+    if (msg.lane === 'announcement') {
+      var icon = document.createElement('span');
+      icon.textContent = '📢';
+      meta.appendChild(icon);
+    }
+    var author = document.createElement('span');
+    author.className = 'chat-msg-author';
+    author.textContent = msg.author;
+    meta.appendChild(author);
+    var time = document.createElement('span');
+    time.className = 'chat-msg-time';
+    time.textContent = formatTime(msg.created_at);
+    meta.appendChild(time);
+    header.appendChild(meta);
+
+    if (msg.user_id === USER_ID || IS_PRIVILEGED) {
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'chat-msg-del';
+      delBtn.title = 'Delete';
+      delBtn.textContent = '🗑';
+      delBtn.addEventListener('click', function () {
+        if (!confirm(DELETE_CONFIRM)) return;
+        fetch('/events/' + EVENT_ID + '/messages/' + msg.id, {
+          method: 'DELETE',
+          headers: { 'X-CSRF-Token': CSRF },
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) { if (data.ok) { div.remove(); _renderedIds.delete(msg.id); } });
+      });
+      header.appendChild(delBtn);
+    }
+
+    div.appendChild(header);
+    var bodyEl = document.createElement('div');
+    bodyEl.className = 'chat-msg-body';
+    bodyEl.textContent = msg.body;
+    div.appendChild(bodyEl);
+    return div;
+  }
+
+  function appendMessage(msg) {
+    if (_renderedIds.has(msg.id)) return;
+    _renderedIds.add(msg.id);
+    var container = document.getElementById('chat-messages-' + msg.lane);
+    if (!container) return;
+    container.appendChild(renderMessage(msg));
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function removeMessage(messageId) {
+    var el = document.querySelector('[data-msg-id="' + messageId + '"]');
+    if (el) { el.remove(); _renderedIds.delete(messageId); }
+  }
+
+  function loadMessages() {
+    fetch('/events/' + EVENT_ID + '/messages')
+      .then(function (r) { return r.json(); })
+      .then(function (messages) {
+        _renderedIds.clear();
+        var annEl = document.getElementById('chat-messages-announcement');
+        var discEl = document.getElementById('chat-messages-discussion');
+        while (annEl.firstChild) { annEl.removeChild(annEl.firstChild); }
+        while (discEl.firstChild) { discEl.removeChild(discEl.firstChild); }
+        messages.forEach(appendMessage);
+        loaded = true;
+      });
+  }
+
+  panel.addEventListener('toggle', function () {
+    if (panel.open && !loaded) loadMessages();
+  });
+
+  if (window._pmSSE) {
+    window._pmSSE.addEventListener('message', function (e) {
+      try {
+        var data = JSON.parse(e.data);
+        if (data.event_id !== EVENT_ID) return;
+        if (data.type === 'chat_message' && loaded) { appendMessage(data.message); }
+        else if (data.type === 'chat_delete') { removeMessage(data.message_id); }
+      } catch (_) {}
+    });
+  }
+
+  document.querySelectorAll('.chat-tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.chat-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var lane = btn.dataset.lane;
+      document.getElementById('chat-lane-announcement').style.display = lane === 'announcement' ? '' : 'none';
+      document.getElementById('chat-lane-discussion').style.display = lane === 'discussion' ? '' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.chat-send-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var lane = btn.dataset.lane;
+      var input = document.getElementById('chat-input-' + lane);
+      var bodyText = input.value.trim();
+      if (!bodyText) return;
+      btn.disabled = true;
+      fetch('/events/' + EVENT_ID + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': CSRF },
+        body: JSON.stringify({ lane: lane, body: bodyText }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (msg) { if (msg.id) { input.value = ''; appendMessage(msg); } btn.disabled = false; })
+        .catch(function () { btn.disabled = false; });
+    });
+  });
+
+  document.querySelectorAll('.chat-input').forEach(function (input) {
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        var lane = input.id.replace('chat-input-', '');
+        var sendBtn = document.querySelector('.chat-send-btn[data-lane="' + lane + '"]');
+        if (sendBtn) sendBtn.click();
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

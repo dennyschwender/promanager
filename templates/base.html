@@ -124,6 +124,7 @@
 <script>
 (function () {
   const evtSource = new EventSource("/notifications/stream");
+  window._pmSSE = evtSource;
   evtSource.onmessage = function (e) {
     try {
       const data = JSON.parse(e.data);
