@@ -71,6 +71,9 @@ class Event(Base):
     externals: Mapped[list[EventExternal]] = relationship(  # noqa: F821
         "EventExternal", back_populates="event", lazy="select", cascade="all, delete-orphan"
     )
+    messages: Mapped[list["EventMessage"]] = relationship(  # noqa: F821
+        "EventMessage", back_populates="event", lazy="select", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Event id={self.id} title={self.title!r} date={self.event_date}>"

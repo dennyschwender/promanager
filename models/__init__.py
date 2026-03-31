@@ -2,6 +2,7 @@
 
 from .attendance import Attendance
 from .event_external import EventExternal
+from .event_message import EventMessage
 from .event import Event
 from .notification import Notification
 from .notification_preference import NotificationPreference
@@ -27,6 +28,7 @@ __all__ = [
     "Event",
     "Attendance",
     "EventExternal",
+    "EventMessage",
     "TeamRecurringSchedule",
     "Notification",
     "NotificationPreference",
