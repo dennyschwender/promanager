@@ -774,6 +774,20 @@
     "pos_forward": "Forwards",
     "pos_other": "Other",
     "edit_attendance_button": "✏️ Modify Attendance",
-    "unknown_error": "An error occurred. Please try again."
+    "unknown_error": "An error occurred. Please try again.",
+    "chat_reply_button": "💬 Reply",
+    "chat_reply_prompt": "Type your reply (or /cancel to abort):",
+    "chat_reply_posted": "Your message was posted to the event discussion."
+  },
+  "chat": {
+    "title": "Chat",
+    "announcements": "Announcements",
+    "discussion": "Discussion",
+    "post_placeholder_announcement": "Write an announcement...",
+    "post_placeholder_discussion": "Write a message...",
+    "send": "Send",
+    "delete_confirm": "Delete this message?",
+    "empty_announcement": "No announcements yet.",
+    "empty_discussion": "No messages yet."
   }
 }

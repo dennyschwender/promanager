@@ -774,6 +774,20 @@
     "pos_forward": "Stürmer",
     "pos_other": "Andere",
     "edit_attendance_button": "✏️ Anwesenheit bearbeiten",
-    "unknown_error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
+    "unknown_error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
+    "chat_reply_button": "💬 Antworten",
+    "chat_reply_prompt": "Schreibe deine Antwort (oder /cancel zum Abbrechen):",
+    "chat_reply_posted": "Deine Nachricht wurde in der Eventdiskussion veröffentlicht."
+  },
+  "chat": {
+    "title": "Chat",
+    "announcements": "Ankündigungen",
+    "discussion": "Diskussion",
+    "post_placeholder_announcement": "Ankündigung schreiben...",
+    "post_placeholder_discussion": "Nachricht schreiben...",
+    "send": "Senden",
+    "delete_confirm": "Diese Nachricht löschen?",
+    "empty_announcement": "Keine Ankündigungen.",
+    "empty_discussion": "Keine Nachrichten."
   }
 }

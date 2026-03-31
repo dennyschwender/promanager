@@ -774,6 +774,20 @@
     "pos_forward": "Attaccanti",
     "pos_other": "Altro",
     "edit_attendance_button": "✏️ Modifica Presenze",
-    "unknown_error": "Si è verificato un errore. Riprova."
+    "unknown_error": "Si è verificato un errore. Riprova.",
+    "chat_reply_button": "💬 Rispondi",
+    "chat_reply_prompt": "Scrivi la tua risposta (o /cancel per annullare):",
+    "chat_reply_posted": "Il tuo messaggio è stato pubblicato nella discussione dell'evento."
+  },
+  "chat": {
+    "title": "Chat",
+    "announcements": "Comunicazioni",
+    "discussion": "Discussione",
+    "post_placeholder_announcement": "Scrivi una comunicazione...",
+    "post_placeholder_discussion": "Scrivi un messaggio...",
+    "send": "Invia",
+    "delete_confirm": "Eliminare questo messaggio?",
+    "empty_announcement": "Nessuna comunicazione.",
+    "empty_discussion": "Nessun messaggio."
   }
 }

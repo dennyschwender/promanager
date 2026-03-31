@@ -774,6 +774,20 @@
     "pos_forward": "Attaquants",
     "pos_other": "Autre",
     "edit_attendance_button": "✏️ Modifier les présences",
-    "unknown_error": "Une erreur s'est produite. Veuillez réessayer."
+    "unknown_error": "Une erreur s'est produite. Veuillez réessayer.",
+    "chat_reply_button": "💬 Répondre",
+    "chat_reply_prompt": "Tapez votre réponse (ou /cancel pour annuler) :",
+    "chat_reply_posted": "Votre message a été publié dans la discussion de l'événement."
+  },
+  "chat": {
+    "title": "Chat",
+    "announcements": "Annonces",
+    "discussion": "Discussion",
+    "post_placeholder_announcement": "Écrire une annonce...",
+    "post_placeholder_discussion": "Écrire un message...",
+    "send": "Envoyer",
+    "delete_confirm": "Supprimer ce message ?",
+    "empty_announcement": "Aucune annonce.",
+    "empty_discussion": "Aucun message."
   }
 }

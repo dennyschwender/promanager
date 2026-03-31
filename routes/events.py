@@ -16,6 +16,8 @@ from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.event_external import EventExternal
+from models.event_message import EventMessage
+from services.chat_service import author_display_name, message_to_dict
 from models.player import Player
 from models.season import Season
 from models.team import Team
@@ -511,6 +513,20 @@ async def event_detail(
 
     externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
 
+    chat_msgs_raw = (
+        db.query(EventMessage)
+        .filter(EventMessage.event_id == event_id)
+        .order_by(EventMessage.created_at.asc())
+        .all()
+    )
+    chat_messages = [
+        message_to_dict(
+            msg,
+            author_display_name(db.get(User, msg.user_id) if msg.user_id else None),
+        )
+        for msg in chat_msgs_raw
+    ]
+
     return render(
         request,
         "events/detail.html",
@@ -523,6 +539,7 @@ async def event_detail(
             "att_by_player": att_by_player,
             "user_player_ids": user_player_ids,
             "externals": externals,
+            "chat_messages": chat_messages,
             "flash": request.query_params.get("flash"),
         },
     )
