@@ -72,27 +72,73 @@
   <fieldset>
     <legend>{{ t('users.linked_player') }}</legend>
     {% if linked_player %}
-      <p><a href="/players/{{ linked_player.id }}">{{ linked_player.full_name }}</a></p>
-      <form method="post" action="/auth/users/{{ target.id }}/unlink-player" style="display:inline;">
-        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-        <button type="submit" class="btn btn-sm btn-outline">{{ t('users.unlink_player') }}</button>
-      </form>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <span><a href="/players/{{ linked_player.id }}">{{ linked_player.full_name }}</a></span>
+        <form method="post" action="/auth/users/{{ target.id }}/unlink-player" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+          <button type="submit" class="btn btn-sm btn-outline">{{ t('users.unlink_player') }}</button>
+        </form>
+      </div>
     {% else %}
-      <p style="color:var(--text-muted);">{{ t('users.no_linked_player') }}</p>
-      {% if unlinked_players %}
-      <form method="post" action="/auth/users/{{ target.id }}/link-player">
-        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="player_search" list="player_list" placeholder="{{ t('users.select_player') }}" style="flex:1;min-width:200px;" autocomplete="off">
-          <datalist id="player_list">
-            {% for p in unlinked_players %}
-            <option value="{{ p.full_name }}" data-id="{{ p.id }}">{{ p.full_name }}</option>
+      <p style="color:var(--text-muted);margin-bottom:.75rem;">{{ t('users.no_linked_player') }}</p>
+
+      <form method="get" action="/auth/users/{{ target.id }}/edit" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+        <label style="margin:0;">
+          <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.season_filter') }}</span>
+          <select name="player_season_id" onchange="this.form.submit()" class="sel-inline">
+            <option value="">{{ t('players_list.all_seasons') }}</option>
+            {% for s in seasons %}
+              <option value="{{ s.id }}" {% if selected_season_id == s.id %}selected{% endif %}>{{ s.name }}{% if s.is_active %} ✓{% endif %}</option>
             {% endfor %}
-          </datalist>
-          <input type="hidden" name="player_id" id="player_id_input">
-          <button type="submit" class="btn btn-primary">{{ t('users.link_player') }}</button>
-        </div>
+          </select>
+        </label>
+        <label style="margin:0;">
+          <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.team_filter') }}</span>
+          <select name="player_team_id" onchange="this.form.submit()" class="sel-inline">
+            <option value="">{{ t('players_list.all_teams') }}</option>
+            {% for team_opt in teams %}
+              <option value="{{ team_opt.id }}" {% if selected_team_id == team_opt.id %}selected{% endif %}>{{ team_opt.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% if selected_season_id %}<input type="hidden" name="player_season_id" value="{{ selected_season_id }}">{% endif %}
+        {% if selected_team_id %}<input type="hidden" name="player_team_id" value="{{ selected_team_id }}">{% endif %}
       </form>
+
+      {% if unlinked_players %}
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>{{ t('players.name') }}</th>
+          <th>{{ t('players.team') }}</th>
+          <th>{{ t('players.email') }}</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+        {% for p in unlinked_players %}
+        <tr>
+          <td><a href="/players/{{ p.id }}" target="_blank">{{ p.full_name }}</a></td>
+          <td>
+            {% set mems = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | list if selected_season_id else p.team_memberships | list %}
+            {% if mems %}
+              {% for m in mems | sort(attribute='priority') | list %}{{ m.team.name if m.team else '?' }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ p.email or '—' }}</td>
+          <td>
+            <form method="post" action="/auth/users/{{ target.id }}/link-player" style="margin:0;">
+              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+              <input type="hidden" name="player_id" value="{{ p.id }}">
+              <button type="submit" class="btn btn-sm btn-primary">{{ t('users.link_player') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p>{{ t('players.no_players') }}</p>
       {% endif %}
     {% endif %}
   </fieldset>
@@ -117,27 +163,4 @@
   </div>
 </form>
 </div>
-{% endblock %}
-{% block scripts %}
-{% if is_admin_edit %}
-<script>
-(function () {
-  var search = document.getElementById('player_search');
-  var hidden = document.getElementById('player_id_input');
-  if (!search || !hidden) return;
-
-  var options = Array.from(document.getElementById('player_list').options);
-  var map = {};
-  options.forEach(function (o) { map[o.value] = o.dataset.id; });
-
-  search.addEventListener('change', function () {
-    hidden.value = map[search.value] || '';
-  });
-
-  search.closest('form').addEventListener('submit', function (e) {
-    if (!hidden.value) { e.preventDefault(); search.focus(); }
-  });
-})();
-</script>
-{% endif %}
 {% endblock %}

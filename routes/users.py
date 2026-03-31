@@ -197,17 +197,35 @@ async def bulk_create_post(
 
 
 @router.get("/{user_id}/edit", dependencies=[Depends(require_admin)])
-async def user_edit_get(user_id: int, request: Request, db: Session = Depends(get_db)):
+async def user_edit_get(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    player_team_id: str | None = None,
+    player_season_id: str | None = None,
+):
     target = db.get(User, user_id)
     if target is None:
         return RedirectResponse("/auth/users", status_code=302)
     linked_player = db.query(Player).filter(Player.user_id == user_id).first()
-    unlinked_players = (
-        db.query(Player)
-        .filter(Player.user_id.is_(None), Player.archived_at.is_(None))
-        .order_by(Player.last_name, Player.first_name)
-        .all()
-    )
+
+    teams = db.query(Team).order_by(Team.name).all()
+    seasons = db.query(Season).order_by(Season.name).all()
+
+    p_team_id = int(player_team_id) if player_team_id and player_team_id.strip() else None
+    p_season_id = int(player_season_id) if player_season_id and player_season_id.strip() else None
+
+    q = db.query(Player).filter(Player.user_id.is_(None), Player.archived_at.is_(None))
+    if p_team_id:
+        from models.player_team import PlayerTeam
+        player_ids = [r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id == p_team_id).all()]
+        q = q.filter(Player.id.in_(player_ids))
+    if p_season_id:
+        from models.player_team import PlayerTeam
+        player_ids = [r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.season_id == p_season_id).all()]
+        q = q.filter(Player.id.in_(player_ids))
+    unlinked_players = q.order_by(Player.last_name, Player.first_name).all()
+
     return render(request, "auth/user_form.html", {
         "user": request.state.user,
         "target": target,
@@ -215,6 +233,10 @@ async def user_edit_get(user_id: int, request: Request, db: Session = Depends(ge
         "error": None,
         "linked_player": linked_player,
         "unlinked_players": unlinked_players,
+        "teams": teams,
+        "seasons": seasons,
+        "selected_team_id": p_team_id,
+        "selected_season_id": p_season_id,
     })
 
 
@@ -239,21 +261,32 @@ async def user_edit_post(
     username = username.strip()
     email = email.strip()
 
+    def _edit_error(msg: str, code: int = 400):
+        linked_player = db.query(Player).filter(Player.user_id == user_id).first()
+        return render(request, "auth/user_form.html", {
+            "user": request.state.user, "target": target, "is_admin_edit": True, "error": msg,
+            "linked_player": linked_player,
+            "unlinked_players": db.query(Player).filter(Player.user_id.is_(None), Player.archived_at.is_(None)).order_by(Player.last_name, Player.first_name).all(),
+            "teams": db.query(Team).order_by(Team.name).all(),
+            "seasons": db.query(Season).order_by(Season.name).all(),
+            "selected_team_id": None, "selected_season_id": None,
+        }, status_code=code)
+
     if not username:
-        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.field_required", field="Username")}, status_code=400)
+        return _edit_error(rt(request, "errors.field_required", field="Username"))
     if not email:
-        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.field_required", field="Email")}, status_code=400)
+        return _edit_error(rt(request, "errors.field_required", field="Email"))
     if role not in ("admin", "coach", "member"):
         role = "member"
     if new_password and len(new_password) < 8:
-        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.password_too_short")}, status_code=400)
+        return _edit_error(rt(request, "errors.password_too_short"))
 
     dup_user = db.query(User).filter(User.username == username, User.id != user_id).first()
     if dup_user:
-        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.username_taken", username=username)}, status_code=400)
+        return _edit_error(rt(request, "errors.username_taken", username=username))
     dup_email = db.query(User).filter(User.email == email, User.id != user_id).first()
     if dup_email:
-        return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": rt(request, "errors.email_taken", email=email)}, status_code=400)
+        return _edit_error(rt(request, "errors.email_taken", email=email))
 
     target.username = username
     target.email = email
