@@ -240,7 +240,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Don't clean up awaiting_external when user is selecting the status (extsta: callbacks)
         _skip_ext_cleanup = data.startswith("extsta:")
         _skip_extn_cleanup = data.startswith("extn:")
-        for _key in ("awaiting_note",) + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
+        for _key in ("awaiting_note", "awaiting_chat_reply") + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
             _pending = context.user_data.pop(_key, None)
             if _pending:
                 _pmid = _pending.get("prompt_message_id")
@@ -425,6 +425,21 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             await _set_status(query, user, db, int(parts[1]), int(parts[2]), parts[3])
 
+        elif data.startswith("chatreply:"):
+            await query.answer()
+            # chatreply:{event_id}:{lane}
+            parts = data.split(":")
+            event_id_cr = int(parts[1])
+            locale_cr = _locale(user)
+            prompt_msg = await query.message.reply_text(
+                t("telegram.chat_reply_prompt", locale_cr)
+            )
+            context.user_data["awaiting_chat_reply"] = {
+                "event_id": event_id_cr,
+                "prompt_message_id": prompt_msg.message_id,
+                "chat_id": query.message.chat_id,
+            }
+
 
 # ---------------------------------------------------------------------------
 # Events list
@@ -608,7 +623,12 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
 
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = str(update.effective_chat.id)
-    cancelled = context.user_data.pop("awaiting_note", None) or context.user_data.pop("awaiting_ext_note", None) or context.user_data.pop("awaiting_external", None)
+    cancelled = (
+        context.user_data.pop("awaiting_note", None)
+        or context.user_data.pop("awaiting_ext_note", None)
+        or context.user_data.pop("awaiting_external", None)
+        or context.user_data.pop("awaiting_chat_reply", None)
+    )
     if cancelled:
         with SessionLocal() as db:
             user = get_user_by_chat_id(db, chat_id)
@@ -690,6 +710,55 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         context.user_data.pop("awaiting_ext_note", None)
         import asyncio as _asyncio  # noqa: PLC0415
         conf = await update.message.reply_text(t("telegram.note_saved", _locale(user) if user else "en"))
+        await _asyncio.sleep(2)
+        try:
+            await conf.delete()
+        except Exception:
+            pass
+        return
+
+    # Handle chat reply input
+    pending_chat = context.user_data.get("awaiting_chat_reply")
+    if pending_chat:
+        body_text = (update.message.text or "").strip()
+        prompt_msg_id = pending_chat.get("prompt_message_id")
+        reply_chat_id = pending_chat.get("chat_id")
+        if prompt_msg_id and reply_chat_id:
+            try:
+                await context.bot.delete_message(chat_id=reply_chat_id, message_id=prompt_msg_id)
+            except Exception:
+                pass
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+        context.user_data.pop("awaiting_chat_reply", None)
+        locale_cr = "en"
+        if body_text:
+            with SessionLocal() as db:
+                user = get_user_by_chat_id(db, chat_id)
+                locale_cr = _locale(user) if user else "en"
+                if user:
+                    from models.event_message import EventMessage as _EventMessage  # noqa: PLC0415
+                    from services.chat_service import (  # noqa: PLC0415
+                        author_display_name,
+                        message_to_dict,
+                        push_chat_message_sse,
+                    )
+                    msg = _EventMessage(
+                        event_id=pending_chat["event_id"],
+                        user_id=user.id,
+                        lane="discussion",
+                        body=body_text,
+                    )
+                    db.add(msg)
+                    db.commit()
+                    db.refresh(msg)
+                    author_name = author_display_name(user)
+                    msg_dict = message_to_dict(msg, author_name)
+                    push_chat_message_sse(pending_chat["event_id"], msg_dict, db)
+        import asyncio as _asyncio  # noqa: PLC0415
+        conf = await update.message.reply_text(t("telegram.chat_reply_posted", locale_cr))
         await _asyncio.sleep(2)
         try:
             await conf.delete()
