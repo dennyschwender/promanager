@@ -47,8 +47,8 @@
         <input type="hidden" name="team_id" value="{{ event.team_id }}">
         <p>{{ event.team.name if event.team else '—' }}</p>
       {% else %}
-        <select name="team_id">
-          <option value="">{{ t('events_form.none_option') }}</option>
+        <select name="team_id" required>
+          <option value="" disabled {% if not event %}selected{% endif %}>{{ t('events_form.select_team') }}</option>
           {% for team_opt in teams %}
             <option value="{{ team_opt.id }}" {% if event and event.team_id == team_opt.id %}selected{% endif %}>{{ team_opt.name }}</option>
           {% endfor %}

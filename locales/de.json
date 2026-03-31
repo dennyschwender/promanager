@@ -557,6 +557,7 @@
     "pt_no_reg": "Keine Registrierung",
     "pt_no_reg_desc": "Keine Anwesenheitsverfolgung für dieses Ereignis",
     "none_option": "— Keiner —",
+    "select_team": "— Team auswählen —",
     "active_suffix": "(aktiv)",
     "time_validation": "Gültige Uhrzeit eingeben (00:00 - 23:59)",
     "time_format_hint": "Uhrzeit im Format HH:MM eingeben (z.B. 19:30)"

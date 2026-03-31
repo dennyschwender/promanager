@@ -557,6 +557,7 @@
     "pt_no_reg": "Nessuna registrazione",
     "pt_no_reg_desc": "Nessun monitoraggio delle presenze per questo evento",
     "none_option": "— Nessuno —",
+    "select_team": "— Seleziona un team —",
     "active_suffix": "(attiva)",
     "time_validation": "Inserisci un'ora valida (00:00 - 23:59)",
     "time_format_hint": "Inserisci l'ora nel formato HH:MM (es. 19:30)"

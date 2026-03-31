@@ -183,7 +183,20 @@ async def event_new_post(
         teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
 
     parsed_team_id = int(team_id) if team_id.strip() else None
-    if not user.is_admin and parsed_team_id is not None:
+    if parsed_team_id is None:
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": None,
+                "seasons": seasons,
+                "teams": teams,
+                "error": rt(request, "errors.field_required", field="Team"),
+            },
+            status_code=400,
+        )
+    if not user.is_admin:
         check_team_access(user, parsed_team_id, db)
 
     if not title.strip():

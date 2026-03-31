@@ -557,6 +557,7 @@
     "pt_no_reg": "No registration",
     "pt_no_reg_desc": "No attendance tracking for this event",
     "none_option": "— None —",
+    "select_team": "— Select a team —",
     "active_suffix": "(active)",
     "time_validation": "Enter a valid time (00:00 - 23:59)",
     "time_format_hint": "Enter time as HH:MM (e.g. 19:30)"

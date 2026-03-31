@@ -39,6 +39,9 @@ async def dashboard(
     )
     if active_season:
         events_q = events_q.filter(Event.season_id == active_season.id)
+    if not user.is_admin:
+        team_ids = [ut.team_id for ut in user.managed_teams]
+        events_q = events_q.filter(Event.team_id.in_(team_ids))
     upcoming_events = events_q.order_by(Event.event_date.asc()).all()
 
     upcoming_count = len(upcoming_events)
