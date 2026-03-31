@@ -58,6 +58,21 @@ def push_unread_count(player_id: int, unread_count: int) -> None:
             logger.warning("SSE queue full for player %s — dropping event", player_id)
 
 
+def push_payload(player_id: int, payload: dict) -> None:
+    """Push an arbitrary JSON payload to all connected tabs for *player_id*.
+
+    Used for chat events (chat_message, chat_delete) that bypass the
+    Notification table.
+    """
+    queues = _connections.get(player_id, [])
+    data = json.dumps(payload)
+    for q in queues:
+        try:
+            q.put_nowait(data)
+        except asyncio.QueueFull:
+            logger.warning("SSE queue full for player %s — dropping chat event", player_id)
+
+
 class InAppChannel:
     """Signals the SSE stream for connected players."""
 
