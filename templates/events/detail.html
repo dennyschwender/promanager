@@ -317,7 +317,12 @@
       e.stopPropagation();
       var pid = myAttBtn.dataset.playerId;
       var playerBtn = document.querySelector('.att-player-btn[data-player-id="' + pid + '"]');
-      if (playerBtn) { openPopover(playerBtn); }
+      if (playerBtn) {
+        // Copy data attrs so openPopover positions at this button but reads player data
+        myAttBtn.dataset.playerName = playerBtn.dataset.playerName || '';
+        myAttBtn.dataset.note = playerBtn.dataset.note || '';
+        openPopover(myAttBtn);
+      }
     });
   }
 
