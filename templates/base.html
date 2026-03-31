@@ -33,8 +33,10 @@
     {% endif %}
     <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
     {% if user %}
+    {% if user.is_admin or user.is_coach %}
     <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
     <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
+    {% endif %}
     {% if user.is_admin %}
       <li><a href="/seasons" class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
     {% endif %}
