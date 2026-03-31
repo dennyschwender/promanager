@@ -11,6 +11,7 @@ from app.database import get_db
 from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
+from models.player import Player
 from models.season import Season
 from models.team import Team
 from models.user import User
@@ -40,7 +41,18 @@ async def dashboard(
     if active_season:
         events_q = events_q.filter(Event.season_id == active_season.id)
     if not user.is_admin:
-        team_ids = get_coach_teams(user, db)
+        if user.is_coach:
+            team_ids = get_coach_teams(user, db)
+        else:
+            # member: get team(s) from linked player records
+            team_ids = {
+                p.team_id
+                for p in db.query(Player).filter(
+                    Player.user_id == user.id,
+                    Player.team_id.isnot(None),
+                    Player.archived_at.is_(None),
+                ).all()
+            }
         events_q = events_q.filter(Event.team_id.in_(team_ids))
     upcoming_events = events_q.order_by(Event.event_date.asc()).all()
 

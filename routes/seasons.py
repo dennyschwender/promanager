@@ -14,7 +14,7 @@ from app.templates import render
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.user import User
-from routes._auth_helpers import require_admin, require_login, rt
+from routes._auth_helpers import require_admin, require_coach_or_admin, require_login, rt
 
 router = APIRouter()
 
@@ -34,7 +34,7 @@ def _parse_date(val: str):
 @router.get("/")
 async def seasons_list(
     request: Request,
-    user: User = Depends(require_login),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()

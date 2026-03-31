@@ -29,6 +29,12 @@
       {% endfor %}
     </select>
   </label>
+  {% if user %}
+  <label style="display:flex;align-items:center;gap:.4rem;margin:0;">
+    <input type="checkbox" name="my_events" value="1" {% if my_events %}checked{% endif %} onchange="this.form.submit()">
+    {{ t('events.my_events') }}
+  </label>
+  {% endif %}
 </form>
 
 {% macro events_table(events, section) %}

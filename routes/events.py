@@ -71,15 +71,18 @@ async def events_list(
     request: Request,
     season_id: str | None = None,
     team_id: str | None = None,
+    my_events: str | None = None,
     upcoming_page: int = 1,
     past_page: int = 1,
     user: "User | None" = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
     import math  # noqa: PLC0415
+    from models.player import Player as _Player
     PAGE_SIZE = 10
     season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]
     team_id = int(team_id) if team_id and team_id.strip() else None  # type: ignore[assignment]
+    my_events = bool(my_events) and user is not None
     today = datetime.today().date()
 
     q = db.query(Event)
@@ -87,6 +90,22 @@ async def events_list(
         q = q.filter(Event.season_id == season_id)
     if team_id is not None:
         q = q.filter(Event.team_id == team_id)
+    if my_events and user is not None:
+        if user.is_admin:
+            pass  # admin sees all
+        elif user.is_coach:
+            my_team_ids = get_coach_teams(user, db)
+            q = q.filter(Event.team_id.in_(my_team_ids))
+        else:
+            my_team_ids = {
+                p.team_id
+                for p in db.query(_Player).filter(
+                    _Player.user_id == user.id,
+                    _Player.team_id.isnot(None),
+                    _Player.archived_at.is_(None),
+                ).all()
+            }
+            q = q.filter(Event.team_id.in_(my_team_ids))
     all_events = q.order_by(Event.event_date.asc()).all()
     all_upcoming = [e for e in all_events if e.event_date >= today]
     all_past = sorted([e for e in all_events if e.event_date < today], key=lambda e: e.event_date, reverse=True)
@@ -117,6 +136,7 @@ async def events_list(
             "teams": teams,
             "selected_season_id": season_id,
             "selected_team_id": team_id,
+            "my_events": my_events,
             "coach_team_ids": get_coach_teams(user, db) if user and user.is_coach else set(),
             "flash": request.query_params.get("flash"),
         },

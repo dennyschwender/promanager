@@ -17,7 +17,7 @@ from models.team import Team
 from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
 from models.user_team import UserTeam
-from routes._auth_helpers import require_admin, require_login, rt
+from routes._auth_helpers import require_admin, require_coach_or_admin, require_login, rt
 from services.schedule_service import (
     count_future_events,
     delete_future_events,
@@ -126,7 +126,7 @@ def _apply_row_to_schedule(sched: TeamRecurringSchedule, row: dict) -> None:
 @router.get("/")
 async def teams_list(
     request: Request,
-    user: User = Depends(require_login),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     teams = db.query(Team).order_by(Team.name).all()
@@ -208,7 +208,7 @@ async def team_detail(
     team_id: int,
     request: Request,
     saved: str = "",
-    user=Depends(require_login),
+    user=Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     team = db.get(Team, team_id)

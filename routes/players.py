@@ -581,7 +581,7 @@ async def players_list(
     team_id: int | None = None,
     season_id: int | None = None,
     archived: str | None = None,
-    user: User = Depends(require_login),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     seasons = db.query(Season).order_by(Season.name).all()
@@ -955,7 +955,7 @@ async def player_search(
 async def player_detail(
     player_id: int,
     request: Request,
-    user: User = Depends(require_login),
+    user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
     player = db.get(Player, player_id)
