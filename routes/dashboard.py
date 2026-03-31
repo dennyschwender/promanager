@@ -12,6 +12,7 @@ from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
+from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
@@ -44,15 +45,19 @@ async def dashboard(
         if user.is_coach:
             team_ids = get_coach_teams(user, db)
         else:
-            # member: get team(s) from linked player records
-            team_ids = {
-                p.team_id
-                for p in db.query(Player).filter(
-                    Player.user_id == user.id,
-                    Player.team_id.isnot(None),
-                    Player.archived_at.is_(None),
-                ).all()
-            }
+            # member: get team(s) from PlayerTeam memberships of linked player
+            player = db.query(Player).filter(
+                Player.user_id == user.id,
+                Player.archived_at.is_(None),
+            ).first()
+            if player:
+                team_ids = {
+                    row[0] for row in db.query(PlayerTeam.team_id).filter(
+                        PlayerTeam.player_id == player.id
+                    ).all()
+                }
+            else:
+                team_ids = set()
         events_q = events_q.filter(Event.team_id.in_(team_ids))
     upcoming_events = events_q.order_by(Event.event_date.asc()).all()
 

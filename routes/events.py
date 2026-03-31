@@ -97,14 +97,16 @@ async def events_list(
             my_team_ids = get_coach_teams(user, db)
             q = q.filter(Event.team_id.in_(my_team_ids))
         else:
+            from models.player_team import PlayerTeam as _PlayerTeam
+            player = db.query(_Player).filter(
+                _Player.user_id == user.id,
+                _Player.archived_at.is_(None),
+            ).first()
             my_team_ids = {
-                p.team_id
-                for p in db.query(_Player).filter(
-                    _Player.user_id == user.id,
-                    _Player.team_id.isnot(None),
-                    _Player.archived_at.is_(None),
+                row[0] for row in db.query(_PlayerTeam.team_id).filter(
+                    _PlayerTeam.player_id == player.id
                 ).all()
-            }
+            } if player else set()
             q = q.filter(Event.team_id.in_(my_team_ids))
     all_events = q.order_by(Event.event_date.asc()).all()
     all_upcoming = [e for e in all_events if e.event_date >= today]
@@ -467,11 +469,15 @@ async def event_detail(
         if user.is_coach:
             check_team_access(user, event.team_id, db, season_id=event.season_id)
         else:
-            # member: must have a player linked to this event's team
-            has_access = db.query(Player).filter(
+            # member: must have a player with a PlayerTeam record for this event's team
+            from models.player_team import PlayerTeam as _PlayerTeam
+            player = db.query(Player).filter(
                 Player.user_id == user.id,
-                Player.team_id == event.team_id,
                 Player.archived_at.is_(None),
+            ).first()
+            has_access = player is not None and db.query(_PlayerTeam).filter(
+                _PlayerTeam.player_id == player.id,
+                _PlayerTeam.team_id == event.team_id,
             ).first() is not None
             if not has_access:
                 raise NotAuthorized
