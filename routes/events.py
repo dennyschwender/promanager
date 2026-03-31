@@ -86,6 +86,9 @@ async def events_list(
         q = q.filter(Event.season_id == season_id)
     if team_id is not None:
         q = q.filter(Event.team_id == team_id)
+    if user and not user.is_admin:
+        coach_ids = get_coach_teams(user, db)
+        q = q.filter(Event.team_id.in_(coach_ids))
 
     all_events = q.order_by(Event.event_date.asc()).all()
     all_upcoming = [e for e in all_events if e.event_date >= today]
