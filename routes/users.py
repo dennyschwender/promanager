@@ -29,13 +29,6 @@ async def users_list(request: Request, db: Session = Depends(get_db)):
     # Build player lookup: user_id -> Player
     linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
     player_by_user: dict[int, Player] = {p.user_id: p for p in linked_players}
-    # Unlinked active players available for linking
-    unlinked_players = (
-        db.query(Player)
-        .filter(Player.user_id.is_(None), Player.archived_at.is_(None))
-        .order_by(Player.last_name, Player.first_name)
-        .all()
-    )
     return render(
         request,
         "auth/users_list.html",
@@ -43,7 +36,6 @@ async def users_list(request: Request, db: Session = Depends(get_db)):
             "user": request.state.user,
             "users": users,
             "player_by_user": player_by_user,
-            "unlinked_players": unlinked_players,
         },
     )
 
@@ -209,7 +201,21 @@ async def user_edit_get(user_id: int, request: Request, db: Session = Depends(ge
     target = db.get(User, user_id)
     if target is None:
         return RedirectResponse("/auth/users", status_code=302)
-    return render(request, "auth/user_form.html", {"user": request.state.user, "target": target, "is_admin_edit": True, "error": None})
+    linked_player = db.query(Player).filter(Player.user_id == user_id).first()
+    unlinked_players = (
+        db.query(Player)
+        .filter(Player.user_id.is_(None), Player.archived_at.is_(None))
+        .order_by(Player.last_name, Player.first_name)
+        .all()
+    )
+    return render(request, "auth/user_form.html", {
+        "user": request.state.user,
+        "target": target,
+        "is_admin_edit": True,
+        "error": None,
+        "linked_player": linked_player,
+        "unlinked_players": unlinked_players,
+    })
 
 
 @router.post("/{user_id}/edit", dependencies=[Depends(require_admin), Depends(require_csrf)])

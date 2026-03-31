@@ -367,7 +367,8 @@
     "last_name": "Nachname",
     "link_player": "Spieler verknüpfen",
     "unlink_player": "Spieler trennen",
-    "select_player": "— Spieler auswählen —"
+    "select_player": "Spieler suchen…",
+    "no_linked_player": "Kein Spieler verknüpft."
   },
   "players_form": {
     "basic_info": "Grunddaten",

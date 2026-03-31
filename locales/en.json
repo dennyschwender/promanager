@@ -367,7 +367,8 @@
     "last_name": "Last Name",
     "link_player": "Link Player",
     "unlink_player": "Unlink Player",
-    "select_player": "— Select a player —"
+    "select_player": "Search player…",
+    "no_linked_player": "No player linked."
   },
   "players_form": {
     "basic_info": "Basic Info",

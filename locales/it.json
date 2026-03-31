@@ -367,7 +367,8 @@
     "last_name": "Cognome",
     "link_player": "Collega giocatore",
     "unlink_player": "Scollega giocatore",
-    "select_player": "— Seleziona un giocatore —"
+    "select_player": "Cerca giocatore…",
+    "no_linked_player": "Nessun giocatore collegato."
   },
   "players_form": {
     "basic_info": "Informazioni di base",

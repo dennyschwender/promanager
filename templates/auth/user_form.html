@@ -68,6 +68,36 @@
   </label>
   {% endif %}
 
+  {% if is_admin_edit %}
+  <fieldset>
+    <legend>{{ t('users.linked_player') }}</legend>
+    {% if linked_player %}
+      <p><a href="/players/{{ linked_player.id }}">{{ linked_player.full_name }}</a></p>
+      <form method="post" action="/auth/users/{{ target.id }}/unlink-player" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+        <button type="submit" class="btn btn-sm btn-outline">{{ t('users.unlink_player') }}</button>
+      </form>
+    {% else %}
+      <p style="color:var(--text-muted);">{{ t('users.no_linked_player') }}</p>
+      {% if unlinked_players %}
+      <form method="post" action="/auth/users/{{ target.id }}/link-player">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="player_search" list="player_list" placeholder="{{ t('users.select_player') }}" style="flex:1;min-width:200px;" autocomplete="off">
+          <datalist id="player_list">
+            {% for p in unlinked_players %}
+            <option value="{{ p.full_name }}" data-id="{{ p.id }}">{{ p.full_name }}</option>
+            {% endfor %}
+          </datalist>
+          <input type="hidden" name="player_id" id="player_id_input">
+          <button type="submit" class="btn btn-primary">{{ t('users.link_player') }}</button>
+        </div>
+      </form>
+      {% endif %}
+    {% endif %}
+  </fieldset>
+  {% endif %}
+
   <fieldset>
     <legend>{{ t('users.change_password') }}</legend>
     {% if not is_admin_edit %}
@@ -87,4 +117,27 @@
   </div>
 </form>
 </div>
+{% endblock %}
+{% block scripts %}
+{% if is_admin_edit %}
+<script>
+(function () {
+  var search = document.getElementById('player_search');
+  var hidden = document.getElementById('player_id_input');
+  if (!search || !hidden) return;
+
+  var options = Array.from(document.getElementById('player_list').options);
+  var map = {};
+  options.forEach(function (o) { map[o.value] = o.dataset.id; });
+
+  search.addEventListener('change', function () {
+    hidden.value = map[search.value] || '';
+  });
+
+  search.closest('form').addEventListener('submit', function (e) {
+    if (!hidden.value) { e.preventDefault(); search.focus(); }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

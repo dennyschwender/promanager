@@ -44,25 +44,7 @@
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
         <div class="action-dropdown-menu">
           <a href="/auth/users/{{ u.id }}/edit" class="btn-link">{{ t('users.edit_user') }}</a>
-          {% set linked = player_by_user.get(u.id) %}
-          {% if linked %}
-          <form method="post" action="/auth/users/{{ u.id }}/unlink-player">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <button type="submit">{{ t('users.unlink_player') }}</button>
-          </form>
-          {% elif unlinked_players %}
-          <form method="post" action="/auth/users/{{ u.id }}/link-player" class="link-player-form">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-            <select name="player_id" required>
-              <option value="" disabled selected>{{ t('users.select_player') }}</option>
-              {% for p in unlinked_players %}
-              <option value="{{ p.id }}">{{ p.full_name }}</option>
-              {% endfor %}
-            </select>
-            <button type="submit">{{ t('users.link_player') }}</button>
-          </form>
-          {% endif %}
-          <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
+<form method="post" action="/auth/users/{{ u.id }}/toggle-active">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="{% if not u.is_active %}reactivate{% endif %}">
               {% if u.is_active %}{{ t('users.deactivate') }}{% else %}{{ t('users.reactivate') }}{% endif %}
