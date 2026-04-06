@@ -1127,3 +1127,70 @@ async def player_unarchive(
     player.archived_at = None
     db.commit()
     return RedirectResponse("/players", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Absences
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{player_id}/absences")
+async def player_absences_list(
+    player_id: int,
+    request: Request,
+    current_user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    """Display list of player absences."""
+    from models.player_absence import PlayerAbsence
+
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    # Check authorization
+    if not current_user.is_admin and not (current_user.players and any(p.id == player_id for p in current_user.players)):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player_id).all()
+    return render(
+        request,
+        "players/absences_list.html",
+        {
+            "user": current_user,
+            "player": player,
+            "absences": absences,
+        },
+    )
+
+
+@router.get("/{player_id}/absences/new")
+async def absence_form_new(
+    player_id: int,
+    request: Request,
+    current_user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    """Display form to create new absence."""
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    # Check authorization
+    if not current_user.is_admin and not (current_user.players and any(p.id == player_id for p in current_user.players)):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Get current or next season
+    season = db.query(Season).filter(Season.end_date >= date.today()).order_by(Season.start_date).first()
+
+    return render(
+        request,
+        "players/absence_form.html",
+        {
+            "user": current_user,
+            "player": player,
+            "absence": None,
+            "season_id": season.id if season else None,
+            "season_end_date": season.end_date if season else None,
+        },
+    )

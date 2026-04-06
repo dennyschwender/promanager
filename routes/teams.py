@@ -635,3 +635,61 @@ async def team_delete(
         db.delete(team)
         db.commit()
     return RedirectResponse("/teams", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Absences
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{team_id}/season/{season_id}/absences")
+async def team_absences_view(
+    team_id: int,
+    season_id: int,
+    request: Request,
+    current_user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    """Display absences for all players in a team."""
+    from models.player_absence import PlayerAbsence
+
+    team = db.query(Team).filter(Team.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    season = db.query(Season).filter(Season.id == season_id).first()
+    if not season:
+        raise HTTPException(status_code=404, detail="Season not found")
+
+    # Check if user coaches this team or is admin
+    user_team = db.query(UserTeam).filter(
+        UserTeam.user_id == current_user.id,
+        UserTeam.team_id == team_id,
+    ).first()
+
+    if not current_user.is_admin and not user_team:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Get all players in team for this season
+    player_teams = db.query(PlayerTeam).filter(
+        PlayerTeam.team_id == team_id,
+        PlayerTeam.season_id == season_id,
+    ).all()
+
+    # Collect absences for each player
+    player_absences = []
+    for pt in player_teams:
+        absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == pt.player_id).all()
+        if absences:
+            player_absences.append((pt.player_id, pt.player.full_name, absences))
+
+    return render(
+        request,
+        "teams/absences_team_view.html",
+        {
+            "user": current_user,
+            "team": team,
+            "season": season,
+            "player_absences": player_absences,
+        },
+    )
