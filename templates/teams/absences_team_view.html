@@ -45,8 +45,7 @@
                 </td>
                 <td>{{ absence.reason or "—" }}</td>
                 <td style="white-space: nowrap;">
-                    <form method="POST" action="/api/players/{{ player_id }}/absences/{{ absence.id }}" style="display: inline;">
-                        <input type="hidden" name="_method" value="DELETE">
+                    <form class="delete-absence-form" method="POST" action="/api/players/{{ player_id }}/absences/{{ absence.id }}" data-player-id="{{ player_id }}" data-absence-id="{{ absence.id }}" style="display: inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t("common.confirm_delete") }}')">{{ t("common.delete") }}</button>
                     </form>
@@ -62,4 +61,37 @@
     {{ t("absences.no_team_absences") }}
 </div>
 {% endif %}
+
+<script>
+document.querySelectorAll('.delete-absence-form').forEach(form => {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const playerId = form.dataset.playerId;
+    const absenceId = form.dataset.absenceId;
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+
+    try {
+      const response = await fetch(`/api/players/${playerId}/absences/${absenceId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Error: ${error.detail || 'Failed to delete absence'}`);
+        return;
+      }
+
+      // Reload page
+      window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while deleting the absence');
+    }
+  });
+});
+</script>
 {% endblock %}

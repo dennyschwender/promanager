@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if absence %}{{ t("absences.edit_title") }}{% else %}{{ t("absences.create_title") }}{% endif %}{% endblock %}
+{% block title %}{{ t("absences.create_title") }}{% endblock %}
 
 {% block breadcrumb %}
 <nav class="breadcrumb">
@@ -8,35 +8,32 @@
   <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
   <a href="/players/{{ player.id }}">{{ player.full_name }}</a><span class="breadcrumb-sep"></span>
   <a href="/players/{{ player.id }}/absences">{{ t('absences.page_title') }}</a><span class="breadcrumb-sep"></span>
-  <span>{% if absence %}{{ t("absences.edit_title") }}{% else %}{{ t("absences.create_title") }}{% endif %}</span>
+  <span>{{ t("absences.create_title") }}</span>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-  <h2>{% if absence %}{{ t("absences.edit_title") }}: {{ player.full_name }}{% else %}{{ t("absences.create_title") }}: {{ player.full_name }}{% endif %}</h2>
+  <h2>{{ t("absences.create_title") }}: {{ player.full_name }}</h2>
 
   {% if error %}
     <div class="alert alert-error">{{ error }}</div>
   {% endif %}
 
-  <form method="POST" action="{% if absence %}/players/{{ player.id }}/absences/{{ absence.id }}{% else %}/players/{{ player.id }}/absences{% endif %}">
+  <form method="POST" action="/players/{{ player.id }}/absences">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-    {% if absence %}<input type="hidden" name="_method" value="PUT">{% endif %}
 
     <fieldset>
       <legend>{{ t("absences.absence_type") }}</legend>
       <div class="form-group">
         <div>
           <label class="radio-inline">
-            <input type="radio" name="absence_type" value="period"
-                   {% if not absence or absence.absence_type == "period" %}checked{% endif %}
+            <input type="radio" name="absence_type" value="period" checked
                    onchange="toggleAbsenceFields()">
             {{ t("absences.period") }}
           </label>
           <label class="radio-inline">
             <input type="radio" name="absence_type" value="recurring"
-                   {% if absence and absence.absence_type == "recurring" %}checked{% endif %}
                    onchange="toggleAbsenceFields()">
             {{ t("absences.recurring") }}
           </label>
@@ -45,20 +42,18 @@
     </fieldset>
 
     <!-- Period fields -->
-    <fieldset id="period_fields" {% if absence and absence.absence_type == "recurring" %}style="display: none;"{% endif %}>
+    <fieldset id="period_fields">
       <legend>{{ t("absences.period_details") }}</legend>
       <label>{{ t("absences.start_date") }} *
-        <input type="date" name="start_date" required
-               value="{% if absence %}{{ absence.start_date }}{% endif %}">
+        <input type="date" name="start_date" required>
       </label>
       <label>{{ t("absences.end_date") }} *
-        <input type="date" name="end_date" required
-               value="{% if absence %}{{ absence.end_date }}{% endif %}">
+        <input type="date" name="end_date" required>
       </label>
     </fieldset>
 
     <!-- Recurring fields -->
-    <fieldset id="recurring_fields" {% if not absence or absence.absence_type == "period" %}style="display: none;"{% endif %}>
+    <fieldset id="recurring_fields" style="display: none;">
       <legend>{{ t("absences.recurring_details") }}</legend>
 
       <div class="form-group">
@@ -97,21 +92,19 @@
 
       <label>{{ t("absences.rrule_until") }}
         <input type="date" name="rrule_until"
-               value="{% if absence %}{{ absence.rrule_until }}{% else %}{{ season_end_date if season_end_date else "" }}{% endif %}"
                placeholder="{% if season_end_date %}{{ season_end_date }}{% endif %}">
         <small>{{ t("absences.rrule_until_hint") }}</small>
       </label>
 
       <input type="hidden" id="rrule" name="rrule">
-      <input type="hidden" id="season_id" name="season_id" value="{{ season_id or "" }}">
+      <input type="hidden" id="season_id" name="season_id" value="{{ season_id }}" required>
     </fieldset>
 
     <fieldset>
       <legend>{{ t("absences.additional_info") }}</legend>
       <label>{{ t("absences.reason") }}
         <input type="text" name="reason" maxlength="512"
-               placeholder="{{ t("absences.reason_placeholder") }}"
-               value="{% if absence %}{{ absence.reason }}{% endif %}">
+               placeholder="{{ t("absences.reason_placeholder") }}">
       </label>
     </fieldset>
 
@@ -155,10 +148,12 @@ function updateRrule() {
   }
 }
 
-// Initialize on page load
+// Handle form submission as JSON
 document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form');
+
+  // Initialize recurring checkboxes from existing absence
   {% if absence and absence.absence_type == "recurring" and absence.rrule %}
-  // Parse and populate weekday checkboxes from rrule
   const rrule = "{{ absence.rrule }}";
   const match = rrule.match(/BYDAY=([A-Z,]+)/);
   if (match) {
@@ -170,6 +165,62 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRrule();
   }
   {% endif %}
+
+  // Form submit handler: convert to JSON POST
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = {};
+    const isRecurring = formData.get('absence_type') === 'recurring';
+
+    // Build request payload
+    data.absence_type = formData.get('absence_type');
+    data.reason = formData.get('reason');
+
+    if (isRecurring) {
+      data.rrule = formData.get('rrule');
+      data.season_id = formData.get('season_id') ? parseInt(formData.get('season_id')) : null;
+      const rruleUntil = formData.get('rrule_until');
+      if (rruleUntil) {
+        data.rrule_until = rruleUntil;
+      }
+    } else {
+      data.start_date = formData.get('start_date');
+      data.end_date = formData.get('end_date');
+    }
+
+    // Extract player ID from form action
+    const actionUrl = form.getAttribute('action');
+    const playerIdMatch = actionUrl.match(/players\/(\d+)/);
+    const playerId = playerIdMatch ? playerIdMatch[1] : null;
+
+    const url = `/api/players/${playerId}/absences`;
+    const method = 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': formData.get('csrf_token'),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Error: ${error.detail || 'Failed to save absence'}`);
+        return;
+      }
+
+      // Redirect to absences list
+      window.location.href = `/players/${playerId}/absences`;
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while saving the absence');
+    }
+  });
 });
 </script>
 {% endblock %}
