@@ -93,6 +93,24 @@ Business logic lives in `services/` and is called from routes. Key services: `au
 - **I will ask for approval on**: destructive operations (force push, branch deletion), PRs/publishing decisions, significant architectural changes, or when requirements are unclear.
 - **Testing expectations**: Tests must pass before committing. Use `pytest -v` and `ruff check` locally.
 
+## Claude Code status line
+
+A context-bar status line is configured in `~/.claude/settings.json` to show:
+
+```
+Haiku 4.5 | 📁promanager | 🔀master (2 files uncommitted, synced 12m ago) | ██████░░░░ 65% of 200k tokens
+💬 example user message preview
+```
+
+**Setup requirement**: Install `jq` for JSON parsing:
+```bash
+brew install jq          # macOS
+sudo apt-get install jq  # Ubuntu/Debian
+apk add jq              # Alpine
+```
+
+The script is at `~/.claude/scripts/context-bar.sh` with 10 color themes available. See `~/.claude/scripts/README.md` for details.
+
 ## Notes
 
 - Port **7000** is the default for both local dev and Docker.
