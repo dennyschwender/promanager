@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from sqlalchemy.orm import Session
 from dateutil.rrule import rrulestr
 
@@ -37,3 +37,57 @@ def is_date_in_absence(player_id: int, check_date: date, db: Session) -> bool:
     """Check if a date falls within any active absence for a player."""
     absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player_id).all()
     return any(_date_matches_absence(check_date, abs_rec) for abs_rec in absences)
+
+
+def apply_absence_to_future_events(player_id: int, db: Session) -> int:
+    """Apply an absence to all matching future event attendance records.
+
+    Returns the count of updated attendance records.
+    """
+    from models.attendance import Attendance
+    from models.event import Event
+
+    today = date.today()
+
+    # Query all attendance records for this player on future events
+    attendances = (
+        db.query(Attendance)
+        .join(Event)
+        .filter(
+            Attendance.player_id == player_id,
+            Event.event_date >= today,
+        )
+        .all()
+    )
+
+    # Fetch all absences for this player
+    absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player_id).all()
+
+    count = 0
+    for att in attendances:
+        # Find if this attendance date matches any absence
+        matching_absence = None
+        for absence in absences:
+            if _date_matches_absence(att.event.event_date, absence):
+                matching_absence = absence
+                break
+
+        if not matching_absence:
+            continue
+
+        # Determine if we should update this attendance
+        should_update = att.status == "unknown" or (
+            att.status == "present" and att.event.presence_type == "all"
+        )
+
+        if should_update:
+            reason = matching_absence.reason or "On leave"
+            att.status = "absent"
+            att.note = f"[Absence] {reason}"
+            att.updated_at = datetime.now(timezone.utc)
+            count += 1
+
+    if count > 0:
+        db.commit()
+
+    return count

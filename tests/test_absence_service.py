@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from models.player import Player
 from models.player_absence import PlayerAbsence
 from models.season import Season
-from services.absence_service import is_date_in_absence
+from models.team import Team
+from models.event import Event
+from models.attendance import Attendance
+from models.player_team import PlayerTeam
+from services.absence_service import is_date_in_absence, apply_absence_to_future_events
 
 
 def test_is_date_in_absence_period_within_range(db: Session):
@@ -121,3 +125,194 @@ def test_is_date_in_absence_recurring_expired(db: Session):
     assert is_date_in_absence(player.id, date(2026, 5, 1), db) is False
     # But April 25 (Friday) should match
     assert is_date_in_absence(player.id, date(2026, 4, 25), db) is True
+
+
+def test_apply_absence_to_future_events_period(db: Session):
+    """Creating a period absence should auto-set matching future events to absent."""
+    player = Player(first_name="David", last_name="Test", is_active=True)
+    db.add(player)
+    db.commit()
+
+    team = Team(name="TestTeam")
+    db.add(team)
+    db.commit()
+
+    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    db.add(season)
+    db.commit()
+
+    # Add player to team
+    pm = PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id)
+    db.add(pm)
+    db.commit()
+
+    # Create events
+    e1 = Event(
+        title="Event 1",
+        event_date=date(2026, 4, 10),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="normal",
+    )
+    e2 = Event(
+        title="Event 2",
+        event_date=date(2026, 4, 15),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="normal",
+    )
+    e3 = Event(
+        title="Event 3",
+        event_date=date(2026, 5, 1),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="normal",
+    )
+    db.add_all([e1, e2, e3])
+    db.commit()
+
+    # Ensure attendance records exist (manually create them for this test)
+    for event in [e1, e2, e3]:
+        att = Attendance(event_id=event.id, player_id=player.id, status="unknown")
+        db.add(att)
+    db.commit()
+
+    # Create absence April 10-20
+    absence = PlayerAbsence(
+        player_id=player.id,
+        absence_type="period",
+        start_date=date(2026, 4, 10),
+        end_date=date(2026, 4, 20),
+        reason="Vacation",
+    )
+    db.add(absence)
+    db.commit()
+
+    # Apply absence
+    count = apply_absence_to_future_events(player.id, db)
+
+    # Check results
+    assert count == 2  # e1 and e2 should be updated
+
+    # Verify e1 (April 10) is set to absent
+    att1 = db.query(Attendance).filter_by(event_id=e1.id, player_id=player.id).first()
+    assert att1.status == "absent"
+    assert "[Absence]" in att1.note
+    assert "Vacation" in att1.note
+
+    # Verify e2 (April 15) is set to absent
+    att2 = db.query(Attendance).filter_by(event_id=e2.id, player_id=player.id).first()
+    assert att2.status == "absent"
+
+    # Verify e3 (May 1) is NOT changed
+    att3 = db.query(Attendance).filter_by(event_id=e3.id, player_id=player.id).first()
+    assert att3.status == "unknown"
+
+
+def test_apply_absence_respects_all_presence_type(db: Session):
+    """Absence should override presence_type='all' (auto-present default)."""
+    player = Player(first_name="Eve", last_name="Test", is_active=True)
+    db.add(player)
+    db.commit()
+
+    team = Team(name="TestTeam2")
+    db.add(team)
+    db.commit()
+
+    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    db.add(season)
+    db.commit()
+
+    pm = PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id)
+    db.add(pm)
+    db.commit()
+
+    # Event with presence_type="all" (everyone present by default)
+    event = Event(
+        title="AllAttendee Event",
+        event_date=date(2026, 4, 15),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="all",
+    )
+    db.add(event)
+    db.commit()
+
+    # Create attendance with status="present" (from all-attendee default)
+    att = Attendance(event_id=event.id, player_id=player.id, status="present")
+    db.add(att)
+    db.commit()
+
+    # Create absence covering this date
+    absence = PlayerAbsence(
+        player_id=player.id,
+        absence_type="period",
+        start_date=date(2026, 4, 10),
+        end_date=date(2026, 4, 20),
+        reason="Vacation",
+    )
+    db.add(absence)
+    db.commit()
+
+    # Apply absence
+    count = apply_absence_to_future_events(player.id, db)
+
+    # Should have updated the auto-present to absent
+    assert count == 1
+    att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
+    assert att_refreshed.status == "absent"
+
+
+def test_apply_absence_preserves_explicit_present(db: Session):
+    """Absence should NOT override explicit 'present' on non-'all' events."""
+    player = Player(first_name="Frank", last_name="Test", is_active=True)
+    db.add(player)
+    db.commit()
+
+    team = Team(name="TestTeam3")
+    db.add(team)
+    db.commit()
+
+    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    db.add(season)
+    db.commit()
+
+    pm = PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id)
+    db.add(pm)
+    db.commit()
+
+    # Event with presence_type="normal" (not all-attendee)
+    event = Event(
+        title="Normal Event",
+        event_date=date(2026, 4, 15),
+        team_id=team.id,
+        season_id=season.id,
+        presence_type="normal",
+    )
+    db.add(event)
+    db.commit()
+
+    # Create attendance with status="present" (coach explicitly set it)
+    att = Attendance(event_id=event.id, player_id=player.id, status="present", note="Coach confirmed")
+    db.add(att)
+    db.commit()
+
+    # Create absence covering this date
+    absence = PlayerAbsence(
+        player_id=player.id,
+        absence_type="period",
+        start_date=date(2026, 4, 10),
+        end_date=date(2026, 4, 20),
+        reason="Vacation",
+    )
+    db.add(absence)
+    db.commit()
+
+    # Apply absence
+    count = apply_absence_to_future_events(player.id, db)
+
+    # Should NOT have updated (explicit present preserved)
+    assert count == 0
+    att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
+    assert att_refreshed.status == "present"
+    assert att_refreshed.note == "Coach confirmed"
