@@ -7,6 +7,7 @@ from .event import Event
 from .notification import Notification
 from .notification_preference import NotificationPreference
 from .player import Player
+from .player_absence import PlayerAbsence
 from .player_contact import PlayerContact
 from .player_phone import PlayerPhone
 from .player_team import PlayerTeam
@@ -22,6 +23,7 @@ __all__ = [
     "Season",
     "Team",
     "Player",
+    "PlayerAbsence",
     "PlayerTeam",
     "PlayerPhone",
     "PlayerContact",

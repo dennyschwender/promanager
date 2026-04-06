@@ -8,6 +8,7 @@ from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from models.player_absence import PlayerAbsence  # noqa: F401
 
 
 class Player(Base):
@@ -75,6 +76,12 @@ class Player(Base):
     )
     web_push_subscriptions: Mapped[list[WebPushSubscription]] = relationship(
         "WebPushSubscription",
+        back_populates="player",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    absences: Mapped[list[PlayerAbsence]] = relationship(
+        "PlayerAbsence",
         back_populates="player",
         cascade="all, delete-orphan",
         lazy="select",
