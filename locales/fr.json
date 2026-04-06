@@ -789,5 +789,16 @@
     "delete_confirm": "Supprimer ce message ?",
     "empty_announcement": "Aucune annonce.",
     "empty_discussion": "Aucun message."
+  },
+  "absences": {
+    "page_title": "Mes Absences",
+    "type": "Type",
+    "dates_pattern": "Dates/Motif",
+    "reason": "Raison",
+    "actions": "Actions",
+    "period": "Période",
+    "recurring": "Récurrent",
+    "no_absences": "Aucune absence programmée",
+    "add_absence": "Ajouter Absence"
   }
 }

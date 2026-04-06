@@ -789,5 +789,16 @@
     "delete_confirm": "Diese Nachricht löschen?",
     "empty_announcement": "Keine Ankündigungen.",
     "empty_discussion": "Keine Nachrichten."
+  },
+  "absences": {
+    "page_title": "Meine Abwesenheiten",
+    "type": "Typ",
+    "dates_pattern": "Daten/Muster",
+    "reason": "Grund",
+    "actions": "Maßnahmen",
+    "period": "Zeitraum",
+    "recurring": "Wiederkehrend",
+    "no_absences": "Keine Abwesenheiten geplant",
+    "add_absence": "Abwesenheit Hinzufügen"
   }
 }

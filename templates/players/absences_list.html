@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t("absences.page_title") }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span><span>{{ t("absences.page_title") }}</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{{ t("absences.page_title") }}</h2>
+    <a href="/players/{{ player.id }}/absences/new" class="btn btn-primary">{{ t("absences.add_absence") }}</a>
+</div>
+
+{% if absences %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{{ t("absences.type") }}</th>
+                <th>{{ t("absences.dates_pattern") }}</th>
+                <th>{{ t("absences.reason") }}</th>
+                <th>{{ t("absences.actions") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for absence in absences %}
+            <tr>
+                <td>
+                    {% if absence.absence_type == "period" %}
+                    {{ t("absences.period") }}
+                    {% else %}
+                    {{ t("absences.recurring") }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if absence.absence_type == "period" %}
+                    {{ absence.start_date|date("Y-m-d") }} – {{ absence.end_date|date("Y-m-d") }}
+                    {% else %}
+                    {{ absence.rrule }} until {{ absence.rrule_until|date("Y-m-d") }}
+                    {% endif %}
+                </td>
+                <td>{{ absence.reason or "—" }}</td>
+                <td style="white-space: nowrap;">
+                    <a href="/players/{{ player.id }}/absences/{{ absence.id }}/edit" class="btn btn-sm btn-outline">{{ t("common.edit") }}</a>
+                    <form method="POST" action="/api/players/{{ player.id }}/absences/{{ absence.id }}" style="display: inline;">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t("common.confirm_delete") }}')">{{ t("common.delete") }}</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    {{ t("absences.no_absences") }}
+</div>
+{% endif %}
+{% endblock %}
