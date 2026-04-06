@@ -91,3 +91,65 @@ def apply_absence_to_future_events(player_id: int, db: Session) -> int:
         db.commit()
 
     return count
+
+
+def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
+    """Re-evaluate attendance records for an event against active absences.
+
+    Called when an event date changes. Updates attendance status if:
+    - Event date now falls within an active absence
+    - Should respect override logic (auto-defaults vs coach overrides)
+
+    Returns the count of updated attendance records.
+    """
+    from models.attendance import Attendance
+    from models.event import Event
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        return 0
+
+    today = date.today()
+    if event.event_date < today:
+        # Don't update past events
+        return 0
+
+    # Query all attendance records for this event
+    attendances = db.query(Attendance).filter(Attendance.event_id == event_id).all()
+
+    count = 0
+    for att in attendances:
+        # Check if this player has an active absence matching the new event date
+        if is_date_in_absence(att.player_id, event.event_date, db):
+            # Get the matching absence for the note
+            absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == att.player_id).all()
+            matching_absence = None
+            for absence in absences:
+                if _date_matches_absence(event.event_date, absence):
+                    matching_absence = absence
+                    break
+
+            # Determine if we should update
+            should_update = att.status == "unknown" or (
+                att.status == "present" and event.presence_type == "all"
+            )
+
+            if should_update:
+                reason = matching_absence.reason if matching_absence else "On leave"
+                att.status = "absent"
+                att.note = f"[Absence] {reason}"
+                att.updated_at = datetime.now(timezone.utc)
+                count += 1
+        else:
+            # Event date is no longer in an absence period
+            # Only clear if the status was set by an absence (has "[Absence]" prefix)
+            if att.status == "absent" and att.note and att.note.startswith("[Absence]"):
+                att.status = "unknown"
+                att.note = None
+                att.updated_at = datetime.now(timezone.utc)
+                count += 1
+
+    if count > 0:
+        db.commit()
+
+    return count

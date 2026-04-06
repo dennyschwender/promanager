@@ -685,6 +685,9 @@ async def event_edit_post(
             status_code=400,
         )
 
+    # Capture old date to detect changes
+    old_event_date = event.event_date
+
     event.title = title.strip()
     event.event_type = event_type
     event.event_date = e_date
@@ -704,6 +707,10 @@ async def event_edit_post(
     sync_attendance_defaults(db, event)
     # Create rows for any new players added since the event was first saved
     ensure_attendance_records(db, event)
+    # If event date changed, re-evaluate attendance against active absences
+    if old_event_date != e_date:
+        from services.absence_service import sync_attendance_to_absences_for_event
+        sync_attendance_to_absences_for_event(event_id, db)
     return RedirectResponse(f"/events/{event_id}", status_code=302)
 
 
