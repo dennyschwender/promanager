@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{% if absence %}{{ t("absences.edit_title") }}{% else %}{{ t("absences.create_title") }}{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players">{{ t('players.title') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players/{{ player.id }}">{{ player.full_name }}</a><span class="breadcrumb-sep"></span>
+  <a href="/players/{{ player.id }}/absences">{{ t('absences.page_title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{% if absence %}{{ t("absences.edit_title") }}{% else %}{{ t("absences.create_title") }}{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <h2>{% if absence %}{{ t("absences.edit_title") }}: {{ player.full_name }}{% else %}{{ t("absences.create_title") }}: {{ player.full_name }}{% endif %}</h2>
+
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="{% if absence %}/players/{{ player.id }}/absences/{{ absence.id }}{% else %}/players/{{ player.id }}/absences{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    {% if absence %}<input type="hidden" name="_method" value="PUT">{% endif %}
+
+    <fieldset>
+      <legend>{{ t("absences.absence_type") }}</legend>
+      <div class="form-group">
+        <div>
+          <label class="radio-inline">
+            <input type="radio" name="absence_type" value="period"
+                   {% if not absence or absence.absence_type == "period" %}checked{% endif %}
+                   onchange="toggleAbsenceFields()">
+            {{ t("absences.period") }}
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="absence_type" value="recurring"
+                   {% if absence and absence.absence_type == "recurring" %}checked{% endif %}
+                   onchange="toggleAbsenceFields()">
+            {{ t("absences.recurring") }}
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Period fields -->
+    <fieldset id="period_fields" {% if absence and absence.absence_type == "recurring" %}style="display: none;"{% endif %}>
+      <legend>{{ t("absences.period_details") }}</legend>
+      <label>{{ t("absences.start_date") }} *
+        <input type="date" name="start_date" required
+               value="{% if absence %}{{ absence.start_date }}{% endif %}">
+      </label>
+      <label>{{ t("absences.end_date") }} *
+        <input type="date" name="end_date" required
+               value="{% if absence %}{{ absence.end_date }}{% endif %}">
+      </label>
+    </fieldset>
+
+    <!-- Recurring fields -->
+    <fieldset id="recurring_fields" {% if not absence or absence.absence_type == "period" %}style="display: none;"{% endif %}>
+      <legend>{{ t("absences.recurring_details") }}</legend>
+
+      <div class="form-group">
+        <label>{{ t("absences.weekdays") }}</label>
+        <div class="checkbox-group">
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="MO" name="weekday_temp" data-day="MO">
+            {{ t("absences.day_monday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="TU" name="weekday_temp" data-day="TU">
+            {{ t("absences.day_tuesday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="WE" name="weekday_temp" data-day="WE">
+            {{ t("absences.day_wednesday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="TH" name="weekday_temp" data-day="TH">
+            {{ t("absences.day_thursday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="FR" name="weekday_temp" data-day="FR">
+            {{ t("absences.day_friday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="SA" name="weekday_temp" data-day="SA">
+            {{ t("absences.day_saturday") }}
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" class="weekday-check" value="SU" name="weekday_temp" data-day="SU">
+            {{ t("absences.day_sunday") }}
+          </label>
+        </div>
+      </div>
+
+      <label>{{ t("absences.rrule_until") }}
+        <input type="date" name="rrule_until"
+               value="{% if absence %}{{ absence.rrule_until }}{% else %}{{ season_end_date if season_end_date else "" }}{% endif %}"
+               placeholder="{% if season_end_date %}{{ season_end_date }}{% endif %}">
+        <small>{{ t("absences.rrule_until_hint") }}</small>
+      </label>
+
+      <input type="hidden" id="rrule" name="rrule">
+      <input type="hidden" id="season_id" name="season_id" value="{{ season_id or "" }}">
+    </fieldset>
+
+    <fieldset>
+      <legend>{{ t("absences.additional_info") }}</legend>
+      <label>{{ t("absences.reason") }}
+        <input type="text" name="reason" maxlength="512"
+               placeholder="{{ t("absences.reason_placeholder") }}"
+               value="{% if absence %}{{ absence.reason }}{% endif %}">
+      </label>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ t("common.save") }}</button>
+      <a href="/players/{{ player.id }}/absences" class="btn btn-secondary">{{ t("common.cancel") }}</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleAbsenceFields() {
+  const type = document.querySelector('input[name="absence_type"]:checked').value;
+  document.getElementById('period_fields').style.display = type === 'period' ? 'block' : 'none';
+  document.getElementById('recurring_fields').style.display = type === 'recurring' ? 'block' : 'none';
+
+  // Clear validation requirements when hiding
+  if (type === 'recurring') {
+    document.querySelector('input[name="start_date"]').removeAttribute('required');
+    document.querySelector('input[name="end_date"]').removeAttribute('required');
+  } else {
+    document.querySelector('input[name="start_date"]').setAttribute('required', 'required');
+    document.querySelector('input[name="end_date"]').setAttribute('required', 'required');
+  }
+}
+
+document.querySelectorAll('.weekday-check').forEach(checkbox => {
+  checkbox.addEventListener('change', updateRrule);
+});
+
+function updateRrule() {
+  const selected = Array.from(document.querySelectorAll('.weekday-check:checked'))
+    .map(cb => cb.value)
+    .join(',');
+
+  const rruleField = document.getElementById('rrule');
+  if (selected) {
+    rruleField.value = `FREQ=WEEKLY;BYDAY=${selected}`;
+  } else {
+    rruleField.value = '';
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  {% if absence and absence.absence_type == "recurring" and absence.rrule %}
+  // Parse and populate weekday checkboxes from rrule
+  const rrule = "{{ absence.rrule }}";
+  const match = rrule.match(/BYDAY=([A-Z,]+)/);
+  if (match) {
+    const days = match[1].split(',');
+    days.forEach(day => {
+      const checkbox = document.querySelector(`.weekday-check[value="${day}"]`);
+      if (checkbox) checkbox.checked = true;
+    });
+    updateRrule();
+  }
+  {% endif %}
+});
+</script>
+{% endblock %}
