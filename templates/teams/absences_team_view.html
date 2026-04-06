@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t("absences.team_absences_title") }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><a href="/teams">{{ t('teams.title') }}</a><span class="breadcrumb-sep"></span><span>{{ t("absences.team_absences_title") }}</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{{ t("absences.team_absences_title") }} - {{ team.name }}</h2>
+    <p class="text-muted">{{ t("absences.team_absences_subtitle") }}: {{ season.name if season else t("absences.all_seasons") }}</p>
+</div>
+
+{% if player_absences %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{{ t("common.player") }}</th>
+                <th>{{ t("absences.type") }}</th>
+                <th>{{ t("absences.dates_pattern") }}</th>
+                <th>{{ t("absences.reason") }}</th>
+                <th>{{ t("absences.actions") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player_id, player_name, absences in player_absences %}
+            {% for absence in absences %}
+            <tr>
+                <td>{{ player_name }}</td>
+                <td>
+                    {% if absence.absence_type == "period" %}
+                    {{ t("absences.period") }}
+                    {% else %}
+                    {{ t("absences.recurring") }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if absence.absence_type == "period" %}
+                    {{ absence.start_date|date("Y-m-d") }} – {{ absence.end_date|date("Y-m-d") }}
+                    {% else %}
+                    {{ absence.rrule }} until {{ absence.rrule_until|date("Y-m-d") }}
+                    {% endif %}
+                </td>
+                <td>{{ absence.reason or "—" }}</td>
+                <td style="white-space: nowrap;">
+                    <form method="POST" action="/api/players/{{ player_id }}/absences/{{ absence.id }}" style="display: inline;">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t("common.confirm_delete") }}')">{{ t("common.delete") }}</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    {{ t("absences.no_team_absences") }}
+</div>
+{% endif %}
+{% endblock %}

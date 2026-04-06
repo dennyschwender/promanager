@@ -274,7 +274,9 @@
     "search_unavailable": "Suche nicht verfügbar",
     "no_results": "Keine Ergebnisse",
     "searching": "Suche...",
-    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+    "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    "player": "Spieler",
+    "confirm_delete": "Möchten Sie dies wirklich löschen?"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",
@@ -817,6 +819,10 @@
     "rrule_until": "Bis Datum",
     "rrule_until_hint": "Standardmäßig Saisonendatum, falls nicht angegeben",
     "reason_placeholder": "Z.B. Urlaub, Verletzungsgenesung, Familienveranstaltung",
-    "additional_info": "Zusätzliche Informationen"
+    "additional_info": "Zusätzliche Informationen",
+    "team_absences_title": "Team-Abwesenheiten",
+    "team_absences_subtitle": "Saison",
+    "no_team_absences": "Keine Abwesenheiten für dieses Team",
+    "all_seasons": "Alle Saisons"
   }
 }

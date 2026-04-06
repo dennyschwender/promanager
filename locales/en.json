@@ -274,7 +274,9 @@
     "search_unavailable": "Search unavailable",
     "no_results": "No results found",
     "searching": "Searching...",
-    "save_error": "Could not save. Please try again."
+    "save_error": "Could not save. Please try again.",
+    "player": "Player",
+    "confirm_delete": "Are you sure you want to delete this?"
   },
   "errors": {
     "404_title": "Page Not Found",
@@ -817,6 +819,10 @@
     "rrule_until": "Until Date",
     "rrule_until_hint": "Defaults to season end date if not specified",
     "reason_placeholder": "e.g., Vacation, Injury recovery, Family event",
-    "additional_info": "Additional Information"
+    "additional_info": "Additional Information",
+    "team_absences_title": "Team Absences",
+    "team_absences_subtitle": "Season",
+    "no_team_absences": "No absences for this team",
+    "all_seasons": "All Seasons"
   }
 }

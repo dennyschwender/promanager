@@ -274,7 +274,9 @@
     "search_unavailable": "Recherche indisponible",
     "no_results": "Aucun résultat",
     "searching": "Recherche...",
-    "save_error": "Impossible de sauvegarder. Veuillez réessayer."
+    "save_error": "Impossible de sauvegarder. Veuillez réessayer.",
+    "player": "Joueur",
+    "confirm_delete": "Êtes-vous sûr de vouloir supprimer ceci?"
   },
   "errors": {
     "404_title": "Page introuvable",
@@ -817,6 +819,10 @@
     "rrule_until": "Date de Fin",
     "rrule_until_hint": "Par défaut, la date de fin de saison si non spécifiée",
     "reason_placeholder": "Ex. Vacances, Récupération de blessure, Événement familial",
-    "additional_info": "Informations Supplémentaires"
+    "additional_info": "Informations Supplémentaires",
+    "team_absences_title": "Absences de l'équipe",
+    "team_absences_subtitle": "Saison",
+    "no_team_absences": "Aucune absence pour cette équipe",
+    "all_seasons": "Toutes les saisons"
   }
 }
