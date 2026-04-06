@@ -225,6 +225,7 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
     """Create Attendance rows for every active player in event's (team, season).
 
     If event.season_id is None, no records are created (season context required).
+    Automatically applies any active absences to newly created records.
     """
     if event.team_id is None:
         return
@@ -252,6 +253,7 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
 
     default = _default_status(event)
     new_records = []
+    new_player_ids = []
     for player in players:
         if player.id not in existing_player_ids:
             status = default
@@ -261,10 +263,18 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
             if status != "absent" and _has_higher_prio_conflict(db, player, event):
                 status = "absent"
             new_records.append(Attendance(event_id=event.id, player_id=player.id, status=status))
+            new_player_ids.append(player.id)
 
     if new_records:
         db.add_all(new_records)
         db.commit()
+
+        # Apply active absences to newly created records
+        from services.absence_service import is_date_in_absence, apply_absence_to_future_events
+        for player_id in new_player_ids:
+            if is_date_in_absence(player_id, event.event_date, db):
+                # Re-apply absences for this specific player (handles override logic)
+                apply_absence_to_future_events(player_id, db)
 
 
 def backfill_attendance_for_player(
