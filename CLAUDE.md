@@ -87,6 +87,12 @@ Business logic lives in `services/` and is called from routes. Key services: `au
 | `DEBUG` | `False` | Raises on missing i18n keys |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `""` | Web Push credentials |
 
+## Claude Code autonomy
+
+- **Code changes & refactoring**: I work autonomously on feature implementation, bug fixes, and refactoring without asking for approval on each step. I commit changes using descriptive messages and run tests before claiming work is done.
+- **I will ask for approval on**: destructive operations (force push, branch deletion), PRs/publishing decisions, significant architectural changes, or when requirements are unclear.
+- **Testing expectations**: Tests must pass before committing. Use `pytest -v` and `ruff check` locally.
+
 ## Notes
 
 - Port **7000** is the default for both local dev and Docker.
