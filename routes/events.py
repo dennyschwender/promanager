@@ -301,7 +301,14 @@ async def event_new_post(
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
         return _err(rt(request, "errors.recurrence_freq_invalid"))
     if recurring and r_end is None:
-        return _err(rt(request, "errors.recurrence_end_required"))
+        # Fall back to the selected season's end date
+        parsed_season_id = int(season_id) if season_id.strip() else None
+        if parsed_season_id:
+            season_obj = db.get(Season, parsed_season_id)
+            if season_obj and season_obj.end_date:
+                r_end = season_obj.end_date
+        if r_end is None:
+            return _err(rt(request, "errors.recurrence_end_required"))
     if recurring and r_end <= e_date:
         return _err(rt(request, "errors.recurrence_end_after_start"))
 

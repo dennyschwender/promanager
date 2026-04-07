@@ -548,6 +548,7 @@
     "freq_biweekly": "Bihebdomadaire (toutes les 2 semaines)",
     "freq_monthly": "Mensuel (même jour chaque mois)",
     "repeat_until": "Répéter jusqu'au",
+    "repeat_until_hint": "Si vide, utilise la date de fin de la saison.",
     "recurrence_hint": "Un événement séparé est créé pour chaque occurrence. Vous pouvez les modifier individuellement ensuite.",
     "recurring_series_note": "Cet événement fait partie d'une série récurrente. La modification ici n'affecte que cette occurrence.",
     "locations": "Lieux",

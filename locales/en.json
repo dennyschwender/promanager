@@ -548,6 +548,7 @@
     "freq_biweekly": "Bi-weekly (every 2 weeks)",
     "freq_monthly": "Monthly (same day each month)",
     "repeat_until": "Repeat until",
+    "repeat_until_hint": "If left blank, defaults to the season end date.",
     "recurrence_hint": "A separate event is created for each occurrence. You can edit each one individually afterwards.",
     "recurring_series_note": "This event is part of a recurring series. Editing here only affects this single occurrence.",
     "locations": "Locations",

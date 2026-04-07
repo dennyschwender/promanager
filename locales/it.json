@@ -548,6 +548,7 @@
     "freq_biweekly": "Bisettimanale (ogni 2 settimane)",
     "freq_monthly": "Mensile (stesso giorno ogni mese)",
     "repeat_until": "Ripeti fino al",
+    "repeat_until_hint": "Se vuoto, viene usata la data di fine stagione.",
     "recurrence_hint": "Viene creato un evento separato per ogni occorrenza. Puoi modificarli singolarmente in seguito.",
     "recurring_series_note": "Questo evento fa parte di una serie ricorrente. La modifica qui riguarda solo questa occorrenza.",
     "locations": "Luoghi",

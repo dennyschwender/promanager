@@ -95,9 +95,10 @@
             <option value="monthly" {{ "selected" if event and event.recurrence_rule == "monthly" else "" }}>{{ t('events_form.freq_monthly') }}</option>
           </select>
         </label>
-        <label>{{ t('events_form.repeat_until') }} *
+        <label>{{ t('events_form.repeat_until') }}
           <input type="date" name="recurrence_end_date" id="id_recurrence_end_date"
                  value="{{ event.recurrence_end_date_raw if event and event.recurrence_end_date_raw else '' }}">
+          <small class="text-muted">{{ t('events_form.repeat_until_hint') }}</small>
         </label>
       </div>
       <p class="recurrence-hint">{{ t('events_form.recurrence_hint') }}</p>
