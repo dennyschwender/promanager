@@ -126,7 +126,7 @@
         <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length + ext_in_bucket|length }}</span>)</span>
       </div>
       <ul class="att-player-list">
-        {% set _pos_labels = {"goalie": t('players.pos_goalie'), "defender": t('players.pos_defender'), "center": t('players.pos_center'), "forward": t('players.pos_forward')} %}
+        {% set _pos_labels = {"goalie": t('enums.pos_goalie'), "defender": t('enums.pos_defender'), "center": t('enums.pos_center'), "forward": t('enums.pos_forward')} %}
         {% set ns = namespace(last_pos="__none__") %}
         {% for entry in summary[bucket] %}
         {% set pos = entry.position %}
