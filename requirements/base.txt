@@ -107,6 +107,8 @@ pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.1
     # via -r /home/denny/Development/promanager/requirements/base.in
+python-dateutil==2.9.0.post0
+    # via -r /home/denny/Development/promanager/requirements/base.in
 python-dotenv==1.2.2
     # via
     #   pydantic-settings
@@ -125,6 +127,8 @@ pyyaml==6.0.3
     #   uvicorn
 requests==2.33.1
     # via pywebpush
+six==1.17.0
+    # via python-dateutil
 slowapi==0.1.9
     # via -r /home/denny/Development/promanager/requirements/base.in
 sqlalchemy==2.0.48
