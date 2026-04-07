@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from types import SimpleNamespace
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -60,6 +61,51 @@ def _parse_time(val: str):
     if not val or not val.strip():
         return None
     return datetime.strptime(val.strip(), "%H:%M").time()
+
+
+def _form_ns(
+    title, event_type, event_date, event_time, event_end_time,
+    location, meeting_time, meeting_location, presence_type,
+    hide_attendance, description, season_id, team_id,
+    is_recurring, recurrence_rule, recurrence_end_date,
+) -> SimpleNamespace:
+    """Build a SimpleNamespace from raw POST strings for form repopulation on error."""
+    try:
+        e_date = _parse_date(event_date)
+    except ValueError:
+        e_date = None
+    try:
+        e_time = _parse_time(event_time)
+    except ValueError:
+        e_time = None
+    try:
+        e_end_time = _parse_time(event_end_time)
+    except ValueError:
+        e_end_time = None
+    try:
+        m_time = _parse_time(meeting_time)
+    except ValueError:
+        m_time = None
+    return SimpleNamespace(
+        id=None,
+        title=title,
+        event_type=event_type,
+        event_date=e_date,
+        event_time=e_time,
+        event_end_time=e_end_time,
+        location=location or None,
+        meeting_time=m_time,
+        meeting_location=meeting_location or None,
+        presence_type=presence_type,
+        hide_attendance=bool(hide_attendance),
+        description=description or None,
+        season_id=int(season_id) if season_id.strip() else None,
+        team_id=int(team_id) if team_id.strip() else None,
+        recurrence_group_id=None,
+        is_recurring=bool(is_recurring.strip()),
+        recurrence_rule=recurrence_rule.strip(),
+        recurrence_end_date_raw=recurrence_end_date.strip(),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +216,7 @@ async def event_new_get(
         {
             "user": user,
             "event": None,
+            "is_new": True,
             "seasons": seasons,
             "teams": teams,
             "error": None,
@@ -207,36 +254,29 @@ async def event_new_post(
         managed_ids = get_coach_teams(user, db)
         teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
 
-    parsed_team_id = int(team_id) if team_id.strip() else None
-    if parsed_team_id is None:
+    form_ns = _form_ns(
+        title, event_type, event_date, event_time, event_end_time,
+        location, meeting_time, meeting_location, presence_type,
+        hide_attendance, description, season_id, team_id,
+        is_recurring, recurrence_rule, recurrence_end_date,
+    )
+
+    def _err(msg):
         return render(
             request,
             "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.field_required", field="Team"),
-            },
+            {"user": user, "event": form_ns, "is_new": True, "seasons": seasons, "teams": teams, "error": msg},
             status_code=400,
         )
+
+    parsed_team_id = int(team_id) if team_id.strip() else None
+    if parsed_team_id is None:
+        return _err(rt(request, "errors.field_required", field="Team"))
     if not user.is_admin:
         check_team_access(user, parsed_team_id, db)
 
     if not title.strip():
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.field_required", field="Event title"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.field_required", field="Event title"))
 
     try:
         e_date = _parse_date(event_date)
@@ -244,32 +284,10 @@ async def event_new_post(
         e_end_time = _parse_time(event_end_time)
         m_time = _parse_time(meeting_time)
     except ValueError:
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.invalid_date_or_time"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.invalid_date_or_time"))
 
     if e_date is None:
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.field_required", field="Event date"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.field_required", field="Event date"))
 
     # ── Recurrence setup ──────────────────────────────────────────────────
     recurring = bool(is_recurring.strip())
@@ -279,57 +297,13 @@ async def event_new_post(
         try:
             r_end = _parse_date(recurrence_end_date)
         except ValueError:
-            return render(
-                request,
-                "events/form.html",
-                {
-                    "user": user,
-                    "event": None,
-                    "seasons": seasons,
-                    "teams": teams,
-                    "error": rt(request, "errors.recurrence_end_invalid"),
-                },
-                status_code=400,
-            )
+            return _err(rt(request, "errors.recurrence_end_invalid"))
     if recurring and (not rule or rule not in ("weekly", "biweekly", "monthly")):
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.recurrence_freq_invalid"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.recurrence_freq_invalid"))
     if recurring and r_end is None:
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.recurrence_end_required"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.recurrence_end_required"))
     if recurring and r_end <= e_date:
-        return render(
-            request,
-            "events/form.html",
-            {
-                "user": user,
-                "event": None,
-                "seasons": seasons,
-                "teams": teams,
-                "error": rt(request, "errors.recurrence_end_after_start"),
-            },
-            status_code=400,
-        )
+        return _err(rt(request, "errors.recurrence_end_after_start"))
 
     group_id = str(uuid.uuid4()) if recurring else None
     common = dict(

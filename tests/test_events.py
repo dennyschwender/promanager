@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 from models.event import Event
+from models.team import Team
 
 # ---------------------------------------------------------------------------
 # List
@@ -27,6 +28,10 @@ def test_events_public(client):
 
 
 def test_create_event(admin_client, db):
+    team = Team(name="Test Team")
+    db.add(team)
+    db.commit()
+    db.refresh(team)
     with patch("services.attendance_service.ensure_attendance_records") as mock_ensure:
         mock_ensure.return_value = None
         resp = admin_client.post(
@@ -39,7 +44,7 @@ def test_create_event(admin_client, db):
                 "location": "Gym A",
                 "description": "",
                 "season_id": "",
-                "team_id": "",
+                "team_id": str(team.id),
             },
             follow_redirects=False,
         )
