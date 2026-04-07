@@ -20,8 +20,15 @@ branch_labels = None
 depends_on = None
 
 
-def _get_active_season_id(conn) -> int:
-    """Return the id of the single active season. Raises RuntimeError if 0 or 2+."""
+def _get_active_season_id(conn) -> int | None:
+    """Return the id of the single active season, or None if the DB is empty (fresh install).
+
+    Raises RuntimeError if the DB has data but no active season, or multiple active seasons.
+    """
+    season_count = conn.execute(sa.text("SELECT COUNT(*) FROM seasons")).scalar()
+    if season_count == 0:
+        # Fresh install — no data to migrate, skip pre-flight
+        return None
     result = conn.execute(sa.text("SELECT id FROM seasons WHERE is_active = 1")).fetchall()
     if len(result) == 0:
         raise RuntimeError(
@@ -38,7 +45,7 @@ def _get_active_season_id(conn) -> int:
 def upgrade() -> None:
     conn = op.get_bind()
 
-    # Pre-flight: exactly one active season must exist
+    # Pre-flight: exactly one active season must exist (skipped on fresh installs with no data)
     active_season_id = _get_active_season_id(conn)
 
     # ── Step 1: Add season_id to player_teams (nullable for now) ──────────────
@@ -46,10 +53,11 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("season_id", sa.Integer(), nullable=True))
 
     # ── Step 2: Populate season_id for all existing rows ──────────────────────
-    conn.execute(
-        sa.text("UPDATE player_teams SET season_id = :sid"),
-        {"sid": active_season_id},
-    )
+    if active_season_id is not None:
+        conn.execute(
+            sa.text("UPDATE player_teams SET season_id = :sid"),
+            {"sid": active_season_id},
+        )
 
     # ── Step 3: Rebuild player_teams with new PK and NOT NULL season_id ───────
     # `recreate="always"` forces Alembic to fully rebuild the table on SQLite,
