@@ -276,7 +276,9 @@
     "searching": "Recherche...",
     "save_error": "Impossible de sauvegarder. Veuillez réessayer.",
     "player": "Joueur",
-    "confirm_delete": "Êtes-vous sûr de vouloir supprimer ceci?"
+    "confirm_delete": "Êtes-vous sûr de vouloir supprimer ceci?",
+    "select_all": "Tout sélectionner",
+    "deselect_all": "Tout désélectionner"
   },
   "errors": {
     "404_title": "Page introuvable",
@@ -608,6 +610,9 @@
     "absent": "Absents",
     "maybe": "Peut-être",
     "unknown": "Inconnus",
+    "custom_selection": "Sélection personnalisée…",
+    "select_players": "Sélectionner des joueurs",
+    "no_players": "Aucun joueur trouvé pour cet événement.",
     "channels": "Canaux",
     "channel_email": "Email",
     "channel_inbox": "In-app",

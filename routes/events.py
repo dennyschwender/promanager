@@ -20,6 +20,7 @@ from models.event_external import EventExternal
 from models.event_message import EventMessage
 from services.chat_service import author_display_name, message_to_dict
 from models.player import Player
+from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
@@ -378,6 +379,29 @@ async def notify_get(
     )
     status_counts = dict(counts_q)
 
+    # Players with their attendance status for custom selection
+    att_rows = (
+        db.query(Attendance.player_id, Attendance.status)
+        .filter(Attendance.event_id == event_id)
+        .all()
+    )
+    att_by_player = {pid: status for pid, status in att_rows}
+    event_players = (
+        db.query(Player)
+        .join(PlayerTeam, PlayerTeam.player_id == Player.id)
+        .filter(
+            PlayerTeam.team_id == event.team_id,
+            Player.archived_at.is_(None),
+        )
+        .order_by(Player.last_name, Player.first_name)
+        .all()
+        if event.team_id else []
+    )
+    players_with_status = [
+        {"id": p.id, "name": f"{p.first_name} {p.last_name}", "status": att_by_player.get(p.id, "unknown")}
+        for p in event_players
+    ]
+
     return render(
         request,
         "events/notify.html",
@@ -386,6 +410,7 @@ async def notify_get(
             "event": event,
             "templates": TEMPLATES,
             "status_counts": status_counts,
+            "players_with_status": players_with_status,
         },
     )
 
@@ -411,7 +436,13 @@ async def notify_post(
     recipients_raw = form.getlist("recipients")
     channels_raw = form.getlist("channels")
 
-    recipient_statuses = None if "all" in recipients_raw else recipients_raw or None
+    custom_player_ids: list[int] | None = None
+    if "custom" in recipients_raw:
+        raw_ids = form.getlist("player_ids")
+        custom_player_ids = [int(x) for x in raw_ids if x.isdigit()]
+        recipient_statuses = None
+    else:
+        recipient_statuses = None if "all" in recipients_raw else recipients_raw or None
     admin_channels = channels_raw if channels_raw else ["inapp"]
 
     if not title or not body:
@@ -426,6 +457,7 @@ async def notify_post(
         admin_channels=admin_channels,
         db=db,
         background_tasks=background_tasks,
+        player_ids=custom_player_ids,
     )
 
     return RedirectResponse(

@@ -276,7 +276,9 @@
     "searching": "Searching...",
     "save_error": "Could not save. Please try again.",
     "player": "Player",
-    "confirm_delete": "Are you sure you want to delete this?"
+    "confirm_delete": "Are you sure you want to delete this?",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all"
   },
   "errors": {
     "404_title": "Page Not Found",
@@ -608,6 +610,9 @@
     "absent": "Absent",
     "maybe": "Maybe",
     "unknown": "Unknown",
+    "custom_selection": "Custom selection…",
+    "select_players": "Select players",
+    "no_players": "No players found for this event.",
     "channels": "Channels",
     "channel_email": "Email",
     "channel_inbox": "In-app",

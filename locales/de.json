@@ -276,7 +276,9 @@
     "searching": "Suche...",
     "save_error": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
     "player": "Spieler",
-    "confirm_delete": "Möchten Sie dies wirklich löschen?"
+    "confirm_delete": "Möchten Sie dies wirklich löschen?",
+    "select_all": "Alle auswählen",
+    "deselect_all": "Alle abwählen"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",
@@ -608,6 +610,9 @@
     "absent": "Abwesend",
     "maybe": "Vielleicht",
     "unknown": "Unbekannt",
+    "custom_selection": "Eigene Auswahl…",
+    "select_players": "Spieler auswählen",
+    "no_players": "Keine Spieler für dieses Ereignis gefunden.",
     "channels": "Kanäle",
     "channel_email": "E-Mail",
     "channel_inbox": "In-App",

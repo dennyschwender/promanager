@@ -63,7 +63,28 @@
     <label><input type="checkbox" name="recipients" value="absent"> {{ t('notify_form.absent') }}</label>
     <label><input type="checkbox" name="recipients" value="maybe"> {{ t('notify_form.maybe') }}</label>
     <label><input type="checkbox" name="recipients" value="unknown"> {{ t('notify_form.unknown') }}</label>
+    <label><input type="checkbox" name="recipients" value="custom" id="chk-custom"> {{ t('notify_form.custom_selection') }}</label>
   </fieldset>
+
+  <!-- Custom player list (shown when "custom" is checked) -->
+  <div id="custom-player-list" style="display:none; margin-top:.5rem; border:1px solid var(--pico-muted-border-color,#ddd); border-radius:var(--tp-radius); padding:.75rem;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem;">
+      <strong style="font-size:.9rem;">{{ t('notify_form.select_players') }}</strong>
+      <span style="font-size:.82rem;">
+        <a href="#" id="select-all-players" style="margin-right:.75rem;">{{ t('common.select_all') }}</a>
+        <a href="#" id="deselect-all-players">{{ t('common.deselect_all') }}</a>
+      </span>
+    </div>
+    {% for p in players_with_status %}
+    <label style="display:flex; align-items:center; gap:.5rem; padding:.2rem 0;">
+      <input type="checkbox" name="player_ids" value="{{ p.id }}" class="player-chk">
+      <span>{{ p.name }}</span>
+      <span class="badge badge-{{ p.status }}" style="font-size:.75rem;">{{ p.status }}</span>
+    </label>
+    {% else %}
+    <p class="text-muted" style="font-size:.88rem;">{{ t('notify_form.no_players') }}</p>
+    {% endfor %}
+  </div>
 
   <!-- Channels -->
   <fieldset>
@@ -108,17 +129,25 @@
   });
 
   const allChk = document.getElementById("chk-all");
+  const customChk = document.getElementById("chk-custom");
   const recipientChks = document.querySelectorAll("input[name='recipients']");
   const preview = document.getElementById("recipient-preview");
+  const customList = document.getElementById("custom-player-list");
+  const playerChks = document.querySelectorAll(".player-chk");
 
   function updatePreview() {
+    if (customChk.checked) {
+      const count = document.querySelectorAll(".player-chk:checked").length;
+      preview.textContent = `— ${count} player(s)`;
+      return;
+    }
     if (allChk.checked) {
       preview.textContent = `— ${TOTAL} player(s)`;
       return;
     }
     let count = 0;
     recipientChks.forEach(chk => {
-      if (chk !== allChk && chk.checked) count += STATUS_COUNTS[chk.value] || 0;
+      if (chk !== allChk && chk !== customChk && chk.checked) count += STATUS_COUNTS[chk.value] || 0;
     });
     preview.textContent = `— ${count} player(s)`;
   }
@@ -126,15 +155,42 @@
   allChk.addEventListener("change", function () {
     if (this.checked) {
       recipientChks.forEach(chk => { if (chk !== allChk) chk.checked = false; });
+      customList.style.display = "none";
     }
     updatePreview();
   });
+
+  customChk.addEventListener("change", function () {
+    if (this.checked) {
+      allChk.checked = false;
+      recipientChks.forEach(chk => { if (chk !== customChk) chk.checked = false; });
+      customList.style.display = "";
+    } else {
+      customList.style.display = "none";
+    }
+    updatePreview();
+  });
+
   recipientChks.forEach(chk => {
-    if (chk !== allChk) chk.addEventListener("change", function () {
-      if (this.checked) allChk.checked = false;
+    if (chk !== allChk && chk !== customChk) chk.addEventListener("change", function () {
+      if (this.checked) { allChk.checked = false; customChk.checked = false; customList.style.display = "none"; }
       updatePreview();
     });
   });
+
+  playerChks.forEach(chk => chk.addEventListener("change", updatePreview));
+
+  document.getElementById("select-all-players").addEventListener("click", function (e) {
+    e.preventDefault();
+    playerChks.forEach(chk => chk.checked = true);
+    updatePreview();
+  });
+  document.getElementById("deselect-all-players").addEventListener("click", function (e) {
+    e.preventDefault();
+    playerChks.forEach(chk => chk.checked = false);
+    updatePreview();
+  });
+
   updatePreview();
 })();
 </script>

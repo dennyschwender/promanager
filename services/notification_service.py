@@ -55,8 +55,16 @@ def get_preference(player_id: int, channel: str, db: Session) -> bool:
 # ── Recipient resolution ──────────────────────────────────────────────────────
 
 
-def _resolve_players(event, recipient_statuses: list[str] | None, db: Session) -> list[Player]:
+def _resolve_players(
+    event,
+    recipient_statuses: list[str] | None,
+    db: Session,
+    player_ids: list[int] | None = None,
+) -> list[Player]:
     """Return the list of players to notify."""
+    if player_ids is not None:
+        return db.query(Player).filter(Player.id.in_(player_ids), Player.archived_at.is_(None)).all()
+
     if event.team_id is not None:
         from models.player_team import PlayerTeam  # noqa: PLC0415
 
@@ -168,6 +176,7 @@ def send_notifications(
     admin_channels: list[str],
     db: Session,
     background_tasks: BackgroundTasks | None,
+    player_ids: list[int] | None = None,
 ) -> dict:
     """Resolve players, then dispatch channels.
 
@@ -176,7 +185,7 @@ def send_notifications(
     called synchronously (tests, background_tasks=None) or as a BackgroundTask
     (where the request session is already closed).
     """
-    players = _resolve_players(event, recipient_statuses, db)
+    players = _resolve_players(event, recipient_statuses, db, player_ids=player_ids)
     if not players:
         return {"queued": 0}
 
