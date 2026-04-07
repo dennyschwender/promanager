@@ -375,7 +375,11 @@
     "link_player": "Spieler verknüpfen",
     "unlink_player": "Spieler trennen",
     "select_player": "Spieler suchen…",
-    "no_linked_player": "Kein Spieler verknüpft."
+    "no_linked_player": "Kein Spieler verknüpft.",
+    "reset_password": "Passwort zurücksetzen & E-Mail senden",
+    "reset_password_confirm": "Passwort für %{username} zurücksetzen und neue Zugangsdaten per E-Mail senden?",
+    "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet.",
+    "reset_email_body": "Ihr Passwort wurde zurückgesetzt. Neue Zugangsdaten:"
   },
   "players_form": {
     "basic_info": "Grunddaten",

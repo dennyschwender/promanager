@@ -375,7 +375,11 @@
     "link_player": "Link Player",
     "unlink_player": "Unlink Player",
     "select_player": "Search player…",
-    "no_linked_player": "No player linked."
+    "no_linked_player": "No player linked.",
+    "reset_password": "Reset password & send email",
+    "reset_password_confirm": "Reset password for %{username} and send new credentials by email?",
+    "reset_password_sent": "Password reset and email sent successfully.",
+    "reset_email_body": "Your password has been reset. New credentials:"
   },
   "players_form": {
     "basic_info": "Basic Info",

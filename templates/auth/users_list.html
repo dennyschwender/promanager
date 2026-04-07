@@ -7,6 +7,9 @@
 </nav>
 {% endblock %}
 {% block content %}
+{% if password_reset %}
+<div class="alert alert-success">{{ t('users.reset_password_sent') }}</div>
+{% endif %}
 <div class="page-header">
   <h2>{{ t('users.title') }}</h2>
   <div style="display:flex;gap:.5rem;">
@@ -44,6 +47,11 @@
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
         <div class="action-dropdown-menu">
           <a href="/auth/users/{{ u.id }}/edit" class="btn-link">{{ t('users.edit_user') }}</a>
+          <form method="post" action="/auth/users/{{ u.id }}/reset-password"
+                onsubmit="return confirm('{{ t('users.reset_password_confirm', username=u.username) }}')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('users.reset_password') }}</button>
+          </form>
 <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="{% if not u.is_active %}reactivate{% endif %}">

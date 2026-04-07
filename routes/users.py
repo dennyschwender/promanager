@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("", dependencies=[Depends(require_admin)])
-async def users_list(request: Request, db: Session = Depends(get_db)):
+async def users_list(request: Request, db: Session = Depends(get_db), reset: str | None = None):
     users = db.query(User).order_by(User.created_at.desc()).all()
     # Build player lookup: user_id -> Player
     linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
@@ -36,6 +36,7 @@ async def users_list(request: Request, db: Session = Depends(get_db)):
             "user": request.state.user,
             "users": users,
             "player_by_user": player_by_user,
+            "password_reset": reset == "1",
         },
     )
 
@@ -376,6 +377,38 @@ async def toggle_active(
     target.is_active = not target.is_active
     db.commit()
     return RedirectResponse("/auth/users", status_code=302)
+
+
+@router.post("/{user_id}/reset-password", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def reset_password(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    target = db.get(User, user_id)
+    if target is None:
+        return RedirectResponse("/auth/users", status_code=302)
+
+    new_pw = secrets.token_urlsafe(12)
+    target.hashed_password = hash_password(new_pw)
+    db.commit()
+
+    email_service.send_email(
+        to=target.email,
+        subject=rt(request, "users.email_subject"),
+        body_html=(
+            f"<p>{rt(request, 'users.reset_email_body')}<br>"
+            f"Username: <strong>{target.username}</strong><br>"
+            f"Password: <strong>{new_pw}</strong></p>"
+        ),
+        body_text=(
+            f"{rt(request, 'users.reset_email_body')}\n"
+            f"Username: {target.username}\n"
+            f"Password: {new_pw}"
+        ),
+    )
+
+    return RedirectResponse("/auth/users?reset=1", status_code=302)
 
 
 @router.post("/{user_id}/delete", dependencies=[Depends(require_admin), Depends(require_csrf)])

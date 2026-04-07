@@ -375,7 +375,11 @@
     "link_player": "Lier un joueur",
     "unlink_player": "Délier le joueur",
     "select_player": "Rechercher un joueur…",
-    "no_linked_player": "Aucun joueur lié."
+    "no_linked_player": "Aucun joueur lié.",
+    "reset_password": "Réinitialiser le mot de passe & envoyer par email",
+    "reset_password_confirm": "Réinitialiser le mot de passe de %{username} et envoyer les nouveaux identifiants par email?",
+    "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès.",
+    "reset_email_body": "Votre mot de passe a été réinitialisé. Nouveaux identifiants :"
   },
   "players_form": {
     "basic_info": "Informations de base",

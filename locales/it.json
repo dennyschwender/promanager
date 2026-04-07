@@ -375,7 +375,11 @@
     "link_player": "Collega giocatore",
     "unlink_player": "Scollega giocatore",
     "select_player": "Cerca giocatore…",
-    "no_linked_player": "Nessun giocatore collegato."
+    "no_linked_player": "Nessun giocatore collegato.",
+    "reset_password": "Reimposta password & invia email",
+    "reset_password_confirm": "Reimpostare la password per %{username} e inviare le nuove credenziali per email?",
+    "reset_password_sent": "Password reimpostata ed email inviata con successo.",
+    "reset_email_body": "La tua password è stata reimpostata. Nuove credenziali:"
   },
   "players_form": {
     "basic_info": "Informazioni di base",
