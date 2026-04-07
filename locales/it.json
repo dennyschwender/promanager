@@ -589,6 +589,7 @@
     "description": "Descrizione",
     "reminder_sent": "Promemoria inviato",
     "recurring_label": "Ricorrente",
+    "group_by_pos": "Raggruppa posizioni",
     "recurring_edit_note": "la modifica riguarda solo questa occorrenza.",
     "reminders_sent_msg": "Promemoria inviati a %{count} giocatore/i.",
     "notified_msg": "Notifica in coda per %{count} giocatore/i.",

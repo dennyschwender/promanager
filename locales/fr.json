@@ -589,6 +589,7 @@
     "description": "Description",
     "reminder_sent": "Rappel envoyé",
     "recurring_label": "Récurrent",
+    "group_by_pos": "Grouper positions",
     "recurring_edit_note": "la modification n'affecte que cette occurrence.",
     "reminders_sent_msg": "Rappels envoyés à %{count} joueur(s).",
     "notified_msg": "Notification en attente pour %{count} joueur(s).",

@@ -589,6 +589,7 @@
     "description": "Description",
     "reminder_sent": "Reminder sent",
     "recurring_label": "Recurring",
+    "group_by_pos": "Position groups",
     "recurring_edit_note": "editing affects only this occurrence.",
     "reminders_sent_msg": "Reminders sent to %{count} player(s).",
     "notified_msg": "Notification queued for %{count} player(s).",

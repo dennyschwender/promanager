@@ -512,9 +512,7 @@ async def event_detail(
         pos_by_player = {pt.player_id: pt.position for pt in pt_rows}
 
     def _att_sort_key(entry: dict) -> tuple:
-        pos = pos_by_player.get(entry["player"].id)
         return (
-            _POS_ORDER.index(pos) if pos in _POS_ORDER else len(_POS_ORDER),
             entry["player"].first_name.casefold(),
             entry["player"].last_name.casefold(),
         )

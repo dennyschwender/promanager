@@ -111,7 +111,10 @@
   </div>
 {% endif %}
 {% if not event.hide_attendance or (user and (user.is_admin or user.is_coach)) %}
-<h3>{{ t('events.attendance_summary') }}</h3>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+  <h3 style="margin:0;">{{ t('events.attendance_summary') }}</h3>
+  <button type="button" id="pos-group-toggle" class="btn btn-sm btn-outline">{{ t('events_detail.group_by_pos') }}</button>
+</div>
 <div id="attendance-columns" class="att-columns">
   {% for bucket, label in [
     ("present",  t('attendance.status_attend')),
@@ -126,20 +129,12 @@
         <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length + ext_in_bucket|length }}</span>)</span>
       </div>
       <ul class="att-player-list">
-        {% set _pos_labels = {"goalie": t('enums.pos_goalie'), "defender": t('enums.pos_defender'), "center": t('enums.pos_center'), "forward": t('enums.pos_forward')} %}
-        {% set ns = namespace(last_pos="__none__") %}
         {% for entry in summary[bucket] %}
-        {% set pos = entry.position %}
-        {% if pos != ns.last_pos %}
-          {% set ns.last_pos = pos %}
-          {% if pos %}
-          <li class="att-pos-divider">{{ _pos_labels.get(pos, pos) }}</li>
-          {% endif %}
-        {% endif %}
-        <li class="att-player-item{% if loop.first %} att-player-item-first{% endif %}">
+        <li class="att-player-item{% if loop.first %} att-player-item-first{% endif %}" data-position="{{ entry.position or '' }}">
           <button type="button" class="att-player-btn"
                   data-player-id="{{ entry.player.id }}"
                   data-player-name="{{ entry.player.full_name | e }}"
+                  data-position="{{ entry.position or '' }}"
                   data-status="{{ bucket }}"
                   data-note="{{ entry.note | e }}">
             {{ entry.player.full_name }}{% if entry.note %} <span class="note-indicator" title="{{ entry.note | e }}">📝</span>{% endif %}
@@ -351,6 +346,73 @@
     }
     document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
   });
+
+  // ── Position grouping toggle ──────────────────────────────────────
+  var POS_ORDER = ['goalie', 'defender', 'center', 'forward'];
+  var POS_LABELS = {
+    goalie:   {{ t('enums.pos_goalie')   | tojson }},
+    defender: {{ t('enums.pos_defender') | tojson }},
+    center:   {{ t('enums.pos_center')   | tojson }},
+    forward:  {{ t('enums.pos_forward')  | tojson }},
+  };
+  var TOGGLE_BTN = document.getElementById('pos-group-toggle');
+  var ATT_COLS   = document.getElementById('attendance-columns');
+
+  function applyGrouping(grouped) {
+    if (!ATT_COLS) return;
+    ATT_COLS.querySelectorAll('.att-player-list').forEach(function (list) {
+      // Remove existing dividers
+      list.querySelectorAll('.att-pos-divider').forEach(function (d) { d.remove(); });
+      var items = Array.prototype.slice.call(list.querySelectorAll('.att-player-item'));
+      // Sort items
+      items.sort(function (a, b) {
+        var pa = a.dataset.position || '';
+        var pb = b.dataset.position || '';
+        var na = (a.querySelector('[data-player-name]') || {}).dataset.playerName || '';
+        var nb = (b.querySelector('[data-player-name]') || {}).dataset.playerName || '';
+        if (grouped) {
+          var ia = POS_ORDER.indexOf(pa); if (ia < 0) ia = 99;
+          var ib = POS_ORDER.indexOf(pb); if (ib < 0) ib = 99;
+          if (ia !== ib) return ia - ib;
+        }
+        return na.localeCompare(nb);
+      });
+      // Re-append in sorted order
+      items.forEach(function (item) { list.appendChild(item); });
+      // Fix att-player-item-first
+      items.forEach(function (item, i) { item.classList.toggle('att-player-item-first', i === 0); });
+      // Insert dividers if grouped
+      if (grouped) {
+        var lastPos = '__none__';
+        Array.prototype.slice.call(list.querySelectorAll('.att-player-item')).forEach(function (item) {
+          var pos = item.dataset.position || '';
+          if (pos && pos !== lastPos) {
+            var div = document.createElement('li');
+            div.className = 'att-pos-divider';
+            div.textContent = POS_LABELS[pos] || pos;
+            list.insertBefore(div, item);
+          }
+          lastPos = pos;
+        });
+      }
+    });
+    if (TOGGLE_BTN) {
+      TOGGLE_BTN.classList.toggle('btn-primary', grouped);
+      TOGGLE_BTN.classList.toggle('btn-outline', !grouped);
+    }
+    try { localStorage.setItem('att_pos_grouping', grouped ? '1' : '0'); } catch(e) {}
+  }
+
+  var initialGrouped = true;
+  try { var _s = localStorage.getItem('att_pos_grouping'); if (_s !== null) initialGrouped = _s === '1'; } catch(e) {}
+  applyGrouping(initialGrouped);
+
+  if (TOGGLE_BTN) {
+    TOGGLE_BTN.addEventListener('click', function () {
+      var isGrouped = TOGGLE_BTN.classList.contains('btn-primary');
+      applyGrouping(!isGrouped);
+    });
+  }
 })();
 </script>
 {% endif %}
