@@ -28,8 +28,8 @@ async def require_absence_ownership_or_coach(
     if current_user.is_admin:
         return absence
 
-    # If player owns it, allow
-    if current_user.players and any(p.id == player_id for p in current_user.players):
+    # If player owns it, allow (explicit query avoids lazy-load DetachedInstanceError)
+    if db.query(Player).filter(Player.user_id == current_user.id, Player.id == player_id).first():
         return absence
 
     # If coach, check if they manage the player's team for the relevant season

@@ -26,8 +26,9 @@ def _check_player_access(current_user, player_id: int, db: Session) -> None:
     """
     # Check if user owns this player or coaches them
     if not current_user.is_admin:
-        # Check if player owns it
-        if not (current_user.players and any(p.id == player_id for p in current_user.players)):
+        # Check if player owns it (explicit query avoids lazy-load DetachedInstanceError)
+        owns_player = db.query(Player).filter(Player.user_id == current_user.id, Player.id == player_id).first() is not None
+        if not owns_player:
             # Check if coach
             if current_user.is_coach:
                 user_teams = db.query(UserTeam).filter(UserTeam.user_id == current_user.id).all()

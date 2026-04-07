@@ -501,6 +501,29 @@ async def event_detail(
 
     summary = get_event_attendance_detail(db, event_id)
 
+    # Attach position to each entry and sort: position order → last_name → first_name
+    _POS_ORDER = ["goalie", "defender", "center", "forward"]
+    pos_by_player: dict[int, str | None] = {}
+    if event.team_id and event.season_id:
+        pt_rows = db.query(PlayerTeam).filter(
+            PlayerTeam.team_id == event.team_id,
+            PlayerTeam.season_id == event.season_id,
+        ).all()
+        pos_by_player = {pt.player_id: pt.position for pt in pt_rows}
+
+    def _att_sort_key(entry: dict) -> tuple:
+        pos = pos_by_player.get(entry["player"].id)
+        return (
+            _POS_ORDER.index(pos) if pos in _POS_ORDER else len(_POS_ORDER),
+            entry["player"].first_name.casefold(),
+            entry["player"].last_name.casefold(),
+        )
+
+    for bucket in summary:
+        summary[bucket].sort(key=_att_sort_key)
+        for entry in summary[bucket]:
+            entry["position"] = pos_by_player.get(entry["player"].id)
+
     future_count = count_future_events(db, event.recurrence_group_id) if event.recurrence_group_id else 0
 
     atts = (

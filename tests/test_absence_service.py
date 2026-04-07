@@ -91,13 +91,13 @@ def test_is_date_in_absence_recurring_weekly(db: Session):
     db.add(absence)
     db.commit()
 
-    # April 11, 18, 25 are Fridays
-    assert is_date_in_absence(player.id, date(2026, 4, 11), db) is True
-    assert is_date_in_absence(player.id, date(2026, 4, 18), db) is True
-    assert is_date_in_absence(player.id, date(2026, 4, 25), db) is True
+    # April 10, 17, 24 are Fridays
+    assert is_date_in_absence(player.id, date(2026, 4, 10), db) is True
+    assert is_date_in_absence(player.id, date(2026, 4, 17), db) is True
+    assert is_date_in_absence(player.id, date(2026, 4, 24), db) is True
 
-    # April 12 is Saturday
-    assert is_date_in_absence(player.id, date(2026, 4, 12), db) is False
+    # April 11 is Saturday
+    assert is_date_in_absence(player.id, date(2026, 4, 11), db) is False
 
 
 def test_is_date_in_absence_recurring_expired(db: Session):
@@ -123,8 +123,8 @@ def test_is_date_in_absence_recurring_expired(db: Session):
 
     # May 1 is a Friday, but after rrule_until
     assert is_date_in_absence(player.id, date(2026, 5, 1), db) is False
-    # But April 25 (Friday) should match
-    assert is_date_in_absence(player.id, date(2026, 4, 25), db) is True
+    # But April 24 (Friday) should match
+    assert is_date_in_absence(player.id, date(2026, 4, 24), db) is True
 
 
 def test_apply_absence_to_future_events_period(db: Session):

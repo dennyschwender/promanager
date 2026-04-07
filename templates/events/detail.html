@@ -126,7 +126,16 @@
         <span class="badge badge-{{ bucket }}">{{ label }} (<span class="att-count">{{ summary[bucket]|length + ext_in_bucket|length }}</span>)</span>
       </div>
       <ul class="att-player-list">
+        {% set _pos_labels = {"goalie": t('players.pos_goalie'), "defender": t('players.pos_defender'), "center": t('players.pos_center'), "forward": t('players.pos_forward')} %}
+        {% set ns = namespace(last_pos="__none__") %}
         {% for entry in summary[bucket] %}
+        {% set pos = entry.position %}
+        {% if pos != ns.last_pos %}
+          {% set ns.last_pos = pos %}
+          {% if pos %}
+          <li class="att-pos-divider">{{ _pos_labels.get(pos, pos) }}</li>
+          {% endif %}
+        {% endif %}
         <li class="att-player-item{% if loop.first %} att-player-item-first{% endif %}">
           <button type="button" class="att-player-btn"
                   data-player-id="{{ entry.player.id }}"
@@ -333,7 +342,11 @@
       var menu = toggle.nextElementSibling;
       var isOpen = menu.classList.contains('open');
       document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
-      if (!isOpen) menu.classList.add('open');
+      if (!isOpen) {
+        var rect = toggle.getBoundingClientRect();
+        menu.classList.add('open');
+        if (window.innerHeight - rect.bottom < 140) menu.classList.add('open-up');
+      }
       return;
     }
     document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });

@@ -550,7 +550,7 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             players_q = (
                 db.query(Player)
                 .filter(Player.id.in_(player_ids.keys()), Player.archived_at.is_(None))
-                .order_by(Player.last_name, Player.first_name)
+                .order_by(Player.first_name, Player.last_name)
                 .all()
             )
             # Attach position from PlayerTeam for grouping
@@ -561,13 +561,20 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             players = (
                 db.query(Player)
                 .filter(Player.archived_at.is_(None))
-                .order_by(Player.last_name, Player.first_name)
+                .order_by(Player.first_name, Player.last_name)
                 .all()
             )
             for p in players:
                 p._bot_position = None  # type: ignore[attr-defined]
 
-        # Group players by position in the message text
+        # Group by status → position → name
+        _STATUS_ORDER = ["present", "absent", "maybe", "unknown"]
+        _STATUS_HEADER = {
+            "present": f"*{t('telegram.status_present', locale)}*",
+            "absent": f"*{t('telegram.status_absent', locale)}*",
+            "maybe": f"*{t('telegram.status_maybe', locale)}*",
+            "unknown": f"*{t('telegram.status_unknown', locale)}*",
+        }
         _POS_ORDER = ["goalie", "defender", "center", "forward", None]
         _POS_LABEL = {
             "goalie": t("telegram.pos_goalie", locale),
@@ -576,23 +583,38 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             "forward": t("telegram.pos_forward", locale),
             None: t("telegram.pos_other", locale),
         }
-        grouped: dict[str | None, list[Player]] = {pos: [] for pos in _POS_ORDER}
+
+        # Build status → position → [Player] structure
+        status_groups: dict[str, dict[str | None, list[Player]]] = {
+            s: {pos: [] for pos in _POS_ORDER} for s in _STATUS_ORDER
+        }
         for p in players:
+            att = att_by_player.get(p.id)
+            s = att.status if att else "unknown"
+            if s not in status_groups:
+                s = "unknown"
             pos = getattr(p, "_bot_position", None)
-            if pos not in grouped:
+            if pos not in _POS_ORDER[:-1]:
                 pos = None
-            grouped[pos].append(p)
+            status_groups[s][pos].append(p)
 
         pos_lines: list[str] = []
-        for pos in _POS_ORDER:
-            group = grouped[pos]
-            if not group:
+        for s in _STATUS_ORDER:
+            pos_group = status_groups[s]
+            if not any(pos_group.values()):
                 continue
-            pos_lines.append(f"\n*{_POS_LABEL[pos]}*")
-            for p in group:
-                att = att_by_player.get(p.id)
-                icon = STATUS_ICON.get(att.status if att else "unknown", "?")
-                pos_lines.append(f"{icon} {p.full_name}")
+            pos_lines.append(f"\n{_STATUS_HEADER[s]}")
+            for pos in _POS_ORDER:
+                group = pos_group[pos]
+                if not group:
+                    continue
+                pos_lines.append(f"_{_POS_LABEL[pos]}_")
+                for p in group:
+                    att = att_by_player.get(p.id)
+                    line = f"  {p.full_name}"
+                    if att and att.note:
+                        line += f" — {att.note}"
+                    pos_lines.append(line)
         if ext_rows:
             pos_lines.append(f"\n*{t('telegram.externals_header', locale)}*")
             for ext in ext_rows:

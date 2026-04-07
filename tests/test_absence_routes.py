@@ -180,7 +180,7 @@ def test_coach_can_create_absence_for_team_player(client, db):
     coach_user = create_user(db, "coach", "coach@test.com", "coachpass", role="coach")
 
     # Create a team and season
-    team = Team(name="Team A", is_active=True)
+    team = Team(name="Team A")
     db.add(team)
     db.commit()
     db.refresh(team)

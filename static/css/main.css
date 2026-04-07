@@ -623,7 +623,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   right: 0;
   top: 100%;
   z-index: 200;
-  min-width: 110px;
+  min-width: 160px;
   background: var(--card-background-color, #fff);
   border: 1px solid var(--muted-border-color);
   border-radius: var(--tp-radius);
@@ -863,6 +863,17 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 
 .att-player-item-first {
   border-top: none;
+}
+
+.att-pos-divider {
+  list-style: none !important;
+  padding: 0.25rem 0.5rem 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-color, #888);
+  border-top: 1px solid var(--muted-border-color, #eee);
 }
 
 .att-player-btn,
