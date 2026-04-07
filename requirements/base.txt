@@ -4,7 +4,7 @@
 #
 # -r base.in
 #
-alembic==1.13.4
+alembic==1.13.3
     # via -r base.in
 bcrypt==4.1.2
     # via -r base.in
