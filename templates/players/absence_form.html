@@ -20,7 +20,7 @@
     <div class="alert alert-error">{{ error }}</div>
   {% endif %}
 
-  <form method="POST" action="/players/{{ player.id }}/absences">
+  <form method="POST" action="/players/{{ player.id }}/absences" novalidate>
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
     <fieldset>
@@ -97,7 +97,7 @@
       </label>
 
       <input type="hidden" id="rrule" name="rrule">
-      <input type="hidden" id="season_id" name="season_id" value="{{ season_id }}" required>
+      <input type="hidden" id="season_id" name="season_id" value="{{ season_id }}">
     </fieldset>
 
     <fieldset>
