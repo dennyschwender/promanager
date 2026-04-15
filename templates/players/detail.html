@@ -128,20 +128,22 @@
 
 {% if user.is_admin %}
 <div class="action-group" style="margin-bottom:1.5rem;">
-  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players.edit') }}</a>
+  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players_detail.edit_info') }}</a>
   <a href="/reports/player/{{ player.id }}" class="btn btn-outline">{{ t('players_detail.attendance_report') }}</a>
+  <a href="/players/{{ player.id }}/absences" class="btn btn-outline">{{ t('players_detail.absences') }}</a>
 </div>
 {% endif %}
 
-<h3>{{ t('players_detail.attendance_history') }}</h3>
-{% if history %}
-<table>
+{# ================== UPCOMING EVENTS ================== #}
+<h3>{{ t('players_detail.future_attendance') }}</h3>
+{% if history_future %}
+<table id="table-future">
   <thead>
     <tr><th>{{ t('reports.date_col') }}</th><th>{{ t('reports.event_col') }}</th><th>{{ t('reports.type_col') }}</th><th>{{ t('reports.status_col') }}</th><th>{{ t('reports.note_col') }}</th></tr>
   </thead>
   <tbody>
-  {% for item in history %}
-    <tr>
+  {% for item in history_future %}
+    <tr class="att-row-future" {% if loop.index > 10 %}style="display:none;"{% endif %}>
       <td>{{ item.event.event_date }}</td>
       <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
       <td><span class="badge badge-{{ item.event.event_type }}">{{ enums.event_type.get(item.event.event_type, item.event.event_type|capitalize) }}</span></td>
@@ -151,7 +153,56 @@
   {% endfor %}
   </tbody>
 </table>
+{% if history_future | length > 10 %}
+<div style="margin-top:.5rem;">
+  <button type="button" class="btn btn-outline btn-sm" id="load-more-future">{{ t('players_detail.load_more') }}</button>
+</div>
+{% endif %}
 {% else %}
   <p>{{ t('players_detail.no_records') }}</p>
 {% endif %}
+
+{# ================== PAST EVENTS ================== #}
+<h3 style="margin-top:2rem;">{{ t('players_detail.past_attendance') }}</h3>
+{% if history_past %}
+<table id="table-past">
+  <thead>
+    <tr><th>{{ t('reports.date_col') }}</th><th>{{ t('reports.event_col') }}</th><th>{{ t('reports.type_col') }}</th><th>{{ t('reports.status_col') }}</th><th>{{ t('reports.note_col') }}</th></tr>
+  </thead>
+  <tbody>
+  {% for item in history_past %}
+    <tr class="att-row-past" {% if loop.index > 10 %}style="display:none;"{% endif %}>
+      <td>{{ item.event.event_date }}</td>
+      <td><a href="/events/{{ item.event.id }}">{{ item.event.title }}</a></td>
+      <td><span class="badge badge-{{ item.event.event_type }}">{{ enums.event_type.get(item.event.event_type, item.event.event_type|capitalize) }}</span></td>
+      <td><span class="badge badge-{{ item.attendance.status }}">{{ enums.status.get(item.attendance.status, item.attendance.status|capitalize) }}</span></td>
+      <td>{{ item.attendance.note or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if history_past | length > 10 %}
+<div style="margin-top:.5rem;">
+  <button type="button" class="btn btn-outline btn-sm" id="load-more-past">{{ t('players_detail.load_more') }}</button>
+</div>
+{% endif %}
+{% else %}
+  <p>{{ t('players_detail.no_records') }}</p>
+{% endif %}
+
+<script>
+(function () {
+  function initLoadMore(btnId, rowClass) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var hidden = Array.from(document.querySelectorAll('.' + rowClass + '[style*="display:none"]'));
+      hidden.slice(0, 10).forEach(function (row) { row.style.display = ''; });
+      if (!document.querySelector('.' + rowClass + '[style*="display:none"]')) btn.style.display = 'none';
+    });
+  }
+  initLoadMore('load-more-future', 'att-row-future');
+  initLoadMore('load-more-past', 'att-row-past');
+})();
+</script>
 {% endblock %}

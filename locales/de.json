@@ -444,7 +444,12 @@
     "sex": "Geschlecht",
     "date_of_birth": "Geburtsdatum",
     "email": "E-Mail",
-    "no_attendance": "Keine Anwesenheitseinträge gefunden."
+    "no_attendance": "Keine Anwesenheitseinträge gefunden.",
+    "edit_info": "Info bearbeiten",
+    "absences": "Abwesenheiten",
+    "past_attendance": "Vergangene Events",
+    "future_attendance": "Kommende Events",
+    "load_more": "10 weitere laden"
   },
   "players_list": {
     "all_seasons": "Alle Saisons",

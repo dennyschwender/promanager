@@ -444,7 +444,12 @@
     "sex": "Sesso",
     "date_of_birth": "Data di nascita",
     "email": "Email",
-    "no_attendance": "Nessun record di presenza trovato."
+    "no_attendance": "Nessun record di presenza trovato.",
+    "edit_info": "Modifica info",
+    "absences": "Assenze",
+    "past_attendance": "Eventi passati",
+    "future_attendance": "Prossimi eventi",
+    "load_more": "Carica altri 10"
   },
   "players_list": {
     "all_seasons": "Tutte le stagioni",
