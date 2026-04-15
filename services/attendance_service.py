@@ -94,7 +94,7 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in detail else "unknown"
-        if att.player:
+        if att.player and att.player.archived_at is None:
             detail[bucket].append({"player": att.player, "note": att.note or ""})
     return detail
 
@@ -247,7 +247,7 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
         )
         .all()
     )
-    players = [m.player for m in memberships if m.player is not None and m.player.is_active]
+    players = [m.player for m in memberships if m.player is not None and m.player.is_active and m.player.archived_at is None]
 
     existing_player_ids = {att.player_id for att in db.query(Attendance).filter(Attendance.event_id == event.id).all()}
 
@@ -306,7 +306,7 @@ def backfill_attendance_for_player(
         return 0
 
     player = db.query(Player).filter(Player.id == player_id).first()
-    if player is None or not player.is_active:
+    if player is None or not player.is_active or player.archived_at is not None:
         return 0
 
     mem = db.query(PlayerTeam).filter_by(player_id=player_id, team_id=team_id, season_id=season_id).first()
