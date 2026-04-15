@@ -426,8 +426,6 @@ window.I18N = {
   of: "{{ t('js_strings.of') }}"
 };
 </script>
-<script src="/static/js/players-table.js"></script>
-{% endif %}
 {% if user.is_admin %}
 <dialog id="archive-dialog">
   <article>
@@ -440,5 +438,7 @@ window.I18N = {
     </footer>
   </article>
 </dialog>
+{% endif %}
+<script src="/static/js/players-table.js"></script>
 {% endif %}
 {% endblock %}
