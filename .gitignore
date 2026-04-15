@@ -26,3 +26,4 @@ build/
 
 # Git worktrees
 .worktrees/
+.worktrees/
