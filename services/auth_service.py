@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 
 import bcrypt
-from itsdangerous import TimestampSigner
+from itsdangerous import BadSignature, SignatureExpired, TimestampSigner, URLSafeTimedSerializer
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -127,3 +127,35 @@ def verify_api_token(user: User, raw_token: str) -> bool:
 def generate_api_token() -> str:
     """Generate a cryptographically secure random API token."""
     return secrets.token_urlsafe(32)
+
+
+# ---------------------------------------------------------------------------
+# Magic login links
+# ---------------------------------------------------------------------------
+
+_MAGIC_LINK_SALT = "magic-link"
+_MAGIC_LINK_MAX_AGE = 60 * 60 * 48  # 48 hours
+
+
+def create_magic_link(user_id: int, redirect_path: str) -> str | None:
+    """Return a signed magic login URL or None if APP_URL is localhost (dev mode).
+
+    The URL contains a URLSafeTimedSerializer token encoding user_id and
+    redirect_path. Valid for 48 hours.
+    """
+    if settings.APP_URL == "http://localhost:7000":
+        return None
+    s = URLSafeTimedSerializer(settings.SECRET_KEY, salt=_MAGIC_LINK_SALT)
+    token = s.dumps({"u": user_id, "p": redirect_path})
+    return f"{settings.APP_URL}/auth/magic?token={token}"
+
+
+def verify_magic_link(token: str) -> tuple[int, str]:
+    """Unsign and decode a magic link token.
+
+    Returns (user_id, redirect_path).
+    Raises BadSignature, SignatureExpired, or KeyError on failure.
+    """
+    s = URLSafeTimedSerializer(settings.SECRET_KEY, salt=_MAGIC_LINK_SALT)
+    data = s.loads(token, max_age=_MAGIC_LINK_MAX_AGE)
+    return int(data["u"]), str(data["p"])
