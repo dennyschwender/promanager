@@ -240,7 +240,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Don't clean up awaiting_external when user is selecting the status (extsta: callbacks)
         _skip_ext_cleanup = data.startswith("extsta:")
         _skip_extn_cleanup = data.startswith("extn:")
-        for _key in ("awaiting_note", "awaiting_chat_reply") + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
+        for _key in ("awaiting_note", "awaiting_chat_reply", "awaiting_absence") + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
             _pending = context.user_data.pop(_key, None)
             if _pending:
                 _pmid = _pending.get("prompt_message_id")
@@ -440,6 +440,57 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 "chat_id": query.message.chat_id,
             }
 
+        elif data.startswith("other:"):
+            await query.answer()
+            # other:{back_page}
+            from bot.absence_handlers import show_other_menu  # noqa: PLC0415
+            back_page_o = int(data.split(":")[1])
+            await show_other_menu(query, user, back_page=back_page_o)
+
+        elif data.startswith("absm:"):
+            await query.answer()
+            # absm:{back_page}
+            from bot.absence_handlers import show_absence_root  # noqa: PLC0415
+            back_page_am = int(data.split(":")[1])
+            await show_absence_root(query, user, db, back_page=back_page_am)
+
+        elif data.startswith("absp:"):
+            await query.answer()
+            # absp:{page}:{back_page}
+            from bot.absence_handlers import show_absence_player_list  # noqa: PLC0415
+            parts = data.split(":")
+            await show_absence_player_list(query, user, db, page=int(parts[1]), back_page=int(parts[2]))
+
+        elif data.startswith("absl:"):
+            await query.answer()
+            # absl:{player_id}:{page}:{back_page}
+            from bot.absence_handlers import show_absence_list  # noqa: PLC0415
+            parts = data.split(":")
+            player_id_al, page_al, back_page_al = int(parts[1]), int(parts[2]), int(parts[3])
+            is_member_al = not (user.is_admin or user.is_coach)
+            await show_absence_list(query, user, db, player_id_al, page_al, back_page_al, is_member_al)
+
+        elif data.startswith("absa:"):
+            await query.answer()
+            # absa:{player_id}:{back_page}
+            from bot.absence_handlers import start_add_absence  # noqa: PLC0415
+            parts = data.split(":")
+            await start_add_absence(query, user, context, int(parts[1]), int(parts[2]))
+
+        elif data.startswith("absd:"):
+            await query.answer()
+            # absd:{absence_id}:{player_id}:{page}:{back_page}
+            from bot.absence_handlers import confirm_delete_absence  # noqa: PLC0415
+            parts = data.split(":")
+            await confirm_delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
+
+        elif data.startswith("absdc:"):
+            await query.answer()
+            # absdc:{absence_id}:{player_id}:{page}:{back_page}
+            from bot.absence_handlers import delete_absence  # noqa: PLC0415
+            parts = data.split(":")
+            await delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
+
 
 # ---------------------------------------------------------------------------
 # Events list
@@ -597,6 +648,7 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         or context.user_data.pop("awaiting_ext_note", None)
         or context.user_data.pop("awaiting_external", None)
         or context.user_data.pop("awaiting_chat_reply", None)
+        or context.user_data.pop("awaiting_absence", None)
     )
     if cancelled:
         with SessionLocal() as db:
@@ -614,6 +666,11 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = str(update.effective_chat.id)
+
+    # Handle absence multi-step input
+    from bot.absence_handlers import handle_absence_text  # noqa: PLC0415
+    if await handle_absence_text(update, context):
+        return
 
     # Handle external name input
     pending_ext = context.user_data.get("awaiting_external")
