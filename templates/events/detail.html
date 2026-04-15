@@ -152,6 +152,7 @@
         <li class="att-player-item">
           <button type="button" class="att-player-btn att-external-btn"
                   data-ext-id="{{ ext.id }}"
+                  data-player-name="{{ ext.full_name | e }}"
                   data-first-name="{{ ext.first_name | e }}"
                   data-last-name="{{ ext.last_name | e }}"
                   data-status="{{ ext.status }}"
@@ -368,8 +369,10 @@
       items.sort(function (a, b) {
         var pa = a.dataset.position || '';
         var pb = b.dataset.position || '';
-        var na = (a.querySelector('[data-player-name]') || {}).dataset.playerName || '';
-        var nb = (b.querySelector('[data-player-name]') || {}).dataset.playerName || '';
+        var _elA = a.querySelector('[data-player-name]');
+        var na = _elA ? (_elA.dataset.playerName || '') : '';
+        var _elB = b.querySelector('[data-player-name]');
+        var nb = _elB ? (_elB.dataset.playerName || '') : '';
         if (grouped) {
           var ia = POS_ORDER.indexOf(pa); if (ia < 0) ia = 99;
           var ib = POS_ORDER.indexOf(pb); if (ib < 0) ib = 99;
