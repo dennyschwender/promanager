@@ -839,6 +839,7 @@
     "team_absences_title": "Absences de l'équipe",
     "team_absences_subtitle": "Saison",
     "no_team_absences": "Aucune absence pour cette équipe",
-    "all_seasons": "Toutes les saisons"
+    "all_seasons": "Toutes les saisons",
+    "absence_type": "Type d'absence"
   }
 }
