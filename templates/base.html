@@ -57,7 +57,7 @@
     </li>
     <li>
       <details role="list" style="list-style:none;">
-        <summary aria-haspopup="listbox" role="link">{{ user.username }}</summary>
+        <summary aria-haspopup="listbox" role="link">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or ''))|trim or user.username }}</summary>
         <ul role="listbox" style="right:0;left:auto;">
           {% if user.is_admin %}
             <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
