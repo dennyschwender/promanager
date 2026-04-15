@@ -20,7 +20,7 @@
     <div class="alert alert-error">{{ error }}</div>
   {% endif %}
 
-  <form method="POST" action="/players/{{ player.id }}/absences" novalidate>
+  <form id="absence-form" method="POST" action="/players/{{ player.id }}/absences" novalidate>
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
     <fieldset>
@@ -150,7 +150,7 @@ function updateRrule() {
 
 // Handle form submission as JSON
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('form');
+  const form = document.getElementById('absence-form');
 
   // Initialize recurring checkboxes from existing absence
   {% if absence and absence.absence_type == "recurring" and absence.rrule %}
