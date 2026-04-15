@@ -18,7 +18,6 @@ from models.attendance import Attendance
 from models.event import Event
 from models.event_external import EventExternal
 from models.event_message import EventMessage
-from services.chat_service import author_display_name, message_to_dict
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.season import Season
@@ -33,13 +32,14 @@ from routes._auth_helpers import (
     require_login,
     rt,
 )
-from services.event_text_service import format_attendance_text
 from services.attendance_service import (
     ensure_attendance_records,
     get_event_attendance_detail,
     sync_attendance_defaults,
 )
+from services.chat_service import author_display_name, message_to_dict
 from services.email_service import send_event_reminder
+from services.event_text_service import format_attendance_text
 from services.notification_service import send_notifications
 from services.notification_templates import TEMPLATES
 from services.schedule_service import (
@@ -128,6 +128,7 @@ async def events_list(
     db: Session = Depends(get_db),
 ):
     import math  # noqa: PLC0415
+
     from models.player import Player as _Player
     PAGE_SIZE = 10
     season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]

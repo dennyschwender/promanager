@@ -595,6 +595,7 @@
     "reminder_sent": "Erinnerung gesendet",
     "recurring_label": "Wiederkehrend",
     "group_by_pos": "Nach Position",
+    "copy_attendance": "Anwesenheit kopieren",
     "recurring_edit_note": "Bearbeitung betrifft nur dieses Vorkommen.",
     "reminders_sent_msg": "Erinnerungen an %{count} Spieler gesendet.",
     "notified_msg": "Benachrichtigung für %{count} Spieler in der Warteschlange.",

@@ -113,7 +113,10 @@
 {% if not event.hide_attendance or (user and (user.is_admin or user.is_coach)) %}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
   <h3 style="margin:0;">{{ t('events.attendance_summary') }}</h3>
-  <button type="button" id="pos-group-toggle" class="btn btn-sm btn-outline">{{ t('events_detail.group_by_pos') }}</button>
+  <div style="display:flex;gap:.5rem;">
+    <button type="button" id="copy-att-btn" class="btn btn-sm btn-outline">{{ t('events_detail.copy_attendance') }}</button>
+    <button type="button" id="pos-group-toggle" class="btn btn-sm btn-outline">{{ t('events_detail.group_by_pos') }}</button>
+  </div>
 </div>
 <div id="attendance-columns" class="att-columns">
   {% for bucket, label in [
@@ -423,6 +426,34 @@
       applyGrouping(!isGrouped);
     });
   }
+
+  // Copy attendance button
+  (function () {
+    var copyBtn = document.getElementById('copy-att-btn');
+    if (!copyBtn) return;
+    copyBtn.addEventListener('click', function () {
+      var orig = copyBtn.textContent;
+      var grouped;
+      try { grouped = localStorage.getItem('att_pos_grouping'); } catch(e) { grouped = null; }
+      var groupedParam = (grouped === null || grouped === '1') ? '1' : '0';
+      fetch('/events/' + EVENT_ID + '/attendance-text?grouped=' + groupedParam)
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+          navigator.clipboard.writeText(text).then(function () {
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.disabled = true;
+            setTimeout(function () {
+              copyBtn.textContent = orig;
+              copyBtn.disabled = false;
+            }, 2000);
+          });
+        })
+        .catch(function () {
+          copyBtn.textContent = 'Error';
+          setTimeout(function () { copyBtn.textContent = orig; }, 2000);
+        });
+    });
+  })();
 })();
 </script>
 {% endif %}
