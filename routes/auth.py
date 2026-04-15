@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from itsdangerous import BadSignature, SignatureExpired
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -19,6 +20,7 @@ from services.auth_service import (
     create_user,
     get_user_by_email,
     get_user_by_username,
+    verify_magic_link,
 )
 
 router = APIRouter()
@@ -139,3 +141,41 @@ async def register_post(
             "flash": f"User '{username}' created successfully.",
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Magic login link
+# ---------------------------------------------------------------------------
+
+
+@router.get("/magic")
+async def magic_link_login(
+    token: str = "",
+    db: Session = Depends(get_db),
+):
+    """Verify a magic link token, set session cookie, and redirect to the encoded path.
+
+    On failure (invalid/expired/missing token), redirect to /auth/login.
+    """
+    if not token:
+        return RedirectResponse("/auth/login", status_code=302)
+    try:
+        user_id, redirect_path = verify_magic_link(token)
+    except (BadSignature, SignatureExpired, KeyError, Exception):
+        return RedirectResponse("/auth/login?error=link_expired", status_code=302)
+
+    user = db.get(User, user_id)
+    if user is None or not user.is_active:
+        return RedirectResponse("/auth/login", status_code=302)
+
+    cookie_val = create_session_cookie(user.id)
+    response = RedirectResponse(redirect_path, status_code=302)
+    response.set_cookie(
+        COOKIE_NAME,
+        cookie_val,
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        max_age=60 * 60 * 24 * 7,  # 7 days
+    )
+    return response
