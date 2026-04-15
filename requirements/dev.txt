@@ -22,7 +22,7 @@ packaging==24.0
     # via pytest
 pluggy==1.5.0
     # via pytest
-pytest==8.3.0
+pytest==9.0.3
     # via
     #   -r dev.in
     #   pytest-asyncio
