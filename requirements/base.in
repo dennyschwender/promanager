@@ -5,7 +5,7 @@ pydantic-settings>=2.0.0
 uvicorn[standard]==0.29.0
 sqlalchemy==2.0.48
 jinja2==3.1.6
-python-multipart==0.0.22
+python-multipart==0.0.26
 bcrypt>=4.0.0
 itsdangerous==2.2.0
 pywebpush~=2.0
