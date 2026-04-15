@@ -1006,6 +1006,15 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
   margin-bottom: 0;
 }
 
+/* ── Archive / generic player dialogs ──────────────────────────── */
+#archive-dialog {
+  max-width: min(480px, 90vw);
+}
+
+#archive-dialog article {
+  overflow: visible;
+}
+
 /* ── Borrowed player indicator ─────────────────────────────────── */
 .borrow-icon {
   display: inline-block;
