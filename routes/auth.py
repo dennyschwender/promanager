@@ -161,7 +161,7 @@ async def magic_link_login(
         return RedirectResponse("/auth/login", status_code=302)
     try:
         user_id, redirect_path = verify_magic_link(token)
-    except (BadSignature, SignatureExpired, KeyError, Exception):
+    except (BadSignature, SignatureExpired, KeyError):
         return RedirectResponse("/auth/login?error=link_expired", status_code=302)
 
     user = db.get(User, user_id)
