@@ -796,7 +796,26 @@
     "unknown_error": "An error occurred. Please try again.",
     "chat_reply_button": "💬 Reply",
     "chat_reply_prompt": "Type your reply (or /cancel to abort):",
-    "chat_reply_posted": "Your message was posted to the event discussion."
+    "chat_reply_posted": "Your message was posted to the event discussion.",
+"other_button": "\u2699\ufe0f Other",
+    "absences_button": "\ud83d\udcc5 Absences",
+    "absences_header": "\ud83d\udcc5 Absences \u2014 %{name}",
+    "absences_empty": "No absences registered.",
+    "absence_add_button": "+ Add absence",
+    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_start_prompt": "Enter start date (YYYY-MM-DD), or /cancel:",
+    "absence_end_prompt": "Enter end date (YYYY-MM-DD), or /cancel:",
+    "absence_reason_prompt": "Enter reason (optional), or /skip:",
+    "absence_added": "Absence added. %{count} event(s) updated.",
+    "absence_deleted": "Absence deleted.",
+    "absence_date_error": "Invalid date format. Please use YYYY-MM-DD:",
+    "absence_past_error": "Start date must be today or in the future:",
+    "absence_range_error": "End date must be on or after start date:",
+    "absence_confirm_del": "Delete this absence?",
+    "absence_confirm_yes": "\u2705 Yes, delete",
+    "absence_confirm_no": "\u274c No, keep",
+    "select_player": "Select a player:"
+
   },
   "chat": {
     "title": "Chat",

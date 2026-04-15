@@ -796,7 +796,26 @@
     "unknown_error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
     "chat_reply_button": "💬 Antworten",
     "chat_reply_prompt": "Schreibe deine Antwort (oder /cancel zum Abbrechen):",
-    "chat_reply_posted": "Deine Nachricht wurde in der Eventdiskussion veröffentlicht."
+    "chat_reply_posted": "Deine Nachricht wurde in der Eventdiskussion veröffentlicht.",
+"other_button": "\u2699\ufe0f Weitere",
+    "absences_button": "\ud83d\udcc5 Abwesenheiten",
+    "absences_header": "\ud83d\udcc5 Abwesenheiten \u2014 %{name}",
+    "absences_empty": "Keine Abwesenheiten registriert.",
+    "absence_add_button": "+ Abwesenheit hinzuf\u00fcgen",
+    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_start_prompt": "Startdatum eingeben (JJJJ-MM-TT), oder /cancel:",
+    "absence_end_prompt": "Enddatum eingeben (JJJJ-MM-TT), oder /cancel:",
+    "absence_reason_prompt": "Grund eingeben (optional), oder /skip:",
+    "absence_added": "Abwesenheit hinzugef\u00fcgt. %{count} Ereignis(se) aktualisiert.",
+    "absence_deleted": "Abwesenheit gel\u00f6scht.",
+    "absence_date_error": "Ung\u00fcltiges Datumsformat. Bitte JJJJ-MM-TT verwenden:",
+    "absence_past_error": "Das Startdatum muss heute oder in der Zukunft liegen:",
+    "absence_range_error": "Das Enddatum muss gleich oder nach dem Startdatum liegen:",
+    "absence_confirm_del": "Diese Abwesenheit l\u00f6schen?",
+    "absence_confirm_yes": "\u2705 Ja, l\u00f6schen",
+    "absence_confirm_no": "\u274c Nein, behalten",
+    "select_player": "Spieler ausw\u00e4hlen:"
+
   },
   "chat": {
     "title": "Chat",

@@ -796,7 +796,26 @@
     "unknown_error": "Si è verificato un errore. Riprova.",
     "chat_reply_button": "💬 Rispondi",
     "chat_reply_prompt": "Scrivi la tua risposta (o /cancel per annullare):",
-    "chat_reply_posted": "Il tuo messaggio è stato pubblicato nella discussione dell'evento."
+    "chat_reply_posted": "Il tuo messaggio è stato pubblicato nella discussione dell'evento.",
+"other_button": "\u2699\ufe0f Altro",
+    "absences_button": "\ud83d\udcc5 Assenze",
+    "absences_header": "\ud83d\udcc5 Assenze \u2014 %{name}",
+    "absences_empty": "Nessuna assenza registrata.",
+    "absence_add_button": "+ Aggiungi assenza",
+    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_start_prompt": "Inserisci la data di inizio (AAAA-MM-GG), o /cancel:",
+    "absence_end_prompt": "Inserisci la data di fine (AAAA-MM-GG), o /cancel:",
+    "absence_reason_prompt": "Inserisci il motivo (opzionale), o /skip:",
+    "absence_added": "Assenza aggiunta. %{count} evento/i aggiornato/i.",
+    "absence_deleted": "Assenza eliminata.",
+    "absence_date_error": "Formato data non valido. Usa AAAA-MM-GG:",
+    "absence_past_error": "La data di inizio deve essere oggi o nel futuro:",
+    "absence_range_error": "La data di fine deve essere uguale o successiva alla data di inizio:",
+    "absence_confirm_del": "Eliminare questa assenza?",
+    "absence_confirm_yes": "\u2705 S\u00ec, elimina",
+    "absence_confirm_no": "\u274c No, mantieni",
+    "select_player": "Seleziona un giocatore:"
+
   },
   "chat": {
     "title": "Chat",

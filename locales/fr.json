@@ -796,7 +796,26 @@
     "unknown_error": "Une erreur s'est produite. Veuillez réessayer.",
     "chat_reply_button": "💬 Répondre",
     "chat_reply_prompt": "Tapez votre réponse (ou /cancel pour annuler) :",
-    "chat_reply_posted": "Votre message a été publié dans la discussion de l'événement."
+    "chat_reply_posted": "Votre message a été publié dans la discussion de l'événement.",
+"other_button": "\u2699\ufe0f Autre",
+    "absences_button": "\ud83d\udcc5 Absences",
+    "absences_header": "\ud83d\udcc5 Absences \u2014 %{name}",
+    "absences_empty": "Aucune absence enregistr\u00e9e.",
+    "absence_add_button": "+ Ajouter une absence",
+    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_start_prompt": "Entrez la date de d\u00e9but (AAAA-MM-JJ), ou /cancel :",
+    "absence_end_prompt": "Entrez la date de fin (AAAA-MM-JJ), ou /cancel :",
+    "absence_reason_prompt": "Entrez le motif (optionnel), ou /skip :",
+    "absence_added": "Absence ajout\u00e9e. %{count} \u00e9v\u00e9nement(s) mis \u00e0 jour.",
+    "absence_deleted": "Absence supprim\u00e9e.",
+    "absence_date_error": "Format de date invalide. Utilisez AAAA-MM-JJ :",
+    "absence_past_error": "La date de d\u00e9but doit \u00eatre aujourd'hui ou dans le futur :",
+    "absence_range_error": "La date de fin doit \u00eatre \u00e9gale ou post\u00e9rieure \u00e0 la date de d\u00e9but :",
+    "absence_confirm_del": "Supprimer cette absence ?",
+    "absence_confirm_yes": "\u2705 Oui, supprimer",
+    "absence_confirm_no": "\u274c Non, garder",
+    "select_player": "S\u00e9lectionnez un joueur :"
+
   },
   "chat": {
     "title": "Chat",
