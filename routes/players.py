@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 from app.csrf import require_csrf, require_csrf_header
 from app.database import get_db
 from app.templates import render
+from models.attendance import Attendance
+from models.event import Event
 from models.player import Player
 from models.player_contact import PlayerContact
 from models.player_phone import PlayerPhone
@@ -1135,6 +1137,18 @@ async def player_archive(
     if not player:
         raise HTTPException(status_code=404)
     player.archived_at = datetime.now(timezone.utc)
+    # Delete attendance rows for all future events so the player disappears
+    # from upcoming trainings while past records are preserved.
+    today = date.today()
+    future_att_ids = (
+        db.query(Attendance.id)
+        .join(Event, Event.id == Attendance.event_id)
+        .filter(Attendance.player_id == player_id, Event.event_date >= today)
+        .all()
+    )
+    if future_att_ids:
+        ids = [r[0] for r in future_att_ids]
+        db.query(Attendance).filter(Attendance.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
     return RedirectResponse("/players", status_code=302)
 

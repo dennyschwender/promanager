@@ -94,7 +94,7 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in detail else "unknown"
-        if att.player and att.player.archived_at is None:
+        if att.player:
             detail[bucket].append({"player": att.player, "note": att.note or ""})
     return detail
 
