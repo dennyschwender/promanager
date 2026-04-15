@@ -33,6 +33,7 @@ from routes._auth_helpers import (
     require_login,
     rt,
 )
+from services.event_text_service import format_attendance_text
 from services.attendance_service import (
     ensure_attendance_records,
     get_event_attendance_detail,
@@ -580,6 +581,32 @@ async def event_detail(
 
 
 # ---------------------------------------------------------------------------
+# Attendance text
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{event_id}/attendance-text")
+async def event_attendance_text(
+    event_id: int,
+    request: Request,
+    grouped: int = 1,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    from fastapi import HTTPException
+    from fastapi.responses import Response
+
+    from app.i18n import DEFAULT_LOCALE
+
+    event = db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=404)
+
+    locale = getattr(request.state, "locale", DEFAULT_LOCALE)
+    text = format_attendance_text(db, event, locale, grouped=bool(grouped), markdown=False)
+    return Response(content=text, media_type="text/plain; charset=utf-8")
+
+
 # Edit
 # ---------------------------------------------------------------------------
 

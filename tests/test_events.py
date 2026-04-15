@@ -273,3 +273,97 @@ def test_member_can_edit_own_player_from_detail(client, db):
     att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "present"
+
+
+# ---------------------------------------------------------------------------
+# Attendance text endpoint
+# ---------------------------------------------------------------------------
+
+
+def test_attendance_text_returns_plain_text(admin_client, db):
+    from datetime import date, time as dtime
+
+    from models.attendance import Attendance
+    from models.player import Player
+    from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
+
+    team = Team(name="TextTeam")
+    season = Season(name="S1", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+    db.add_all([team, season])
+    db.commit()
+
+    event = Event(
+        title="Copy Test Match",
+        event_type="match",
+        event_date=date(2026, 4, 16),
+        event_time=dtime(19, 30),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+
+    player = Player(first_name="Zeno", last_name="Boscolo")
+    db.add(player)
+    db.commit()
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, position="forward"))
+    db.add(Attendance(event_id=event.id, player_id=player.id, status="present"))
+    db.commit()
+
+    resp = admin_client.get(f"/events/{event.id}/attendance-text?grouped=1")
+    assert resp.status_code == 200
+    assert "text/plain" in resp.headers["content-type"]
+    body = resp.text
+    assert "Copy Test Match" in body
+    assert "Zeno Boscolo" in body
+    assert "Forwards (1)" in body
+
+
+def test_attendance_text_flat(admin_client, db):
+    from datetime import date
+
+    from models.attendance import Attendance
+    from models.player import Player
+    from models.player_team import PlayerTeam
+    from models.season import Season
+    from models.team import Team
+
+    team = Team(name="FlatTeam")
+    season = Season(name="S2", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+    db.add_all([team, season])
+    db.commit()
+
+    event = Event(
+        title="Flat Test",
+        event_type="training",
+        event_date=date(2026, 4, 17),
+        team_id=team.id,
+        season_id=season.id,
+    )
+    db.add(event)
+    db.commit()
+
+    player = Player(first_name="Anna", last_name="Z")
+    db.add(player)
+    db.commit()
+    db.add(PlayerTeam(player_id=player.id, team_id=team.id, season_id=season.id, position="defender"))
+    db.add(Attendance(event_id=event.id, player_id=player.id, status="present"))
+    db.commit()
+
+    resp = admin_client.get(f"/events/{event.id}/attendance-text?grouped=0")
+    assert resp.status_code == 200
+    body = resp.text
+    assert "Anna Z" in body
+    assert "Defenders" not in body  # no position headers in flat mode
+
+
+def test_attendance_text_404(admin_client):
+    resp = admin_client.get("/events/99999/attendance-text?grouped=1")
+    assert resp.status_code == 404
+
+
+def test_attendance_text_requires_login(client):
+    resp = client.get("/events/1/attendance-text?grouped=1", follow_redirects=False)
+    assert resp.status_code == 302
