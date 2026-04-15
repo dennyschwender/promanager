@@ -387,13 +387,19 @@
       items.forEach(function (item, i) { item.classList.toggle('att-player-item-first', i === 0); });
       // Insert dividers if grouped
       if (grouped) {
+        // Count players per position
+        var posCounts = {};
+        items.forEach(function (item) {
+          var pos = item.dataset.position || '';
+          if (pos) posCounts[pos] = (posCounts[pos] || 0) + 1;
+        });
         var lastPos = '__none__';
         Array.prototype.slice.call(list.querySelectorAll('.att-player-item')).forEach(function (item) {
           var pos = item.dataset.position || '';
           if (pos && pos !== lastPos) {
             var div = document.createElement('li');
             div.className = 'att-pos-divider';
-            div.textContent = POS_LABELS[pos] || pos;
+            div.textContent = (POS_LABELS[pos] || pos) + ' (' + (posCounts[pos] || 0) + ')';
             list.insertBefore(div, item);
           }
           lastPos = pos;
