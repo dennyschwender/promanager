@@ -1,6 +1,6 @@
 """tests/test_absence_routes.py — Absence API route tests."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -75,12 +75,15 @@ def test_create_period_absence(member_client: TestClient, member_user, db):
     db.commit()
     db.refresh(player)
 
+    start = date.today() + timedelta(days=5)
+    end = date.today() + timedelta(days=15)
+
     response = member_client.post(
         f"/api/players/{player.id}/absences",
         json={
             "absence_type": "period",
-            "start_date": "2026-04-10",
-            "end_date": "2026-04-20",
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
             "reason": "Vacation",
         },
     )
@@ -93,8 +96,8 @@ def test_create_period_absence(member_client: TestClient, member_user, db):
     # Verify in DB
     absence = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player.id).first()
     assert absence is not None
-    assert absence.start_date == date(2026, 4, 10)
-    assert absence.end_date == date(2026, 4, 20)
+    assert absence.start_date == start
+    assert absence.end_date == end
 
 
 def test_create_recurring_absence(member_client: TestClient, member_user, db):
@@ -163,8 +166,8 @@ def test_admin_can_create_absence_for_any_player(admin_client, db):
         f"/api/players/{player.id}/absences",
         json={
             "absence_type": "period",
-            "start_date": "2026-04-10",
-            "end_date": "2026-04-20",
+            "start_date": (date.today() + timedelta(days=5)).isoformat(),
+            "end_date": (date.today() + timedelta(days=15)).isoformat(),
             "reason": "Vacation",
         },
     )
@@ -213,8 +216,8 @@ def test_coach_can_create_absence_for_team_player(client, db):
         f"/api/players/{player.id}/absences",
         json={
             "absence_type": "period",
-            "start_date": "2026-04-10",
-            "end_date": "2026-04-20",
+            "start_date": (date.today() + timedelta(days=5)).isoformat(),
+            "end_date": (date.today() + timedelta(days=15)).isoformat(),
             "reason": "Vacation",
         },
     )
