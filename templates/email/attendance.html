@@ -1,0 +1,5 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p>Hi <strong>{{ name }}</strong>,</p>
+<p>Please confirm your attendance for <strong>{{ event_title }}</strong> on {{ date }}.</p>
+{% endblock %}

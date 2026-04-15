@@ -1,0 +1,14 @@
+{% extends "email/base.html" %}
+{% block content %}
+<p>Your password has been reset. New credentials:</p>
+<table style="border-collapse: collapse; margin: 12px 0;">
+  <tr>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold;">Username</td>
+    <td style="padding: 4px 0;">{{ username }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold;">Password</td>
+    <td style="padding: 4px 0; font-family: monospace;">{{ password }}</td>
+  </tr>
+</table>
+{% endblock %}
