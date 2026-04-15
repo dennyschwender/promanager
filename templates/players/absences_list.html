@@ -35,15 +35,15 @@
                 </td>
                 <td>
                     {% if absence.absence_type == "period" %}
-                    {{ absence.start_date|date("Y-m-d") }} – {{ absence.end_date|date("Y-m-d") }}
+                    {{ absence.start_date }} – {{ absence.end_date }}
                     {% else %}
-                    {{ absence.rrule }} until {{ absence.rrule_until|date("Y-m-d") }}
+                    {{ absence.rrule }}{% if absence.rrule_until %} until {{ absence.rrule_until }}{% endif %}
                     {% endif %}
                 </td>
                 <td>{{ absence.reason or "—" }}</td>
                 <td style="white-space: nowrap;">
                     <form class="delete-absence-form" method="POST" action="/api/players/{{ player.id }}/absences/{{ absence.id }}" data-player-id="{{ player.id }}" data-absence-id="{{ absence.id }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ t("common.confirm_delete") }}')">{{ t("common.delete") }}</button>
                     </form>
                 </td>
