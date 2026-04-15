@@ -92,6 +92,9 @@ async def borrow_player(
 _VALID_STATUSES = {"present", "absent", "maybe", "unknown"}
 
 
+_VALID_POSITIONS = {"goalie", "defender", "center", "forward"}
+
+
 @router.post("/{event_id}/externals")
 async def add_external(
     event_id: int,
@@ -99,6 +102,7 @@ async def add_external(
     last_name: str = Form(...),
     status: str = Form("unknown"),
     note: str = Form(""),
+    position: str = Form(""),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -114,6 +118,7 @@ async def add_external(
         last_name=last_name.strip(),
         status=status,
         note=note.strip() or None,
+        position=position.strip() if position.strip() in _VALID_POSITIONS else None,
     )
     db.add(ext)
     db.commit()
@@ -124,6 +129,7 @@ async def add_external(
         "full_name": ext.full_name,
         "status": ext.status,
         "note": ext.note or "",
+        "position": ext.position or "",
     })
 
 
@@ -149,6 +155,7 @@ async def update_external(
     ext_id: int,
     status: str = Form("unknown"),
     note: str = Form(""),
+    position: str = Form(""),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -159,8 +166,9 @@ async def update_external(
     if status in _VALID_STATUSES:
         ext.status = status
     ext.note = note.strip() or None
+    ext.position = position.strip() if position.strip() in _VALID_POSITIONS else None
     db.commit()
-    return JSONResponse({"ok": True, "status": ext.status, "note": ext.note or ""})
+    return JSONResponse({"ok": True, "status": ext.status, "note": ext.note or "", "position": ext.position or ""})
 
 
 # ---------------------------------------------------------------------------

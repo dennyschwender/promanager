@@ -26,6 +26,8 @@ class EventExternal(Base):
     note: Mapped[str | None] = mapped_column(String(512), nullable=True)
     # "present" | "absent" | "maybe" | "unknown"
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="unknown")
+    # "goalie" | "defender" | "center" | "forward" | None
+    position: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     event: Mapped["Event"] = relationship("Event", back_populates="externals", lazy="select")  # noqa: F821

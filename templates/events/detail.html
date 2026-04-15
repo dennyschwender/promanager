@@ -105,7 +105,7 @@
     <button type="button" class="btn btn-outline btn-sm" onclick="openBorrowDialog()">
       + {{ t('attendance.borrow_btn') }}
     </button>
-    <button type="button" class="btn btn-outline btn-sm" onclick="openExtDialog(null,'','','unknown','')">
+    <button type="button" class="btn btn-outline btn-sm" onclick="openExtDialog(null,'','','unknown','','')">
       + {{ t('externals.add') }}
     </button>
   </div>
@@ -149,14 +149,15 @@
         {% endfor %}
         {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
         {% for ext in ext_in_bucket %}
-        <li class="att-player-item">
+        <li class="att-player-item" data-position="{{ ext.position or '' }}">
           <button type="button" class="att-player-btn att-external-btn"
                   data-ext-id="{{ ext.id }}"
                   data-player-name="{{ ext.full_name | e }}"
                   data-first-name="{{ ext.first_name | e }}"
                   data-last-name="{{ ext.last_name | e }}"
                   data-status="{{ ext.status }}"
-                  data-note="{{ (ext.note or '') | e }}">
+                  data-note="{{ (ext.note or '') | e }}"
+                  data-position="{{ ext.position or '' }}">
             👤 {{ ext.full_name }}{% if ext.note %} <span class="note-indicator" title="{{ ext.note | e }}">📝</span>{% endif %}
           </button>
         </li>
@@ -301,7 +302,7 @@
     if (btn.classList.contains('att-external-btn')) {
       if (!IS_PRIVILEGED) return;
       e.stopPropagation();
-      openExtDialog(parseInt(btn.dataset.extId, 10), btn.dataset.firstName, btn.dataset.lastName, btn.dataset.status, btn.dataset.note);
+      openExtDialog(parseInt(btn.dataset.extId, 10), btn.dataset.firstName, btn.dataset.lastName, btn.dataset.status, btn.dataset.note, btn.dataset.position || '');
       return;
     }
     var pid = parseInt(btn.dataset.playerId, 10);
@@ -590,6 +591,14 @@
       <label>{{ t('users.first_name') }}<input type="text" id="ext-first-name"></label>
       <label>{{ t('users.last_name') }}<input type="text" id="ext-last-name"></label>
     </div>
+    <label>{{ t('players_form.position') }}
+      <select id="ext-position">
+        <option value="">—</option>
+        {% for val, lbl in [('goalie', t('players_form.pos_goalie')),('defender', t('players_form.pos_defender')),('center', t('players_form.pos_center')),('forward', t('players_form.pos_forward'))] %}
+        <option value="{{ val }}">{{ lbl }}</option>
+        {% endfor %}
+      </select>
+    </label>
     <label>{{ t('events.type') }}
       <select id="ext-status">
         {% for s, lbl in [("present", t('attendance.status_attend')),("absent", t('attendance.status_absent')),("maybe", t('events_detail.maybe')),("unknown", t('attendance.status_unknown'))] %}
@@ -612,11 +621,12 @@
   var _eventId = {{ event.id }};
   var _editingId = null;
 
-  window.openExtDialog = function(id, firstName, lastName, status, note) {
+  window.openExtDialog = function(id, firstName, lastName, status, note, position) {
     _editingId = id;
     document.getElementById('ext-dialog-title').textContent = id ? {{ t('common.edit')|tojson }} : {{ t('externals.add')|tojson }};
     document.getElementById('ext-first-name').value = firstName;
     document.getElementById('ext-last-name').value = lastName;
+    document.getElementById('ext-position').value = position || '';
     document.getElementById('ext-status').value = status;
     document.getElementById('ext-note').value = note;
     document.getElementById('ext-error').style.display = 'none';
@@ -631,6 +641,7 @@
   window.saveExternal = function() {
     var firstName = document.getElementById('ext-first-name').value.trim();
     var lastName = document.getElementById('ext-last-name').value.trim();
+    var position = document.getElementById('ext-position').value;
     var status = document.getElementById('ext-status').value;
     var note = document.getElementById('ext-note').value.trim();
     var errEl = document.getElementById('ext-error');
@@ -642,6 +653,7 @@
     body.append('csrf_token', _csrf);
     body.append('first_name', firstName);
     body.append('last_name', lastName);
+    body.append('position', position);
     body.append('status', status);
     body.append('note', note);
     fetch(url, {method:'POST', body: body})
