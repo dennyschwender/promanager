@@ -723,12 +723,14 @@
   function getRowValue(row, fieldKey) {
     function valOf(sel) { var el = row.querySelector(sel); return el ? (el.dataset.value || '') : ''; }
     switch (fieldKey) {
-      case 'name':
+      case 'name': {
+        var nameParts = [];
         var tds = Array.from(row.querySelectorAll('td'));
         for (var i = 0; i < tds.length; i++) {
-          if (!tds[i].dataset.col && tds[i].querySelector('a')) return tds[i].textContent.trim().toLowerCase();
+          if (!tds[i].dataset.col && tds[i].querySelector('a')) nameParts.push(tds[i].textContent.trim());
         }
-        return '';
+        return nameParts.join(' ').toLowerCase();
+      }
       case 'email':         return valOf('td[data-col="Email"]');
       case 'phone':         return valOf('td[data-col="Phone"]');
       case 'date_of_birth': return valOf('td[data-col="Date of birth"]');

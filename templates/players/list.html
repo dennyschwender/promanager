@@ -75,6 +75,21 @@
     });
     form.submit();
   }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var currentSort = {{ sort | tojson }};
+    var currentDir = {{ sort_dir | tojson }};
+    document.querySelectorAll('.sortable-col').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var key = th.dataset.sortKey;
+        var params = new URLSearchParams(window.location.search);
+        var newDir = (key === currentSort && currentDir === 'asc') ? 'desc' : 'asc';
+        params.set('sort', key);
+        params.set('sort_dir', newDir);
+        window.location.search = params.toString();
+      });
+    });
+  });
 </script>
 
 <div id="adv-filter-panel" style="display:none;margin-bottom:.75rem;">
@@ -146,7 +161,14 @@
   <thead>
     <tr>
       {% if user.is_admin %}<th style="width:2rem;"><input type="checkbox" id="select-all"></th>{% endif %}
-      <th>{{ t('players.name') }}</th>
+      <th class="sortable-col" data-sort-key="first_name" style="cursor:pointer;white-space:nowrap;">
+        {{ t('players_form.first_name') }}
+        {% if sort == 'first_name' %}{% if sort_dir == 'asc' %} ▲{% else %} ▼{% endif %}{% else %} <span style="opacity:.35;">▲</span>{% endif %}
+      </th>
+      <th class="sortable-col" data-sort-key="last_name" style="cursor:pointer;white-space:nowrap;">
+        {{ t('players_form.last_name') }}
+        {% if sort == 'last_name' %}{% if sort_dir == 'asc' %} ▲{% else %} ▼{% endif %}{% else %} <span style="opacity:.35;">▲</span>{% endif %}
+      </th>
       <th data-col="Team">{{ t('players.team') }}</th>
       <th data-col="Email">{{ t('players.email') }}</th>
       <th data-col="Phone">{{ t('players.phone') }}</th>
@@ -170,7 +192,8 @@
         data-is-active="{{ 'true' if p.is_active else 'false' }}"
         data-archived-at="{{ p.archived_at.isoformat() if p.archived_at else '' }}">
       {% if user.is_admin %}<td><input type="checkbox" class="row-check"></td>{% endif %}
-      <td><a href="/players/{{ p.id }}"><strong>{{ p.full_name }}</strong></a></td>
+      <td><a href="/players/{{ p.id }}"><strong>{{ p.first_name }}</strong></a></td>
+      <td><a href="/players/{{ p.id }}"><strong>{{ p.last_name }}</strong></a></td>
       <td data-col="Team" data-value="{{ p.team_memberships | length }}">
         {% set season_mems = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | sort(attribute='priority') | list if selected_season_id else [] %}
         {% if season_mems %}

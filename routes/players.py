@@ -581,6 +581,8 @@ async def players_list(
     team_id: int | None = None,
     season_id: int | None = None,
     archived: str | None = None,
+    sort: str = "first_name",
+    sort_dir: str = "asc",
     user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
@@ -601,7 +603,21 @@ async def players_list(
         )
     elif team_id is not None:
         q = q.join(PlayerTeam, Player.id == PlayerTeam.player_id).filter(PlayerTeam.team_id == team_id)
-    players = q.order_by(Player.last_name, Player.first_name).all()
+
+    _sort_cols = {
+        "first_name": Player.first_name,
+        "last_name": Player.last_name,
+        "email": Player.email,
+        "date_of_birth": Player.date_of_birth,
+    }
+    _primary = _sort_cols.get(sort, Player.first_name)
+    _secondary = Player.last_name if sort == "first_name" else Player.first_name
+    if sort_dir == "desc":
+        q = q.order_by(_primary.desc(), _secondary)
+    else:
+        q = q.order_by(_primary, _secondary)
+
+    players = q.all()
     teams = db.query(Team).order_by(Team.name).all()
 
     # Build {player_id: PlayerTeam} for the template (requires both filters set)
@@ -630,6 +646,8 @@ async def players_list(
             "selected_season_id": selected_season_id,
             "player_team_map": player_team_map,
             "archived_filter": archived or "",
+            "sort": sort,
+            "sort_dir": sort_dir,
         },
     )
 
@@ -963,6 +981,12 @@ async def player_detail(
         return RedirectResponse("/players", status_code=302)
 
     history = get_player_attendance_history(db, player_id)
+    today = date.today()
+    history_past = [h for h in history if h["event"].event_date < today]
+    history_future = sorted(
+        [h for h in history if h["event"].event_date >= today],
+        key=lambda x: x["event"].event_date,
+    )
     _mems = sorted(player.team_memberships, key=lambda m: m.priority)
     sorted_memberships = sorted(_mems, key=lambda m: m.season.name if m.season else "", reverse=True)
 
@@ -972,7 +996,8 @@ async def player_detail(
         {
             "user": user,
             "player": player,
-            "history": history,
+            "history_past": history_past,
+            "history_future": history_future,
             "sorted_memberships": sorted_memberships,
         },
     )
