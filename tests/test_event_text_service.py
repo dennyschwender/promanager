@@ -2,8 +2,6 @@
 
 from datetime import date, time
 
-import pytest
-
 from models.attendance import Attendance
 from models.event import Event
 from models.event_external import EventExternal
@@ -12,7 +10,6 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from services.event_text_service import format_attendance_body, format_attendance_text
-
 
 # ---------------------------------------------------------------------------
 # format_attendance_body
