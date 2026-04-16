@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # Must be a mailto: or https: URI — required by the Web Push protocol
     VAPID_SUBJECT: str = "mailto:admin@promanager.local"
 
+    # ── Backup ────────────────────────────────────────────────────────────
+    # Number of daily backup files to keep (older ones are pruned automatically)
+    BACKUP_KEEP_DAYS: int = 7
+
     # ── Telegram Bot ──────────────────────────────────────────────────────
     # Get token from @BotFather on Telegram
     TELEGRAM_BOT_TOKEN: str = ""

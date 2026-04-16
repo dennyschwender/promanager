@@ -126,19 +126,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         )
 
     # ── Background scheduler ──────────────────────────────────────────────
-    from services.scheduler import reminder_loop  # noqa: PLC0415
+    from services.scheduler import backup_loop, reminder_loop  # noqa: PLC0415
 
-    _scheduler_task = asyncio.create_task(reminder_loop())
+    _reminder_task = asyncio.create_task(reminder_loop())
+    _backup_task = asyncio.create_task(backup_loop())
 
     yield
 
     logger.info("Shutting down.")
     shutdown_event.set()
-    _scheduler_task.cancel()
-    try:
-        await _scheduler_task
-    except asyncio.CancelledError:
-        pass
+    for _task in (_reminder_task, _backup_task):
+        _task.cancel()
+        try:
+            await _task
+        except asyncio.CancelledError:
+            pass
 
     # ── Telegram Bot shutdown ─────────────────────────────────────────────
     try:

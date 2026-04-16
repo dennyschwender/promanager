@@ -151,3 +151,33 @@ def test_send_due_reminders_skips_far_future_events(db):
 
     assert count == 0
     mock_send.assert_not_called()
+
+
+def test_backup_database_creates_file(tmp_path, monkeypatch):
+    """backup_database() creates a timestamped copy in data/backups/."""
+    import os
+    from services.scheduler import backup_database
+
+    # Create a fake SQLite file
+    db_file = tmp_path / "proManager.db"
+    db_file.write_bytes(b"SQLite fake")
+
+    monkeypatch.setattr("app.config.settings.DATABASE_URL", f"sqlite:///{db_file}")
+    monkeypatch.setattr("app.config.settings.BACKUP_KEEP_DAYS", 7)
+
+    result = backup_database()
+
+    assert result is not None
+    assert os.path.isfile(result)
+    assert "proManager_" in os.path.basename(result)
+
+
+def test_backup_database_skips_non_sqlite(monkeypatch):
+    """backup_database() returns None and logs a debug message for non-SQLite URLs."""
+    from services.scheduler import backup_database
+
+    monkeypatch.setattr("app.config.settings.DATABASE_URL", "postgresql://user:pass@host/db")
+
+    result = backup_database()
+
+    assert result is None
