@@ -1,7 +1,5 @@
 """Tests that users routes call new send functions (not raw send_email)."""
-import pytest
 from unittest.mock import patch
-from tests.conftest import *  # noqa: F401,F403
 
 
 def test_register_calls_send_welcome_email(admin_client, db):

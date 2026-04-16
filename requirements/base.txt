@@ -115,7 +115,7 @@ python-dotenv==1.2.2
     #   uvicorn
 python-i18n[yaml]==0.3.9
     # via -r /home/denny/Development/promanager/requirements/base.in
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via -r /home/denny/Development/promanager/requirements/base.in
 python-telegram-bot==22.7
     # via -r /home/denny/Development/promanager/requirements/base.in

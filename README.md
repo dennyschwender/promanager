@@ -12,7 +12,7 @@ A self-hosted **player presence and absence tracker** for sports teams. ProManag
 - Automatic attendance record creation when events are created
 - Real-time event chat with SSE push (announcements + discussion lanes)
 - Telegram bot — mark attendance, view events, add notes, reply to chat
-- Multi-channel notifications: email reminders, in-app, and web push
+- Multi-channel notifications: email reminders (with magic login links), in-app, and web push
 - Season and player attendance reports
 - User management with player linking (one-to-one)
 - Role-based access: **admin** (full CRUD), **coach** (own teams), **member** (own attendance)
@@ -119,6 +119,7 @@ The script prints the new user's ID on success, or an error if the username alre
 | `SMTP_PASSWORD` | *(empty)* | SMTP authentication password. |
 | `SMTP_FROM` | `noreply@promanager.local` | From address for outgoing emails. |
 | `APP_NAME` | `ProManager` | Display name shown in the browser title and emails. |
+| `APP_URL` | `http://localhost:7000` | Public base URL of the app (e.g. `https://myserver.com`). Used to generate magic login links in emails. Magic links are omitted from emails when this is left as the default localhost value. |
 | `REMINDER_HOURS_BEFORE` | `24` | Hours before an event to send reminder emails. |
 | `COOKIE_SECURE` | `False` | Set `True` when serving over HTTPS (marks session cookie Secure). |
 | `DEBUG` | `False` | Raises `KeyError` on missing i18n translation keys (development aid). |
@@ -176,9 +177,11 @@ Enable the bot by setting `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_URL` in `.e
 ### Notifications
 
 ProManager delivers notifications through three channels (configurable per user):
-- **Email** — event reminders N hours before an event (see `REMINDER_HOURS_BEFORE`)
+- **Email** — event reminders and attendance requests use Jinja2 HTML templates. Emails optionally include a **magic login link** (one-click sign-in valid for 48 hours) when `APP_URL` is set to a public URL.
 - **In-app** — unread count shown in the nav bar
 - **Web push** — browser push notifications (requires VAPID keys)
+
+Email types: event reminders, attendance requests, welcome (on account creation), password reset, and general notifications.
 
 ### Reports
 
