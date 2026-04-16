@@ -129,6 +129,9 @@ def test_is_date_in_absence_recurring_expired(db: Session):
 
 def test_apply_absence_to_future_events_period(db: Session):
     """Creating a period absence should auto-set matching future events to absent."""
+    from datetime import timedelta
+    today = date.today()
+
     player = Player(first_name="David", last_name="Test", is_active=True)
     db.add(player)
     db.commit()
@@ -137,7 +140,7 @@ def test_apply_absence_to_future_events_period(db: Session):
     db.add(team)
     db.commit()
 
-    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    season = Season(name="Spring 2026", start_date=today, end_date=today + timedelta(days=90))
     db.add(season)
     db.commit()
 
@@ -146,71 +149,54 @@ def test_apply_absence_to_future_events_period(db: Session):
     db.add(pm)
     db.commit()
 
-    # Create events
-    e1 = Event(
-        title="Event 1",
-        event_date=date(2026, 4, 10),
-        team_id=team.id,
-        season_id=season.id,
-        presence_type="normal",
-    )
-    e2 = Event(
-        title="Event 2",
-        event_date=date(2026, 4, 15),
-        team_id=team.id,
-        season_id=season.id,
-        presence_type="normal",
-    )
-    e3 = Event(
-        title="Event 3",
-        event_date=date(2026, 5, 1),
-        team_id=team.id,
-        season_id=season.id,
-        presence_type="normal",
-    )
+    # Create events: two within absence window, one outside
+    d_in1 = today + timedelta(days=2)
+    d_in2 = today + timedelta(days=5)
+    d_out = today + timedelta(days=20)
+
+    e1 = Event(title="Event 1", event_date=d_in1, team_id=team.id, season_id=season.id, presence_type="normal")
+    e2 = Event(title="Event 2", event_date=d_in2, team_id=team.id, season_id=season.id, presence_type="normal")
+    e3 = Event(title="Event 3", event_date=d_out, team_id=team.id, season_id=season.id, presence_type="normal")
     db.add_all([e1, e2, e3])
     db.commit()
 
-    # Ensure attendance records exist (manually create them for this test)
     for event in [e1, e2, e3]:
         att = Attendance(event_id=event.id, player_id=player.id, status="unknown")
         db.add(att)
     db.commit()
 
-    # Create absence April 10-20
+    # Absence covers d_in1 and d_in2 but not d_out
     absence = PlayerAbsence(
         player_id=player.id,
         absence_type="period",
-        start_date=date(2026, 4, 10),
-        end_date=date(2026, 4, 20),
+        start_date=today + timedelta(days=1),
+        end_date=today + timedelta(days=10),
         reason="Vacation",
     )
     db.add(absence)
     db.commit()
 
-    # Apply absence
     count = apply_absence_to_future_events(player.id, db)
 
-    # Check results
     assert count == 2  # e1 and e2 should be updated
 
-    # Verify e1 (April 10) is set to absent
     att1 = db.query(Attendance).filter_by(event_id=e1.id, player_id=player.id).first()
     assert att1.status == "absent"
     assert "[Absence]" in att1.note
     assert "Vacation" in att1.note
 
-    # Verify e2 (April 15) is set to absent
     att2 = db.query(Attendance).filter_by(event_id=e2.id, player_id=player.id).first()
     assert att2.status == "absent"
 
-    # Verify e3 (May 1) is NOT changed
     att3 = db.query(Attendance).filter_by(event_id=e3.id, player_id=player.id).first()
     assert att3.status == "unknown"
 
 
 def test_apply_absence_respects_all_presence_type(db: Session):
     """Absence should override presence_type='all' (auto-present default)."""
+    from datetime import timedelta
+    today = date.today()
+
     player = Player(first_name="Eve", last_name="Test", is_active=True)
     db.add(player)
     db.commit()
@@ -219,7 +205,7 @@ def test_apply_absence_respects_all_presence_type(db: Session):
     db.add(team)
     db.commit()
 
-    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    season = Season(name="Spring 2026", start_date=today, end_date=today + timedelta(days=90))
     db.add(season)
     db.commit()
 
@@ -227,10 +213,11 @@ def test_apply_absence_respects_all_presence_type(db: Session):
     db.add(pm)
     db.commit()
 
-    # Event with presence_type="all" (everyone present by default)
+    future_date = today + timedelta(days=5)
+
     event = Event(
         title="AllAttendee Event",
-        event_date=date(2026, 4, 15),
+        event_date=future_date,
         team_id=team.id,
         season_id=season.id,
         presence_type="all",
@@ -238,26 +225,22 @@ def test_apply_absence_respects_all_presence_type(db: Session):
     db.add(event)
     db.commit()
 
-    # Create attendance with status="present" (from all-attendee default)
     att = Attendance(event_id=event.id, player_id=player.id, status="present")
     db.add(att)
     db.commit()
 
-    # Create absence covering this date
     absence = PlayerAbsence(
         player_id=player.id,
         absence_type="period",
-        start_date=date(2026, 4, 10),
-        end_date=date(2026, 4, 20),
+        start_date=today + timedelta(days=1),
+        end_date=today + timedelta(days=10),
         reason="Vacation",
     )
     db.add(absence)
     db.commit()
 
-    # Apply absence
     count = apply_absence_to_future_events(player.id, db)
 
-    # Should have updated the auto-present to absent
     assert count == 1
     att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
     assert att_refreshed.status == "absent"

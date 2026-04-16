@@ -180,7 +180,7 @@ def test_coach_can_create_absence_for_team_player(client, db):
     from services.auth_service import create_user, create_session_cookie
 
     # Create a coach user
-    coach_user = create_user(db, "coach", "coach@test.com", "coachpass", role="coach")
+    coach_user = create_user(db, "coach", "coach@test.com", "coachpass", role="coach", must_change_password=False)
 
     # Create a team and season
     team = Team(name="Team A")
