@@ -18,9 +18,81 @@ from models.team import Team
 from models.user import User
 from routes._auth_helpers import NotAuthorized, require_admin, rt
 from services import email_service
-from services.auth_service import hash_password
+from services.auth_service import create_magic_link, hash_password
+from services.email_service import send_reset_email, send_welcome_email
 
 router = APIRouter()
+
+
+@router.get("/register", dependencies=[Depends(require_admin)])
+async def register_get(request: Request):
+    from models.user import User as _User  # noqa: F401
+    return render(request, "auth/register.html", {"user": request.state.user, "error": None, "flash": None})
+
+
+@router.post("/register", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def register_post(
+    request: Request,
+    db: Session = Depends(get_db),
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    role: str = Form("member"),
+    phone: str = Form(""),
+    locale: str = Form("en"),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+):
+    from services.auth_service import create_user, get_user_by_email, get_user_by_username
+
+    username = username.strip()
+    email = email.strip()
+
+    def error(msg: str):
+        return render(
+            request,
+            "auth/register.html",
+            {"user": request.state.user, "error": msg, "flash": None},
+            status_code=400,
+        )
+
+    if role not in {"admin", "coach", "member"}:
+        return error(rt(request, "errors.invalid_role"))
+    if get_user_by_username(db, username):
+        return error(rt(request, "errors.username_taken", username=username))
+    if get_user_by_email(db, email):
+        return error(rt(request, "errors.email_taken", email=email))
+    if len(password) < 8:
+        return error(rt(request, "errors.password_too_short"))
+
+    new_user = create_user(
+        db,
+        username=username,
+        email=email,
+        password=password,
+        role=role,
+        phone=phone or None,
+        locale=locale or None,
+        first_name=first_name or None,
+        last_name=last_name or None,
+    )
+    magic = create_magic_link(new_user.id, "/dashboard")
+    send_welcome_email(
+        to=new_user.email,
+        username=new_user.username,
+        password=password,
+        locale=new_user.locale or "en",
+        magic_link=magic,
+    )
+    return render(
+        request,
+        "auth/register.html",
+        {
+            "user": request.state.user,
+            "error": None,
+            "flash": f"User '{username}' created successfully.",
+        },
+    )
 
 
 @router.get("", dependencies=[Depends(require_admin)])
@@ -393,19 +465,13 @@ async def reset_password(
     target.hashed_password = hash_password(new_pw)
     db.commit()
 
-    email_service.send_email(
+    magic = create_magic_link(target.id, "/dashboard")
+    send_reset_email(
         to=target.email,
-        subject=rt(request, "users.email_subject"),
-        body_html=(
-            f"<p>{rt(request, 'users.reset_email_body')}<br>"
-            f"Username: <strong>{target.username}</strong><br>"
-            f"Password: <strong>{new_pw}</strong></p>"
-        ),
-        body_text=(
-            f"{rt(request, 'users.reset_email_body')}\n"
-            f"Username: {target.username}\n"
-            f"Password: {new_pw}"
-        ),
+        username=target.username,
+        password=new_pw,
+        locale=target.locale or "en",
+        magic_link=magic,
     )
 
     return RedirectResponse("/auth/users?reset=1", status_code=302)
