@@ -125,10 +125,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "Telegram bot not configured (TELEGRAM_BOT_TOKEN/TELEGRAM_WEBHOOK_URL/TELEGRAM_WEBHOOK_SECRET not set)."
         )
 
+    # ── Background scheduler ──────────────────────────────────────────────
+    from services.scheduler import reminder_loop  # noqa: PLC0415
+
+    _scheduler_task = asyncio.create_task(reminder_loop())
+
     yield
 
     logger.info("Shutting down.")
     shutdown_event.set()
+    _scheduler_task.cancel()
+    try:
+        await _scheduler_task
+    except asyncio.CancelledError:
+        pass
 
     # ── Telegram Bot shutdown ─────────────────────────────────────────────
     try:
