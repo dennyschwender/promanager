@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 def _strip_html(html: str) -> str:
     """Convert an HTML string to plain text by stripping tags."""
+    # Remove <head>...</head> so <title> doesn't duplicate the header text
+    html = re.sub(r"<head\b[^>]*>.*?</head>", "", html, flags=re.IGNORECASE | re.DOTALL)
     html = re.sub(r"<br\s*/?>", "\n", html, flags=re.IGNORECASE)
     html = re.sub(r"</(p|div|tr|li)>", "\n", html, flags=re.IGNORECASE)
     html = re.sub(r"<[^>]+>", "", html)
