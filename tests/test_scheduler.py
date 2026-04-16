@@ -108,6 +108,33 @@ def test_send_due_reminders_respects_email_preference(db):
     mock_send.assert_not_called()
 
 
+def test_send_due_reminders_respects_team_auto_reminders_flag(db):
+    """Reminder job skips events on teams that have auto_reminders=False."""
+    from models.team import Team
+    from services.scheduler import send_due_reminders
+
+    team = Team(name="Silent Team", auto_reminders=False)
+    db.add(team)
+    db.commit()
+    db.refresh(team)
+
+    player = _make_player(db, email="silent@test.com")
+    event = _make_event(db, days_ahead=0, has_time=False)
+    event.team_id = team.id
+    db.add(event)
+    db.commit()
+
+    att = Attendance(event_id=event.id, player_id=player.id, status="unknown")
+    db.add(att)
+    db.commit()
+
+    with patch("services.scheduler.send_event_reminder", return_value=True) as mock_send:
+        count = send_due_reminders()
+
+    assert count == 0
+    mock_send.assert_not_called()
+
+
 def test_send_due_reminders_skips_far_future_events(db):
     """Reminder job does not email for events outside the reminder window."""
     from services.scheduler import send_due_reminders

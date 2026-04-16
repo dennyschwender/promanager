@@ -33,6 +33,11 @@
   <label for="description">{{ t('teams_form.description') }}
     <textarea id="description" name="description">{{ team.description if team and team.description else '' }}</textarea>
   </label>
+  <label style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem;">
+    <input type="checkbox" id="auto_reminders" name="auto_reminders" value="on"
+           {% if team is none or team.auto_reminders %}checked{% endif %}>
+    {{ t('teams_form.auto_reminders') }}
+  </label>
 
   {# ── Confirmation warning ── #}
   {% if confirm_mode and flagged %}

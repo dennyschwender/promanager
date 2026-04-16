@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Integer, String
+from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -14,6 +14,7 @@ class Team(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    auto_reminders: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # ── Relationships ──────────────────────────────────────────────────────
     player_memberships: Mapped[list[PlayerTeam]] = relationship(

@@ -49,6 +49,10 @@ def send_due_reminders() -> int:
         )
 
         for event in events:
+            # Skip events whose team has auto_reminders disabled
+            if event.team_id and event.team and not event.team.auto_reminders:
+                continue
+
             # Precise time-based window check — only when event has a time set.
             # Events with no time use the date-level filter above; we don't skip
             # them based on time since we don't know when they happen.

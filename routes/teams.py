@@ -167,6 +167,7 @@ async def team_new_post(
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
+    auto_reminders: str = Form("on"),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -191,6 +192,7 @@ async def team_new_post(
     team = Team(
         name=name.strip(),
         description=description.strip() or None,
+        auto_reminders=auto_reminders == "on",
     )
     db.add(team)
     db.commit()
@@ -270,6 +272,7 @@ async def team_edit_post(
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
+    auto_reminders: str = Form(""),
     confirm_step: str = Form("", alias="_confirm_step"),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
@@ -310,6 +313,7 @@ async def team_edit_post(
     # Apply core team fields
     team.name = name.strip()
     team.description = description.strip() or None
+    team.auto_reminders = auto_reminders == "on"
 
     # ── CONFIRMATION POST ────────────────────────────────────────────────────
     if confirm_step == "1":

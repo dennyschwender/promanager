@@ -527,7 +527,8 @@
     "will_be_removed": "verrà rimosso",
     "events_deleted": "evento/i futuro/i verrebbe/ro eliminato/i",
     "no_future_events": "Nessun evento futuro da eliminare",
-    "no_season": "— Nessuna stagione —"
+    "no_season": "— Nessuna stagione —",
+    "auto_reminders": "Invia promemoria automatici via e-mail ai giocatori"
   },
   "teams_detail": {
     "meet_prefix": "Ritrovo",

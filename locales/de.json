@@ -527,7 +527,8 @@
     "will_be_removed": "wird entfernt",
     "events_deleted": "zukünftige Ereignis(se) würde(n) gelöscht",
     "no_future_events": "Keine zukünftigen Ereignisse zu löschen",
-    "no_season": "— Keine Saison —"
+    "no_season": "— Keine Saison —",
+    "auto_reminders": "Automatische E-Mail-Erinnerungen an Spieler senden"
   },
   "teams_detail": {
     "meet_prefix": "Treffen",
