@@ -328,7 +328,10 @@
     "reminder_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>This is a reminder for the upcoming event:</p><table><tr><td><strong>Event</strong></td><td>%{event_name}</td></tr><tr><td><strong>When</strong></td><td>%{when}</td></tr><tr><td><strong>Location</strong></td><td>%{location}</td></tr></table><p>Please update your attendance status.</p><p>Best regards,<br>%{app_name}</p>",
     "attendance_subject": "Please confirm attendance: %{event_name} on %{date}",
     "attendance_body": "Hi %{name},\n\nPlease confirm your attendance for:\n\n  Event: %{event_name}\n  Date:  %{date}\n\nUpdate your status here: %{url}\n\nBest regards,\n%{app_name}",
-    "attendance_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>Please confirm your attendance for <strong>%{event_name}</strong> on %{date}.</p><p><a href=\"%{url}\">Click here to update your attendance status</a></p><p>Best regards,<br>%{app_name}</p>"
+    "attendance_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>Please confirm your attendance for <strong>%{event_name}</strong> on %{date}.</p><p><a href=\"%{url}\">Click here to update your attendance status</a></p><p>Best regards,<br>%{app_name}</p>",
+    "welcome_subject": "Welcome to %{app_name}",
+    "reset_subject": "Your %{app_name} password has been reset",
+    "notification_subject": "%{title}"
   },
   "schedule": {
     "title": "Schedule",
@@ -797,12 +800,12 @@
     "chat_reply_button": "💬 Reply",
     "chat_reply_prompt": "Type your reply (or /cancel to abort):",
     "chat_reply_posted": "Your message was posted to the event discussion.",
-"other_button": "\u2699\ufe0f Other",
-    "absences_button": "\ud83d\udcc5 Absences",
-    "absences_header": "\ud83d\udcc5 Absences \u2014 %{name}",
+    "other_button": "⚙️ Other",
+    "absences_button": "📅 Absences",
+    "absences_header": "📅 Absences — %{name}",
     "absences_empty": "No absences registered.",
     "absence_add_button": "+ Add absence",
-    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_del_button": "🗑 %{dates}",
     "absence_start_prompt": "Enter start date (YYYY-MM-DD), or /cancel:",
     "absence_end_prompt": "Enter end date (YYYY-MM-DD), or /cancel:",
     "absence_reason_prompt": "Enter reason (optional), or /skip:",
@@ -812,10 +815,9 @@
     "absence_past_error": "Start date must be today or in the future:",
     "absence_range_error": "End date must be on or after start date:",
     "absence_confirm_del": "Delete this absence?",
-    "absence_confirm_yes": "\u2705 Yes, delete",
-    "absence_confirm_no": "\u274c No, keep",
+    "absence_confirm_yes": "✅ Yes, delete",
+    "absence_confirm_no": "❌ No, keep",
     "select_player": "Select a player:"
-
   },
   "chat": {
     "title": "Chat",

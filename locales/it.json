@@ -328,7 +328,10 @@
     "reminder_body_html": "<p>Ciao <strong>%{name}</strong>,</p><p>Ecco un promemoria per il prossimo evento:</p><table><tr><td><strong>Evento</strong></td><td>%{event_name}</td></tr><tr><td><strong>Quando</strong></td><td>%{when}</td></tr><tr><td><strong>Luogo</strong></td><td>%{location}</td></tr></table><p>Aggiorna la tua presenza.</p><p>Cordiali saluti,<br>%{app_name}</p>",
     "attendance_subject": "Conferma presenza: %{event_name} il %{date}",
     "attendance_body": "Ciao %{name},\n\nConferma la tua presenza per:\n\n  Evento: %{event_name}\n  Data:   %{date}\n\nAggiorna il tuo stato qui: %{url}\n\nCordiali saluti,\n%{app_name}",
-    "attendance_body_html": "<p>Ciao <strong>%{name}</strong>,</p><p>Conferma la tua presenza per <strong>%{event_name}</strong> il %{date}.</p><p><a href=\"%{url}\">Clicca qui per aggiornare la tua presenza</a></p><p>Cordiali saluti,<br>%{app_name}</p>"
+    "attendance_body_html": "<p>Ciao <strong>%{name}</strong>,</p><p>Conferma la tua presenza per <strong>%{event_name}</strong> il %{date}.</p><p><a href=\"%{url}\">Clicca qui per aggiornare la tua presenza</a></p><p>Cordiali saluti,<br>%{app_name}</p>",
+    "welcome_subject": "Benvenuto in %{app_name}",
+    "reset_subject": "La tua password %{app_name} è stata reimpostata",
+    "notification_subject": "%{title}"
   },
   "schedule": {
     "title": "Calendario",
@@ -797,12 +800,12 @@
     "chat_reply_button": "💬 Rispondi",
     "chat_reply_prompt": "Scrivi la tua risposta (o /cancel per annullare):",
     "chat_reply_posted": "Il tuo messaggio è stato pubblicato nella discussione dell'evento.",
-"other_button": "\u2699\ufe0f Altro",
-    "absences_button": "\ud83d\udcc5 Assenze",
-    "absences_header": "\ud83d\udcc5 Assenze \u2014 %{name}",
+    "other_button": "⚙️ Altro",
+    "absences_button": "📅 Assenze",
+    "absences_header": "📅 Assenze — %{name}",
     "absences_empty": "Nessuna assenza registrata.",
     "absence_add_button": "+ Aggiungi assenza",
-    "absence_del_button": "\ud83d\uddd1 %{dates}",
+    "absence_del_button": "🗑 %{dates}",
     "absence_start_prompt": "Inserisci la data di inizio (AAAA-MM-GG), o /cancel:",
     "absence_end_prompt": "Inserisci la data di fine (AAAA-MM-GG), o /cancel:",
     "absence_reason_prompt": "Inserisci il motivo (opzionale), o /skip:",
@@ -812,10 +815,9 @@
     "absence_past_error": "La data di inizio deve essere oggi o nel futuro:",
     "absence_range_error": "La data di fine deve essere uguale o successiva alla data di inizio:",
     "absence_confirm_del": "Eliminare questa assenza?",
-    "absence_confirm_yes": "\u2705 S\u00ec, elimina",
-    "absence_confirm_no": "\u274c No, mantieni",
+    "absence_confirm_yes": "✅ Sì, elimina",
+    "absence_confirm_no": "❌ No, mantieni",
     "select_player": "Seleziona un giocatore:"
-
   },
   "chat": {
     "title": "Chat",
