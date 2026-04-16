@@ -324,14 +324,12 @@
   },
   "email": {
     "reminder_subject": "Erinnerung: %{event_name} am %{date}",
-    "reminder_body": "Hallo %{name},\n\nErinnerung an den bevorstehenden Termin:\n\n  Termin: %{event_name}\n  Wann:   %{when}\n  Ort:    %{location}\n\nBitte aktualisieren Sie Ihren Anwesenheitsstatus.\n\nMit freundlichen Grüßen,\n%{app_name}",
-    "reminder_body_html": "<p>Hallo <strong>%{name}</strong>,</p><p>Erinnerung an den bevorstehenden Termin:</p><table><tr><td><strong>Termin</strong></td><td>%{event_name}</td></tr><tr><td><strong>Wann</strong></td><td>%{when}</td></tr><tr><td><strong>Ort</strong></td><td>%{location}</td></tr></table><p>Bitte aktualisieren Sie Ihren Anwesenheitsstatus.</p><p>Mit freundlichen Grüßen,<br>%{app_name}</p>",
     "attendance_subject": "Anwesenheit bestätigen: %{event_name} am %{date}",
-    "attendance_body": "Hallo %{name},\n\nBitte bestätigen Sie Ihre Anwesenheit für:\n\n  Termin: %{event_name}\n  Datum:  %{date}\n\nStatus hier aktualisieren: %{url}\n\nMit freundlichen Grüßen,\n%{app_name}",
-    "attendance_body_html": "<p>Hallo <strong>%{name}</strong>,</p><p>Bitte bestätigen Sie Ihre Anwesenheit für <strong>%{event_name}</strong> am %{date}.</p><p><a href=\"%{url}\">Hier klicken, um den Status zu aktualisieren</a></p><p>Mit freundlichen Grüßen,<br>%{app_name}</p>",
-    "welcome_subject": "Willkommen bei %{app_name}",
-    "reset_subject": "Ihr %{app_name}-Passwort wurde zurückgesetzt",
-    "notification_subject": "%{title}"
+    "welcome_subject": "Willkommen bei ProManager",
+    "reset_subject": "Ihr neues ProManager-Passwort",
+    "notification_subject": "{{ title }}",
+    "login_button": "Bei ProManager anmelden",
+    "footer": "Diese E-Mail wurde von {{ app_name }} gesendet."
   },
   "schedule": {
     "title": "Spielplan",
@@ -360,7 +358,6 @@
     "skipped_count": "{count} übersprungen (bereits verknüpft oder E-Mail in Verwendung)",
     "email_failed_count": "{count} E-Mail-Zustellungsfehler",
     "back_to_users": "Zurück zu Benutzern",
-    "email_subject": "Ihr ProManager-Konto",
     "delete_confirm": "Benutzer %{username} löschen?",
     "delete_confirm_user": "Benutzer %{username} löschen?",
     "edit_title": "Benutzer bearbeiten",
@@ -381,8 +378,7 @@
     "no_linked_player": "Kein Spieler verknüpft.",
     "reset_password": "Passwort zurücksetzen & E-Mail senden",
     "reset_password_confirm": "Passwort für %{username} zurücksetzen und neue Zugangsdaten per E-Mail senden?",
-    "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet.",
-    "reset_email_body": "Ihr Passwort wurde zurückgesetzt. Neue Zugangsdaten:"
+    "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet."
   },
   "players_form": {
     "basic_info": "Grunddaten",

@@ -324,14 +324,12 @@
   },
   "email": {
     "reminder_subject": "Promemoria: %{event_name} il %{date}",
-    "reminder_body": "Ciao %{name},\n\nEcco un promemoria per il prossimo evento:\n\n  Evento:  %{event_name}\n  Quando:  %{when}\n  Luogo:   %{location}\n\nRicordati di aggiornare la tua presenza.\n\nCordiali saluti,\n%{app_name}",
-    "reminder_body_html": "<p>Ciao <strong>%{name}</strong>,</p><p>Ecco un promemoria per il prossimo evento:</p><table><tr><td><strong>Evento</strong></td><td>%{event_name}</td></tr><tr><td><strong>Quando</strong></td><td>%{when}</td></tr><tr><td><strong>Luogo</strong></td><td>%{location}</td></tr></table><p>Aggiorna la tua presenza.</p><p>Cordiali saluti,<br>%{app_name}</p>",
     "attendance_subject": "Conferma presenza: %{event_name} il %{date}",
-    "attendance_body": "Ciao %{name},\n\nConferma la tua presenza per:\n\n  Evento: %{event_name}\n  Data:   %{date}\n\nAggiorna il tuo stato qui: %{url}\n\nCordiali saluti,\n%{app_name}",
-    "attendance_body_html": "<p>Ciao <strong>%{name}</strong>,</p><p>Conferma la tua presenza per <strong>%{event_name}</strong> il %{date}.</p><p><a href=\"%{url}\">Clicca qui per aggiornare la tua presenza</a></p><p>Cordiali saluti,<br>%{app_name}</p>",
-    "welcome_subject": "Benvenuto in %{app_name}",
-    "reset_subject": "La tua password %{app_name} è stata reimpostata",
-    "notification_subject": "%{title}"
+    "welcome_subject": "Benvenuto su ProManager",
+    "reset_subject": "La tua nuova password ProManager",
+    "notification_subject": "{{ title }}",
+    "login_button": "Accedi a ProManager",
+    "footer": "Questa email è stata inviata da {{ app_name }}."
   },
   "schedule": {
     "title": "Calendario",
@@ -360,7 +358,6 @@
     "skipped_count": "{count} saltato/i (già collegato o email in uso)",
     "email_failed_count": "{count} errore/i di consegna email",
     "back_to_users": "Torna agli utenti",
-    "email_subject": "Il tuo account ProManager",
     "delete_confirm": "Eliminare l'utente %{username}?",
     "delete_confirm_user": "Eliminare l'utente %{username}?",
     "edit_title": "Modifica utente",
@@ -381,8 +378,7 @@
     "no_linked_player": "Nessun giocatore collegato.",
     "reset_password": "Reimposta password & invia email",
     "reset_password_confirm": "Reimpostare la password per %{username} e inviare le nuove credenziali per email?",
-    "reset_password_sent": "Password reimpostata ed email inviata con successo.",
-    "reset_email_body": "La tua password è stata reimpostata. Nuove credenziali:"
+    "reset_password_sent": "Password reimpostata ed email inviata con successo."
   },
   "players_form": {
     "basic_info": "Informazioni di base",

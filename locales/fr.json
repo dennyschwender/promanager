@@ -324,14 +324,12 @@
   },
   "email": {
     "reminder_subject": "Rappel : %{event_name} le %{date}",
-    "reminder_body": "Bonjour %{name},\n\nCeci est un rappel pour l'événement à venir :\n\n  Événement : %{event_name}\n  Quand :     %{when}\n  Lieu :      %{location}\n\nPensez à mettre à jour votre statut de présence.\n\nCordialement,\n%{app_name}",
-    "reminder_body_html": "<p>Bonjour <strong>%{name}</strong>,</p><p>Ceci est un rappel pour l'événement à venir :</p><table><tr><td><strong>Événement</strong></td><td>%{event_name}</td></tr><tr><td><strong>Quand</strong></td><td>%{when}</td></tr><tr><td><strong>Lieu</strong></td><td>%{location}</td></tr></table><p>Mettez à jour votre statut de présence.</p><p>Cordialement,<br>%{app_name}</p>",
     "attendance_subject": "Confirmation de présence : %{event_name} le %{date}",
-    "attendance_body": "Bonjour %{name},\n\nConfirmez votre présence pour :\n\n  Événement : %{event_name}\n  Date :      %{date}\n\nMettez à jour votre statut ici : %{url}\n\nCordialement,\n%{app_name}",
-    "attendance_body_html": "<p>Bonjour <strong>%{name}</strong>,</p><p>Confirmez votre présence pour <strong>%{event_name}</strong> le %{date}.</p><p><a href=\"%{url}\">Cliquez ici pour mettre à jour votre statut</a></p><p>Cordialement,<br>%{app_name}</p>",
-    "welcome_subject": "Bienvenue sur %{app_name}",
-    "reset_subject": "Votre mot de passe %{app_name} a été réinitialisé",
-    "notification_subject": "%{title}"
+    "welcome_subject": "Bienvenue sur ProManager",
+    "reset_subject": "Votre nouveau mot de passe ProManager",
+    "notification_subject": "{{ title }}",
+    "login_button": "Se connecter à ProManager",
+    "footer": "Cet e-mail a été envoyé par {{ app_name }}."
   },
   "schedule": {
     "title": "Calendrier",
@@ -360,7 +358,6 @@
     "skipped_count": "{count} ignoré(s) (déjà lié ou email déjà utilisé)",
     "email_failed_count": "{count} échec(s) d'envoi d'email",
     "back_to_users": "Retour aux utilisateurs",
-    "email_subject": "Votre compte ProManager",
     "delete_confirm": "Supprimer l'utilisateur %{username} ?",
     "delete_confirm_user": "Supprimer l'utilisateur %{username} ?",
     "edit_title": "Modifier l'utilisateur",
@@ -381,8 +378,7 @@
     "no_linked_player": "Aucun joueur lié.",
     "reset_password": "Réinitialiser le mot de passe & envoyer par email",
     "reset_password_confirm": "Réinitialiser le mot de passe de %{username} et envoyer les nouveaux identifiants par email?",
-    "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès.",
-    "reset_email_body": "Votre mot de passe a été réinitialisé. Nouveaux identifiants :"
+    "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès."
   },
   "players_form": {
     "basic_info": "Informations de base",

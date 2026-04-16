@@ -324,14 +324,12 @@
   },
   "email": {
     "reminder_subject": "Reminder: %{event_name} on %{date}",
-    "reminder_body": "Hi %{name},\n\nThis is a reminder for the upcoming event:\n\n  Event:    %{event_name}\n  When:     %{when}\n  Location: %{location}\n\nPlease make sure to update your attendance status.\n\nBest regards,\n%{app_name}",
-    "reminder_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>This is a reminder for the upcoming event:</p><table><tr><td><strong>Event</strong></td><td>%{event_name}</td></tr><tr><td><strong>When</strong></td><td>%{when}</td></tr><tr><td><strong>Location</strong></td><td>%{location}</td></tr></table><p>Please update your attendance status.</p><p>Best regards,<br>%{app_name}</p>",
     "attendance_subject": "Please confirm attendance: %{event_name} on %{date}",
-    "attendance_body": "Hi %{name},\n\nPlease confirm your attendance for:\n\n  Event: %{event_name}\n  Date:  %{date}\n\nUpdate your status here: %{url}\n\nBest regards,\n%{app_name}",
-    "attendance_body_html": "<p>Hi <strong>%{name}</strong>,</p><p>Please confirm your attendance for <strong>%{event_name}</strong> on %{date}.</p><p><a href=\"%{url}\">Click here to update your attendance status</a></p><p>Best regards,<br>%{app_name}</p>",
-    "welcome_subject": "Welcome to %{app_name}",
-    "reset_subject": "Your %{app_name} password has been reset",
-    "notification_subject": "%{title}"
+    "welcome_subject": "Welcome to ProManager",
+    "reset_subject": "Your new ProManager password",
+    "notification_subject": "{{ title }}",
+    "login_button": "Log in to ProManager",
+    "footer": "This email was sent by {{ app_name }}."
   },
   "schedule": {
     "title": "Schedule",
@@ -360,7 +358,6 @@
     "skipped_count": "{count} skipped (already linked or email already in use)",
     "email_failed_count": "{count} email delivery failure(s)",
     "back_to_users": "Back to users",
-    "email_subject": "Your ProManager account",
     "delete_confirm": "Delete user %{username}?",
     "delete_confirm_user": "Delete user %{username}?",
     "edit_title": "Edit User",
@@ -381,8 +378,7 @@
     "no_linked_player": "No player linked.",
     "reset_password": "Reset password & send email",
     "reset_password_confirm": "Reset password for %{username} and send new credentials by email?",
-    "reset_password_sent": "Password reset and email sent successfully.",
-    "reset_email_body": "Your password has been reset. New credentials:"
+    "reset_password_sent": "Password reset and email sent successfully."
   },
   "players_form": {
     "basic_info": "Basic Info",
