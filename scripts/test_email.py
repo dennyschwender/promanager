@@ -41,8 +41,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
 
 from app.database import SessionLocal, init_db
-from app.i18n import t
-from services.email_service import send_attendance_request, send_email, send_event_reminder
+from services.auth_service import create_magic_link
+from services.email_service import (
+    send_attendance_request,
+    send_event_reminder,
+    send_notification_email,
+    send_reset_email,
+    send_welcome_email,
+)
 
 # ---------------------------------------------------------------------------
 # Fake defaults
@@ -58,7 +64,7 @@ FAKE_EVENT_LOCATION = "Test Arena"
 FAKE_ATTENDANCE_URL = "http://localhost:7000/events/1"
 FAKE_NOTIFICATION_TITLE = "Test Notification"
 FAKE_NOTIFICATION_BODY = "This is a test notification sent from the test_email script."
-FAKE_NOTIFICATION_TAG = "test"
+FAKE_USER_ID = 0  # sentinel — create_magic_link returns None for localhost APP_URL
 
 
 def main() -> None:
@@ -85,6 +91,7 @@ def main() -> None:
     event_time = FAKE_EVENT_TIME
     event_location = FAKE_EVENT_LOCATION
     attendance_url = FAKE_ATTENDANCE_URL
+    user_id = FAKE_USER_ID
 
     if args.player_id or args.event_id or args.user_id:
         from models.event import Event
@@ -119,12 +126,14 @@ def main() -> None:
                     sys.exit(1)
                 player_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.username
                 username = user.username
+                user_id = user.id
                 print(f"Using user: {username}")
 
     locale = args.locale
     print(f"Sending '{args.type}' email to {args.to} (locale={locale}) ...")
 
     if args.type == "reminder":
+        magic_link = create_magic_link(user_id, f"/events/{args.event_id or 1}")
         ok = send_event_reminder(
             player_email=args.to,
             player_name=player_name,
@@ -133,9 +142,11 @@ def main() -> None:
             event_time=event_time,
             event_location=event_location,
             locale=locale,
+            magic_link=magic_link,
         )
 
     elif args.type == "attendance":
+        magic_link = create_magic_link(user_id, f"/events/{args.event_id or 1}")
         ok = send_attendance_request(
             player_email=args.to,
             player_name=player_name,
@@ -143,43 +154,38 @@ def main() -> None:
             event_date=event_date,
             attendance_url=attendance_url,
             locale=locale,
+            magic_link=magic_link,
         )
 
     elif args.type == "welcome":
-        subject = t("users.email_subject", locale)
-        body_html = (
-            f"<p>Your account has been created.<br>"
-            f"Username: <strong>{username}</strong><br>"
-            f"Password: <strong>{FAKE_PASSWORD}</strong></p>"
+        magic_link = create_magic_link(user_id, "/dashboard")
+        ok = send_welcome_email(
+            to=args.to,
+            username=username,
+            password=FAKE_PASSWORD,
+            locale=locale,
+            magic_link=magic_link,
         )
-        body_text = (
-            f"Your account has been created.\n"
-            f"Username: {username}\n"
-            f"Password: {FAKE_PASSWORD}"
-        )
-        ok = send_email(args.to, subject, body_html, body_text)
 
     elif args.type == "reset":
-        subject = t("users.email_subject", locale)
-        reset_body = t("users.reset_email_body", locale)
-        body_html = (
-            f"<p>{reset_body}<br>"
-            f"Username: <strong>{username}</strong><br>"
-            f"Password: <strong>{FAKE_PASSWORD}</strong></p>"
+        magic_link = create_magic_link(user_id, "/dashboard")
+        ok = send_reset_email(
+            to=args.to,
+            username=username,
+            password=FAKE_PASSWORD,
+            locale=locale,
+            magic_link=magic_link,
         )
-        body_text = (
-            f"{reset_body}\n"
-            f"Username: {username}\n"
-            f"Password: {FAKE_PASSWORD}"
-        )
-        ok = send_email(args.to, subject, body_html, body_text)
 
     elif args.type == "notification":
-        body_html = (
-            f"<p>{FAKE_NOTIFICATION_BODY.replace(chr(10), '<br>')}</p>"
-            f"<p><small>Tag: {FAKE_NOTIFICATION_TAG}</small></p>"
+        magic_link = create_magic_link(user_id, "/dashboard")
+        ok = send_notification_email(
+            to=args.to,
+            title=FAKE_NOTIFICATION_TITLE,
+            body=FAKE_NOTIFICATION_BODY,
+            locale=locale,
+            magic_link=magic_link,
         )
-        ok = send_email(args.to, FAKE_NOTIFICATION_TITLE, body_html, FAKE_NOTIFICATION_BODY)
 
     if ok:
         print("Done.")
