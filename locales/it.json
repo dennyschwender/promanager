@@ -327,9 +327,9 @@
     "attendance_subject": "Conferma presenza: %{event_name} il %{date}",
     "welcome_subject": "Benvenuto su ProManager",
     "reset_subject": "La tua nuova password ProManager",
-    "notification_subject": "{{ title }}",
+    "notification_subject": "%{title}",
     "login_button": "Accedi a ProManager",
-    "footer": "Questa email è stata inviata da {{ app_name }}."
+    "footer": "Questa email è stata inviata da %{app_name}."
   },
   "schedule": {
     "title": "Calendario",

@@ -327,9 +327,9 @@
     "attendance_subject": "Please confirm attendance: %{event_name} on %{date}",
     "welcome_subject": "Welcome to ProManager",
     "reset_subject": "Your new ProManager password",
-    "notification_subject": "{{ title }}",
+    "notification_subject": "%{title}",
     "login_button": "Log in to ProManager",
-    "footer": "This email was sent by {{ app_name }}."
+    "footer": "This email was sent by %{app_name}."
   },
   "schedule": {
     "title": "Schedule",
