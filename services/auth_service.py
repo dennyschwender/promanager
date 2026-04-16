@@ -85,6 +85,7 @@ def create_user(
     locale: str | None = None,
     first_name: str | None = None,
     last_name: str | None = None,
+    must_change_password: bool = True,
 ) -> User:
     user = User(
         username=username,
@@ -96,6 +97,7 @@ def create_user(
         locale=locale,
         first_name=first_name,
         last_name=last_name,
+        must_change_password=must_change_password,
     )
     db.add(user)
     db.commit()

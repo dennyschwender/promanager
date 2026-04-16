@@ -46,7 +46,13 @@
     "channel_push": "Browser-Benachrichtigung",
     "push_denied": "Berechtigung verweigert.",
     "push_failed": "Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
-    "push_not_supported": "Web Push wird in diesem Browser nicht unterstützt."
+    "push_not_supported": "Web Push wird in diesem Browser nicht unterstützt.",
+    "change_password_title": "Passwort ändern",
+    "change_password_intro": "Sie müssen ein neues Passwort festlegen, bevor Sie fortfahren können.",
+    "new_password": "Neues Passwort",
+    "confirm_password": "Neues Passwort bestätigen",
+    "change_password_submit": "Neues Passwort setzen",
+    "change_password_mismatch": "Passwörter stimmen nicht überein."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -46,7 +46,13 @@
     "channel_push": "Notification navigateur",
     "push_denied": "Permission refusée.",
     "push_failed": "Échec de l'abonnement. Veuillez réessayer.",
-    "push_not_supported": "Web Push n'est pas supporté par ce navigateur."
+    "push_not_supported": "Web Push n'est pas supporté par ce navigateur.",
+    "change_password_title": "Changer votre mot de passe",
+    "change_password_intro": "Vous devez définir un nouveau mot de passe avant de continuer.",
+    "new_password": "Nouveau mot de passe",
+    "confirm_password": "Confirmer le nouveau mot de passe",
+    "change_password_submit": "Définir le nouveau mot de passe",
+    "change_password_mismatch": "Les mots de passe ne correspondent pas."
   },
   "dashboard": {
     "title": "Tableau de bord",

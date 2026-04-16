@@ -247,7 +247,7 @@ def test_member_can_edit_own_player_from_detail(client, db):
     from models.player import Player
     from services.auth_service import create_session_cookie, create_user
 
-    member = create_user(db, "member_detail", "detail@test.com", "password1", role="member")
+    member = create_user(db, "member_detail", "detail@test.com", "password1", role="member", must_change_password=False)
     event = Event(title="Member Edit Event", event_type="training", event_date=date.today())
     db.add(event)
     db.commit()

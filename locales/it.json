@@ -46,7 +46,13 @@
     "channel_push": "Notifica browser",
     "push_denied": "Permesso negato.",
     "push_failed": "Iscrizione fallita. Riprova.",
-    "push_not_supported": "Web Push non è supportato in questo browser."
+    "push_not_supported": "Web Push non è supportato in questo browser.",
+    "change_password_title": "Cambia password",
+    "change_password_intro": "Devi impostare una nuova password prima di continuare.",
+    "new_password": "Nuova password",
+    "confirm_password": "Conferma nuova password",
+    "change_password_submit": "Imposta nuova password",
+    "change_password_mismatch": "Le password non corrispondono."
   },
   "dashboard": {
     "title": "Pannello",

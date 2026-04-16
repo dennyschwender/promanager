@@ -46,7 +46,13 @@
     "channel_push": "Browser push",
     "push_denied": "Permission denied.",
     "push_failed": "Failed to subscribe. Please try again.",
-    "push_not_supported": "Web Push is not supported in this browser."
+    "push_not_supported": "Web Push is not supported in this browser.",
+    "change_password_title": "Change Your Password",
+    "change_password_intro": "You must set a new password before continuing.",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "change_password_submit": "Set New Password",
+    "change_password_mismatch": "Passwords do not match."
   },
   "dashboard": {
     "title": "Dashboard",

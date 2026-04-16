@@ -13,7 +13,7 @@ from services.notification_service import create_default_preferences
 
 @pytest.fixture()
 def player_with_user(db):
-    user = create_user(db, "puser", "p@test.com", "pass", role="member")
+    user = create_user(db, "puser", "p@test.com", "pass", role="member", must_change_password=False)
     player = Player(
         first_name="Test",
         last_name="Player",

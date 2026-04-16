@@ -144,8 +144,8 @@ def test_attendance_summary(db):
 def test_member_cannot_update_another_members_player(client, db):
     """A member may only update attendance for their own players."""
     # Create two members
-    user_a = create_user(db, "member_a", "a@test.com", "password1", role="member")
-    user_b = create_user(db, "member_b", "b@test.com", "password2", role="member")
+    user_a = create_user(db, "member_a", "a@test.com", "password1", role="member", must_change_password=False)
+    user_b = create_user(db, "member_b", "b@test.com", "password2", role="member", must_change_password=False)
 
     event = _make_event(db, title="Auth Boundary Event")
 

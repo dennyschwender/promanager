@@ -83,12 +83,12 @@ def csrf_client(db):
 
 @pytest.fixture()
 def admin_user(db):
-    return create_user(db, "admin", "admin@test.com", "adminpass", role="admin")
+    return create_user(db, "admin", "admin@test.com", "adminpass", role="admin", must_change_password=False)
 
 
 @pytest.fixture()
 def member_user(db):
-    return create_user(db, "member1", "member@test.com", "memberpass", role="member")
+    return create_user(db, "member1", "member@test.com", "memberpass", role="member", must_change_password=False)
 
 
 @pytest.fixture()

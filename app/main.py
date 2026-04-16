@@ -71,6 +71,17 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     )
             finally:
                 db.close()
+        # Force password change before any other page
+        _CHANGE_PW_PATH = "/auth/change-password"
+        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/healthz"}
+        if (
+            request.state.user is not None
+            and getattr(request.state.user, "must_change_password", False)
+            and request.url.path not in _CHANGE_PW_ALLOWED
+            and not request.url.path.startswith("/static")
+        ):
+            return RedirectResponse(_CHANGE_PW_PATH, status_code=302)
+
         response = await call_next(request)
         return response
 

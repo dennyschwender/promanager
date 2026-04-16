@@ -20,6 +20,7 @@ from services.auth_service import (
     create_user,
     get_user_by_email,
     get_user_by_username,
+    hash_password,
     verify_magic_link,
 )
 
@@ -179,3 +180,47 @@ async def magic_link_login(
         max_age=60 * 60 * 24 * 7,  # 7 days
     )
     return response
+
+
+# ---------------------------------------------------------------------------
+# Change password (forced on first login)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/change-password")
+async def change_password_get(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    user = request.state.user
+    if user is None:
+        return RedirectResponse("/auth/login", status_code=302)
+    return render(request, "auth/change_password.html", {"user": user, "error": None})
+
+
+@router.post("/change-password")
+async def change_password_post(
+    request: Request,
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    user = request.state.user
+    if user is None:
+        return RedirectResponse("/auth/login", status_code=302)
+
+    def _error(msg: str):
+        return render(request, "auth/change_password.html", {"user": user, "error": msg}, status_code=400)
+
+    if len(new_password) < 8:
+        return _error(rt(request, "errors.password_too_short"))
+    if new_password != confirm_password:
+        return _error(rt(request, "auth.change_password_mismatch"))
+
+    db_user = db.get(User, user.id)
+    db_user.hashed_password = hash_password(new_password)
+    db_user.must_change_password = False
+    db.commit()
+
+    return RedirectResponse("/dashboard", status_code=302)

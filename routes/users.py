@@ -225,6 +225,7 @@ async def bulk_create_post(
             email=player.email,
             hashed_password=hash_password(pw),
             role=role,
+            must_change_password=True,
         )
         db.add(new_user)
         db.flush()  # get new_user.id
@@ -463,6 +464,7 @@ async def reset_password(
 
     new_pw = secrets.token_urlsafe(12)
     target.hashed_password = hash_password(new_pw)
+    target.must_change_password = True
     db.commit()
 
     magic = create_magic_link(target.id, "/dashboard")

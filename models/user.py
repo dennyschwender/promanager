@@ -44,6 +44,9 @@ class User(Base):
     # Preferred UI locale — one of: en, it, fr, de
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
 
+    # Force password change on next login (set after account creation or password reset)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     # ── Relationships ──────────────────────────────────────────────────────
     players: Mapped[list[Player]] = relationship("Player", back_populates="user", lazy="select")
     managed_teams: Mapped[list["UserTeam"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
