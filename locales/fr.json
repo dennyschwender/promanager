@@ -432,7 +432,10 @@
     "player_field_readonly_tooltip": "Ce champ est géré par le joueur lié. Modifiez-le dans le profil du joueur.",
     "sync_from_players": "Synchroniser depuis les joueurs",
     "sync_confirm": "Cela écrasera le nom/email/téléphone des utilisateurs avec les données du joueur lié. Continuer ?",
-    "synced_from_players": "{count} utilisateur(s) synchronisé(s) depuis les profils joueurs."
+    "synced_from_players": "{count} utilisateur(s) synchronisé(s) depuis les profils joueurs.",
+    "coach_teams": "Affectations entraîneur",
+    "no_coach_teams": "Non affecté à aucune équipe.",
+    "all_seasons": "Toutes les saisons"
   },
   "players_form": {
     "basic_info": "Informations de base",

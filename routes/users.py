@@ -333,6 +333,9 @@ async def user_edit_get(
         q = q.filter(Player.id.in_(player_ids))
     unlinked_players = q.order_by(Player.last_name, Player.first_name).all()
 
+    from models.user_team import UserTeam
+    managed_teams = db.query(UserTeam).filter(UserTeam.user_id == user_id).all()
+
     return render(request, "auth/user_form.html", {
         "user": request.state.user,
         "target": target,
@@ -344,6 +347,7 @@ async def user_edit_get(
         "seasons": seasons,
         "selected_team_id": p_team_id,
         "selected_season_id": p_season_id,
+        "managed_teams": managed_teams,
     })
 
 
@@ -599,6 +603,41 @@ async def impersonate_user(
     response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
     response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
     return response
+
+
+@router.post("/{user_id}/add-team", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def user_add_team(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    team_id: int = Form(...),
+    season_id: str = Form(""),
+):
+    from models.user_team import UserTeam
+    target = db.get(User, user_id)
+    if target is None or target.role not in ("admin", "coach"):
+        return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
+    sid = int(season_id) if season_id.strip() else None
+    q = db.query(UserTeam).filter(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
+    q = q.filter(UserTeam.season_id.is_(None) if sid is None else UserTeam.season_id == sid)
+    if not q.first():
+        db.add(UserTeam(user_id=user_id, team_id=team_id, season_id=sid))
+        db.commit()
+    return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
+
+
+@router.post("/{user_id}/remove-team/{ut_id}", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def user_remove_team(
+    user_id: int,
+    ut_id: int,
+    db: Session = Depends(get_db),
+):
+    from models.user_team import UserTeam
+    ut = db.get(UserTeam, ut_id)
+    if ut and ut.user_id == user_id:
+        db.delete(ut)
+        db.commit()
+    return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
 
 
 @router.post("/sync-from-players", dependencies=[Depends(require_admin), Depends(require_csrf)])

@@ -432,7 +432,10 @@
     "player_field_readonly_tooltip": "This field is managed by the linked player. Edit it on the player profile.",
     "sync_from_players": "Sync from players",
     "sync_confirm": "This will overwrite user name/email/phone with data from their linked player. Continue?",
-    "synced_from_players": "{count} user(s) synced from player profiles."
+    "synced_from_players": "{count} user(s) synced from player profiles.",
+    "coach_teams": "Coach assignments",
+    "no_coach_teams": "Not assigned to any team.",
+    "all_seasons": "All seasons"
   },
   "players_form": {
     "basic_info": "Basic Info",

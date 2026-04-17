@@ -432,7 +432,10 @@
     "player_field_readonly_tooltip": "Dieses Feld wird vom verknüpften Spieler verwaltet. Im Spielerprofil bearbeiten.",
     "sync_from_players": "Von Spielern synchronisieren",
     "sync_confirm": "Name/E-Mail/Telefon der Benutzer werden mit den Daten des verknüpften Spielers überschrieben. Fortfahren?",
-    "synced_from_players": "{count} Benutzer aus Spielerprofilen synchronisiert."
+    "synced_from_players": "{count} Benutzer aus Spielerprofilen synchronisiert.",
+    "coach_teams": "Trainer-Zuweisungen",
+    "no_coach_teams": "Keinem Team zugewiesen.",
+    "all_seasons": "Alle Saisons"
   },
   "players_form": {
     "basic_info": "Grunddaten",
