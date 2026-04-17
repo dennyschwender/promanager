@@ -47,10 +47,14 @@
     <th>{{ t('events.title_col') }}</th>
     <th class="col-hide-mobile">{{ t('events.type') }}</th>
     <th class="col-hide-tablet">{{ t('events.location') }}</th>
+    {% if my_player_id %}<th>{{ t('dashboard.my_status') }}</th>{% endif %}
     {% if user %}<th>{{ t('events.actions') }}</th>{% endif %}
   </tr></thead>
   <tbody>
   {% for e in events %}
+    {% set att = my_attendance.get(e.id) if my_attendance is defined else none %}
+    {% set att_status = att.status if att else 'unknown' %}
+    {% set att_note = att.note if att and att.note else '' %}
     <tr>
       <td style="white-space:nowrap;">{{ e.event_date }}</td>
       <td class="col-hide-mobile" style="white-space:nowrap;">{{ e.meeting_time.strftime('%H:%M') if e.meeting_time else '—' }}</td>
@@ -61,6 +65,20 @@
       </td>
       <td class="col-hide-mobile"><span class="badge badge-{{ e.event_type }}">{{ enums.event_type.get(e.event_type, e.event_type|capitalize) }}</span></td>
       <td class="col-hide-tablet">{{ e.location or '—' }}</td>
+      {% if my_player_id %}
+      <td>
+        {% set status_labels = {'present': t('attendance.status_present'), 'absent': t('attendance.status_absent'), 'maybe': t('attendance.status_maybe'), 'unknown': t('attendance.status_unknown')} %}
+        {% if section == 'upcoming' %}
+        <button type="button" class="btn btn-sm evt-list-att-btn att-active-{{ att_status }}"
+                data-event-id="{{ e.id }}"
+                data-player-id="{{ my_player_id }}"
+                data-status="{{ att_status }}"
+                data-note="{{ att_note | e }}">{{ status_labels.get(att_status, att_status) }}</button>
+        {% else %}
+        <span class="badge badge-{{ att_status }}">{{ status_labels.get(att_status, att_status) }}</span>
+        {% endif %}
+      </td>
+      {% endif %}
       {% if user %}
       <td>
         <div class="action-dropdown">
@@ -150,4 +168,123 @@ function closeAll() {
   });
 }
 </script>
+
+{% if my_player_id %}
+<meta name="csrf-token-evtlist" content="{{ request.state.csrf_token }}">
+<style>
+.att-active-present { background: var(--tp-success, #27ae60); color: #fff; border-color: var(--tp-success, #27ae60); }
+.att-active-absent  { background: var(--tp-danger,  #c0392b); color: #fff; border-color: var(--tp-danger,  #c0392b); }
+.att-active-maybe   { background: var(--tp-warning, #f39c12); color: #fff; border-color: var(--tp-warning, #f39c12); }
+.att-active-unknown { background: var(--tp-secondary, #95a5a6); color: #fff; border-color: var(--tp-secondary, #95a5a6); }
+</style>
+<div id="evtlist-att-popover" class="att-popover att-popover-hidden">
+  <div class="pop-status-row">
+    {% for s, lbl in [('present', t('attendance.status_present')), ('absent', t('attendance.status_absent')), ('maybe', t('attendance.status_maybe')), ('unknown', t('attendance.status_unknown'))] %}
+    <button type="button" class="btn btn-sm btn-outline pop-status-btn" data-status="{{ s }}">{{ lbl }}</button>
+    {% endfor %}
+  </div>
+  <textarea id="evtlist-pop-note" class="pop-note" rows="2" placeholder="{{ t('attendance.note_placeholder') }}"></textarea>
+  <div id="evtlist-pop-error" class="pop-error pop-error-hidden"></div>
+  <div class="pop-actions">
+    <button type="button" class="btn btn-sm btn-outline" id="evtlist-pop-cancel">{{ t('common.cancel') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" id="evtlist-pop-save">{{ t('common.save') }}</button>
+  </div>
+</div>
+<script>
+(function () {
+  var CSRF = document.querySelector('meta[name="csrf-token-evtlist"]').getAttribute('content');
+  var STATUS_LABELS = {
+    'present': '{{ t("attendance.status_present") | e }}',
+    'absent':  '{{ t("attendance.status_absent") | e }}',
+    'maybe':   '{{ t("attendance.status_maybe") | e }}',
+    'unknown': '{{ t("attendance.status_unknown") | e }}'
+  };
+  var popover = document.getElementById('evtlist-att-popover');
+  var popNote = document.getElementById('evtlist-pop-note');
+  var popError = document.getElementById('evtlist-pop-error');
+  var popSave = document.getElementById('evtlist-pop-save');
+  var activeBtn = null;
+
+  function highlightStatus(status) {
+    popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+      b.classList.toggle('btn-primary', b.dataset.status === status);
+      b.classList.toggle('btn-outline', b.dataset.status !== status);
+    });
+  }
+
+  function openPopover(btn) {
+    var rect = btn.getBoundingClientRect();
+    popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    popover.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 260) + 'px';
+    popNote.value = btn.dataset.note || '';
+    popError.classList.add('pop-error-hidden');
+    highlightStatus(btn.dataset.status);
+    activeBtn = btn;
+    popSave.disabled = false;
+    popover.classList.remove('att-popover-hidden');
+  }
+
+  function closePopover() {
+    popover.classList.add('att-popover-hidden');
+    activeBtn = null;
+  }
+
+  document.querySelectorAll('.evt-list-att-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (activeBtn === btn && !popover.classList.contains('att-popover-hidden')) {
+        closePopover();
+      } else {
+        openPopover(btn);
+      }
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!popover.classList.contains('att-popover-hidden') && !popover.contains(e.target)) {
+      closePopover();
+    }
+  });
+
+  document.getElementById('evtlist-pop-cancel').addEventListener('click', closePopover);
+
+  popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+    b.addEventListener('click', function () { highlightStatus(b.dataset.status); });
+  });
+
+  popSave.addEventListener('click', function () {
+    if (!activeBtn) return;
+    var newStatus = popover.querySelector('.btn-primary.pop-status-btn');
+    if (!newStatus) return;
+    var status = newStatus.dataset.status;
+    var note = popNote.value;
+    var eventId = activeBtn.dataset.eventId;
+    var playerId = activeBtn.dataset.playerId;
+    popSave.disabled = true;
+    fetch('/attendance/' + eventId + '/' + playerId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': CSRF },
+      body: 'csrf_token=' + encodeURIComponent(CSRF) + '&status=' + encodeURIComponent(status) + '&note=' + encodeURIComponent(note)
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.ok) {
+        activeBtn.dataset.status = status;
+        activeBtn.dataset.note = note;
+        activeBtn.className = activeBtn.className.replace(/att-active-\w+/g, '').trim();
+        activeBtn.classList.add('att-active-' + status);
+        activeBtn.textContent = STATUS_LABELS[status] || status;
+        closePopover();
+      } else {
+        popError.textContent = '{{ t("common.save_error") | e }}';
+        popError.classList.remove('pop-error-hidden');
+        popSave.disabled = false;
+      }
+    }).catch(function () {
+      popError.textContent = '{{ t("common.save_error") | e }}';
+      popError.classList.remove('pop-error-hidden');
+      popSave.disabled = false;
+    });
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

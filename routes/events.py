@@ -175,6 +175,23 @@ async def events_list(
     seasons = db.query(Season).order_by(Season.name).all()
     teams = db.query(Team).order_by(Team.name).all()
 
+    # For members: fetch their attendance for all visible events
+    my_attendance: dict[int, Attendance] = {}
+    my_player_id: int | None = None
+    if user is not None and not user.is_admin and not user.is_coach:
+        my_player = db.query(Player).filter(
+            Player.user_id == user.id,
+            Player.archived_at.is_(None),
+        ).first()
+        if my_player:
+            my_player_id = my_player.id
+            all_event_ids = [e.id for e in upcoming] + [e.id for e in past]
+            records = db.query(Attendance).filter(
+                Attendance.event_id.in_(all_event_ids),
+                Attendance.player_id == my_player.id,
+            ).all()
+            my_attendance = {a.event_id: a for a in records}
+
     return render(
         request,
         "events/list.html",
@@ -193,6 +210,9 @@ async def events_list(
             "my_events": my_events,
             "coach_team_ids": get_coach_teams(user, db) if user and user.is_coach else set(),
             "flash": request.query_params.get("flash"),
+            "my_player_id": my_player_id,
+            "my_attendance": my_attendance,
+            "today": today,
         },
     )
 
