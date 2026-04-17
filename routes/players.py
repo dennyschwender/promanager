@@ -1218,9 +1218,11 @@ async def player_absences_list(
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
 
-    # Check authorization
-    if not current_user.is_admin and not (current_user.players and any(p.id == player_id for p in current_user.players)):
-        raise HTTPException(status_code=403, detail="Not authorized")
+    # Check authorization: admin, coach, or the linked user
+    if not current_user.is_admin and not current_user.is_coach:
+        owns = db.query(Player).filter(Player.id == player_id, Player.user_id == current_user.id).first()
+        if not owns:
+            raise HTTPException(status_code=403, detail="Not authorized")
 
     absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player_id).all()
     return render(
@@ -1246,9 +1248,11 @@ async def absence_form_new(
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
 
-    # Check authorization
-    if not current_user.is_admin and not (current_user.players and any(p.id == player_id for p in current_user.players)):
-        raise HTTPException(status_code=403, detail="Not authorized")
+    # Check authorization: admin, coach, or the linked user
+    if not current_user.is_admin and not current_user.is_coach:
+        owns = db.query(Player).filter(Player.id == player_id, Player.user_id == current_user.id).first()
+        if not owns:
+            raise HTTPException(status_code=403, detail="Not authorized")
 
     # Get current or next season
     season = db.query(Season).filter(Season.end_date >= date.today()).order_by(Season.start_date).first()
