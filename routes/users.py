@@ -26,6 +26,25 @@ from services.email_service import send_reset_email, send_welcome_email
 router = APIRouter()
 
 
+def _generate_username(db: Session, first_name: str | None, last_name: str | None, fallback: str) -> str:
+    """Build firstname.lastname username, falling back to email prefix, with collision suffix."""
+    import re
+    base = ""
+    if first_name and last_name:
+        base = f"{first_name.strip().lower()}.{last_name.strip().lower()}"
+    elif first_name or last_name:
+        base = (first_name or last_name).strip().lower()
+    if not base:
+        base = fallback.split("@")[0].lower()
+    base = re.sub(r"[^a-z0-9._-]", "", base)[:50] or "user"
+    candidate = base
+    suffix = 1
+    while db.query(User).filter(User.username == candidate).first():
+        candidate = f"{base}{suffix}"
+        suffix += 1
+    return candidate
+
+
 @router.get("/register", dependencies=[Depends(require_admin)])
 async def register_get(request: Request):
     from models.user import User as _User  # noqa: F401
@@ -225,12 +244,16 @@ async def bulk_create_post(
 
         # Create user
         pw = secrets.token_urlsafe(12)
+        username = _generate_username(db, player.first_name, player.last_name, player.email)
         new_user = User(
-            username=player.email,
+            username=username,
             email=player.email,
             hashed_password=hash_password(pw),
             role=role,
             locale=locale,
+            first_name=player.first_name,
+            last_name=player.last_name,
+            phone=player.phone,
             must_change_password=True,
         )
         db.add(new_user)
@@ -240,7 +263,7 @@ async def bulk_create_post(
         magic = create_magic_link(new_user.id, "/dashboard")
         sent = send_welcome_email(
             to=player.email,
-            username=player.email,
+            username=username,
             password=pw,
             locale=locale,
             magic_link=magic,
