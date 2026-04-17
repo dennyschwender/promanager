@@ -696,6 +696,7 @@ async def event_edit_post(
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
+    edit_scope: str = Form("single"),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -782,7 +783,12 @@ async def event_edit_post(
     # Capture old date to detect changes
     old_event_date = event.event_date
 
-    event.title = title.strip()
+    new_title = title.strip()
+    new_description = description.strip() or None
+    new_season_id = int(season_id) if season_id.strip() else None
+    new_team_id = int(team_id) if team_id.strip() else None
+
+    event.title = new_title
     event.event_type = event_type
     event.event_date = e_date
     event.event_time = e_time
@@ -792,10 +798,35 @@ async def event_edit_post(
     event.meeting_location = meeting_location.strip() or None
     event.presence_type = presence_type
     event.hide_attendance = bool(hide_attendance)
-    event.description = description.strip() or None
-    event.season_id = int(season_id) if season_id.strip() else None
-    event.team_id = int(team_id) if team_id.strip() else None
+    event.description = new_description
+    event.season_id = new_season_id
+    event.team_id = new_team_id
     db.add(event)
+
+    # Propagate non-date fields to this + all future events in the series
+    if edit_scope == "this_and_future" and event.recurrence_group_id:
+        db.query(Event).filter(
+            Event.recurrence_group_id == event.recurrence_group_id,
+            Event.event_date >= e_date,
+            Event.id != event_id,
+        ).update(
+            {
+                "title": new_title,
+                "event_type": event_type,
+                "event_time": e_time,
+                "event_end_time": e_end_time,
+                "location": location.strip() or None,
+                "meeting_time": m_time,
+                "meeting_location": meeting_location.strip() or None,
+                "presence_type": presence_type,
+                "hide_attendance": bool(hide_attendance),
+                "description": new_description,
+                "season_id": new_season_id,
+                "team_id": new_team_id,
+            },
+            synchronize_session="fetch",
+        )
+
     db.commit()
     # Sync existing attendance rows to the (possibly changed) presence_type
     sync_attendance_defaults(db, event)
@@ -803,9 +834,16 @@ async def event_edit_post(
     ensure_attendance_records(db, event)
     # If event date changed, re-evaluate attendance against active absences
     if old_event_date != e_date:
-        from services.absence_service import sync_attendance_to_absences_for_event
+        from services.absence_service import sync_attendance_to_absences_for_event  # noqa: PLC0415
         sync_attendance_to_absences_for_event(event_id, db)
-    log_action("event.update", target_type="event", target_id=event_id, target_label=old_title, request=request)
+    log_action(
+        "event.update",
+        target_type="event",
+        target_id=event_id,
+        target_label=old_title,
+        extra={"scope": edit_scope},
+        request=request,
+    )
     return RedirectResponse(f"/events/{event_id}", status_code=302)
 
 

@@ -629,7 +629,10 @@
     "hide_attendance_desc": "(Nur Admin und Coach können die Anwesenheitsliste sehen, wenn aktiviert)",
     "notify_section": "Spieler benachrichtigen",
     "notify_on_create": "Benachrichtigung an alle Spieler senden, wenn das Event erstellt wird",
-    "notify_channels": "Benachrichtigungskanäle"
+    "notify_channels": "Benachrichtigungskanäle",
+    "edit_scope_legend": "Änderungen anwenden auf",
+    "edit_scope_single": "Nur dieses Ereignis",
+    "edit_scope_future": "Dieses und alle %{count} zukünftigen Ereignisse der Serie"
   },
   "events_detail": {
     "season": "Saison",

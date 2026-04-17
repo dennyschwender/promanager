@@ -629,7 +629,10 @@
     "hide_attendance_desc": "(Only Admin and Coach can see the attendance list when enabled)",
     "notify_section": "Notify players",
     "notify_on_create": "Send notification to all players when event is created",
-    "notify_channels": "Notification channels"
+    "notify_channels": "Notification channels",
+    "edit_scope_legend": "Apply changes to",
+    "edit_scope_single": "This event only",
+    "edit_scope_future": "This and all %{count} future events in series"
   },
   "events_detail": {
     "season": "Season",

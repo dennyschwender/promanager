@@ -210,6 +210,22 @@
   </script>
   {% endif %}
 
+  {% if not is_new and event and event.recurrence_group_id and future_count > 0 %}
+  <fieldset>
+    <legend>{{ t('events_form.edit_scope_legend') }}</legend>
+    <label class="att-dialog-radio">
+      <input type="radio" name="edit_scope" value="single" checked>
+      {{ t('events_form.edit_scope_single') }}
+    </label>
+    <label class="att-dialog-radio">
+      <input type="radio" name="edit_scope" value="this_and_future">
+      {{ t('events_form.edit_scope_future', count=future_count) }}
+    </label>
+  </fieldset>
+  {% else %}
+  <input type="hidden" name="edit_scope" value="single">
+  {% endif %}
+
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
     <a href="/events" class="btn btn-outline">{{ t('common.cancel') }}</a>
