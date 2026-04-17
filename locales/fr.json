@@ -303,7 +303,8 @@
     "deselect_all": "Tout désélectionner",
     "security": "Sécurité",
     "filter": "Filtrer",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "search": "Rechercher"
   },
   "errors": {
     "404_title": "Page introuvable",

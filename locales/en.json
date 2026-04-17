@@ -303,7 +303,8 @@
     "deselect_all": "Deselect all",
     "security": "Security",
     "filter": "Filter",
-    "clear": "Clear"
+    "clear": "Clear",
+    "search": "Search"
   },
   "errors": {
     "404_title": "Page Not Found",

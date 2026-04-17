@@ -303,7 +303,8 @@
     "deselect_all": "Alle abwählen",
     "security": "Sicherheit",
     "filter": "Filtern",
-    "clear": "Zurücksetzen"
+    "clear": "Zurücksetzen",
+    "search": "Suchen"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",
