@@ -822,6 +822,8 @@
     var conditions = readConditions();
     var logic = (document.getElementById('adv-filter-logic') || {}).value || 'and';
     var statusEl = document.getElementById('adv-filter-status');
+    var searchEl = document.getElementById('player-search');
+    var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
     var total = 0, visible = 0;
     document.querySelectorAll('#players-table tbody tr').forEach(function (row) {
       total++;
@@ -829,11 +831,13 @@
         : logic === 'and'
           ? conditions.every(function (c) { return rowMatchesCondition(row, c); })
           : conditions.some(function  (c) { return rowMatchesCondition(row, c); });
+      if (show && search) show = (row.dataset.search || '').indexOf(search) !== -1;
       row.style.display = show ? '' : 'none';
       if (show) visible++;
     });
     if (statusEl) statusEl.textContent = conditions.length > 0 ? 'Showing ' + visible + ' of ' + total + ' players' : '';
   }
+  window.playerSearchApply = applyAdvFilter;
 
   function buildValueArea(def, container) {
     container.querySelectorAll('.adv-op-sel,.adv-val-input,.adv-bool-sel,.adv-date-from,.adv-date-to,.adv-date-sep').forEach(function (el) { el.remove(); });

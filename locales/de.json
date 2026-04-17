@@ -538,7 +538,8 @@
     "rows_selected": "%{count} Zeile(n) ausgewählt",
     "showing_count": "Zeige %{visible} von %{total} Spielern",
     "season_filter": "Saison",
-    "team_filter": "Mannschaft"
+    "team_filter": "Mannschaft",
+    "search_placeholder": "Nach Name, E-Mail, Telefon suchen…"
   },
   "teams_form": {
     "team_name": "Mannschaftsname",

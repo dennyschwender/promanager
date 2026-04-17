@@ -17,6 +17,12 @@
   {% endif %}
 </div>
 
+<div style="margin-bottom:.5rem;">
+  <label style="display:block;margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('common.search') }}</span>
+    <input type="search" id="player-search" class="sel-inline" style="min-width:220px;" placeholder="{{ t('players_list.search_placeholder') }}" oninput="window.playerSearchApply && window.playerSearchApply()">
+  </label>
+</div>
 <form method="get" action="/players" id="player-filter-form"
       style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
   <label style="margin:0;">
@@ -190,7 +196,8 @@
     <tr data-player-id="{{ p.id }}"
         data-dob="{{ p.date_of_birth or '' }}"
         data-is-active="{{ 'true' if p.is_active else 'false' }}"
-        data-archived-at="{{ p.archived_at.isoformat() if p.archived_at else '' }}">
+        data-archived-at="{{ p.archived_at.isoformat() if p.archived_at else '' }}"
+        data-search="{{ (p.first_name ~ ' ' ~ p.last_name ~ ' ' ~ (p.email or '') ~ ' ' ~ (p.phone or ''))|lower }}">
       {% if user.is_admin %}<td><input type="checkbox" class="row-check"></td>{% endif %}
       <td><a href="/players/{{ p.id }}"><strong>{{ p.first_name }}</strong></a></td>
       <td><a href="/players/{{ p.id }}"><strong>{{ p.last_name }}</strong></a></td>

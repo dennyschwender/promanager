@@ -538,7 +538,8 @@
     "rows_selected": "%{count} row(s) selected",
     "showing_count": "Showing %{visible} of %{total} players",
     "season_filter": "Season",
-    "team_filter": "Team"
+    "team_filter": "Team",
+    "search_placeholder": "Search by name, email, phone…"
   },
   "teams_form": {
     "team_name": "Team Name",
