@@ -42,6 +42,7 @@
     {% endif %}
     {% if user.is_admin %}
       <li><a href="/seasons" class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
+      <li><a href="/auth/users" class="{% if path.startswith('/auth/users') or path.startswith('/auth/register') %}nav-active{% endif %}">{{ t('users.title') }}</a></li>
     {% endif %}
     {% if user.is_admin or user.is_coach %}
       <li><a href="/reports" class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
@@ -63,8 +64,6 @@
         <summary aria-haspopup="listbox" role="link">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or ''))|trim or user.username }}</summary>
         <ul role="listbox" style="right:0;left:auto;">
           {% if user.is_admin %}
-            <li><a href="/auth/register">{{ t('nav.register_user') }}</a></li>
-            <li><a href="/auth/users">{{ t('users.title') }}</a></li>
             <li><a href="/admin/audit">{{ t('admin.audit_log_title') }}</a></li>
             <li><hr style="margin:.25rem 0;"></li>
           {% endif %}
