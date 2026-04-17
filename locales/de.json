@@ -336,7 +336,17 @@
     "reset_subject": "Ihr neues ProManager-Passwort",
     "notification_subject": "%{title}",
     "login_button": "Bei ProManager anmelden",
-    "footer": "Diese E-Mail wurde von %{app_name} gesendet."
+    "footer": "Diese E-Mail wurde von %{app_name} gesendet.",
+    "welcome_intro": "Dein Konto wurde erstellt. Hier sind deine Anmeldedaten:",
+    "reset_intro": "Dein Passwort wurde zurückgesetzt. Neue Zugangsdaten:",
+    "label_username": "Benutzername",
+    "label_password": "Passwort",
+    "reminder_greeting": "Hallo %{name},",
+    "reminder_intro": "Dies ist eine Erinnerung für die bevorstehende Veranstaltung:",
+    "label_event": "Veranstaltung",
+    "label_when": "Wann",
+    "label_location": "Ort",
+    "reminder_cta": "Bitte aktualisiere deinen Anwesenheitsstatus."
   },
   "schedule": {
     "title": "Spielplan",

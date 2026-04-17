@@ -336,7 +336,17 @@
     "reset_subject": "Your new ProManager password",
     "notification_subject": "%{title}",
     "login_button": "Log in to ProManager",
-    "footer": "This email was sent by %{app_name}."
+    "footer": "This email was sent by %{app_name}.",
+    "welcome_intro": "Your account has been created. Here are your login credentials:",
+    "reset_intro": "Your password has been reset. New credentials:",
+    "label_username": "Username",
+    "label_password": "Password",
+    "reminder_greeting": "Hi %{name},",
+    "reminder_intro": "This is a reminder for the upcoming event:",
+    "label_event": "Event",
+    "label_when": "When",
+    "label_location": "Location",
+    "reminder_cta": "Please make sure to update your attendance status."
   },
   "schedule": {
     "title": "Schedule",

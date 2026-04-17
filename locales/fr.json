@@ -336,7 +336,17 @@
     "reset_subject": "Votre nouveau mot de passe ProManager",
     "notification_subject": "%{title}",
     "login_button": "Se connecter à ProManager",
-    "footer": "Cet e-mail a été envoyé par %{app_name}."
+    "footer": "Cet e-mail a été envoyé par %{app_name}.",
+    "welcome_intro": "Votre compte a été créé. Voici vos identifiants de connexion :",
+    "reset_intro": "Votre mot de passe a été réinitialisé. Nouveaux identifiants :",
+    "label_username": "Nom d'utilisateur",
+    "label_password": "Mot de passe",
+    "reminder_greeting": "Bonjour %{name},",
+    "reminder_intro": "Voici un rappel pour l'événement à venir :",
+    "label_event": "Événement",
+    "label_when": "Quand",
+    "label_location": "Lieu",
+    "reminder_cta": "N'oubliez pas de mettre à jour votre statut de présence."
   },
   "schedule": {
     "title": "Calendrier",

@@ -1,20 +1,20 @@
 {% extends "email/base.html" %}
 {% block content %}
-<p>Hi <strong>{{ name }}</strong>,</p>
-<p>This is a reminder for the upcoming event:</p>
+<p>{{ t("email.reminder_greeting", name=name) }}</p>
+<p>{{ t("email.reminder_intro") }}</p>
 <table style="border-collapse: collapse; margin: 12px 0;">
   <tr>
-    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">Event</td>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">{{ t("email.label_event") }}</td>
     <td style="padding: 4px 0;">{{ event_title }}</td>
   </tr>
   <tr>
-    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">When</td>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">{{ t("email.label_when") }}</td>
     <td style="padding: 4px 0;">{{ when }}</td>
   </tr>
   <tr>
-    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">Location</td>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold; vertical-align: top;">{{ t("email.label_location") }}</td>
     <td style="padding: 4px 0;">{{ location }}</td>
   </tr>
 </table>
-<p>Please make sure to update your attendance status.</p>
+<p>{{ t("email.reminder_cta") }}</p>
 {% endblock %}

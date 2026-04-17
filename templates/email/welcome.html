@@ -1,13 +1,13 @@
 {% extends "email/base.html" %}
 {% block content %}
-<p>Your account has been created. Here are your login credentials:</p>
+<p>{{ t("email.welcome_intro") }}</p>
 <table style="border-collapse: collapse; margin: 12px 0;">
   <tr>
-    <td style="padding: 4px 16px 4px 0; font-weight: bold;">Username</td>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold;">{{ t("email.label_username") }}</td>
     <td style="padding: 4px 0;">{{ username }}</td>
   </tr>
   <tr>
-    <td style="padding: 4px 16px 4px 0; font-weight: bold;">Password</td>
+    <td style="padding: 4px 16px 4px 0; font-weight: bold;">{{ t("email.label_password") }}</td>
     <td style="padding: 4px 0; font-family: monospace;">{{ password }}</td>
   </tr>
 </table>
