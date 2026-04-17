@@ -53,7 +53,16 @@
     "confirm_password": "Confirmer le nouveau mot de passe",
     "change_password_submit": "Définir le nouveau mot de passe",
     "change_password_mismatch": "Les mots de passe ne correspondent pas.",
-    "change_password_saved": "Mot de passe mis à jour avec succès."
+    "change_password_saved": "Mot de passe mis à jour avec succès.",
+    "logout_all_devices": "Déconnecter tous les appareils",
+    "logout_all_confirm": "Cela invalidera immédiatement toutes les sessions actives sur tous les appareils.",
+    "logout_all_done": "Vous avez été déconnecté de tous les autres appareils.",
+    "forgot_password": "Mot de passe oublié ?",
+    "forgot_password_title": "Réinitialiser le mot de passe",
+    "forgot_password_intro": "Entrez votre adresse e-mail et nous vous enverrons un nouveau mot de passe.",
+    "forgot_password_email_label": "Adresse e-mail",
+    "forgot_password_submit": "Envoyer l'e-mail de réinitialisation",
+    "forgot_password_sent": "Si un compte existe avec cet e-mail, un nouveau mot de passe a été envoyé."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -285,7 +294,8 @@
     "player": "Joueur",
     "confirm_delete": "Êtes-vous sûr de vouloir supprimer ceci?",
     "select_all": "Tout sélectionner",
-    "deselect_all": "Tout désélectionner"
+    "deselect_all": "Tout désélectionner",
+    "security": "Sécurité"
   },
   "errors": {
     "404_title": "Page introuvable",
@@ -346,7 +356,9 @@
     "label_event": "Événement",
     "label_when": "Quand",
     "label_location": "Lieu",
-    "reminder_cta": "N'oubliez pas de mettre à jour votre statut de présence."
+    "reminder_cta": "N'oubliez pas de mettre à jour votre statut de présence.",
+    "forgot_password_subject": "Votre mot de passe a été réinitialisé — %{app_name}",
+    "forgot_password_intro": "Votre mot de passe a été réinitialisé. Voici vos nouveaux identifiants :"
   },
   "schedule": {
     "title": "Calendrier",
@@ -606,7 +618,10 @@
     "time_validation": "Entrez une heure valide (00:00 - 23:59)",
     "time_format_hint": "Entrez l'heure au format HH:MM (ex. 19:30)",
     "hide_attendance": "Masquer la liste de présence aux joueurs",
-    "hide_attendance_desc": "(Seuls l'Admin et le Coach peuvent voir la liste de présence lorsque activé)"
+    "hide_attendance_desc": "(Seuls l'Admin et le Coach peuvent voir la liste de présence lorsque activé)",
+    "notify_section": "Notifier les joueurs",
+    "notify_on_create": "Envoyer une notification à tous les joueurs lors de la création de l'événement",
+    "notify_channels": "Canaux de notification"
   },
   "events_detail": {
     "season": "Saison",

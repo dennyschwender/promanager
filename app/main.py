@@ -73,7 +73,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 db.close()
         # Force password change before any other page
         _CHANGE_PW_PATH = "/auth/change-password"
-        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/auth/stop-impersonating", "/healthz"}
+        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/auth/stop-impersonating", "/auth/logout-all", "/healthz"}
         if (
             request.state.user is not None
             and getattr(request.state.user, "must_change_password", False)

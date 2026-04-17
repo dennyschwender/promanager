@@ -121,5 +121,15 @@
     <button type="submit" class="btn btn-sm btn-outline">{{ t('common.save') }}</button>
   </form>
 </section>
+
+<!-- ── Security ─────────────────────────────────────────────────────────── -->
+<section style="margin-top:2rem;">
+  <h3>{{ t('common.security') }}</h3>
+  <p class="text-muted" style="font-size:.88rem;">{{ t('auth.logout_all_confirm') }}</p>
+  <form method="post" action="/auth/logout-all">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <button type="submit" class="btn btn-sm btn-outline">{{ t('auth.logout_all_devices') }}</button>
+  </form>
+</section>
 </div>
 {% endblock %}

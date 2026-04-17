@@ -53,7 +53,16 @@
     "confirm_password": "Neues Passwort bestätigen",
     "change_password_submit": "Neues Passwort setzen",
     "change_password_mismatch": "Passwörter stimmen nicht überein.",
-    "change_password_saved": "Passwort erfolgreich geändert."
+    "change_password_saved": "Passwort erfolgreich geändert.",
+    "logout_all_devices": "Alle Geräte abmelden",
+    "logout_all_confirm": "Damit werden sofort alle aktiven Sitzungen auf allen Geräten ungültig.",
+    "logout_all_done": "Sie wurden von allen anderen Geräten abgemeldet.",
+    "forgot_password": "Passwort vergessen?",
+    "forgot_password_title": "Passwort zurücksetzen",
+    "forgot_password_intro": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen ein neues Passwort.",
+    "forgot_password_email_label": "E-Mail-Adresse",
+    "forgot_password_submit": "Reset-E-Mail senden",
+    "forgot_password_sent": "Falls ein Konto mit dieser E-Mail existiert, wurde ein neues Passwort gesendet."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -285,7 +294,8 @@
     "player": "Spieler",
     "confirm_delete": "Möchten Sie dies wirklich löschen?",
     "select_all": "Alle auswählen",
-    "deselect_all": "Alle abwählen"
+    "deselect_all": "Alle abwählen",
+    "security": "Sicherheit"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",
@@ -346,7 +356,9 @@
     "label_event": "Veranstaltung",
     "label_when": "Wann",
     "label_location": "Ort",
-    "reminder_cta": "Bitte aktualisiere deinen Anwesenheitsstatus."
+    "reminder_cta": "Bitte aktualisiere deinen Anwesenheitsstatus.",
+    "forgot_password_subject": "Ihr Passwort wurde zurückgesetzt — %{app_name}",
+    "forgot_password_intro": "Ihr Passwort wurde zurückgesetzt. Hier sind Ihre neuen Anmeldedaten:"
   },
   "schedule": {
     "title": "Spielplan",
@@ -606,7 +618,10 @@
     "time_validation": "Gültige Uhrzeit eingeben (00:00 - 23:59)",
     "time_format_hint": "Uhrzeit im Format HH:MM eingeben (z.B. 19:30)",
     "hide_attendance": "Anwesenheitsliste vor Spielern verbergen",
-    "hide_attendance_desc": "(Nur Admin und Coach können die Anwesenheitsliste sehen, wenn aktiviert)"
+    "hide_attendance_desc": "(Nur Admin und Coach können die Anwesenheitsliste sehen, wenn aktiviert)",
+    "notify_section": "Spieler benachrichtigen",
+    "notify_on_create": "Benachrichtigung an alle Spieler senden, wenn das Event erstellt wird",
+    "notify_channels": "Benachrichtigungskanäle"
   },
   "events_detail": {
     "season": "Saison",

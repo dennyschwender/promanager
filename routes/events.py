@@ -230,6 +230,7 @@ async def event_new_get(
 @router.post("/new")
 async def event_new_post(
     request: Request,
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     event_type: str = Form("training"),
     event_date: str = Form(...),
@@ -246,6 +247,7 @@ async def event_new_post(
     is_recurring: str = Form(""),
     recurrence_rule: str = Form(""),
     recurrence_end_date: str = Form(""),
+    notify_on_create: str = Form(""),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -353,6 +355,29 @@ async def event_new_post(
             first_event = ev
 
     db.commit()
+
+    # ── Optional creation notification ───────────────────────────────────
+    if notify_on_create.strip() and first_event is not None:
+        form_data = await request.form()
+        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush"]
+        date_str = first_event.event_date.strftime("%Y-%m-%d") if first_event.event_date else ""
+        notif_title = first_event.title
+        notif_body = date_str
+        if first_event.event_time:
+            notif_body += f" {first_event.event_time.strftime('%H:%M')}"
+        if first_event.location:
+            notif_body += f" · {first_event.location}"
+        send_notifications(
+            event=first_event,
+            title=notif_title,
+            body=notif_body.strip(),
+            tag="announcement",
+            recipient_statuses=None,
+            admin_channels=channels,
+            db=db,
+            background_tasks=background_tasks,
+        )
+
     return RedirectResponse(f"/events/{first_event.id}", status_code=302)
 
 

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import secrets
+from datetime import datetime, timezone
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from itsdangerous import BadSignature, SignatureExpired
@@ -13,7 +17,7 @@ from app.database import get_db
 from app.limiter import limiter
 from app.templates import render
 from models.user import User
-from routes._auth_helpers import require_admin, rt
+from routes._auth_helpers import require_admin, require_login, rt
 from services.auth_service import (
     authenticate_user,
     create_session_cookie,
@@ -249,3 +253,74 @@ async def stop_impersonating(request: Request):
         )
     response.delete_cookie("_orig_session")
     return response
+
+
+# ---------------------------------------------------------------------------
+# Log out all devices (session invalidation)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/logout-all")
+async def logout_all_post(
+    request: Request,
+    _csrf: None = Depends(require_csrf),
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    db_user = db.get(User, user.id)
+    db_user.logout_all_at = datetime.now(timezone.utc)
+    db.commit()
+
+    # Re-issue a fresh session cookie so the current session stays valid
+    new_cookie = create_session_cookie(user.id)
+    flash_msg = quote(rt(request, "auth.logout_all_done"))
+    response = RedirectResponse(f"/profile?flash={flash_msg}", status_code=302)
+    response.set_cookie(
+        COOKIE_NAME,
+        new_cookie,
+        httponly=True,
+        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        max_age=60 * 60 * 24 * 7,
+    )
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Forgot password (self-service)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/forgot-password")
+@limiter.limit("10/minute")
+async def forgot_password_get(request: Request):
+    if request.state.user:
+        return RedirectResponse("/dashboard", status_code=302)
+    return render(request, "auth/forgot_password.html", {"user": None, "sent": False, "error": None})
+
+
+@router.post("/forgot-password")
+@limiter.limit("5/minute")
+async def forgot_password_post(
+    request: Request,
+    email: str = Form(...),
+    _csrf: None = Depends(require_csrf),
+    db: Session = Depends(get_db),
+):
+    from services.email_service import send_forgot_password_email  # noqa: PLC0415
+
+    user = get_user_by_email(db, email.strip().lower())
+    if user and user.is_active:
+        new_password = secrets.token_urlsafe(10)
+        user.hashed_password = hash_password(new_password)
+        user.must_change_password = True
+        db.commit()
+        send_forgot_password_email(
+            to=user.email,
+            username=user.username,
+            password=new_password,
+            locale=getattr(user, "locale", "en") or "en",
+        )
+
+    # Always show success to avoid user enumeration
+    return render(request, "auth/forgot_password.html", {"user": None, "sent": True, "error": None})

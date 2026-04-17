@@ -213,3 +213,19 @@ def send_notification_email(
     }, locale=locale)
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)
+
+
+def send_forgot_password_email(
+    to: str,
+    username: str,
+    password: str,
+    locale: str = "en",
+) -> bool:
+    """Send a forgot-password email with new temporary credentials."""
+    subject = _t("email.forgot_password_subject", locale, app_name=settings.APP_NAME)
+    body_html = render_email_template("forgot_password", {
+        "username": username,
+        "password": password,
+    }, locale=locale)
+    body_text = _strip_html(body_html)
+    return send_email(to, subject, body_html, body_text)

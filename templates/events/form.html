@@ -187,6 +187,29 @@
     <small class="text-muted">{{ t('events_form.hide_attendance_desc') }}</small>
   </label>
 
+  {% if is_new %}
+  <fieldset id="notify-fieldset">
+    <legend>{{ t('events_form.notify_section') }}</legend>
+    <label class="checkbox-inline">
+      <input type="checkbox" name="notify_on_create" id="id_notify_on_create" value="1">
+      <span>{{ t('events_form.notify_on_create') }}</span>
+    </label>
+    <div id="notify-channel-options" style="display:none; margin-top:.5rem; padding-left:1.5rem;">
+      <small class="text-muted" style="display:block;margin-bottom:.3rem;">{{ t('events_form.notify_channels') }}</small>
+      <label class="checkbox-inline"><input type="checkbox" name="notify_channels" value="email" checked> {{ t('notify_form.channel_email') }}</label>
+      <label class="checkbox-inline"><input type="checkbox" name="notify_channels" value="inapp" checked> {{ t('notify_form.channel_inbox') }}</label>
+      <label class="checkbox-inline"><input type="checkbox" name="notify_channels" value="webpush" checked> {{ t('notify_form.channel_push') }}</label>
+    </div>
+  </fieldset>
+  <script>
+  (function() {
+    var chk = document.getElementById('id_notify_on_create');
+    var opts = document.getElementById('notify-channel-options');
+    chk.addEventListener('change', function() { opts.style.display = this.checked ? '' : 'none'; });
+  })();
+  </script>
+  {% endif %}
+
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('events.save') }}</button>
     <a href="/events" class="btn btn-outline">{{ t('common.cancel') }}</a>
