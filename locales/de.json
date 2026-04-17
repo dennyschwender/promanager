@@ -424,7 +424,12 @@
     "stop_impersonating": "Zurück zu Ihrem Konto",
     "send_welcome": "Willkommens-E-Mail senden",
     "send_welcome_confirm": "Passwort zurücksetzen und Willkommens-E-Mail an %{username} senden?",
-    "send_welcome_sent": "Willkommens-E-Mail gesendet."
+    "send_welcome_sent": "Willkommens-E-Mail gesendet.",
+    "all_roles": "Alle Rollen",
+    "with_player": "Mit verknüpftem Spieler",
+    "without_player": "Ohne verknüpften Spieler",
+    "player_linked_readonly_hint": "Einige Felder werden vom verknüpften Spielerprofil verwaltet. Bearbeite sie dort:",
+    "player_field_readonly_tooltip": "Dieses Feld wird vom verknüpften Spieler verwaltet. Im Spielerprofil bearbeiten."
   },
   "players_form": {
     "basic_info": "Grunddaten",

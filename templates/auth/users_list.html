@@ -13,6 +13,7 @@
 {% if request.query_params.get('welcome') %}
 <div class="alert alert-success">{{ t('users.send_welcome_sent') }}</div>
 {% endif %}
+
 <div class="page-header">
   <h2>{{ t('users.title') }}</h2>
   <div style="display:flex;gap:.5rem;">
@@ -21,28 +22,91 @@
   </div>
 </div>
 
-<div class="table-responsive">
-<table>
-  <thead><tr>
-    <th>{{ t('users.username') }}</th>
-    <th>{{ t('users.email') }}</th>
-    <th>{{ t('users.role') }}</th>
-    <th>{{ t('users.linked_player') }}</th>
-    <th>{{ t('users.created_at') }}</th>
-    <th>{{ t('users.actions') }}</th>
-  </tr></thead>
+<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('auth.role') }}</span>
+    <select id="filter-role" class="sel-inline" onchange="applyFilters()">
+      <option value="">{{ t('users.all_roles') }}</option>
+      <option value="admin">{{ t('auth.admin') }}</option>
+      <option value="coach">{{ t('auth.role_coach') }}</option>
+      <option value="member">{{ t('auth.member') }}</option>
+    </select>
+  </label>
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players.active') }}</span>
+    <select id="filter-active" class="sel-inline" onchange="applyFilters()">
+      <option value="">{{ t('players_list.all') }}</option>
+      <option value="true" selected>{{ t('players_list.active_only') }}</option>
+      <option value="false">{{ t('players_list.archived_only') }}</option>
+    </select>
+  </label>
+  <label style="margin:0;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('users.linked_player') }}</span>
+    <select id="filter-linked" class="sel-inline" onchange="applyFilters()">
+      <option value="">{{ t('players_list.all') }}</option>
+      <option value="yes">{{ t('users.with_player') }}</option>
+      <option value="no">{{ t('users.without_player') }}</option>
+    </select>
+  </label>
+  <div style="position:relative;display:inline-block;align-self:flex-end;">
+    <button type="button" class="btn btn-outline" id="columns-btn">{{ t('players_list.columns') }}</button>
+    <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
+      {% for col in ["Name","Username","Email","Role","Phone","Linked player","Active","Created","Actions"] %}
+      <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
+        <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="table-responsive" id="users-table-wrapper">
+<table id="users-table">
+  <thead>
+    <tr>
+      <th data-col="Name" class="sortable-col" data-sort-key="name" style="cursor:pointer;white-space:nowrap;">
+        {{ t('players.name') }} <span class="sort-arrow" data-key="name" style="opacity:.35;">▲</span>
+      </th>
+      <th data-col="Username" class="sortable-col" data-sort-key="username" style="cursor:pointer;white-space:nowrap;">
+        {{ t('users.username') }} <span class="sort-arrow" data-key="username" style="opacity:.35;">▲</span>
+      </th>
+      <th data-col="Email">{{ t('users.email') }}</th>
+      <th data-col="Role">{{ t('users.role') }}</th>
+      <th data-col="Phone">{{ t('users.phone') }}</th>
+      <th data-col="Linked player">{{ t('users.linked_player') }}</th>
+      <th data-col="Active">{{ t('players.active') }}</th>
+      <th data-col="Created" class="sortable-col" data-sort-key="created" style="cursor:pointer;white-space:nowrap;">
+        {{ t('users.created_at') }} <span class="sort-arrow" data-key="created">▼</span>
+      </th>
+      <th data-col="Actions">{{ t('users.actions') }}</th>
+    </tr>
+  </thead>
   <tbody>
   {% for u in users %}
-  <tr>
-    <td>{{ u.username }}</td>
-    <td>{{ u.email }}</td>
-    <td><span class="badge badge-{{ u.role }}">{{ enums.role.get(u.role, u.role|capitalize) }}</span></td>
-    <td>
-      {% set p = player_by_user.get(u.id) %}
+  {% set p = player_by_user.get(u.id) %}
+  <tr
+    data-role="{{ u.role }}"
+    data-active="{{ 'true' if u.is_active else 'false' }}"
+    data-linked="{{ 'yes' if p else 'no' }}"
+    data-name="{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or ''))|trim|lower or u.username|lower }}"
+    data-username="{{ u.username|lower }}"
+    data-created="{{ u.created_at.isoformat() if u.created_at else '' }}">
+    <td data-col="Name">
+      <a href="/auth/users/{{ u.id }}/edit"><strong>{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or ''))|trim or '—' }}</strong></a>
+    </td>
+    <td data-col="Username">{{ u.username }}</td>
+    <td data-col="Email">{{ u.email }}</td>
+    <td data-col="Role"><span class="badge badge-{{ u.role }}">{{ enums.role.get(u.role, u.role|capitalize) }}</span></td>
+    <td data-col="Phone">{{ u.phone or '—' }}</td>
+    <td data-col="Linked player">
       {% if p %}<a href="/players/{{ p.id }}">{{ p.full_name }}</a>{% else %}—{% endif %}
     </td>
-    <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
-    <td>
+    <td data-col="Active">
+      {% if u.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>
+      {% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}
+    </td>
+    <td data-col="Created">{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+    <td data-col="Actions">
       {% if u.id == user.id %}
         <a href="/auth/users/{{ u.id }}/edit" class="btn btn-sm btn-outline">{{ t('users.edit_user') }}</a>
       {% else %}
@@ -60,7 +124,7 @@
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit">{{ t('users.send_welcome') }}</button>
           </form>
-<form method="post" action="/auth/users/{{ u.id }}/toggle-active">
+          <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit" class="{% if not u.is_active %}reactivate{% endif %}">
               {% if u.is_active %}{{ t('users.deactivate') }}{% else %}{{ t('users.reactivate') }}{% endif %}
@@ -89,25 +153,104 @@
 {% endblock %}
 {% block scripts %}
 <script>
-document.addEventListener('click', function (e) {
-  var toggle = e.target.closest('.action-dropdown-toggle');
-  if (toggle) {
+(function () {
+  // Column toggle
+  var popover = document.getElementById('columns-popover');
+  document.getElementById('columns-btn').addEventListener('click', function (e) {
     e.stopPropagation();
-    var menu = toggle.nextElementSibling;
-    var isOpen = menu.classList.contains('open');
-    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
-    document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
-    if (!isOpen) {
-      var rect = toggle.getBoundingClientRect();
-      menu.classList.add('open');
-      if (window.innerHeight - rect.bottom < 120) menu.classList.add('open-up');
-      var wrapper = toggle.closest('.table-responsive');
-      if (wrapper) wrapper.classList.add('dropdown-open');
+    popover.style.display = popover.style.display === 'none' ? '' : 'none';
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#columns-btn') && !e.target.closest('#columns-popover')) {
+      popover.style.display = 'none';
     }
-    return;
+  });
+  document.querySelectorAll('.col-toggle').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      var col = cb.dataset.col;
+      document.querySelectorAll('#users-table [data-col="' + col + '"]').forEach(function (el) {
+        el.style.display = cb.checked ? '' : 'none';
+      });
+    });
+  });
+
+  // Sorting
+  var currentSort = 'created';
+  var currentDir = 'desc';
+
+  function updateSortIndicators() {
+    document.querySelectorAll('.sort-arrow').forEach(function (el) {
+      var key = el.dataset.key;
+      if (key === currentSort) {
+        el.textContent = currentDir === 'asc' ? '▲' : '▼';
+        el.style.opacity = '1';
+      } else {
+        el.textContent = '▲';
+        el.style.opacity = '.35';
+      }
+    });
   }
-  document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
-  document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
-});
+
+  function sortTable(key) {
+    if (currentSort === key) {
+      currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort = key;
+      currentDir = 'asc';
+    }
+    updateSortIndicators();
+    var tbody = document.querySelector('#users-table tbody');
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var av = a.dataset[key] || '';
+      var bv = b.dataset[key] || '';
+      return currentDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+  }
+
+  document.querySelectorAll('.sortable-col').forEach(function (th) {
+    th.addEventListener('click', function () { sortTable(th.dataset.sortKey); });
+  });
+
+  // Filtering
+  window.applyFilters = function () {
+    var role = document.getElementById('filter-role').value;
+    var active = document.getElementById('filter-active').value;
+    var linked = document.getElementById('filter-linked').value;
+    document.querySelectorAll('#users-table tbody tr').forEach(function (row) {
+      var show = true;
+      if (role && row.dataset.role !== role) show = false;
+      if (active && row.dataset.active !== active) show = false;
+      if (linked && row.dataset.linked !== linked) show = false;
+      row.style.display = show ? '' : 'none';
+    });
+  };
+  applyFilters();
+
+  // Action dropdown
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('.action-dropdown-toggle');
+    if (toggle) {
+      e.stopPropagation();
+      var menu = toggle.nextElementSibling;
+      var isOpen = menu.classList.contains('open');
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
+      document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
+      if (!isOpen) {
+        var rect = toggle.getBoundingClientRect();
+        menu.classList.add('open');
+        if (window.innerHeight - rect.bottom < 120) menu.classList.add('open-up');
+        var wrapper = toggle.closest('.table-responsive');
+        if (wrapper) wrapper.classList.add('dropdown-open');
+      }
+      return;
+    }
+    if (!e.target.closest('#columns-btn') && !e.target.closest('#columns-popover')) {
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
+      document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
+    }
+  });
+})();
 </script>
 {% endblock %}

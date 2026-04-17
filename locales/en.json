@@ -424,7 +424,12 @@
     "stop_impersonating": "Back to your account",
     "send_welcome": "Send welcome email",
     "send_welcome_confirm": "Reset password and send welcome email to %{username}?",
-    "send_welcome_sent": "Welcome email sent."
+    "send_welcome_sent": "Welcome email sent.",
+    "all_roles": "All roles",
+    "with_player": "With linked player",
+    "without_player": "Without linked player",
+    "player_linked_readonly_hint": "Some fields are managed by the linked player profile. Edit them on",
+    "player_field_readonly_tooltip": "This field is managed by the linked player. Edit it on the player profile."
   },
   "players_form": {
     "basic_info": "Basic Info",

@@ -20,12 +20,20 @@
 
 <form method="post" action="{% if is_admin_edit %}/auth/users/{{ target.id }}/edit{% else %}/profile/edit{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+  {% set from_player = is_admin_edit and linked_player %}
+  {% if from_player %}
+  <div class="alert alert-warning" style="margin-bottom:.75rem;font-size:.88rem;">
+    {{ t('users.player_linked_readonly_hint') }} <a href="/players/{{ linked_player.id }}/edit">{{ linked_player.full_name }}</a>.
+  </div>
+  {% endif %}
   <div class="form-grid-2">
     <label for="first_name">{{ t('users.first_name') }}
-      <input type="text" id="first_name" name="first_name" value="{{ target.first_name or '' }}">
+      <input type="text" id="first_name" name="first_name" value="{{ target.first_name or '' }}"
+             {% if from_player %}readonly title="{{ t('users.player_field_readonly_tooltip') }}"{% endif %}>
     </label>
     <label for="last_name">{{ t('users.last_name') }}
-      <input type="text" id="last_name" name="last_name" value="{{ target.last_name or '' }}">
+      <input type="text" id="last_name" name="last_name" value="{{ target.last_name or '' }}"
+             {% if from_player %}readonly title="{{ t('users.player_field_readonly_tooltip') }}"{% endif %}>
     </label>
   </div>
   <div class="form-grid-2">
@@ -33,11 +41,13 @@
       <input type="text" id="username" name="username" required value="{{ target.username }}">
     </label>
     <label for="email">{{ t('auth.email') }} *
-      <input type="email" id="email" name="email" required value="{{ target.email }}">
+      <input type="email" id="email" name="email" required value="{{ target.email }}"
+             {% if from_player %}readonly title="{{ t('users.player_field_readonly_tooltip') }}"{% endif %}>
     </label>
   </div>
   <label for="phone">{{ t('users.phone') }}
-    <input type="tel" id="phone" name="phone" value="{{ target.phone or '' }}" placeholder="{{ t('users.phone_hint') }}">
+    <input type="tel" id="phone" name="phone" value="{{ target.phone or '' }}" placeholder="{{ t('users.phone_hint') }}"
+           {% if from_player %}readonly title="{{ t('users.player_field_readonly_tooltip') }}"{% endif %}>
   </label>
 
   {% if is_admin_edit %}
