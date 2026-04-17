@@ -117,6 +117,7 @@ async def register_post(
     locale: str = Form("en"),
     first_name: str = Form(""),
     last_name: str = Form(""),
+    send_welcome_email: str = Form(""),
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -142,6 +143,11 @@ async def register_post(
         return error(rt(request, "errors.password_too_short"))
 
     create_user(db, username=username, email=email, password=password, role=role, phone=phone or None, locale=locale or None, first_name=first_name or None, last_name=last_name or None)
+
+    if send_welcome_email == "1" and email:
+        from services.email_service import send_welcome_email as _send_welcome  # noqa: PLC0415
+        _send_welcome(to=email, username=username, password=password, locale=locale or "en")
+
     return render(
         request,
         "auth/register.html",

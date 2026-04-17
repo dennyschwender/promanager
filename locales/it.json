@@ -66,7 +66,8 @@
     "password_auto": "Genera automaticamente",
     "password_manual": "Imposta manualmente",
     "password_regenerate": "Rigenera",
-    "password_min": "Min. 8 caratteri"
+    "password_min": "Min. 8 caratteri",
+    "send_welcome_email": "Invia email di benvenuto con le credenziali"
   },
   "dashboard": {
     "title": "Pannello",

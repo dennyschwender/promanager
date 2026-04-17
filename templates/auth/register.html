@@ -76,6 +76,10 @@
   <label for="phone">{{ t('users.phone_label') }}
     <input type="tel" id="phone" name="phone" value="{{ form_data.phone if form_data else '' }}">
   </label>
+  <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;">
+    <input type="checkbox" name="send_welcome_email" value="1" checked>
+    {{ t('auth.send_welcome_email') }}
+  </label>
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('auth.register_submit') }}</button>
     <a href="/dashboard" class="btn btn-outline">{{ t('common.cancel') }}</a>
