@@ -116,7 +116,8 @@
     "delete_scope_future": "Elimina questo e tutti i %{count} eventi della serie (incluso oggi)",
     "delete_future_confirm": "Verranno eliminati definitivamente %{count} evento/i. Confermi?",
     "deleted_single": "Evento eliminato.",
-    "deleted_series": "%{count} eventi della serie eliminati."
+    "deleted_series": "%{count} eventi della serie eliminati.",
+    "meeting_time": "Ritrovo"
   },
   "attendance": {
     "title": "Registra Presenze",

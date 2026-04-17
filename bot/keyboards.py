@@ -21,7 +21,9 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     """One row per event with a View button, plus Prev/Next/Refresh navigation."""
     rows = []
     for event in events:
-        label = f"{event.event_date} — {event.title}"
+        time_val = event.meeting_time or event.event_time
+        time_str = f" {str(time_val)[:5]}" if time_val else ""
+        label = f"{event.event_date}{time_str} — {event.title}"
         rows.append([InlineKeyboardButton(label, callback_data=f"evt:{event.id}")])
 
     nav = []

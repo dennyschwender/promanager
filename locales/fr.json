@@ -116,7 +116,8 @@
     "delete_scope_future": "Supprimer cet événement et les %{count} de la série (aujourd'hui inclus)",
     "delete_future_confirm": "Cela supprimera définitivement %{count} événement(s). Êtes-vous sûr ?",
     "deleted_single": "Événement supprimé.",
-    "deleted_series": "%{count} événements de la série supprimés."
+    "deleted_series": "%{count} événements de la série supprimés.",
+    "meeting_time": "RDV"
   },
   "attendance": {
     "title": "Marquer les présences",

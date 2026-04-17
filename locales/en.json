@@ -116,7 +116,8 @@
     "delete_scope_future": "Delete this and all %{count} events in this series (including today)",
     "delete_future_confirm": "This will permanently delete %{count} event(s). Are you sure?",
     "deleted_single": "Event deleted.",
-    "deleted_series": "Deleted %{count} events in this series."
+    "deleted_series": "Deleted %{count} events in this series.",
+    "meeting_time": "Meet"
   },
   "attendance": {
     "title": "Mark Attendance",
