@@ -672,7 +672,8 @@
     "pt_selection": "Auswahl",
     "pt_available": "Verfügbar",
     "pt_no_reg": "Keine Registrierung",
-    "no_registration_note": "Die Anwesenheitsverfolgung ist für dieses Ereignis deaktiviert."
+    "no_registration_note": "Die Anwesenheitsverfolgung ist für dieses Ereignis deaktiviert.",
+    "no_position": "Keine Position"
   },
   "notify_form": {
     "template": "Vorlage",

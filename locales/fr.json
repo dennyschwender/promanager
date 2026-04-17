@@ -672,7 +672,8 @@
     "pt_selection": "Sélection",
     "pt_available": "Disponible",
     "pt_no_reg": "Sans inscription",
-    "no_registration_note": "Le suivi des présences est désactivé pour cet événement."
+    "no_registration_note": "Le suivi des présences est désactivé pour cet événement.",
+    "no_position": "Sans position"
   },
   "notify_form": {
     "template": "Modèle",

@@ -672,7 +672,8 @@
     "pt_selection": "Selezione",
     "pt_available": "Disponibile",
     "pt_no_reg": "Nessuna registrazione",
-    "no_registration_note": "Il tracciamento delle presenze è disabilitato per questo evento."
+    "no_registration_note": "Il tracciamento delle presenze è disabilitato per questo evento.",
+    "no_position": "Nessuna posizione"
   },
   "notify_form": {
     "template": "Modello",

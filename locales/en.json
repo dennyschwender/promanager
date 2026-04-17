@@ -672,7 +672,8 @@
     "pt_selection": "Selection",
     "pt_available": "Available",
     "pt_no_reg": "No registration",
-    "no_registration_note": "Attendance tracking is disabled for this event."
+    "no_registration_note": "Attendance tracking is disabled for this event.",
+    "no_position": "No position"
   },
   "notify_form": {
     "template": "Template",

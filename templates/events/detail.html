@@ -368,12 +368,13 @@
   });
 
   // ── Position grouping toggle ──────────────────────────────────────
-  var POS_ORDER = ['goalie', 'defender', 'center', 'forward'];
+  var POS_ORDER = ['goalie', 'defender', 'center', 'forward', ''];
   var POS_LABELS = {
     goalie:   {{ t('enums.pos_goalie')   | tojson }},
     defender: {{ t('enums.pos_defender') | tojson }},
     center:   {{ t('enums.pos_center')   | tojson }},
     forward:  {{ t('enums.pos_forward')  | tojson }},
+    '':       {{ t('events_detail.no_position') | tojson }},
   };
   var TOGGLE_BTN = document.getElementById('pos-group-toggle');
   var ATT_COLS   = document.getElementById('attendance-columns');
@@ -405,19 +406,19 @@
       items.forEach(function (item, i) { item.classList.toggle('att-player-item-first', i === 0); });
       // Insert dividers if grouped
       if (grouped) {
-        // Count players per position
+        // Count players per position (including no-position as '')
         var posCounts = {};
         items.forEach(function (item) {
           var pos = item.dataset.position || '';
-          if (pos) posCounts[pos] = (posCounts[pos] || 0) + 1;
+          posCounts[pos] = (posCounts[pos] || 0) + 1;
         });
         var lastPos = '__none__';
         Array.prototype.slice.call(list.querySelectorAll('.att-player-item')).forEach(function (item) {
           var pos = item.dataset.position || '';
-          if (pos && pos !== lastPos) {
+          if (pos !== lastPos) {
             var div = document.createElement('li');
             div.className = 'att-pos-divider';
-            div.textContent = (POS_LABELS[pos] || pos) + ' (' + (posCounts[pos] || 0) + ')';
+            div.textContent = (POS_LABELS[pos] || pos || POS_LABELS['']) + ' (' + (posCounts[pos] || 0) + ')';
             list.insertBefore(div, item);
           }
           lastPos = pos;
