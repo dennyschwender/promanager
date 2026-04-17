@@ -173,6 +173,21 @@
 </div>
 {% endif %}
 
+{# Hidden anchor so #my-att-btn JS can find the player button even when hide_attendance hides the columns #}
+{% if user_player_ids and event.hide_attendance and not (user.is_admin or user.is_coach) %}
+  {% set _my_pid2 = user_player_ids | list | first %}
+  {% set _my_att2 = att_by_player.get(_my_pid2) %}
+  {% if _my_att2 %}
+  <div style="display:none" id="my-att-hidden-anchor">
+    <button type="button" class="att-player-btn"
+            data-player-id="{{ _my_pid2 }}"
+            data-player-name=""
+            data-status="{{ _my_att2.status }}"
+            data-note="{{ (_my_att2.note or '') | e }}"></button>
+  </div>
+  {% endif %}
+{% endif %}
+
 {# ── Shared popover (single DOM node, reused for each player) ──── #}
 <div id="att-popover" class="att-popover att-popover-hidden">
   <strong id="pop-name" class="pop-name"></strong>
