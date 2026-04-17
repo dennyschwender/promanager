@@ -11,4 +11,13 @@
     <td style="padding: 4px 0; font-family: monospace;">{{ password }}</td>
   </tr>
 </table>
+{% if telegram_bot_username %}
+<hr style="border:none;border-top:1px solid #eee;margin:1.5rem 0;">
+<h3 style="margin:0 0 .5rem;">{{ t("email.telegram_section") }}</h3>
+<p>{{ t("email.telegram_intro") }}</p>
+<p style="margin:.75rem 0;">
+  <a href="https://t.me/{{ telegram_bot_username }}" style="display:inline-block;background:#229ED9;color:#fff;padding:.5rem 1.25rem;border-radius:6px;text-decoration:none;font-weight:bold;">@{{ telegram_bot_username }}</a>
+</p>
+<p style="font-size:.88rem;color:#666;">{{ t("email.telegram_cta") }}</p>
+{% endif %}
 {% endblock %}

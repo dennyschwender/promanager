@@ -174,6 +174,7 @@ def send_welcome_email(
         "username": username,
         "password": password,
         "magic_link": magic_link,
+        "telegram_bot_username": settings.TELEGRAM_BOT_USERNAME or None,
     }, locale=locale)
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)

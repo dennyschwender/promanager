@@ -358,7 +358,10 @@
     "label_location": "Lieu",
     "reminder_cta": "N'oubliez pas de mettre à jour votre statut de présence.",
     "forgot_password_subject": "Votre mot de passe a été réinitialisé — %{app_name}",
-    "forgot_password_intro": "Votre mot de passe a été réinitialisé. Voici vos nouveaux identifiants :"
+    "forgot_password_intro": "Votre mot de passe a été réinitialisé. Voici vos nouveaux identifiants :",
+    "telegram_section": "Connecter via Telegram",
+    "telegram_intro": "Vous pouvez aussi gérer vos présences via notre bot Telegram :",
+    "telegram_cta": "Démarrez une conversation avec le bot, il vous guidera dans la configuration."
   },
   "schedule": {
     "title": "Calendrier",

@@ -358,7 +358,10 @@
     "label_location": "Location",
     "reminder_cta": "Please make sure to update your attendance status.",
     "forgot_password_subject": "Your password has been reset — %{app_name}",
-    "forgot_password_intro": "Your password has been reset. Here are your new login credentials:"
+    "forgot_password_intro": "Your password has been reset. Here are your new login credentials:",
+    "telegram_section": "Connect via Telegram",
+    "telegram_intro": "You can also manage your attendance via our Telegram bot:",
+    "telegram_cta": "Start a conversation with the bot and it will guide you through the setup."
   },
   "schedule": {
     "title": "Schedule",

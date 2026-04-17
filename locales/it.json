@@ -358,7 +358,10 @@
     "label_location": "Luogo",
     "reminder_cta": "Ricordati di aggiornare il tuo stato di presenza.",
     "forgot_password_subject": "La tua password è stata reimpostata — %{app_name}",
-    "forgot_password_intro": "La tua password è stata reimpostata. Ecco le tue nuove credenziali:"
+    "forgot_password_intro": "La tua password è stata reimpostata. Ecco le tue nuove credenziali:",
+    "telegram_section": "Collegati tramite Telegram",
+    "telegram_intro": "Puoi anche gestire le tue presenze tramite il nostro bot Telegram:",
+    "telegram_cta": "Avvia una conversazione con il bot e ti guiderà nella configurazione."
   },
   "schedule": {
     "title": "Calendario",

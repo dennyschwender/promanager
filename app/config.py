@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     TELEGRAM_WEBHOOK_URL: str = ""
     # Random secret to validate incoming webhook requests from Telegram
     TELEGRAM_WEBHOOK_SECRET: str = ""
+    # Bot username (without @) — shown in welcome emails so users know how to connect
+    TELEGRAM_BOT_USERNAME: str = ""
 
     @field_validator("SMTP_PORT")
     @classmethod

@@ -358,7 +358,10 @@
     "label_location": "Ort",
     "reminder_cta": "Bitte aktualisiere deinen Anwesenheitsstatus.",
     "forgot_password_subject": "Ihr Passwort wurde zurückgesetzt — %{app_name}",
-    "forgot_password_intro": "Ihr Passwort wurde zurückgesetzt. Hier sind Ihre neuen Anmeldedaten:"
+    "forgot_password_intro": "Ihr Passwort wurde zurückgesetzt. Hier sind Ihre neuen Anmeldedaten:",
+    "telegram_section": "Via Telegram verbinden",
+    "telegram_intro": "Du kannst deine Anwesenheit auch über unseren Telegram-Bot verwalten:",
+    "telegram_cta": "Starte ein Gespräch mit dem Bot, er führt dich durch die Einrichtung."
   },
   "schedule": {
     "title": "Spielplan",
