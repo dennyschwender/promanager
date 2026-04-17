@@ -217,7 +217,7 @@ async def update_attendance(
         if player is None or player.user_id != user.id:
             if wants_json:
                 return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=403)
-            return RedirectResponse(f"/events/{event_id}", status_code=302)
+            return RedirectResponse("/events/" + str(int(event_id)), status_code=302)
 
     # Capture old status before update
     old_att = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.player_id == player_id).first()

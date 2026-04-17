@@ -595,13 +595,24 @@ async def impersonate_user(
     if target is None or not target.is_active:
         raise NotAuthorized
 
-    orig_session = request.cookies.get(COOKIE_NAME, "")
+    # Validate existing session cookie before saving it as the restore token
+    from itsdangerous import BadSignature, SignatureExpired  # noqa: PLC0415
+
+    from app.session import _signer  # noqa: PLC0415
+    raw_orig = request.cookies.get(COOKIE_NAME, "")
+    try:
+        _signer.unsign(raw_orig, max_age=60 * 60 * 24 * 7)
+        orig_session = raw_orig
+    except (BadSignature, SignatureExpired):
+        orig_session = ""
+
     new_session = create_session_cookie(target.id)
 
     log_action("auth.impersonate", target_type="user", target_id=target.id, target_label=target.username, request=request)
     response = RedirectResponse("/dashboard", status_code=302)
     response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
-    response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
+    if orig_session:
+        response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
     return response
 
 
@@ -616,14 +627,14 @@ async def user_add_team(
     from models.user_team import UserTeam
     target = db.get(User, user_id)
     if target is None or target.role not in ("admin", "coach"):
-        return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
+        return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
     sid = int(season_id) if season_id.strip() else None
     q = db.query(UserTeam).filter(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
     q = q.filter(UserTeam.season_id.is_(None) if sid is None else UserTeam.season_id == sid)
     if not q.first():
         db.add(UserTeam(user_id=user_id, team_id=team_id, season_id=sid))
         db.commit()
-    return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
+    return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 
 @router.post("/{user_id}/remove-team/{ut_id}", dependencies=[Depends(require_admin), Depends(require_csrf)])
@@ -637,7 +648,7 @@ async def user_remove_team(
     if ut and ut.user_id == user_id:
         db.delete(ut)
         db.commit()
-    return RedirectResponse(f"/auth/users/{user_id}/edit", status_code=302)
+    return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 
 @router.post("/sync-from-players", dependencies=[Depends(require_admin), Depends(require_csrf)])
