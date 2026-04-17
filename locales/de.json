@@ -908,7 +908,9 @@
     "team_absences_subtitle": "Saison",
     "no_team_absences": "Keine Abwesenheiten für dieses Team",
     "all_seasons": "Alle Saisons",
-    "absence_type": "Abwesenheitsart"
+    "absence_type": "Abwesenheitsart",
+    "manage_my_absences": "Meine Abwesenheiten verwalten",
+    "self_service_hint": "Zeiträume festlegen, in denen du nicht verfügbar bist, damit deine Anwesenheit automatisch als abwesend markiert wird."
   },
   "admin": {
     "audit_log_title": "Aktivitätsprotokoll",

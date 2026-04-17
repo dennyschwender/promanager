@@ -63,6 +63,11 @@
   <p>{{ t('dashboard.no_upcoming') }} {% if user.is_admin %}<a href="/events/new">{{ t('dashboard.create_one') }}</a>.{% endif %}</p>
 {% endif %}
 
+{% if my_player_id %}
+<hr>
+<p><a href="/players/{{ my_player_id }}/absences" class="btn btn-outline">{{ t('absences.manage_my_absences') }}</a></p>
+{% endif %}
+
 {% if user.is_admin %}
 <hr>
 <h3>{{ t('dashboard.quick_actions') }}</h3>
