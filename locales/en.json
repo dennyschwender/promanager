@@ -295,7 +295,9 @@
     "confirm_delete": "Are you sure you want to delete this?",
     "select_all": "Select all",
     "deselect_all": "Deselect all",
-    "security": "Security"
+    "security": "Security",
+    "filter": "Filter",
+    "clear": "Clear"
   },
   "errors": {
     "404_title": "Page Not Found",
@@ -903,5 +905,18 @@
     "no_team_absences": "No absences for this team",
     "all_seasons": "All Seasons",
     "absence_type": "Absence Type"
+  },
+  "admin": {
+    "audit_log_title": "Audit Log",
+    "audit_log_entries": "entries",
+    "audit_log_empty": "No audit entries found.",
+    "audit_filter_actor": "Filter by user...",
+    "audit_filter_action": "Filter by action...",
+    "audit_col_time": "Time",
+    "audit_col_actor": "User",
+    "audit_col_action": "Action",
+    "audit_col_target": "Target",
+    "audit_col_extra": "Details",
+    "audit_col_ip": "IP"
   }
 }

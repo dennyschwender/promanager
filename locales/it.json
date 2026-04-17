@@ -295,7 +295,9 @@
     "confirm_delete": "Sei sicuro di voler eliminare questo?",
     "select_all": "Seleziona tutti",
     "deselect_all": "Deseleziona tutti",
-    "security": "Sicurezza"
+    "security": "Sicurezza",
+    "filter": "Filtra",
+    "clear": "Cancella"
   },
   "errors": {
     "404_title": "Pagina Non Trovata",
@@ -903,5 +905,18 @@
     "no_team_absences": "Nessuna assenza per questo team",
     "all_seasons": "Tutte le stagioni",
     "absence_type": "Tipo di assenza"
+  },
+  "admin": {
+    "audit_log_title": "Registro attività",
+    "audit_log_entries": "voci",
+    "audit_log_empty": "Nessuna voce trovata.",
+    "audit_filter_actor": "Filtra per utente...",
+    "audit_filter_action": "Filtra per azione...",
+    "audit_col_time": "Ora",
+    "audit_col_actor": "Utente",
+    "audit_col_action": "Azione",
+    "audit_col_target": "Destinatario",
+    "audit_col_extra": "Dettagli",
+    "audit_col_ip": "IP"
   }
 }

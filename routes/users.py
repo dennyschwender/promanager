@@ -19,7 +19,7 @@ from models.season import Season
 from models.team import Team
 from models.user import User
 from routes._auth_helpers import NotAuthorized, require_admin, rt
-from services import email_service
+from services.audit_service import log_action
 from services.auth_service import create_magic_link, create_session_cookie, hash_password
 from services.email_service import send_reset_email, send_welcome_email
 
@@ -253,6 +253,9 @@ async def bulk_create_post(
 
     db.commit()
 
+    if created:
+        log_action("user.bulk_create", extra={"created": created, "skipped": skipped, "role": role, "locale": locale}, request=request)
+
     teams = db.query(Team).order_by(Team.name).all()
     seasons = db.query(Season).order_by(Season.name).all()
 
@@ -454,8 +457,10 @@ async def toggle_active(
         if active_admin_count <= 1:
             raise NotAuthorized
 
+    action = "user.deactivate" if target.is_active else "user.reactivate"
     target.is_active = not target.is_active
     db.commit()
+    log_action(action, target_type="user", target_id=target.id, target_label=target.username, request=request)
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -483,6 +488,7 @@ async def reset_password(
         magic_link=magic,
     )
 
+    log_action("user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request)
     return RedirectResponse("/auth/users?reset=1", status_code=302)
 
 
@@ -510,6 +516,7 @@ async def send_welcome(
         magic_link=magic,
     )
 
+    log_action("user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request)
     return RedirectResponse("/auth/users?welcome=1", status_code=302)
 
 
@@ -541,6 +548,8 @@ async def delete_user(
         if active_admin_count <= 1:
             raise NotAuthorized
 
+    label = target.username
+    log_action("user.delete", target_type="user", target_id=target.id, target_label=label, request=request)
     db.delete(target)
     db.commit()
     return RedirectResponse("/auth/users", status_code=302)
@@ -562,6 +571,7 @@ async def impersonate_user(
     orig_session = request.cookies.get(COOKIE_NAME, "")
     new_session = create_session_cookie(target.id)
 
+    log_action("auth.impersonate", target_type="user", target_id=target.id, target_label=target.username, request=request)
     response = RedirectResponse("/dashboard", status_code=302)
     response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
     response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)

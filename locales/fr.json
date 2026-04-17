@@ -295,7 +295,9 @@
     "confirm_delete": "Êtes-vous sûr de vouloir supprimer ceci?",
     "select_all": "Tout sélectionner",
     "deselect_all": "Tout désélectionner",
-    "security": "Sécurité"
+    "security": "Sécurité",
+    "filter": "Filtrer",
+    "clear": "Effacer"
   },
   "errors": {
     "404_title": "Page introuvable",
@@ -903,5 +905,18 @@
     "no_team_absences": "Aucune absence pour cette équipe",
     "all_seasons": "Toutes les saisons",
     "absence_type": "Type d'absence"
+  },
+  "admin": {
+    "audit_log_title": "Journal d'activité",
+    "audit_log_entries": "entrées",
+    "audit_log_empty": "Aucune entrée trouvée.",
+    "audit_filter_actor": "Filtrer par utilisateur...",
+    "audit_filter_action": "Filtrer par action...",
+    "audit_col_time": "Heure",
+    "audit_col_actor": "Utilisateur",
+    "audit_col_action": "Action",
+    "audit_col_target": "Cible",
+    "audit_col_extra": "Détails",
+    "audit_col_ip": "IP"
   }
 }

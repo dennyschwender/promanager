@@ -37,6 +37,7 @@ from services.attendance_service import (
     get_event_attendance_detail,
     sync_attendance_defaults,
 )
+from services.audit_service import log_action
 from services.chat_service import author_display_name, message_to_dict
 from services.email_service import send_event_reminder
 from services.event_text_service import format_attendance_text
@@ -378,6 +379,11 @@ async def event_new_post(
             background_tasks=background_tasks,
         )
 
+    count = len(dates_to_create)
+    log_action("event.create", target_type="event", target_id=first_event.id,
+               target_label=first_event.title,
+               extra={"occurrences": count, "team_id": parsed_team_id},
+               request=request)
     return RedirectResponse(f"/events/{first_event.id}", status_code=302)
 
 
@@ -772,6 +778,7 @@ async def event_edit_post(
             status_code=400,
         )
 
+    old_title = event.title
     # Capture old date to detect changes
     old_event_date = event.event_date
 
@@ -798,6 +805,7 @@ async def event_edit_post(
     if old_event_date != e_date:
         from services.absence_service import sync_attendance_to_absences_for_event
         sync_attendance_to_absences_for_event(event_id, db)
+    log_action("event.update", target_type="event", target_id=event_id, target_label=old_title, request=request)
     return RedirectResponse(f"/events/{event_id}", status_code=302)
 
 
@@ -826,12 +834,17 @@ async def event_delete(
     if scope == "future" and event.recurrence_group_id:
         n = delete_future_events(db, event.recurrence_group_id)
         db.commit()
+        log_action("event.delete", target_type="event", target_id=event_id, target_label=event.title,
+                   extra={"scope": "future", "count": n}, request=request)
         msg = quote(rt(request, "events.deleted_series", count=n))
         return RedirectResponse(f"/events?flash={msg}", status_code=302)
 
     # Default: delete single event
+    label = event.title
     db.delete(event)
     db.commit()
+    log_action("event.delete", target_type="event", target_id=event_id, target_label=label,
+               extra={"scope": "single"}, request=request)
     msg = quote(rt(request, "events.deleted_single"))
     return RedirectResponse(f"/events?flash={msg}", status_code=302)
 

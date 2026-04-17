@@ -26,6 +26,7 @@ from models.team import Team
 from models.user import User
 from routes._auth_helpers import check_team_access, require_admin, require_coach_or_admin, require_login, rt
 from services.attendance_service import backfill_attendance_for_player, get_player_attendance_history
+from services.audit_service import log_action
 from services.import_service import ImportResult, parse_csv, parse_xlsx, process_rows
 
 router = APIRouter()
@@ -690,7 +691,7 @@ async def player_new_post(
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
-):
+):  # audit: player.create logged after commit
     form = await request.form()
     first_name = (form.get("first_name") or "").strip()
     last_name = (form.get("last_name") or "").strip()
@@ -757,6 +758,13 @@ async def player_new_post(
     _sync_contact(db, player, form)
 
     db.commit()
+    log_action(
+        "player.create",
+        target_type="player",
+        target_id=player.id,
+        target_label=f"{player.first_name} {player.last_name}",
+        request=request,
+    )
     return RedirectResponse("/players", status_code=302)
 
 
@@ -1118,6 +1126,13 @@ async def player_edit_post(
 
     db.add(player)
     db.commit()
+    log_action(
+        "player.update",
+        target_type="player",
+        target_id=player.id,
+        target_label=f"{player.first_name} {player.last_name}",
+        request=request,
+    )
     return RedirectResponse(f"/players/{player_id}", status_code=302)
 
 
@@ -1129,6 +1144,7 @@ async def player_edit_post(
 @router.post("/{player_id}/archive")
 async def player_archive(
     player_id: int,
+    request: Request,
     _user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -1150,12 +1166,20 @@ async def player_archive(
         ids = [r[0] for r in future_att_ids]
         db.query(Attendance).filter(Attendance.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
+    log_action(
+        "player.archive",
+        target_type="player",
+        target_id=player.id,
+        target_label=f"{player.first_name} {player.last_name}",
+        request=request,
+    )
     return RedirectResponse("/players", status_code=302)
 
 
 @router.post("/{player_id}/unarchive")
 async def player_unarchive(
     player_id: int,
+    request: Request,
     _user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -1165,6 +1189,13 @@ async def player_unarchive(
         raise HTTPException(status_code=404)
     player.archived_at = None
     db.commit()
+    log_action(
+        "player.unarchive",
+        target_type="player",
+        target_id=player.id,
+        target_label=f"{player.first_name} {player.last_name}",
+        request=request,
+    )
     return RedirectResponse("/players", status_code=302)
 
 

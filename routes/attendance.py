@@ -16,6 +16,7 @@ from models.player_team import PlayerTeam
 from models.user import User
 from routes._auth_helpers import require_coach_or_admin, require_login, rt
 from services.attendance_service import set_attendance
+from services.audit_service import log_action
 
 router = APIRouter()
 
@@ -218,7 +219,25 @@ async def update_attendance(
                 return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=403)
             return RedirectResponse(f"/events/{event_id}", status_code=302)
 
+    # Capture old status before update
+    old_att = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.player_id == player_id).first()
+    old_status = old_att.status if old_att else None
+
     set_attendance(db, event_id, player_id, status, note)
+
+    if old_status != status:
+        player_obj = db.get(Player, player_id)
+        player_label = f"{player_obj.first_name} {player_obj.last_name}" if player_obj else str(player_id)
+        event_obj = db.get(Event, event_id)
+        log_action(
+            "attendance.update",
+            target_type="attendance",
+            target_id=player_id,
+            target_label=player_label,
+            extra={"event_id": event_id, "event": event_obj.title if event_obj else None,
+                   "old": old_status, "new": status},
+            request=request,
+        )
 
     if wants_json:
         return JSONResponse({"ok": True, "status": status, "note": note})

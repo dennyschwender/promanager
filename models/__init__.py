@@ -1,6 +1,7 @@
 """models/__init__.py — Import all models so Base.metadata is fully populated."""
 
 from .attendance import Attendance
+from .audit_log import AuditLog
 from .event import Event
 from .event_external import EventExternal
 from .event_message import EventMessage
@@ -36,4 +37,5 @@ __all__ = [
     "NotificationPreference",
     "WebPushSubscription",
     "UserTeam",
+    "AuditLog",
 ]

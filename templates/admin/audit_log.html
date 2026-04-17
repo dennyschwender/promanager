@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.audit_log_title') }} — ProManager{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('admin.audit_log_title') }}</h2>
+  <span style="color:var(--tp-muted);font-size:.85rem;">{{ total }} {{ t('admin.audit_log_entries') }}</span>
+</div>
+
+<form method="get" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+  <input type="text" name="actor" value="{{ filter_actor }}" placeholder="{{ t('admin.audit_filter_actor') }}" style="min-width:160px;">
+  <input type="text" name="action" value="{{ filter_action }}" placeholder="{{ t('admin.audit_filter_action') }}" style="min-width:200px;">
+  <button type="submit" class="btn btn-secondary">{{ t('common.filter') }}</button>
+  {% if filter_actor or filter_action %}
+  <a href="/admin/audit" class="btn btn-secondary">{{ t('common.clear') }}</a>
+  {% endif %}
+</form>
+
+{% if entries %}
+<div class="table-responsive">
+<table>
+  <thead><tr>
+    <th>{{ t('admin.audit_col_time') }}</th>
+    <th>{{ t('admin.audit_col_actor') }}</th>
+    <th>{{ t('admin.audit_col_action') }}</th>
+    <th>{{ t('admin.audit_col_target') }}</th>
+    <th>{{ t('admin.audit_col_extra') }}</th>
+    <th>{{ t('admin.audit_col_ip') }}</th>
+  </tr></thead>
+  <tbody>
+  {% for entry in entries %}
+  <tr>
+    <td style="white-space:nowrap;font-size:.82rem;color:var(--tp-muted);">{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td>{{ entry.actor_username or '—' }}</td>
+    <td><code style="font-size:.82rem;">{{ entry.action }}</code></td>
+    <td>
+      {% if entry.target_label %}
+        <span style="font-size:.88rem;">{{ entry.target_label }}</span>
+        {% if entry.target_type %}<small style="color:var(--tp-muted);"> ({{ entry.target_type }})</small>{% endif %}
+      {% else %}—{% endif %}
+    </td>
+    <td style="font-size:.78rem;color:var(--tp-muted);max-width:280px;word-break:break-all;">
+      {% if entry.extra %}{{ entry.extra }}{% else %}—{% endif %}
+    </td>
+    <td style="font-size:.78rem;color:var(--tp-muted);">{{ entry.ip_address or '—' }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+<div style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap;">
+  {% if page > 1 %}
+  <a href="?page={{ page - 1 }}&actor={{ filter_actor }}&action={{ filter_action }}" class="btn btn-secondary">← {{ t('common.prev') }}</a>
+  {% endif %}
+  <span style="color:var(--tp-muted);font-size:.88rem;">{{ page }} / {{ total_pages }}</span>
+  {% if page < total_pages %}
+  <a href="?page={{ page + 1 }}&actor={{ filter_actor }}&action={{ filter_action }}" class="btn btn-secondary">{{ t('common.next') }} →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<p style="color:var(--tp-muted);">{{ t('admin.audit_log_empty') }}</p>
+{% endif %}
+{% endblock %}

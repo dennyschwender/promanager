@@ -44,9 +44,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
         # Embed unread notification count for the bell badge
         request.state.unread_count = 0
         if request.state.user is not None:
+            from datetime import datetime, timedelta, timezone  # noqa: PLC0415
+
             from app import database as _db_mod  # noqa: PLC0415
             from models.notification import Notification  # noqa: PLC0415
             from models.player import Player  # noqa: PLC0415
+            from models.user import User as _User  # noqa: PLC0415
 
             db = _db_mod.SessionLocal()
             try:
@@ -69,6 +72,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
                         )
                         .count()
                     )
+
+                # Throttled last_seen_at update (max once per 5 min)
+                now = datetime.now(timezone.utc)
+                u = request.state.user
+                threshold = timedelta(minutes=5)
+                last_seen = u.last_seen_at
+                if last_seen and last_seen.tzinfo is None:
+                    last_seen = last_seen.replace(tzinfo=timezone.utc)
+                if last_seen is None or (now - last_seen) > threshold:
+                    db_user = db.get(_User, u.id)
+                    if db_user is not None:
+                        db_user.last_seen_at = now
+                        db.commit()
             finally:
                 db.close()
         # Force password change before any other page
@@ -194,6 +210,7 @@ def create_app() -> FastAPI:
         ("routes.telegram", "", "telegram"),
         ("routes.event_messages", "", "event_messages"),
         ("routes.absences", "", "absences"),
+        ("routes.admin", "/admin", "admin"),
     ]
     for module_path, prefix, tag in _routers:
         try:

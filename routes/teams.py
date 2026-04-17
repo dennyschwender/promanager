@@ -18,6 +18,7 @@ from models.team_recurring_schedule import TeamRecurringSchedule
 from models.user import User
 from models.user_team import UserTeam
 from routes._auth_helpers import require_admin, require_coach_or_admin, require_login, rt
+from services.audit_service import log_action
 from services.schedule_service import (
     count_future_events,
     delete_future_events,
@@ -197,6 +198,7 @@ async def team_new_post(
     db.add(team)
     db.commit()
     db.refresh(team)
+    log_action("team.create", target_type="team", target_id=team.id, target_label=team.name, request=request)
     return RedirectResponse("/teams", status_code=302)
 
 
@@ -636,8 +638,10 @@ async def team_delete(
 ):
     team = db.get(Team, team_id)
     if team:
+        label = team.name
         db.delete(team)
         db.commit()
+        log_action("team.delete", target_type="team", target_id=team_id, target_label=label, request=request)
     return RedirectResponse("/teams", status_code=302)
 
 

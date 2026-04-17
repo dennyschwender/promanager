@@ -15,6 +15,7 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.user import User
 from routes._auth_helpers import require_admin, require_coach_or_admin, rt
+from services.audit_service import log_action
 
 router = APIRouter()
 
@@ -100,6 +101,7 @@ async def season_new_post(
     db.add(season)
     db.commit()
     db.refresh(season)
+    log_action("season.create", target_type="season", target_id=season.id, target_label=season.name, request=request)
     return RedirectResponse("/seasons", status_code=302)
 
 
@@ -176,6 +178,7 @@ async def season_edit_post(
     season.end_date = e_date
     db.add(season)
     db.commit()
+    log_action("season.update", target_type="season", target_id=season.id, target_label=season.name, request=request)
     return RedirectResponse("/seasons", status_code=302)
 
 
@@ -198,6 +201,8 @@ async def season_activate(
         season.is_active = True
         db.add(season)
     db.commit()
+    if season:
+        log_action("season.activate", target_type="season", target_id=season.id, target_label=season.name, request=request)
     return RedirectResponse("/seasons", status_code=302)
 
 
@@ -216,8 +221,10 @@ async def season_delete(
 ):
     season = db.get(Season, season_id)
     if season:
+        label = season.name
         db.delete(season)
         db.commit()
+        log_action("season.delete", target_type="season", target_id=season_id, target_label=label, request=request)
     return RedirectResponse("/seasons", status_code=302)
 
 

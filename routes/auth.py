@@ -18,6 +18,7 @@ from app.limiter import limiter
 from app.templates import render
 from models.user import User
 from routes._auth_helpers import require_admin, require_login, rt
+from services.audit_service import log_action
 from services.auth_service import (
     authenticate_user,
     create_session_cookie,
@@ -56,6 +57,7 @@ async def login_post(
 ):
     user = authenticate_user(db, username, password)
     if user is None:
+        log_action("auth.login_failed", actor_username=username, extra={"username": username}, request=request)
         return render(
             request,
             "auth/login.html",
@@ -63,6 +65,7 @@ async def login_post(
             status_code=401,
         )
 
+    log_action("auth.login", actor_user_id=user.id, actor_username=user.username, request=request)
     cookie_val = create_session_cookie(user.id)
     response = RedirectResponse("/dashboard", status_code=302)
     response.set_cookie(
@@ -82,7 +85,9 @@ async def login_post(
 
 
 @router.get("/logout")
-async def logout():
+async def logout(request: Request):
+    if request.state.user:
+        log_action("auth.logout", request=request)
     response = RedirectResponse("/auth/login", status_code=302)
     response.delete_cookie(COOKIE_NAME)
     return response
@@ -230,6 +235,7 @@ async def change_password_post(
     db_user.must_change_password = False
     db.commit()
 
+    log_action("auth.change_password", request=request)
     return RedirectResponse("/auth/change-password?saved=1", status_code=302)
 
 
@@ -241,6 +247,7 @@ async def change_password_post(
 @router.get("/stop-impersonating")
 async def stop_impersonating(request: Request):
     orig_session = request.cookies.get("_orig_session", "")
+    log_action("auth.stop_impersonate", request=request)
     response = RedirectResponse("/auth/users", status_code=302)
     if orig_session:
         response.set_cookie(
@@ -271,6 +278,7 @@ async def logout_all_post(
     db_user.logout_all_at = datetime.now(timezone.utc)
     db.commit()
 
+    log_action("auth.logout_all", request=request)
     # Re-issue a fresh session cookie so the current session stays valid
     new_cookie = create_session_cookie(user.id)
     flash_msg = quote(rt(request, "auth.logout_all_done"))
@@ -322,5 +330,8 @@ async def forgot_password_post(
             locale=getattr(user, "locale", "en") or "en",
         )
 
+    if user and user.is_active:
+        log_action("auth.forgot_password", target_type="user", target_id=user.id,
+                   target_label=user.username, request=request)
     # Always show success to avoid user enumeration
     return render(request, "auth/forgot_password.html", {"user": None, "sent": True, "error": None})
