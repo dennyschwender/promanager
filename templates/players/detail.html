@@ -9,9 +9,53 @@
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>{{ player.full_name }}</h2>
-  {% if player.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}
+  <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+    <h2 style="margin:0;">{{ player.full_name }}</h2>
+    {% if player.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}
+  </div>
+  {% if user.is_admin %}
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players_detail.edit_info') }}</a>
+    <a href="/reports/player/{{ player.id }}" class="btn btn-outline">{{ t('players_detail.attendance_report') }}</a>
+    <a href="/players/{{ player.id }}/absences" class="btn btn-outline">{{ t('players_detail.absences') }}</a>
+  </div>
+  {% endif %}
 </div>
+
+{# ================== PERSONAL INFO ================== #}
+<section class="card" style="margin-bottom:1.25rem;">
+  <h3 style="margin-top:0">{{ t('players_detail.personal_info') }}</h3>
+  <dl class="detail-dl">
+    <dt>{{ t('players_form.sex') }}</dt>
+    <dd>{{ enums.sex.get(player.sex, player.sex|capitalize) if player.sex else '—' }}</dd>
+    <dt>{{ t('players_form.date_of_birth') }}</dt>
+    <dd>{{ player.date_of_birth if player.date_of_birth else '—' }}</dd>
+    <dt>{{ t('players_detail.email') }}</dt>
+    <dd>
+      {% if player.email %}<a href="mailto:{{ player.email }}">{{ player.email }}</a>
+      {% else %}&mdash;{% endif %}
+    </dd>
+    <dt>{{ t('players_detail.phone_primary') }}</dt>
+    <dd>{{ player.phone or '—' }}</dd>
+    {% if player.phones %}
+    <dt>{{ t('players_detail.phone_numbers') }}</dt>
+    <dd>
+      <ul style="margin:0;padding-left:1.2em;">
+        {% for ph in player.phones %}
+          <li>{{ ph.phone }}{% if ph.label %} <small class="muted">({{ ph.label }})</small>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </dd>
+    {% endif %}
+    <dt>{{ t('players_detail.address') }}</dt>
+    <dd>
+      {% if player.street or player.city %}
+        {% if player.street %}{{ player.street }}<br>{% endif %}
+        {{ player.postcode or '' }} {{ player.city or '' }}
+      {% else %}&mdash;{% endif %}
+    </dd>
+  </dl>
+</section>
 
 {# ==================== TEAMS ==================== #}
 {% if player.team_memberships %}
@@ -59,41 +103,6 @@
 </section>
 {% endif %}
 
-{# ================== PERSONAL INFO ================== #}
-<section class="card" style="margin-bottom:1.25rem;">
-  <h3 style="margin-top:0">{{ t('players_detail.personal_info') }}</h3>
-  <dl class="detail-dl">
-    <dt>{{ t('players_form.sex') }}</dt>
-    <dd>{{ enums.sex.get(player.sex, player.sex|capitalize) if player.sex else '—' }}</dd>
-    <dt>{{ t('players_form.date_of_birth') }}</dt>
-    <dd>{{ player.date_of_birth if player.date_of_birth else '—' }}</dd>
-    <dt>{{ t('players_detail.email') }}</dt>
-    <dd>
-      {% if player.email %}<a href="mailto:{{ player.email }}">{{ player.email }}</a>
-      {% else %}&mdash;{% endif %}
-    </dd>
-    <dt>{{ t('players_detail.phone_primary') }}</dt>
-    <dd>{{ player.phone or '—' }}</dd>
-    {% if player.phones %}
-    <dt>{{ t('players_detail.phone_numbers') }}</dt>
-    <dd>
-      <ul style="margin:0;padding-left:1.2em;">
-        {% for ph in player.phones %}
-          <li>{{ ph.phone }}{% if ph.label %} <small class="muted">({{ ph.label }})</small>{% endif %}</li>
-        {% endfor %}
-      </ul>
-    </dd>
-    {% endif %}
-    <dt>{{ t('players_detail.address') }}</dt>
-    <dd>
-      {% if player.street or player.city %}
-        {% if player.street %}{{ player.street }}<br>{% endif %}
-        {{ player.postcode or '' }} {{ player.city or '' }}
-      {% else %}&mdash;{% endif %}
-    </dd>
-  </dl>
-</section>
-
 {# ================== EMERGENCY CONTACT ================== #}
 {% if player.contact %}
 <section class="card" style="margin-bottom:1.25rem;">
@@ -126,13 +135,6 @@
 </section>
 {% endif %}
 
-{% if user.is_admin %}
-<div class="action-group" style="margin-bottom:1.5rem;">
-  <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players_detail.edit_info') }}</a>
-  <a href="/reports/player/{{ player.id }}" class="btn btn-outline">{{ t('players_detail.attendance_report') }}</a>
-  <a href="/players/{{ player.id }}/absences" class="btn btn-outline">{{ t('players_detail.absences') }}</a>
-</div>
-{% endif %}
 
 {# ================== UPCOMING EVENTS ================== #}
 <h3>{{ t('players_detail.future_attendance') }}</h3>
