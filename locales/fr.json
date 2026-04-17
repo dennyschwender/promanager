@@ -410,7 +410,10 @@
     "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès.",
     "impersonate": "Se connecter en tant que",
     "impersonating_banner": "Vous consultez l'application en tant que %{username}.",
-    "stop_impersonating": "Retour à votre compte"
+    "stop_impersonating": "Retour à votre compte",
+    "send_welcome": "Envoyer l'e-mail de bienvenue",
+    "send_welcome_confirm": "Réinitialiser le mot de passe et envoyer l'e-mail de bienvenue à %{username} ?",
+    "send_welcome_sent": "E-mail de bienvenue envoyé."
   },
   "players_form": {
     "basic_info": "Informations de base",

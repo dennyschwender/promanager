@@ -10,6 +10,9 @@
 {% if password_reset %}
 <div class="alert alert-success">{{ t('users.reset_password_sent') }}</div>
 {% endif %}
+{% if request.query_params.get('welcome') %}
+<div class="alert alert-success">{{ t('users.send_welcome_sent') }}</div>
+{% endif %}
 <div class="page-header">
   <h2>{{ t('users.title') }}</h2>
   <div style="display:flex;gap:.5rem;">
@@ -51,6 +54,11 @@
                 onsubmit="return confirm('{{ t('users.reset_password_confirm', username=u.username) }}')">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <button type="submit">{{ t('users.reset_password') }}</button>
+          </form>
+          <form method="post" action="/auth/users/{{ u.id }}/send-welcome"
+                onsubmit="return confirm('{{ t('users.send_welcome_confirm', username=u.username) }}')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('users.send_welcome') }}</button>
           </form>
 <form method="post" action="/auth/users/{{ u.id }}/toggle-active">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">

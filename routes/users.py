@@ -481,6 +481,33 @@ async def reset_password(
     return RedirectResponse("/auth/users?reset=1", status_code=302)
 
 
+@router.post("/{user_id}/send-welcome", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def send_welcome(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    target = db.get(User, user_id)
+    if target is None:
+        return RedirectResponse("/auth/users", status_code=302)
+
+    new_pw = secrets.token_urlsafe(12)
+    target.hashed_password = hash_password(new_pw)
+    target.must_change_password = True
+    db.commit()
+
+    magic = create_magic_link(target.id, "/dashboard")
+    send_welcome_email(
+        to=target.email,
+        username=target.username,
+        password=new_pw,
+        locale=target.locale or "en",
+        magic_link=magic,
+    )
+
+    return RedirectResponse("/auth/users?welcome=1", status_code=302)
+
+
 @router.post("/{user_id}/delete", dependencies=[Depends(require_admin), Depends(require_csrf)])
 async def delete_user(
     user_id: int,

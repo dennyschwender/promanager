@@ -410,7 +410,10 @@
     "reset_password_sent": "Password reset and email sent successfully.",
     "impersonate": "Log in as",
     "impersonating_banner": "You are viewing the app as %{username}.",
-    "stop_impersonating": "Back to your account"
+    "stop_impersonating": "Back to your account",
+    "send_welcome": "Send welcome email",
+    "send_welcome_confirm": "Reset password and send welcome email to %{username}?",
+    "send_welcome_sent": "Welcome email sent."
   },
   "players_form": {
     "basic_info": "Basic Info",

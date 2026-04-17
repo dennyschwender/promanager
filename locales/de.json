@@ -410,7 +410,10 @@
     "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet.",
     "impersonate": "Anmelden als",
     "impersonating_banner": "Sie sehen die App als %{username}.",
-    "stop_impersonating": "Zurück zu Ihrem Konto"
+    "stop_impersonating": "Zurück zu Ihrem Konto",
+    "send_welcome": "Willkommens-E-Mail senden",
+    "send_welcome_confirm": "Passwort zurücksetzen und Willkommens-E-Mail an %{username} senden?",
+    "send_welcome_sent": "Willkommens-E-Mail gesendet."
   },
   "players_form": {
     "basic_info": "Grunddaten",
