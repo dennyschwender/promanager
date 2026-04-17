@@ -99,6 +99,13 @@
   {% endif %}
 </nav>
 
+{% if request.cookies.get('_orig_session') %}
+<div style="background:var(--tp-warning,#e67e22);color:#fff;text-align:center;padding:.4rem 1rem;font-size:.88rem;">
+  {{ t('users.impersonating_banner', username=user.username) }}
+  <a href="/auth/stop-impersonating" style="color:#fff;font-weight:700;margin-left:1rem;">{{ t('users.stop_impersonating') }} →</a>
+</div>
+{% endif %}
+
 <main class="container-fluid" style="padding-top:1.5rem;max-width:1600px;margin-inline:auto;">
   {% block breadcrumb %}{% endblock %}
   {% block content %}{% endblock %}

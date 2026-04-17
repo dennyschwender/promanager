@@ -1,9 +1,9 @@
 """models/__init__.py — Import all models so Base.metadata is fully populated."""
 
 from .attendance import Attendance
+from .event import Event
 from .event_external import EventExternal
 from .event_message import EventMessage
-from .event import Event
 from .notification import Notification
 from .notification_preference import NotificationPreference
 from .player import Player

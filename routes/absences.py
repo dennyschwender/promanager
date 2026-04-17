@@ -12,8 +12,8 @@ from models.player_absence import PlayerAbsence
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.user_team import UserTeam
-from routes._auth_helpers import require_login
 from routes._absence_helpers import require_absence_ownership_or_coach
+from routes._auth_helpers import require_login
 from services.absence_service import apply_absence_to_future_events
 
 router = APIRouter(prefix="/api", tags=["absences"])

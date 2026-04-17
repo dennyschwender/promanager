@@ -14,7 +14,7 @@ from app.templates import render
 from models.player_team import PlayerTeam
 from models.season import Season
 from models.user import User
-from routes._auth_helpers import require_admin, require_coach_or_admin, require_login, rt
+from routes._auth_helpers import require_admin, require_coach_or_admin, rt
 
 router = APIRouter()
 

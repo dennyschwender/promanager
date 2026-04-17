@@ -58,6 +58,12 @@
               {% if u.is_active %}{{ t('users.deactivate') }}{% else %}{{ t('users.reactivate') }}{% endif %}
             </button>
           </form>
+          {% if u.role != 'admin' %}
+          <form method="post" action="/auth/users/{{ u.id }}/impersonate">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('users.impersonate') }}</button>
+          </form>
+          {% endif %}
           <form method="post" action="/auth/users/{{ u.id }}/delete"
                 onsubmit="return confirm('{{ t('users.delete_confirm_user', username=u.username) }}')">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">

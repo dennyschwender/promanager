@@ -99,10 +99,11 @@ async def send_telegram_notifications(
     except Exception:
         return
 
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
     import app.database as _db_mod  # noqa: PLC0415
     from models.attendance import Attendance  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
 
     db = _db_mod.SessionLocal()
     try:

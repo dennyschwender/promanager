@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 
 import bcrypt
-from itsdangerous import BadSignature, SignatureExpired, TimestampSigner, URLSafeTimedSerializer
+from itsdangerous import TimestampSigner, URLSafeTimedSerializer
 from sqlalchemy.orm import Session
 
 from app.config import settings

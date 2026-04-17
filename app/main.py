@@ -73,7 +73,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 db.close()
         # Force password change before any other page
         _CHANGE_PW_PATH = "/auth/change-password"
-        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/healthz"}
+        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/auth/stop-impersonating", "/healthz"}
         if (
             request.state.user is not None
             and getattr(request.state.user, "must_change_password", False)
@@ -261,7 +261,8 @@ def create_app() -> FastAPI:
     from fastapi import Form as _Form  # noqa: PLC0415
 
     from app.csrf import require_csrf as _require_csrf  # noqa: PLC0415
-    from services.auth_service import hash_password as _hash_password, verify_password as _verify_password  # noqa: PLC0415
+    from services.auth_service import hash_password as _hash_password  # noqa: PLC0415
+    from services.auth_service import verify_password as _verify_password
 
     @app.get("/profile/edit", include_in_schema=False)
     async def profile_edit_get(
@@ -329,6 +330,7 @@ def create_app() -> FastAPI:
                 player.last_name = db_user.last_name
         db.commit()
         from urllib.parse import quote as _quote  # noqa: PLC0415
+
         from routes._auth_helpers import rt as _rt2  # noqa: PLC0415
         flash = _quote(_rt2(request, "users.profile_saved"))
         from fastapi.responses import RedirectResponse as _RedirectResponse  # noqa: PLC0415

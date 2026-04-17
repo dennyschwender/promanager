@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from sqlalchemy.orm import Session
+
 from dateutil.rrule import rrulestr
+from sqlalchemy.orm import Session
 
 from models.player_absence import PlayerAbsence
 

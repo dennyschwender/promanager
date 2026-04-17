@@ -8,8 +8,10 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.csrf import require_csrf
 from app.database import get_db
+from app.session import COOKIE_NAME
 from app.templates import render
 from models.player import Player
 from models.player_team import PlayerTeam
@@ -18,7 +20,7 @@ from models.team import Team
 from models.user import User
 from routes._auth_helpers import NotAuthorized, require_admin, rt
 from services import email_service
-from services.auth_service import create_magic_link, hash_password
+from services.auth_service import create_magic_link, create_session_cookie, hash_password
 from services.email_service import send_reset_email, send_welcome_email
 
 router = APIRouter()
@@ -510,3 +512,25 @@ async def delete_user(
     db.delete(target)
     db.commit()
     return RedirectResponse("/auth/users", status_code=302)
+
+
+@router.post("/{user_id}/impersonate", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def impersonate_user(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    current_user = request.state.user
+    if current_user.id == user_id:
+        return RedirectResponse("/auth/users", status_code=302)
+    target = db.get(User, user_id)
+    if target is None or not target.is_active:
+        raise NotAuthorized
+
+    orig_session = request.cookies.get(COOKIE_NAME, "")
+    new_session = create_session_cookie(target.id)
+
+    response = RedirectResponse("/dashboard", status_code=302)
+    response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
+    response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
+    return response

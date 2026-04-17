@@ -52,7 +52,8 @@
     "new_password": "Neues Passwort",
     "confirm_password": "Neues Passwort bestätigen",
     "change_password_submit": "Neues Passwort setzen",
-    "change_password_mismatch": "Passwörter stimmen nicht überein."
+    "change_password_mismatch": "Passwörter stimmen nicht überein.",
+    "change_password_saved": "Passwort erfolgreich geändert."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -384,7 +385,10 @@
     "no_linked_player": "Kein Spieler verknüpft.",
     "reset_password": "Passwort zurücksetzen & E-Mail senden",
     "reset_password_confirm": "Passwort für %{username} zurücksetzen und neue Zugangsdaten per E-Mail senden?",
-    "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet."
+    "reset_password_sent": "Passwort zurückgesetzt und E-Mail erfolgreich gesendet.",
+    "impersonate": "Anmelden als",
+    "impersonating_banner": "Sie sehen die App als %{username}.",
+    "stop_impersonating": "Zurück zu Ihrem Konto"
   },
   "players_form": {
     "basic_info": "Grunddaten",
@@ -538,7 +542,9 @@
     "all_seasons": "Alle Saisons",
     "select_coach": "— Trainer auswählen —",
     "season_optional": "Saison (optional)",
-    "remove_coach_confirm": "Diesen Trainer entfernen?"
+    "remove_coach_confirm": "Diesen Trainer entfernen?",
+    "auto_reminders_on": "Automatische Erinnerungen: An",
+    "auto_reminders_off": "Automatische Erinnerungen: Aus"
   },
   "teams_list": {
     "copy_roster": "Kader kopieren",

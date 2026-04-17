@@ -2,7 +2,6 @@
 
 from datetime import date, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
 
 from models.player import Player
@@ -177,7 +176,7 @@ def test_admin_can_create_absence_for_any_player(admin_client, db):
 
 def test_coach_can_create_absence_for_team_player(client, db):
     """Coach should be able to create absences for their team's players."""
-    from services.auth_service import create_user, create_session_cookie
+    from services.auth_service import create_session_cookie, create_user
 
     # Create a coach user
     coach_user = create_user(db, "coach", "coach@test.com", "coachpass", role="coach", must_change_password=False)

@@ -16,8 +16,8 @@ async def require_absence_ownership_or_coach(
 ):
     """Check if user owns the absence (player) or coaches the player's team."""
     from models.player import Player
-    from models.user_team import UserTeam
     from models.player_team import PlayerTeam
+    from models.user_team import UserTeam
 
     # Get the absence
     absence = db.query(PlayerAbsence).filter(PlayerAbsence.id == absence_id).first()

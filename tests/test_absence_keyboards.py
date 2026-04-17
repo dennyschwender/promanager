@@ -2,8 +2,6 @@
 
 from types import SimpleNamespace
 
-import pytest
-
 from bot.absence_keyboards import (
     absence_delete_confirm_keyboard,
     absence_list_keyboard,

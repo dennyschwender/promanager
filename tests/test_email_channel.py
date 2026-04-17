@@ -1,6 +1,5 @@
 """Tests that email_channel uses send_notification_email."""
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def test_email_channel_calls_send_notification_email():

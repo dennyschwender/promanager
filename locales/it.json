@@ -52,7 +52,8 @@
     "new_password": "Nuova password",
     "confirm_password": "Conferma nuova password",
     "change_password_submit": "Imposta nuova password",
-    "change_password_mismatch": "Le password non corrispondono."
+    "change_password_mismatch": "Le password non corrispondono.",
+    "change_password_saved": "Password aggiornata con successo."
   },
   "dashboard": {
     "title": "Pannello",
@@ -384,7 +385,10 @@
     "no_linked_player": "Nessun giocatore collegato.",
     "reset_password": "Reimposta password & invia email",
     "reset_password_confirm": "Reimpostare la password per %{username} e inviare le nuove credenziali per email?",
-    "reset_password_sent": "Password reimpostata ed email inviata con successo."
+    "reset_password_sent": "Password reimpostata ed email inviata con successo.",
+    "impersonate": "Accedi come",
+    "impersonating_banner": "Stai visualizzando l'app come %{username}.",
+    "stop_impersonating": "Torna al tuo account"
   },
   "players_form": {
     "basic_info": "Informazioni di base",
@@ -538,7 +542,9 @@
     "all_seasons": "Tutte le stagioni",
     "select_coach": "— Seleziona allenatore —",
     "season_optional": "Stagione (opzionale)",
-    "remove_coach_confirm": "Rimuovere questo allenatore?"
+    "remove_coach_confirm": "Rimuovere questo allenatore?",
+    "auto_reminders_on": "Promemoria automatici: Attivi",
+    "auto_reminders_off": "Promemoria automatici: Disattivati"
   },
   "teams_list": {
     "copy_roster": "Copia rosa",

@@ -23,8 +23,11 @@
 {% endif %}
 
 {% if team.description %}
-<p style="margin-bottom:1.5rem;color:var(--tp-muted);">{{ team.description }}</p>
+<p style="margin-bottom:1rem;color:var(--tp-muted);">{{ team.description }}</p>
 {% endif %}
+<p style="font-size:.85rem;color:var(--tp-muted);margin-bottom:1.5rem;">
+  {% if team.auto_reminders %}✉️ {{ t('teams_detail.auto_reminders_on') }}{% else %}🔕 {{ t('teams_detail.auto_reminders_off') }}{% endif %}
+</p>
 
 {% if schedules %}
 <h3 style="margin-bottom:.75rem;">{{ t('teams_form.recurring_schedules') }}</h3>

@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
-
 from services.auth_service import create_user
 
 
 def _make_token(user_id: int, path: str) -> str:
     """Create a valid magic link token directly (bypasses APP_URL check)."""
-    import app.config
     from itsdangerous import URLSafeTimedSerializer
+
+    import app.config
     s = URLSafeTimedSerializer(app.config.settings.SECRET_KEY, salt="magic-link")
     return s.dumps({"u": user_id, "p": path})
 

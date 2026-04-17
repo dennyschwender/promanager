@@ -281,7 +281,8 @@ def test_member_can_edit_own_player_from_detail(client, db):
 
 
 def test_attendance_text_returns_plain_text(admin_client, db):
-    from datetime import date, time as dtime
+    from datetime import date
+    from datetime import time as dtime
 
     from models.attendance import Attendance
     from models.player import Player

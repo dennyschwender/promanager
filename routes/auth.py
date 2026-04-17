@@ -150,7 +150,9 @@ async def register_post(
 
 
 @router.get("/magic")
+@limiter.limit("30/minute")
 async def magic_link_login(
+    request: Request,
     token: str = "",
     db: Session = Depends(get_db),
 ):
@@ -195,7 +197,8 @@ async def change_password_get(
     user = request.state.user
     if user is None:
         return RedirectResponse("/auth/login", status_code=302)
-    return render(request, "auth/change_password.html", {"user": user, "error": None})
+    saved = "saved" in request.query_params
+    return render(request, "auth/change_password.html", {"user": user, "error": None, "saved": saved})
 
 
 @router.post("/change-password")
@@ -223,4 +226,26 @@ async def change_password_post(
     db_user.must_change_password = False
     db.commit()
 
-    return RedirectResponse("/dashboard", status_code=302)
+    return RedirectResponse("/auth/change-password?saved=1", status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# Stop impersonating (restore admin session)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/stop-impersonating")
+async def stop_impersonating(request: Request):
+    orig_session = request.cookies.get("_orig_session", "")
+    response = RedirectResponse("/auth/users", status_code=302)
+    if orig_session:
+        response.set_cookie(
+            COOKIE_NAME,
+            orig_session,
+            httponly=True,
+            samesite="lax",
+            secure=settings.COOKIE_SECURE,
+            max_age=60 * 60 * 24 * 7,
+        )
+    response.delete_cookie("_orig_session")
+    return response

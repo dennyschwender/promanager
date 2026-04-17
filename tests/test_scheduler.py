@@ -7,7 +7,6 @@ from models.attendance import Attendance
 from models.event import Event
 from models.notification_preference import NotificationPreference
 from models.player import Player
-from models.season import Season
 from models.team import Team
 
 
@@ -110,7 +109,6 @@ def test_send_due_reminders_respects_email_preference(db):
 
 def test_send_due_reminders_respects_team_auto_reminders_flag(db):
     """Reminder job skips events on teams that have auto_reminders=False."""
-    from models.team import Team
     from services.scheduler import send_due_reminders
 
     team = Team(name="Silent Team", auto_reminders=False)
@@ -156,6 +154,7 @@ def test_send_due_reminders_skips_far_future_events(db):
 def test_backup_database_creates_file(tmp_path, monkeypatch):
     """backup_database() creates a timestamped copy in data/backups/."""
     import os
+
     from services.scheduler import backup_database
 
     # Create a fake SQLite file

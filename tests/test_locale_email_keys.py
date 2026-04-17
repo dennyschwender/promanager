@@ -1,7 +1,8 @@
 """Tests that required email locale keys exist in all locale files."""
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 LOCALES = ["en", "it", "fr", "de"]
 REQUIRED_KEYS = [

@@ -1,17 +1,17 @@
 """tests/test_absence_service.py — Absence service tests."""
 
-import pytest
 from datetime import date
+
 from sqlalchemy.orm import Session
 
+from models.attendance import Attendance
+from models.event import Event
 from models.player import Player
 from models.player_absence import PlayerAbsence
+from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
-from models.event import Event
-from models.attendance import Attendance
-from models.player_team import PlayerTeam
-from services.absence_service import is_date_in_absence, apply_absence_to_future_events
+from services.absence_service import apply_absence_to_future_events, is_date_in_absence
 
 
 def test_is_date_in_absence_period_within_range(db: Session):

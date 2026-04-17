@@ -270,7 +270,7 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
         db.commit()
 
         # Apply active absences to newly created records
-        from services.absence_service import is_date_in_absence, apply_absence_to_future_events
+        from services.absence_service import apply_absence_to_future_events, is_date_in_absence
         for player_id in new_player_ids:
             if is_date_in_absence(player_id, event.event_date, db):
                 # Re-apply absences for this specific player (handles override logic)

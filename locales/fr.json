@@ -52,7 +52,8 @@
     "new_password": "Nouveau mot de passe",
     "confirm_password": "Confirmer le nouveau mot de passe",
     "change_password_submit": "Définir le nouveau mot de passe",
-    "change_password_mismatch": "Les mots de passe ne correspondent pas."
+    "change_password_mismatch": "Les mots de passe ne correspondent pas.",
+    "change_password_saved": "Mot de passe mis à jour avec succès."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -384,7 +385,10 @@
     "no_linked_player": "Aucun joueur lié.",
     "reset_password": "Réinitialiser le mot de passe & envoyer par email",
     "reset_password_confirm": "Réinitialiser le mot de passe de %{username} et envoyer les nouveaux identifiants par email?",
-    "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès."
+    "reset_password_sent": "Mot de passe réinitialisé et email envoyé avec succès.",
+    "impersonate": "Se connecter en tant que",
+    "impersonating_banner": "Vous consultez l'application en tant que %{username}.",
+    "stop_impersonating": "Retour à votre compte"
   },
   "players_form": {
     "basic_info": "Informations de base",
@@ -538,7 +542,9 @@
     "all_seasons": "Toutes les saisons",
     "select_coach": "— Sélectionner un entraîneur —",
     "season_optional": "Saison (optionnelle)",
-    "remove_coach_confirm": "Retirer cet entraîneur ?"
+    "remove_coach_confirm": "Retirer cet entraîneur ?",
+    "auto_reminders_on": "Rappels automatiques : Activés",
+    "auto_reminders_off": "Rappels automatiques : Désactivés"
   },
   "teams_list": {
     "copy_roster": "Copier l'effectif",
