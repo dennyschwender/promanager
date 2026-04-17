@@ -78,13 +78,24 @@
   </table>
   </div>
 
-  <label style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-    {{ t('users.role_label') }}
-    <select name="role" style="width:auto;margin:0;">
-      <option value="member">{{ t('auth.member') }}</option>
-      <option value="coach">{{ t('auth.role_coach') }}</option>
-    </select>
-  </label>
+  <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+    <label style="display:flex;align-items:center;gap:.75rem;">
+      {{ t('users.role_label') }}
+      <select name="role" style="width:auto;margin:0;">
+        <option value="member">{{ t('auth.member') }}</option>
+        <option value="coach">{{ t('auth.role_coach') }}</option>
+      </select>
+    </label>
+    <label style="display:flex;align-items:center;gap:.75rem;">
+      {{ t('auth.language_preference') }}
+      <select name="locale" style="width:auto;margin:0;">
+        <option value="en">English</option>
+        <option value="it">Italiano</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </label>
+  </div>
 
   <button type="submit" class="btn btn-primary">{{ t('users.submit_bulk') }}</button>
   <a href="/auth/users" class="btn btn-outline" style="margin-left:.5rem;">{{ t('common.cancel') }}</a>

@@ -190,9 +190,12 @@ async def bulk_create_post(
     db: Session = Depends(get_db),
     player_ids: list[int] = Form(default=[]),
     role: str = Form(default="member"),
+    locale: str = Form(default="en"),
 ):
     if role not in ("admin", "coach", "member"):
         role = "member"
+    if locale not in ("en", "it", "fr", "de"):
+        locale = "en"
 
     created = 0
     skipped = 0
@@ -227,18 +230,20 @@ async def bulk_create_post(
             email=player.email,
             hashed_password=hash_password(pw),
             role=role,
+            locale=locale,
             must_change_password=True,
         )
         db.add(new_user)
         db.flush()  # get new_user.id
         player.user_id = new_user.id
 
-        # Send welcome email
-        sent = email_service.send_email(
+        magic = create_magic_link(new_user.id, "/dashboard")
+        sent = send_welcome_email(
             to=player.email,
-            subject=rt(request, "users.email_subject"),
-            body_html=f"<p>Your account has been created.<br>Username: <strong>{player.email}</strong><br>Password: <strong>{pw}</strong></p>",
-            body_text=f"Your account has been created.\nUsername: {player.email}\nPassword: {pw}",
+            username=player.email,
+            password=pw,
+            locale=locale,
+            magic_link=magic,
         )
         if sent:
             created += 1
