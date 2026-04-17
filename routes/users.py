@@ -600,11 +600,13 @@ async def impersonate_user(
 
     from app.session import _signer  # noqa: PLC0415
     raw_orig = request.cookies.get(COOKIE_NAME, "")
-    try:
-        _signer.unsign(raw_orig, max_age=60 * 60 * 24 * 7)
-        orig_session = raw_orig
-    except (BadSignature, SignatureExpired):
-        orig_session = ""
+    orig_session = ""
+    if raw_orig:
+        try:
+            user_id_bytes = _signer.unsign(raw_orig, max_age=60 * 60 * 24 * 7)
+            orig_session = create_session_cookie(int(user_id_bytes))
+        except (BadSignature, SignatureExpired, ValueError):
+            pass
 
     new_session = create_session_cookie(target.id)
 

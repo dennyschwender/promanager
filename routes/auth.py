@@ -256,21 +256,21 @@ async def stop_impersonating(request: Request):
     log_action("auth.stop_impersonate", request=request)
     response = RedirectResponse("/auth/users", status_code=302)
     if orig_session:
-        # Validate the cookie is a properly signed session token before restoring it
         from itsdangerous import BadSignature, SignatureExpired  # noqa: PLC0415
 
         from app.session import _signer  # noqa: PLC0415
         try:
-            _signer.unsign(orig_session, max_age=60 * 60 * 24 * 7)
+            user_id_bytes = _signer.unsign(orig_session, max_age=60 * 60 * 24 * 7)
+            restored_cookie = create_session_cookie(int(user_id_bytes))
             response.set_cookie(
                 COOKIE_NAME,
-                orig_session,
+                restored_cookie,
                 httponly=True,
                 samesite="lax",
                 secure=settings.COOKIE_SECURE,
                 max_age=60 * 60 * 24 * 7,
             )
-        except (BadSignature, SignatureExpired):
+        except (BadSignature, SignatureExpired, ValueError):
             pass  # Invalid token — don't restore; user lands on /auth/users unauthenticated
     response.delete_cookie("_orig_session")
     return response
