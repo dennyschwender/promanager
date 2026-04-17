@@ -181,26 +181,26 @@
                 </select>
               </td>
               <td>
-                <input type="number" name="shirt_{{ s.id }}_{{ t.id }}" id="shirt_{{ s.id }}_{{ t.id }}"
+                <input type="number" name="shirt_{{ s.id }}_{{ team_opt.id }}" id="shirt_{{ s.id }}_{{ team_opt.id }}"
                        min="0" max="99" style="width:4rem;"
                        value="{{ mem.shirt_number if checked and mem.shirt_number is not none else '' }}"
                        {% if not checked %}disabled{% endif %}>
               </td>
               <td>
-                <select name="status_{{ s.id }}_{{ t.id }}" id="status_{{ s.id }}_{{ t.id }}" {% if not checked %}disabled{% endif %}
-                        onchange="toggleInjuredUntil(this, {{ s.id }}, {{ t.id }})">
+                <select name="status_{{ s.id }}_{{ team_opt.id }}" id="status_{{ s.id }}_{{ team_opt.id }}" {% if not checked %}disabled{% endif %}
+                        onchange="toggleInjuredUntil(this, {{ s.id }}, {{ team_opt.id }})">
                   {% for val, lbl in [('active', t('common.active')),('inactive', t('common.inactive')),('injured', t('common.injured'))] %}
                     <option value="{{ val }}" {% if checked and mem.membership_status == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
                 </select>
               </td>
               <td>
-                <input type="date" name="injured_until_{{ s.id }}_{{ t.id }}" id="injured_until_{{ s.id }}_{{ t.id }}"
+                <input type="date" name="injured_until_{{ s.id }}_{{ team_opt.id }}" id="injured_until_{{ s.id }}_{{ team_opt.id }}"
                        value="{{ mem.injured_until.isoformat() if checked and mem.injured_until else '' }}"
                        {% if not checked or (checked and mem.membership_status != 'injured') %}disabled{% endif %}>
               </td>
               <td style="text-align:center;">
-                <input type="checkbox" name="absent_default_{{ s.id }}_{{ t.id }}" id="absent_default_{{ s.id }}_{{ t.id }}"
+                <input type="checkbox" name="absent_default_{{ s.id }}_{{ team_opt.id }}" id="absent_default_{{ s.id }}_{{ team_opt.id }}"
                        {% if checked and mem.absent_by_default %}checked{% endif %}
                        {% if not checked %}disabled{% endif %}>
               </td>
