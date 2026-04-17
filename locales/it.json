@@ -62,7 +62,11 @@
     "forgot_password_intro": "Inserisci il tuo indirizzo email e ti invieremo una nuova password.",
     "forgot_password_email_label": "Indirizzo email",
     "forgot_password_submit": "Invia email di reset",
-    "forgot_password_sent": "Se esiste un account con quell'indirizzo, ti abbiamo inviato una nuova password."
+    "forgot_password_sent": "Se esiste un account con quell'indirizzo, ti abbiamo inviato una nuova password.",
+    "password_auto": "Genera automaticamente",
+    "password_manual": "Imposta manualmente",
+    "password_regenerate": "Rigenera",
+    "password_min": "Min. 8 caratteri"
   },
   "dashboard": {
     "title": "Pannello",

@@ -62,7 +62,11 @@
     "forgot_password_intro": "Enter your email address and we will send you a new password.",
     "forgot_password_email_label": "Email address",
     "forgot_password_submit": "Send reset email",
-    "forgot_password_sent": "If an account exists with that email, a new password has been sent."
+    "forgot_password_sent": "If an account exists with that email, a new password has been sent.",
+    "password_auto": "Auto-generate",
+    "password_manual": "Set manually",
+    "password_regenerate": "Regenerate",
+    "password_min": "Min. 8 characters"
   },
   "dashboard": {
     "title": "Dashboard",

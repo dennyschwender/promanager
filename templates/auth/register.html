@@ -33,9 +33,29 @@
       <input type="email" id="email" name="email" required value="{{ form_data.email if form_data else '' }}">
     </label>
   </div>
-  <label for="password">{{ t('auth.password_hint') }}
-    <input type="password" id="password" name="password" required minlength="8">
-  </label>
+  <fieldset style="border:1px solid var(--pico-muted-border-color,#ddd);border-radius:var(--tp-radius);padding:.75rem 1rem .5rem;">
+    <legend style="font-size:.9rem;padding:0 .25rem;">{{ t('auth.password_hint') }}</legend>
+    <div style="display:flex;gap:1.5rem;margin-bottom:.75rem;">
+      <label style="display:flex;align-items:center;gap:.4rem;margin:0;font-weight:normal;">
+        <input type="radio" name="pw_mode" value="auto" checked onchange="setPwMode('auto')"> {{ t('auth.password_auto') }}
+      </label>
+      <label style="display:flex;align-items:center;gap:.4rem;margin:0;font-weight:normal;">
+        <input type="radio" name="pw_mode" value="manual" onchange="setPwMode('manual')"> {{ t('auth.password_manual') }}
+      </label>
+    </div>
+    <div id="pw-auto-section">
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <input type="text" id="pw_generated" readonly style="font-family:monospace;flex:1;" value="">
+        <button type="button" class="btn btn-outline btn-sm" onclick="generatePassword()">&#x21bb; {{ t('auth.password_regenerate') }}</button>
+        <button type="button" class="btn btn-outline btn-sm" id="pw-copy-btn" onclick="copyPassword()">{{ t('common.copy') }}</button>
+      </div>
+      <input type="hidden" id="password_auto" name="password" value="">
+    </div>
+    <div id="pw-manual-section" style="display:none;">
+      <input type="password" id="password_manual" minlength="8" placeholder="{{ t('auth.password_min') }}">
+      <input type="hidden" id="password_manual_hidden" name="password" value="" disabled>
+    </div>
+  </fieldset>
   <div class="form-grid-2">
     <label for="role">{{ t('auth.role') }}
       <select id="role" name="role">
@@ -62,4 +82,62 @@
   </div>
 </form>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+function generatePassword() {
+  var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%&*';
+  var pw = '';
+  for (var i = 0; i < 16; i++) {
+    pw += chars[Math.floor(Math.random() * chars.length)];
+  }
+  document.getElementById('pw_generated').value = pw;
+  document.getElementById('password_auto').value = pw;
+  document.getElementById('pw-copy-btn').textContent = '{{ t("common.copy") }}';
+}
+
+function copyPassword() {
+  var val = document.getElementById('pw_generated').value;
+  navigator.clipboard.writeText(val).then(function() {
+    document.getElementById('pw-copy-btn').textContent = '✓';
+    setTimeout(function() { document.getElementById('pw-copy-btn').textContent = '{{ t("common.copy") }}'; }, 2000);
+  });
+}
+
+function setPwMode(mode) {
+  var autoSec = document.getElementById('pw-auto-section');
+  var manSec = document.getElementById('pw-manual-section');
+  var autoInput = document.getElementById('password_auto');
+  var manInput = document.getElementById('password_manual_hidden');
+  if (mode === 'auto') {
+    autoSec.style.display = '';
+    manSec.style.display = 'none';
+    autoInput.disabled = false;
+    manInput.disabled = true;
+  } else {
+    autoSec.style.display = 'none';
+    manSec.style.display = '';
+    autoInput.disabled = true;
+    manInput.disabled = false;
+    document.getElementById('password_manual').oninput = function() {
+      manInput.value = this.value;
+    };
+  }
+}
+
+document.querySelector('form').addEventListener('submit', function(e) {
+  var mode = document.querySelector('input[name="pw_mode"]:checked').value;
+  if (mode === 'manual') {
+    var pw = document.getElementById('password_manual').value;
+    if (pw.length < 8) {
+      e.preventDefault();
+      alert('{{ t("errors.password_too_short") }}');
+      return;
+    }
+    document.getElementById('password_manual_hidden').value = pw;
+  }
+});
+
+generatePassword();
+</script>
 {% endblock %}

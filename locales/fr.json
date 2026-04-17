@@ -62,7 +62,11 @@
     "forgot_password_intro": "Entrez votre adresse e-mail et nous vous enverrons un nouveau mot de passe.",
     "forgot_password_email_label": "Adresse e-mail",
     "forgot_password_submit": "Envoyer l'e-mail de réinitialisation",
-    "forgot_password_sent": "Si un compte existe avec cet e-mail, un nouveau mot de passe a été envoyé."
+    "forgot_password_sent": "Si un compte existe avec cet e-mail, un nouveau mot de passe a été envoyé.",
+    "password_auto": "Générer automatiquement",
+    "password_manual": "Définir manuellement",
+    "password_regenerate": "Régénérer",
+    "password_min": "Min. 8 caractères"
   },
   "dashboard": {
     "title": "Tableau de bord",
