@@ -435,7 +435,8 @@
     "synced_from_players": "{count} user(s) synced from player profiles.",
     "coach_teams": "Coach assignments",
     "no_coach_teams": "Not assigned to any team.",
-    "all_seasons": "All seasons"
+    "all_seasons": "All seasons",
+    "search_placeholder": "Search by name, username, email, phone…"
   },
   "players_form": {
     "basic_info": "Basic Info",

@@ -435,7 +435,8 @@
     "synced_from_players": "{count} Benutzer aus Spielerprofilen synchronisiert.",
     "coach_teams": "Trainer-Zuweisungen",
     "no_coach_teams": "Keinem Team zugewiesen.",
-    "all_seasons": "Alle Saisons"
+    "all_seasons": "Alle Saisons",
+    "search_placeholder": "Nach Name, Benutzername, E-Mail, Telefon suchen…"
   },
   "players_form": {
     "basic_info": "Grunddaten",

@@ -31,6 +31,10 @@
 </div>
 
 <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+  <label style="margin:0;flex:1;min-width:180px;">
+    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('common.search') }}</span>
+    <input type="search" id="filter-search" class="sel-inline" style="width:100%;" placeholder="{{ t('users.search_placeholder') }}" oninput="applyFilters()">
+  </label>
   <label style="margin:0;">
     <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('auth.role') }}</span>
     <select id="filter-role" class="sel-inline" onchange="applyFilters()">
@@ -59,7 +63,7 @@
   <div style="position:relative;display:inline-block;align-self:flex-end;">
     <button type="button" class="btn btn-outline" id="columns-btn">{{ t('players_list.columns') }}</button>
     <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
-      {% for col in ["Name","Username","Email","Role","Phone","Linked player","Active","Created","Actions"] %}
+      {% for col in ["First name","Last name","Username","Email","Role","Phone","Linked player","Active","Created","Actions"] %}
       <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
         <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
       </label>
@@ -72,8 +76,11 @@
 <table id="users-table">
   <thead>
     <tr>
-      <th data-col="Name" class="sortable-col" data-sort-key="name" style="cursor:pointer;white-space:nowrap;">
-        {{ t('players.name') }} <span class="sort-arrow" data-key="name" style="opacity:.35;">▲</span>
+      <th data-col="First name" class="sortable-col" data-sort-key="firstname" style="cursor:pointer;white-space:nowrap;">
+        {{ t('players_form.first_name') }} <span class="sort-arrow" data-key="firstname" style="opacity:.35;">▲</span>
+      </th>
+      <th data-col="Last name" class="sortable-col" data-sort-key="lastname" style="cursor:pointer;white-space:nowrap;">
+        {{ t('players_form.last_name') }} <span class="sort-arrow" data-key="lastname" style="opacity:.35;">▲</span>
       </th>
       <th data-col="Username" class="sortable-col" data-sort-key="username" style="cursor:pointer;white-space:nowrap;">
         {{ t('users.username') }} <span class="sort-arrow" data-key="username" style="opacity:.35;">▲</span>
@@ -96,11 +103,16 @@
     data-role="{{ u.role }}"
     data-active="{{ 'true' if u.is_active else 'false' }}"
     data-linked="{{ 'yes' if p else 'no' }}"
-    data-name="{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or ''))|trim|lower or u.username|lower }}"
+    data-firstname="{{ (u.first_name or '')|lower }}"
+    data-lastname="{{ (u.last_name or '')|lower }}"
     data-username="{{ u.username|lower }}"
-    data-created="{{ u.created_at.isoformat() if u.created_at else '' }}">
-    <td data-col="Name">
-      <a href="/auth/users/{{ u.id }}/edit"><strong>{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or ''))|trim or '—' }}</strong></a>
+    data-created="{{ u.created_at.isoformat() if u.created_at else '' }}"
+    data-search="{{ ((u.first_name or '') ~ ' ' ~ (u.last_name or '') ~ ' ' ~ u.username ~ ' ' ~ u.email ~ ' ' ~ (u.phone or '') ~ ' ' ~ (p.full_name if p else ''))|lower }}">
+    <td data-col="First name">
+      <a href="/auth/users/{{ u.id }}/edit"><strong>{{ u.first_name or '—' }}</strong></a>
+    </td>
+    <td data-col="Last name">
+      <a href="/auth/users/{{ u.id }}/edit"><strong>{{ u.last_name or '—' }}</strong></a>
     </td>
     <td data-col="Username">{{ u.username }}</td>
     <td data-col="Email">{{ u.email }}</td>
@@ -221,16 +233,18 @@
     th.addEventListener('click', function () { sortTable(th.dataset.sortKey); });
   });
 
-  // Filtering
+  // Filtering + search
   window.applyFilters = function () {
     var role = document.getElementById('filter-role').value;
     var active = document.getElementById('filter-active').value;
     var linked = document.getElementById('filter-linked').value;
+    var search = document.getElementById('filter-search').value.trim().toLowerCase();
     document.querySelectorAll('#users-table tbody tr').forEach(function (row) {
       var show = true;
       if (role && row.dataset.role !== role) show = false;
       if (active && row.dataset.active !== active) show = false;
       if (linked && row.dataset.linked !== linked) show = false;
+      if (search && !(row.dataset.search || '').includes(search)) show = false;
       row.style.display = show ? '' : 'none';
     });
   };

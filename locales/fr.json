@@ -435,7 +435,8 @@
     "synced_from_players": "{count} utilisateur(s) synchronisé(s) depuis les profils joueurs.",
     "coach_teams": "Affectations entraîneur",
     "no_coach_teams": "Non affecté à aucune équipe.",
-    "all_seasons": "Toutes les saisons"
+    "all_seasons": "Toutes les saisons",
+    "search_placeholder": "Rechercher par nom, identifiant, e-mail, téléphone…"
   },
   "players_form": {
     "basic_info": "Informations de base",
