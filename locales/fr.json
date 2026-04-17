@@ -429,7 +429,10 @@
     "with_player": "Avec joueur lié",
     "without_player": "Sans joueur lié",
     "player_linked_readonly_hint": "Certains champs sont gérés par le profil du joueur lié. Modifiez-les sur",
-    "player_field_readonly_tooltip": "Ce champ est géré par le joueur lié. Modifiez-le dans le profil du joueur."
+    "player_field_readonly_tooltip": "Ce champ est géré par le joueur lié. Modifiez-le dans le profil du joueur.",
+    "sync_from_players": "Synchroniser depuis les joueurs",
+    "sync_confirm": "Cela écrasera le nom/email/téléphone des utilisateurs avec les données du joueur lié. Continuer ?",
+    "synced_from_players": "{count} utilisateur(s) synchronisé(s) depuis les profils joueurs."
   },
   "players_form": {
     "basic_info": "Informations de base",

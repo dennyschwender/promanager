@@ -13,12 +13,20 @@
 {% if request.query_params.get('welcome') %}
 <div class="alert alert-success">{{ t('users.send_welcome_sent') }}</div>
 {% endif %}
+{% if request.query_params.get('synced') %}
+<div class="alert alert-success">{{ t('users.synced_from_players', count=request.query_params.get('synced')) }}</div>
+{% endif %}
 
 <div class="page-header">
   <h2>{{ t('users.title') }}</h2>
-  <div style="display:flex;gap:.5rem;">
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
     <a href="/auth/register" class="btn btn-outline">{{ t('nav.register_user') }}</a>
-    <a href="/auth/users/bulk-create" class="btn btn-primary">{{ t('users.create_from_players') }}</a>
+    <a href="/auth/users/bulk-create" class="btn btn-outline">{{ t('users.create_from_players') }}</a>
+    <form method="post" action="/auth/users/sync-from-players" style="margin:0;"
+          onsubmit="return confirm('{{ t('users.sync_confirm') }}')">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-primary">{{ t('users.sync_from_players') }}</button>
+    </form>
   </div>
 </div>
 

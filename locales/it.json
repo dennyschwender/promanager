@@ -429,7 +429,10 @@
     "with_player": "Con giocatore collegato",
     "without_player": "Senza giocatore collegato",
     "player_linked_readonly_hint": "Alcuni campi sono gestiti dal profilo del giocatore collegato. Modificali su",
-    "player_field_readonly_tooltip": "Questo campo è gestito dal giocatore collegato. Modificalo nel profilo del giocatore."
+    "player_field_readonly_tooltip": "Questo campo è gestito dal giocatore collegato. Modificalo nel profilo del giocatore.",
+    "sync_from_players": "Sincronizza dai giocatori",
+    "sync_confirm": "Questo sovrascriverà nome/email/telefono degli utenti con i dati dal giocatore collegato. Continuare?",
+    "synced_from_players": "{count} utente/i sincronizzato/i dai profili giocatore."
   },
   "players_form": {
     "basic_info": "Informazioni di base",

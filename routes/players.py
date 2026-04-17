@@ -173,6 +173,23 @@ def _sync_contact(db: Session, player: Player, form) -> None:
     contact.city = (form.get("contact_city") or "").strip() or None
 
 
+def _sync_user_from_player(db: Session, player: Player) -> None:
+    """Sync user fields (name, email, phone) from linked player after player save."""
+    if not player.user_id:
+        return
+    linked_user = db.get(User, player.user_id)
+    if linked_user is None:
+        return
+    if player.first_name:
+        linked_user.first_name = player.first_name
+    if player.last_name:
+        linked_user.last_name = player.last_name
+    if player.email:
+        linked_user.email = player.email
+    if player.phone:
+        linked_user.phone = player.phone
+
+
 def _apply_personal_fields(player: Player, form) -> None:
     """Write personal-info form values onto a Player instance."""
     player.sex = (form.get("sex") or "").strip() or None
@@ -1125,6 +1142,8 @@ async def player_edit_post(
     _sync_contact(db, player, form)
 
     db.add(player)
+    db.commit()
+    _sync_user_from_player(db, player)
     db.commit()
     log_action(
         "player.update",

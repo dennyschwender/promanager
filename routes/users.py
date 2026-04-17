@@ -576,3 +576,25 @@ async def impersonate_user(
     response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
     response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
     return response
+
+
+@router.post("/sync-from-players", dependencies=[Depends(require_admin), Depends(require_csrf)])
+async def sync_users_from_players(request: Request, db: Session = Depends(get_db)):
+    linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
+    synced = 0
+    for player in linked_players:
+        u = db.get(User, player.user_id)
+        if u is None:
+            continue
+        if player.first_name:
+            u.first_name = player.first_name
+        if player.last_name:
+            u.last_name = player.last_name
+        if player.email:
+            u.email = player.email
+        if player.phone:
+            u.phone = player.phone
+        synced += 1
+    db.commit()
+    log_action("user.sync_from_players", extra={"synced": synced}, request=request)
+    return RedirectResponse(f"/auth/users?synced={synced}", status_code=302)
