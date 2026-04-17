@@ -43,6 +43,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request.state.csrf_token = generate_csrf_token(request.cookies.get(COOKIE_NAME, ""))
         # Embed unread notification count for the bell badge
         request.state.unread_count = 0
+        request.state.nav_player_id = None
         if request.state.user is not None:
             from datetime import datetime, timedelta, timezone  # noqa: PLC0415
 
@@ -64,6 +65,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     .all()
                 ]
                 if player_ids:
+                    request.state.nav_player_id = player_ids[0]
                     request.state.unread_count = (
                         db.query(Notification)
                         .filter(

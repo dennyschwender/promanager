@@ -66,6 +66,9 @@
             <li><hr style="margin:.25rem 0;"></li>
           {% endif %}
           <li><a href="/profile">{{ t('nav.profile') }}</a></li>
+          {% if request.state.nav_player_id %}
+          <li><a href="/players/{{ request.state.nav_player_id }}/absences">{{ t('absences.manage_my_absences') }}</a></li>
+          {% endif %}
           <li>
             <a href="#" data-theme-toggle onclick="toggleTheme(); return false;">
               {% if current_theme == 'dark' %}☀️ {{ t('nav.light_mode') }}{% else %}🌙 {{ t('nav.dark_mode') }}{% endif %}
