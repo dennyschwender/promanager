@@ -26,4 +26,9 @@ build/
 
 # Git worktrees
 .worktrees/
-.worktrees/
+
+# Claude Code working directory
+.claude/
+
+# Node
+node_modules/

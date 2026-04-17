@@ -8,13 +8,16 @@ A self-hosted **player presence and absence tracker** for sports teams. ProManag
 - Team and player roster management with player archiving and bulk CSV import
 - Event scheduling (matches, trainings, other) with recurring event support
 - Per-player attendance tracking (present / absent / maybe / unknown) with free-text notes
+- Inline attendance update directly from the events list (no need to open the event)
 - External participants per event (non-roster guests)
 - Automatic attendance record creation when events are created
+- **Player absence management** — period absences and recurring absence rules (RFC 5545 RRULE); auto-applied to future events; self-service for members, team-scoped for coaches
 - Real-time event chat with SSE push (announcements + discussion lanes)
 - Telegram bot — mark attendance, view events, add notes, reply to chat
 - Multi-channel notifications: email reminders (with magic login links), in-app, and web push
 - Season and player attendance reports
-- User management with player linking (one-to-one)
+- User management with player linking (one-to-one); linked fields (name, email, phone) auto-sync from player on save
+- Coach team assignments — assign admin/coach users to specific teams (and optionally seasons) from the user management page
 - Role-based access: **admin** (full CRUD), **coach** (own teams), **member** (own attendance)
 - Coach/team scoping — non-admin users see only their assigned teams
 - Internationalisation: English, German, French, Italian (user-selectable)
@@ -140,7 +143,9 @@ Create and manage multiple seasons (e.g. *2025/26*). Only one season can be **ac
 
 ### Teams & Players
 
-Teams belong to a season. Players belong to teams via flexible memberships. Player profiles store name, email, and phone. A player can be **linked to a user account**, allowing members to log in and manage their own attendance.
+Teams belong to a season. Players belong to teams via flexible memberships. Player profiles store name, email, phone, shirt number, position, membership status (active / inactive / injured), and an optional emergency contact.
+
+A player can be **linked to a user account**, allowing members to log in and manage their own attendance. Name, email, and phone sync automatically from the player profile to the linked user whenever the player is saved.
 
 Inactive players can be **archived** (soft-delete) to keep historical data intact. Players can be imported in bulk via CSV from the players list page.
 
@@ -154,7 +159,16 @@ Events can be of type **match**, **training**, or **other**. Attendance records 
 
 ### Attendance
 
-Admins can mark all players' attendance. Members see only their own linked player and can update their status and note. Each record supports a free-text note. Attendance can also be updated via the Telegram bot.
+Admins can mark all players' attendance. Members see only their own linked player and can update their status and note. Each record supports a free-text note. Attendance can be updated inline from the events list or from the event detail page, and also via the Telegram bot.
+
+### Absences
+
+Players, coaches, and admins can define absences that are automatically applied to future events:
+
+- **Period absences** — a date range (e.g. holiday, injury leave)
+- **Recurring absences** — an RFC 5545 RRULE pattern (e.g. every Friday)
+
+When an absence is created, matching existing events are updated to `absent` (respecting any coach overrides). Members can manage their own absences; coaches can manage absences for players on their teams; admins have full access.
 
 ### Event Chat
 
@@ -182,6 +196,12 @@ ProManager delivers notifications through three channels (configurable per user)
 - **Web push** — browser push notifications (requires VAPID keys)
 
 Email types: event reminders, attendance requests, welcome (on account creation), password reset, and general notifications.
+
+### User Management
+
+Admins can create, edit, and deactivate user accounts. Users can be linked to a player (one-to-one). The users list supports search, sorting, and filtering by role, active status, and player-link status.
+
+When creating a user from a player ("bulk create"), the username defaults to `firstname.lastname` and name/email/phone are inherited from the player. Coach and admin users can be assigned to specific teams (and optionally seasons) to scope their access.
 
 ### Reports
 
