@@ -126,7 +126,63 @@
             onclick="addPhone()">{{ t('players_form.add_phone') }}</button>
   </fieldset>
 
-  {# 4. SEASON MEMBERSHIPS — one collapsible section per season #}
+  {# 4. EMERGENCY CONTACT #}
+  <fieldset>
+    <legend>
+      {{ t('players_form.emergency_contact') }}
+      <button type="button" class="btn btn-outline btn-sm" style="margin-left:.75rem;"
+              onclick="toggleContactSection()">
+        <span id="contact-toggle-label">{% if player and player.contact %}{{ t('common.hide') }}{% else %}{{ t('common.show') }}{% endif %}</span>
+      </button>
+    </legend>
+    <div id="contact-section" {% if not (player and player.contact) %}style="display:none"{% endif %}>
+      <div class="form-grid-2">
+        <label>{{ t('players_form.first_name') }}
+          <input type="text" name="contact_first_name"
+                 value="{{ player.contact.first_name if player and player.contact else '' }}">
+        </label>
+        <label>{{ t('players_form.last_name') }}
+          <input type="text" name="contact_last_name"
+                 value="{{ player.contact.last_name if player and player.contact else '' }}">
+        </label>
+      </div>
+      <label>{{ t('players_form.relationship') }} <small>({{ t('players_form.relationship_hint') }})</small>
+        <input type="text" name="contact_relationship" placeholder="Parent"
+               value="{{ player.contact.relationship_label if player and player.contact and player.contact.relationship_label else '' }}">
+      </label>
+      <div class="form-grid-2">
+        <label>{{ t('players_form.contact_email') }}
+          <input type="email" name="contact_email"
+                 value="{{ player.contact.email if player and player.contact and player.contact.email else '' }}">
+        </label>
+        <label>{{ t('players_form.phone') }}
+          <input type="text" name="contact_phone" placeholder="+41 79 000 00 00"
+                 value="{{ player.contact.phone if player and player.contact and player.contact.phone else '' }}">
+        </label>
+      </div>
+      <label>{{ t('players_form.phone_2') }}
+        <input type="text" name="contact_phone2" placeholder="+41 79 000 00 00"
+               value="{{ player.contact.phone2 if player and player.contact and player.contact.phone2 else '' }}">
+      </label>
+      <label>{{ t('players_form.street_address') }}
+        <input type="text" name="contact_street"
+               value="{{ player.contact.street if player and player.contact and player.contact.street else '' }}">
+      </label>
+      <div class="form-grid-2">
+        <label>{{ t('players_form.postcode') }}
+          <input type="text" name="contact_postcode"
+                 value="{{ player.contact.postcode if player and player.contact and player.contact.postcode else '' }}">
+        </label>
+        <label>{{ t('players_form.city') }}
+          <input type="text" name="contact_city"
+                 value="{{ player.contact.city if player and player.contact and player.contact.city else '' }}">
+        </label>
+      </div>
+      <p class="recurrence-hint">{{ t('players_form.remove_contact_hint') }}</p>
+    </div>
+  </fieldset>
+
+  {# 5. SEASON MEMBERSHIPS — one collapsible section per season #}
   {% if seasons %}
   <fieldset>
     <legend>{{ t('players_form.season_memberships') }}</legend>
@@ -216,62 +272,6 @@
     {% endfor %}
   </fieldset>
   {% endif %}
-
-  {# 5. EMERGENCY CONTACT #}
-  <fieldset>
-    <legend>
-      {{ t('players_form.emergency_contact') }}
-      <button type="button" class="btn btn-outline btn-sm" style="margin-left:.75rem;"
-              onclick="toggleContactSection()">
-        <span id="contact-toggle-label">{% if player and player.contact %}{{ t('common.hide') }}{% else %}{{ t('common.show') }}{% endif %}</span>
-      </button>
-    </legend>
-    <div id="contact-section" {% if not (player and player.contact) %}style="display:none"{% endif %}>
-      <div class="form-grid-2">
-        <label>{{ t('players_form.first_name') }}
-          <input type="text" name="contact_first_name"
-                 value="{{ player.contact.first_name if player and player.contact else '' }}">
-        </label>
-        <label>{{ t('players_form.last_name') }}
-          <input type="text" name="contact_last_name"
-                 value="{{ player.contact.last_name if player and player.contact else '' }}">
-        </label>
-      </div>
-      <label>{{ t('players_form.relationship') }} <small>({{ t('players_form.relationship_hint') }})</small>
-        <input type="text" name="contact_relationship" placeholder="Parent"
-               value="{{ player.contact.relationship_label if player and player.contact and player.contact.relationship_label else '' }}">
-      </label>
-      <div class="form-grid-2">
-        <label>{{ t('players_form.contact_email') }}
-          <input type="email" name="contact_email"
-                 value="{{ player.contact.email if player and player.contact and player.contact.email else '' }}">
-        </label>
-        <label>{{ t('players_form.phone') }}
-          <input type="text" name="contact_phone" placeholder="+41 79 000 00 00"
-                 value="{{ player.contact.phone if player and player.contact and player.contact.phone else '' }}">
-        </label>
-      </div>
-      <label>{{ t('players_form.phone_2') }}
-        <input type="text" name="contact_phone2" placeholder="+41 79 000 00 00"
-               value="{{ player.contact.phone2 if player and player.contact and player.contact.phone2 else '' }}">
-      </label>
-      <label>{{ t('players_form.street_address') }}
-        <input type="text" name="contact_street"
-               value="{{ player.contact.street if player and player.contact and player.contact.street else '' }}">
-      </label>
-      <div class="form-grid-2">
-        <label>{{ t('players_form.postcode') }}
-          <input type="text" name="contact_postcode"
-                 value="{{ player.contact.postcode if player and player.contact and player.contact.postcode else '' }}">
-        </label>
-        <label>{{ t('players_form.city') }}
-          <input type="text" name="contact_city"
-                 value="{{ player.contact.city if player and player.contact and player.contact.city else '' }}">
-        </label>
-      </div>
-      <p class="recurrence-hint">{{ t('players_form.remove_contact_hint') }}</p>
-    </div>
-  </fieldset>
 
   <div class="form-footer">
     <button type="submit" class="btn btn-primary">{{ t('players.save') }}</button>
