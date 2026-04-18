@@ -371,6 +371,40 @@ def create_app() -> FastAPI:
             headers={"Service-Worker-Allowed": "/"},
         )
 
+    # ── PWA: dynamic manifest (uses APP_NAME from settings) ───────────────
+    @app.get("/manifest.json", include_in_schema=False)
+    async def web_manifest():
+        import json  # noqa: PLC0415
+
+        return JSONResponse(
+            {
+                "name": settings.APP_NAME,
+                "short_name": settings.APP_NAME,
+                "description": "Self-hosted player presence/absence tracker for sports teams",
+                "start_url": "/dashboard",
+                "display": "standalone",
+                "background_color": "#1a1a2e",
+                "theme_color": "#4a9eff",
+                "orientation": "portrait-primary",
+                "icons": [
+                    {
+                        "src": "/static/img/icon-192.png",
+                        "sizes": "192x192",
+                        "type": "image/png",
+                        "purpose": "any maskable",
+                    },
+                    {
+                        "src": "/static/img/icon-512.png",
+                        "sizes": "512x512",
+                        "type": "image/png",
+                        "purpose": "any maskable",
+                    },
+                ],
+                "categories": ["sports", "productivity"],
+            },
+            media_type="application/manifest+json",
+        )
+
     # ── Root redirect ─────────────────────────────────────────────────────
     @app.get("/", include_in_schema=False)
     async def root_redirect():

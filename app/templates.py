@@ -27,9 +27,12 @@ def _git_rev() -> str:
         return "0"
 
 
+from app.config import settings as _settings  # noqa: PLC0415
+
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["now"] = lambda: datetime.now(timezone.utc)
 templates.env.globals["static_v"] = _git_rev()
+templates.env.globals["app_name"] = _settings.APP_NAME
 templates.env.filters["urlencode"] = quote_plus
 
 

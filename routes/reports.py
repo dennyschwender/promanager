@@ -16,6 +16,7 @@ from models.user import User
 from routes._auth_helpers import require_login
 from services.attendance_service import (
     get_event_attendance_stats,
+    get_matrix_attendance_stats,
     get_player_attendance_history,
     get_season_attendance_stats,
 )
@@ -184,6 +185,79 @@ async def report_event(
             "selected_team_id": team_id_int,
             "selected_event_type": event_type_val or "",
             "hide_future": "1" if hide_future_bool else "",
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Matrix report — players × events grid
+# ---------------------------------------------------------------------------
+
+
+@router.get("/matrix/{season_id}")
+async def report_matrix(
+    season_id: int,
+    request: Request,
+    team_id: str | None = Query(default=None),
+    event_type: str | None = Query(default=None),
+    date_from: str | None = Query(default=None),
+    date_to: str | None = Query(default=None),
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    from datetime import date as _date  # noqa: PLC0415
+
+    season = db.get(Season, season_id)
+    if season is None:
+        return RedirectResponse("/seasons", status_code=302)
+
+    team_id_int = int(team_id) if team_id else None
+    event_type_val = event_type if event_type in _EVENT_TYPES else None
+
+    def _parse_date(s: str | None) -> _date | None:
+        if not s:
+            return None
+        try:
+            return _date.fromisoformat(s)
+        except ValueError:
+            return None
+
+    date_from_val = _parse_date(date_from)
+    date_to_val = _parse_date(date_to)
+
+    all_seasons = db.query(Season).order_by(Season.name).all()
+    teams = _season_teams(db, season_id)
+
+    allowed_team_ids: set[int] | None = None
+    if user.is_coach and not user.is_admin:
+        from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
+
+        allowed_team_ids = get_coach_teams(user, db, season_id=season_id)
+        if team_id_int and team_id_int not in allowed_team_ids:
+            team_id_int = None
+
+    matrix = get_matrix_attendance_stats(
+        db, season_id,
+        team_id=team_id_int,
+        event_type=event_type_val,
+        date_from=date_from_val,
+        date_to=date_to_val,
+        allowed_team_ids=allowed_team_ids,
+    )
+
+    return render(
+        request,
+        "reports/matrix.html",
+        {
+            "user": user,
+            "season": season,
+            "all_seasons": all_seasons,
+            "teams": teams,
+            "matrix": matrix,
+            "selected_team_id": team_id_int,
+            "selected_event_type": event_type_val or "",
+            "date_from": date_from or "",
+            "date_to": date_to or "",
         },
     )
 

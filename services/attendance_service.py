@@ -206,6 +206,80 @@ def get_event_attendance_stats(
     return results
 
 
+def get_matrix_attendance_stats(
+    db: Session,
+    season_id: int,
+    team_id: int | None = None,
+    event_type: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    allowed_team_ids: set[int] | None = None,
+) -> dict:
+    """Matrix report: players × events.
+
+    Returns:
+        {
+            "events": [Event, ...],           # sorted by date asc
+            "rows": [
+                {
+                    "player": Player,
+                    "statuses": {event_id: status_str, ...},  # missing = no record
+                    "present_count": int,
+                    "total": int,
+                },
+                ...
+            ],
+        }
+    """
+    q = db.query(Event).filter(Event.season_id == season_id)
+    if team_id is not None:
+        q = q.filter(Event.team_id == team_id)
+    if event_type:
+        q = q.filter(Event.event_type == event_type)
+    if date_from:
+        q = q.filter(Event.event_date >= date_from)
+    if date_to:
+        q = q.filter(Event.event_date <= date_to)
+    if allowed_team_ids is not None:
+        q = q.filter(Event.team_id.in_(allowed_team_ids))
+    events = q.order_by(Event.event_date.asc()).all()
+
+    if not events:
+        return {"events": [], "rows": []}
+
+    event_ids = [e.id for e in events]
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+
+    attendances = (
+        db.query(Attendance)
+        .options(joinedload(Attendance.player))
+        .filter(Attendance.event_id.in_(event_ids))
+        .all()
+    )
+
+    # Build player → {event_id: status}
+    player_map: dict[int, dict] = {}
+    for att in attendances:
+        if att.player is None:
+            continue
+        if att.player_id not in player_map:
+            player_map[att.player_id] = {"player": att.player, "statuses": {}}
+        player_map[att.player_id]["statuses"][att.event_id] = att.status
+
+    rows = []
+    for entry in sorted(player_map.values(), key=lambda x: (x["player"].last_name or "", x["player"].first_name or "")):
+        statuses = entry["statuses"]
+        present = sum(1 for s in statuses.values() if s == "present")
+        rows.append({
+            "player": entry["player"],
+            "statuses": statuses,
+            "present_count": present,
+            "total": len(event_ids),
+        })
+
+    return {"events": events, "rows": rows}
+
+
 def get_player_attendance_history(db: Session, player_id: int) -> list[dict]:
     """Return list of {event, attendance} dicts sorted by event_date desc."""
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
