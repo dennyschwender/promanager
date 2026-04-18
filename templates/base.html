@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ProManager{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#4a9eff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ProManager">
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png">
   <link rel="stylesheet" href="/static/css/pico.min.css">
   <link rel="stylesheet" href="/static/css/flatpickr.min.css">
   <link rel="stylesheet" href="/static/css/main.css?v={{ static_v }}">
@@ -205,6 +212,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(err) {
+    console.warn('SW registration failed:', err);
+  });
+}
 </script>
 <script src="/static/js/flatpickr.min.js"></script>
 <script>

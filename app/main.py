@@ -356,11 +356,20 @@ def create_app() -> FastAPI:
         return _RedirectResponse(f"/profile?flash={flash}", status_code=302)
 
     # ── Health check ──────────────────────────────────────────────────────
-    from fastapi.responses import JSONResponse  # noqa: PLC0415
+    from fastapi.responses import FileResponse, JSONResponse  # noqa: PLC0415
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz():
         return JSONResponse({"status": "ok"})
+
+    # ── PWA: service worker at root scope ─────────────────────────────────
+    @app.get("/sw.js", include_in_schema=False)
+    async def service_worker():
+        return FileResponse(
+            "static/js/sw.js",
+            media_type="application/javascript",
+            headers={"Service-Worker-Allowed": "/"},
+        )
 
     # ── Root redirect ─────────────────────────────────────────────────────
     @app.get("/", include_in_schema=False)
