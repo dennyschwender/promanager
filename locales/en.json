@@ -533,7 +533,10 @@
     "absences": "Absences",
     "past_attendance": "Past Events",
     "future_attendance": "Upcoming Events",
-    "load_more": "Load 10 more"
+    "load_more": "Load 10 more",
+    "user_account": "User Account",
+    "no_account": "No account",
+    "last_seen": "Last seen"
   },
   "players_list": {
     "all_seasons": "All Seasons",

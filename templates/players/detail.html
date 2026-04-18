@@ -22,8 +22,10 @@
   {% endif %}
 </div>
 
-{# ================== PERSONAL INFO ================== #}
-<section class="card" style="margin-bottom:1.25rem;">
+{# ================== PERSONAL INFO + USER INFO (50/50 or 100%) ================== #}
+<div style="display:grid;grid-template-columns:{% if linked_user %}1fr 1fr{% else %}1fr{% endif %};gap:1.25rem;margin-bottom:1.25rem;align-items:start;">
+
+<section class="card" style="margin:0;">
   <h3 style="margin-top:0">{{ t('players_detail.personal_info') }}</h3>
   <dl class="detail-dl">
     <dt>{{ t('players_form.sex') }}</dt>
@@ -56,6 +58,33 @@
     </dd>
   </dl>
 </section>
+
+{% if linked_user %}
+<section class="card" style="margin:0;">
+  <h3 style="margin-top:0">{{ t('players_detail.user_account') }}</h3>
+  <dl class="detail-dl">
+    <dt>{{ t('users.username') }}</dt>
+    <dd>{{ linked_user.username }}</dd>
+    <dt>{{ t('players_detail.email') }}</dt>
+    <dd>
+      {% if linked_user.email %}<a href="mailto:{{ linked_user.email }}">{{ linked_user.email }}</a>
+      {% else %}&mdash;{% endif %}
+    </dd>
+    <dt>{{ t('users.role') }}</dt>
+    <dd>{{ enums.role.get(linked_user.role, linked_user.role|capitalize) if linked_user.role else '—' }}</dd>
+    <dt>{{ t('players_detail.last_seen') }}</dt>
+    <dd>{{ linked_user.last_seen_at.strftime('%Y-%m-%d %H:%M') if linked_user.last_seen_at else '—' }}</dd>
+    {% if user.is_admin %}
+    <dt style="padding-top:.5rem;"></dt>
+    <dd style="padding-top:.5rem;">
+      <a href="/auth/users/{{ linked_user.id }}/edit" class="btn btn-outline btn-sm">{{ t('users.edit_user') }}</a>
+    </dd>
+    {% endif %}
+  </dl>
+</section>
+{% endif %}
+
+</div>
 
 {# ==================== TEAMS ==================== #}
 {% if player.team_memberships %}

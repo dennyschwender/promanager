@@ -1039,12 +1039,15 @@ async def player_detail(
     _mems = sorted(player.team_memberships, key=lambda m: m.priority)
     sorted_memberships = sorted(_mems, key=lambda m: m.season.name if m.season else "", reverse=True)
 
+    linked_user = db.get(User, player.user_id) if player.user_id else None
+
     return render(
         request,
         "players/detail.html",
         {
             "user": user,
             "player": player,
+            "linked_user": linked_user,
             "history_past": history_past,
             "history_future": history_future,
             "sorted_memberships": sorted_memberships,
