@@ -255,7 +255,8 @@
     "per_event_report": "Ereignisbericht",
     "per_player_report": "Spielerbericht",
     "team_col": "Team",
-    "event_report_title": "Ereignisbericht"
+    "event_report_title": "Ereignisbericht",
+    "all_events": "Alle Ereignisse"
   },
   "notifications": {
     "title": "Benachrichtigungen",

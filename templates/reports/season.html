@@ -31,9 +31,8 @@
 {# ── Filters ── #}
 <form method="get" action="/reports/season/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
   {% if teams %}
-  <label style="margin:0;">
-    <span style="display:block;font-size:.85rem;color:var(--muted-color);margin-bottom:.15rem;">{{ t('reports.filter_team') }}</span>
-    <select name="team_id" onchange="this.form.submit()" class="sel-inline">
+  <label>{{ t('reports.filter_team') }}
+    <select name="team_id" onchange="this.form.submit()">
       <option value="">{{ t('reports.all_teams') }}</option>
       {% for team in teams %}
         <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
@@ -41,18 +40,19 @@
     </select>
   </label>
   {% endif %}
-  <label style="margin:0;">
-    <span style="display:block;font-size:.85rem;color:var(--muted-color);margin-bottom:.15rem;">{{ t('reports.filter_event_type') }}</span>
-    <select name="event_type" onchange="this.form.submit()" class="sel-inline">
+  <label>{{ t('reports.filter_event_type') }}
+    <select name="event_type" onchange="this.form.submit()">
       <option value="">{{ t('reports.all_types') }}</option>
       <option value="training" {% if selected_event_type == 'training' %}selected{% endif %}>{{ t('enums.event_type_training') }}</option>
       <option value="match" {% if selected_event_type == 'match' %}selected{% endif %}>{{ t('enums.event_type_match') }}</option>
       <option value="other" {% if selected_event_type == 'other' %}selected{% endif %}>{{ t('enums.event_type_other') }}</option>
     </select>
   </label>
-  <label style="display:flex;flex-direction:column;gap:.25rem;margin:0;justify-content:flex-end;">
-    <span style="font-size:.85rem;color:var(--muted-color);">{{ t('reports.hide_future') }}</span>
-    <input type="checkbox" name="hide_future" value="1" {% if hide_future %}checked{% endif %} onchange="this.form.submit()" style="margin:0;width:auto;">
+  <label>{{ t('reports.hide_future') }}
+    <select name="hide_future" onchange="this.form.submit()">
+      <option value="">{{ t('reports.all_events') }}</option>
+      <option value="1" {% if hide_future %}selected{% endif %}>{{ t('reports.hide_future') }}</option>
+    </select>
   </label>
   <div style="align-self:flex-end;margin-left:auto;">
     {% set qs = season_qs() %}

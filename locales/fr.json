@@ -255,7 +255,8 @@
     "per_event_report": "Rapport par événement",
     "per_player_report": "Rapport par joueur",
     "team_col": "Équipe",
-    "event_report_title": "Rapport événements"
+    "event_report_title": "Rapport événements",
+    "all_events": "Tous les événements"
   },
   "notifications": {
     "title": "Notifications",
