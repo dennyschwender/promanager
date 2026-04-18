@@ -21,7 +21,10 @@
       var parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return DEFAULT_COLS.slice();
       var valid = parsed.filter(function (c) { return ALL_COLS.indexOf(c) !== -1; });
-      return valid.length ? valid : DEFAULT_COLS.slice();
+      if (!valid.length) return DEFAULT_COLS.slice();
+      // Ensure newly added DEFAULT_COLS always appear for existing users
+      DEFAULT_COLS.forEach(function (c) { if (valid.indexOf(c) === -1) valid.push(c); });
+      return valid;
     } catch (e) {
       return DEFAULT_COLS.slice();
     }
