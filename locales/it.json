@@ -15,7 +15,8 @@
     "dark_mode": "Modalità scura",
     "light_mode": "Modalità chiara",
     "schedule": "Calendario",
-    "members": "Membri"
+    "members": "Membri",
+    "my_attendance": "Le mie presenze"
   },
   "auth": {
     "login_title": "Accedi",
@@ -264,7 +265,8 @@
     "matrix_title": "Report matrice",
     "date_from": "Da",
     "date_to": "A",
-    "switch_report": "Tipo Report"
+    "switch_report": "Tipo Report",
+    "my_title": "Le mie presenze"
   },
   "notifications": {
     "title": "Notifiche",

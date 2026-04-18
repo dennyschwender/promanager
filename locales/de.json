@@ -15,7 +15,8 @@
     "dark_mode": "Dunkelmodus",
     "light_mode": "Hellmodus",
     "schedule": "Spielplan",
-    "members": "Mitglieder"
+    "members": "Mitglieder",
+    "my_attendance": "Meine Anwesenheit"
   },
   "auth": {
     "login_title": "Anmelden",
@@ -264,7 +265,8 @@
     "matrix_title": "Matrixbericht",
     "date_from": "Von",
     "date_to": "Bis",
-    "switch_report": "Berichtstyp"
+    "switch_report": "Berichtstyp",
+    "my_title": "Meine Anwesenheit"
   },
   "notifications": {
     "title": "Benachrichtigungen",

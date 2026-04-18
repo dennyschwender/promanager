@@ -15,7 +15,8 @@
     "dark_mode": "Mode sombre",
     "light_mode": "Mode clair",
     "schedule": "Calendrier",
-    "members": "Membres"
+    "members": "Membres",
+    "my_attendance": "Mes présences"
   },
   "auth": {
     "login_title": "Connexion",
@@ -264,7 +265,8 @@
     "matrix_title": "Rapport matriciel",
     "date_from": "De",
     "date_to": "Au",
-    "switch_report": "Type de rapport"
+    "switch_report": "Type de rapport",
+    "my_title": "Mes présences"
   },
   "notifications": {
     "title": "Notifications",

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ t('reports.my_title') }} — {{ app_name }}{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('reports.my_title') }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('reports.my_title') }}: {{ player.full_name }}</h2>
+  {% if season.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% endif %}
+</div>
+
+{# ── Season switcher ── #}
+<div class="filter-row" style="margin-bottom:1rem;">
+  <span style="font-size:.85rem;color:var(--muted-color);align-self:flex-end;">{{ t('reports.seasons_label') }}</span>
+  {% for s in all_seasons %}
+    <a href="/reports/my/{{ s.id }}"
+       class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}">{{ s.name }}</a>
+  {% endfor %}
+</div>
+
+{# ── Summary cards ── #}
+{% set total = matrix.total %}
+<div class="stat-grid" style="margin-bottom:1.5rem;">
+  <div class="stat-card">
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">{{ t('reports.total') }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--tp-success,#27ae60);">{{ matrix.present_count }}</div>
+    <div class="stat-label">{{ t('reports.attended') }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--tp-danger,#c0392b);">{{ matrix.absent_count }}</div>
+    <div class="stat-label">{{ t('reports.absent') }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--tp-warning,#e67e22);">{{ matrix.maybe_count }}</div>
+    <div class="stat-label">{{ t('reports.maybe') }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">
+      {% if total > 0 %}{{ (matrix.present_count / total * 100) | round(1) }}%{% else %}—{% endif %}
+    </div>
+    <div class="stat-label">{{ t('reports.attendance_rate') }}</div>
+  </div>
+</div>
+
+{% if total > 0 %}
+<div class="progress-bar-wrap" style="margin-bottom:1.5rem;">
+  <progress value="{{ (matrix.present_count / total * 100) | round(0) | int }}" max="100"></progress>
+  <span>{{ (matrix.present_count / total * 100) | round(1) }}% {{ t('reports.attendance_pct') }}</span>
+</div>
+{% endif %}
+
+{# ── Month-grouped event grid ── #}
+{% if matrix.months %}
+<style>
+.my-month { margin-bottom: 1.5rem; }
+.my-month h4 { margin-bottom: .5rem; font-size: .95rem; text-transform: capitalize; }
+.my-events { display: flex; flex-wrap: wrap; gap: .4rem; }
+.my-chip {
+  display: flex; flex-direction: column; align-items: center;
+  padding: .35rem .6rem; border-radius: 6px; font-size: .75rem;
+  min-width: 3.5rem; text-align: center; text-decoration: none;
+  border: 1px solid transparent;
+}
+.my-chip .chip-date { font-weight: 600; font-size: .72rem; margin-bottom: .1rem; }
+.my-chip .chip-title { font-size: .68rem; max-width: 5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.my-chip.present  { background: #d4f5dc; color: #1a5c2a; border-color: #6fcf97; }
+.my-chip.absent   { background: #fde8e8; color: #7b1e1e; border-color: #e57373; }
+.my-chip.maybe    { background: #fff3cd; color: #7a5200; border-color: #f0c040; }
+.my-chip.unknown  { background: var(--card-background-color, #f5f5f5); color: var(--muted-color); border-color: var(--muted-border-color); }
+[data-theme="dark"] .my-chip.present { background: #1a4a27; color: #6fcf97; }
+[data-theme="dark"] .my-chip.absent  { background: #4a1a1a; color: #e57373; }
+[data-theme="dark"] .my-chip.maybe   { background: #4a3a00; color: #f0c040; }
+[data-theme="dark"] .my-chip.unknown { background: #2a2a2a; color: var(--muted-color); }
+</style>
+
+{% for month in matrix.months %}
+<div class="my-month">
+  <h4>{{ month.events[0].event.event_date | string | truncate(7, True, '') | replace('-', '/') }}</h4>
+  <div class="my-events">
+    {% for item in month.events %}
+    <a href="/events/{{ item.event.id }}" class="my-chip {{ item.status }}" title="{{ item.event.title }} — {{ enums.status.get(item.status, item.status) }}">
+      <span class="chip-date">{{ item.event.event_date.strftime('%d') }}</span>
+      <span class="chip-title">{{ item.event.title }}</span>
+      <span style="font-size:.65rem;margin-top:.1rem;">{{ enums.status.get(item.status, item.status) }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+{# ── Legend ── #}
+<div style="display:flex;gap:.75rem;flex-wrap:wrap;font-size:.8rem;margin-top:.5rem;">
+  {% for status in ['present','absent','maybe','unknown'] %}
+  <span class="my-chip {{ status }}" style="min-width:unset;padding:.2rem .5rem;pointer-events:none;">{{ enums.status.get(status, status) }}</span>
+  {% endfor %}
+</div>
+
+{% else %}
+<p>{{ t('reports.no_records') }}</p>
+{% endif %}
+
+{% endblock %}

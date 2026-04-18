@@ -18,6 +18,7 @@ from services.attendance_service import (
     get_event_attendance_stats,
     get_matrix_attendance_stats,
     get_player_attendance_history,
+    get_player_season_matrix,
     get_season_attendance_stats,
 )
 
@@ -300,5 +301,54 @@ async def report_player(
             "user": user,
             "player": player,
             "history": history,
+        },
+    )
+
+
+@router.get("/my", include_in_schema=False)
+async def report_my_redirect(
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    """Redirect to the active season's personal attendance report."""
+    player = db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True)).first()
+    if player is None:
+        return RedirectResponse("/dashboard", status_code=302)
+    active = db.query(Season).filter(Season.is_active.is_(True)).first()
+    season = active or db.query(Season).order_by(Season.id.desc()).first()
+    if season is None:
+        return RedirectResponse("/dashboard", status_code=302)
+    return RedirectResponse(f"/reports/my/{season.id}", status_code=302)
+
+
+@router.get("/my/{season_id}")
+async def report_my(
+    season_id: int,
+    request: Request,
+    user: User = Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    """Personal attendance matrix for the logged-in player."""
+    player = db.query(Player).filter(Player.user_id == user.id, Player.is_active.is_(True)).first()
+    if player is None:
+        return RedirectResponse("/dashboard", status_code=302)
+
+    season = db.get(Season, season_id)
+    if season is None:
+        return RedirectResponse("/reports/my", status_code=302)
+
+    all_seasons = db.query(Season).order_by(Season.start_date.desc()).all()
+    matrix = get_player_season_matrix(db, player.id, season_id)
+
+    return render(
+        request,
+        "reports/my.html",
+        {
+            "user": user,
+            "player": player,
+            "season": season,
+            "all_seasons": all_seasons,
+            "matrix": matrix,
         },
     )

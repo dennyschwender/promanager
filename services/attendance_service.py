@@ -280,19 +280,71 @@ def get_matrix_attendance_stats(
     return {"events": events, "rows": rows}
 
 
-def get_player_attendance_history(db: Session, player_id: int) -> list[dict]:
+def get_player_attendance_history(db: Session, player_id: int, season_id: int | None = None) -> list[dict]:
     """Return list of {event, attendance} dicts sorted by event_date desc."""
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
-    attendances = (
-        db.query(Attendance).options(joinedload(Attendance.event)).filter(Attendance.player_id == player_id).all()
-    )
+    q = db.query(Attendance).options(joinedload(Attendance.event)).filter(Attendance.player_id == player_id)
+    if season_id is not None:
+        q = q.join(Event, Attendance.event_id == Event.id).filter(Event.season_id == season_id)
+    attendances = q.all()
     results = []
     for att in attendances:
         if att.event:
             results.append({"event": att.event, "attendance": att})
     results.sort(key=lambda x: x["event"].event_date, reverse=True)
     return results
+
+
+def get_player_season_matrix(db: Session, player_id: int, season_id: int) -> dict:
+    """Single-player matrix for one season: events grouped by month with status per event.
+
+    Returns:
+        {
+            "months": [
+                {
+                    "label": "April 2026",
+                    "events": [{"event": Event, "status": str}, ...]
+                }, ...
+            ],
+            "present_count": int,
+            "absent_count": int,
+            "maybe_count": int,
+            "unknown_count": int,
+            "total": int,
+        }
+    """
+    from collections import defaultdict  # noqa: PLC0415
+    from sqlalchemy.orm import joinedload  # noqa: PLC0415
+
+    events = db.query(Event).filter(Event.season_id == season_id).order_by(Event.event_date.asc()).all()
+    if not events:
+        return {"months": [], "present_count": 0, "absent_count": 0, "maybe_count": 0, "unknown_count": 0, "total": 0}
+
+    event_ids = [e.id for e in events]
+    attendances = (
+        db.query(Attendance)
+        .filter(Attendance.player_id == player_id, Attendance.event_id.in_(event_ids))
+        .all()
+    )
+    status_map = {att.event_id: att.status for att in attendances}
+
+    counts: dict[str, int] = {"present": 0, "absent": 0, "maybe": 0, "unknown": 0}
+    months: dict[str, list] = defaultdict(list)
+    for event in events:
+        status = status_map.get(event.id, "unknown")
+        counts[status if status in counts else "unknown"] += 1
+        month_key = event.event_date.strftime("%Y-%m")
+        months[month_key].append({"event": event, "status": status})
+
+    return {
+        "months": [{"key": k, "events": v} for k, v in sorted(months.items())],
+        "present_count": counts["present"],
+        "absent_count": counts["absent"],
+        "maybe_count": counts["maybe"],
+        "unknown_count": counts["unknown"],
+        "total": len(events),
+    }
 
 
 # ---------------------------------------------------------------------------

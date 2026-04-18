@@ -44,6 +44,7 @@
     <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
     {% if user and request.state.nav_player_id and not user.is_admin and not user.is_coach %}
     <li><a href="/players/{{ request.state.nav_player_id }}/absences" class="{% if path.startswith('/players') and '/absences' in path %}nav-active{% endif %}">{{ t('absences.manage_my_absences') }}</a></li>
+    <li><a href="/reports/my" class="{% if path.startswith('/reports/my') %}nav-active{% endif %}">{{ t('nav.my_attendance') }}</a></li>
     {% endif %}
     {% if user %}
     {% if user.is_admin or user.is_coach %}

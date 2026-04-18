@@ -15,7 +15,8 @@
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
     "schedule": "Schedule",
-    "members": "Members"
+    "members": "Members",
+    "my_attendance": "My Attendance"
   },
   "auth": {
     "login_title": "Sign In",
@@ -264,7 +265,8 @@
     "matrix_title": "Matrix Report",
     "date_from": "From",
     "date_to": "To",
-    "switch_report": "Report Type"
+    "switch_report": "Report Type",
+    "my_title": "My Attendance"
   },
   "notifications": {
     "title": "Notifications",
