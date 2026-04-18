@@ -7,14 +7,10 @@
   var _params = new URLSearchParams(window.location.search);
   var HAS_TEAM_FILTER = !!(_params.get('season_id') && _params.get('team_id'));
   var LS_ORDER_KEY = 'promanager_player_col_order';
-  var DEFAULT_COLS = [window.I18N.col_team, window.I18N.col_email, window.I18N.col_active, window.I18N.col_has_user, window.I18N.col_actions];
-  var ALL_COLS = [
-    window.I18N.col_team, window.I18N.col_email, window.I18N.col_phone, window.I18N.col_dob, window.I18N.col_active,
-    window.I18N.col_has_user, window.I18N.col_role, window.I18N.col_shirt, window.I18N.col_position, window.I18N.col_status, window.I18N.col_injured, window.I18N.col_absent_default,
-    window.I18N.col_priority, window.I18N.col_actions
-  ];
+  var DEFAULT_COLS = ['Team', 'Email', 'Active', 'Has User', 'Actions'];
+  var ALL_COLS = ['Team', 'Email', 'Phone', 'Date of birth', 'Active', 'Has User', 'Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority', 'Actions'];
   // Columns that only contain meaningful data when a season is selected
-  var PT_COLS = [window.I18N.col_role, window.I18N.col_shirt, window.I18N.col_position, window.I18N.col_status, window.I18N.col_injured, window.I18N.col_absent_default, window.I18N.col_priority];
+  var PT_COLS = ['Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority'];
 
   var cfg = window.PLAYERS_CONFIG || {};
 

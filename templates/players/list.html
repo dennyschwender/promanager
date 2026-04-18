@@ -58,9 +58,25 @@
     <div style="position:relative;display:inline-block;">
       <button type="button" class="btn btn-outline" id="columns-btn">{{ t('players_list.columns') }}</button>
       <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
-        {% for col in ["Team","Email","Phone","Date of birth","Active","Has User","Role","Shirt number","Position","Status","Injured until","Absent by default","Priority","Actions"] %}
+        {% set col_labels = [
+          ("Team",             t('players.team')),
+          ("Email",            t('players.email')),
+          ("Phone",            t('players.phone')),
+          ("Date of birth",    t('players_list.date_of_birth')),
+          ("Active",           t('players.active')),
+          ("Has User",         t('players.has_user')),
+          ("Role",             t('players_form.role')),
+          ("Shirt number",     t('players_form.shirt_number')),
+          ("Position",         t('players_form.position')),
+          ("Status",           t('players_form.status')),
+          ("Injured until",    t('players_form.injured_until')),
+          ("Absent by default",t('players_form.absent_default')),
+          ("Priority",         t('players_form.priority')),
+          ("Actions",          t('players.actions')),
+        ] %}
+        {% for col_key, col_label in col_labels %}
         <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
-          <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
+          <input type="checkbox" class="col-toggle" data-col="{{ col_key }}" checked> {{ col_label }}
         </label>
         {% endfor %}
       </div>
