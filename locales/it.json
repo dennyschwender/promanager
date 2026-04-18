@@ -800,7 +800,8 @@
     "day_3": "Mercoledì",
     "day_4": "Giovedì",
     "day_5": "Venerdì",
-    "day_6": "Sabato"
+    "day_6": "Sabato",
+    "col_has_user": "Ha Utente"
   },
   "enums": {
     "event_type_training": "Allenamento",

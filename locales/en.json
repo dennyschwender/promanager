@@ -800,7 +800,8 @@
     "day_3": "Wednesday",
     "day_4": "Thursday",
     "day_5": "Friday",
-    "day_6": "Saturday"
+    "day_6": "Saturday",
+    "col_has_user": "Has User"
   },
   "enums": {
     "event_type_training": "Training",

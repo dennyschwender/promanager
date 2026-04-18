@@ -3,10 +3,9 @@
 
   // ── Constants ──────────────────────────────────────────────────────────────
   var LS_KEY = 'promanager_player_columns_v2';
-  var LS_ORDER_KEY = 'promanager_player_col_order';
+  var LS_ORDER_KEY = 'promanager_player_col_order_v2';
   var _params = new URLSearchParams(window.location.search);
   var HAS_TEAM_FILTER = !!(_params.get('season_id') && _params.get('team_id'));
-  var LS_ORDER_KEY = 'promanager_player_col_order';
   var DEFAULT_COLS = ['Team', 'Email', 'Active', 'Has User', 'Actions'];
   var ALL_COLS = ['Team', 'Email', 'Phone', 'Date of birth', 'Active', 'Has User', 'Role', 'Shirt number', 'Position', 'Status', 'Injured until', 'Absent by default', 'Priority', 'Actions'];
   // Columns that only contain meaningful data when a season is selected
