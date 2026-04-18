@@ -2,7 +2,7 @@
   'use strict';
 
   // ── Constants ──────────────────────────────────────────────────────────────
-  var LS_KEY = 'promanager_player_columns';
+  var LS_KEY = 'promanager_player_columns_v2';
   var LS_ORDER_KEY = 'promanager_player_col_order';
   var _params = new URLSearchParams(window.location.search);
   var HAS_TEAM_FILTER = !!(_params.get('season_id') && _params.get('team_id'));
