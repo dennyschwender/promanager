@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Events — ProManager{% endblock %}
+{% block head_extra %}
+<style>
+.events-list-table { table-layout: fixed; width: 100%; }
+.events-list-table td, .events-list-table th { overflow: hidden; text-overflow: ellipsis; }
+</style>
+{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('events.title') }}</span></nav>
 {% endblock %}
@@ -41,7 +47,17 @@
 
 {% macro events_table(events, section) %}
 <div class="table-responsive">
-<table>
+<table class="events-list-table">
+  <colgroup>
+    <col style="width:8rem;">
+    <col class="col-hide-mobile" style="width:6rem;">
+    <col class="col-hide-mobile" style="width:6rem;">
+    <col>
+    <col class="col-hide-mobile" style="width:7rem;">
+    <col class="col-hide-tablet" style="width:11rem;">
+    {% if my_player_id %}<col style="width:8rem;">{% endif %}
+    {% if user %}<col style="width:4rem;">{% endif %}
+  </colgroup>
   <thead><tr>
     <th>{{ t('events.date') }}</th>
     <th class="col-hide-mobile">{{ t('events.meeting_time') }}</th>
