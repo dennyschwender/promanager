@@ -609,7 +609,7 @@ async def players_list(
     seasons = db.query(Season).order_by(Season.name).all()
     selected_season_id = season_id
 
-    q = db.query(Player)
+    q = db.query(Player).filter(Player.player_type == "player")
     # Archive filter
     if archived == "only":
         q = q.filter(Player.archived_at.isnot(None))

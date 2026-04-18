@@ -97,6 +97,21 @@ async def register_post(
         first_name=first_name or None,
         last_name=last_name or None,
     )
+    # Auto-create staff player record for non-member users with no linked player
+    if role in ("admin", "coach"):
+        existing_player = db.query(Player).filter(Player.user_id == new_user.id).first()
+        if existing_player is None:
+            staff_player = Player(
+                first_name=new_user.first_name or new_user.username,
+                last_name=new_user.last_name or "",
+                email=new_user.email,
+                phone=new_user.phone,
+                is_active=True,
+                player_type=role,
+                user_id=new_user.id,
+            )
+            db.add(staff_player)
+            db.commit()
     magic = create_magic_link(new_user.id, "/dashboard")
     send_welcome_email(
         to=new_user.email,

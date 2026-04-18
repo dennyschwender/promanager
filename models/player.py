@@ -39,6 +39,9 @@ class Player(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True, unique=True
     )
 
+    # "player" | "coach" | "admin" — staff types hidden from rosters/reports
+    player_type: Mapped[str] = mapped_column(String(16), nullable=False, default="player")
+
     # ── Relationships ──────────────────────────────────────────────────────
     team_memberships: Mapped[list[PlayerTeam]] = relationship(
         "PlayerTeam",
