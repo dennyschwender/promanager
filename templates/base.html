@@ -32,7 +32,7 @@
     <li><a href="/dashboard" class="{% if path == '/dashboard' %}nav-active{% endif %}">{{ t('nav.dashboard') }}</a></li>
     {% endif %}
     <li><a href="/events" class="{% if path.startswith('/events') %}nav-active{% endif %}">{{ t('nav.events') }}</a></li>
-    {% if user and request.state.nav_player_id %}
+    {% if user and request.state.nav_player_id and not user.is_admin and not user.is_coach %}
     <li><a href="/players/{{ request.state.nav_player_id }}/absences" class="{% if path.startswith('/players') and '/absences' in path %}nav-active{% endif %}">{{ t('absences.manage_my_absences') }}</a></li>
     {% endif %}
     {% if user %}
