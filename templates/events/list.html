@@ -74,9 +74,9 @@
     {% set att_status = att.status if att else 'unknown' %}
     {% set att_note = att.note if att and att.note else '' %}
     <tr>
-      <td style="white-space:nowrap;">{{ e.event_date }}</td>
-      <td class="col-hide-mobile" style="white-space:nowrap;">{{ e.meeting_time.strftime('%H:%M') if e.meeting_time else '—' }}</td>
-      <td class="col-hide-mobile" style="white-space:nowrap;">{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
+      <td class="nowrap">{{ e.event_date }}</td>
+      <td class="col-hide-mobile" class="nowrap">{{ e.meeting_time.strftime('%H:%M') if e.meeting_time else '—' }}</td>
+      <td class="col-hide-mobile" class="nowrap">{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
       <td>
         <a href="/events/{{ e.id }}">{% if section == 'upcoming' %}<strong>{{ e.title }}</strong>{% else %}{{ e.title }}{% endif %}</a>
         {% if e.recurrence_group_id %}<span class="badge-recurring" title="{{ t('events.recurring') }}">&#8635;</span>{% endif %}

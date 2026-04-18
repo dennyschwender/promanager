@@ -19,7 +19,7 @@
 
 <div class="page-header">
   <h2>{{ t('users.title') }}</h2>
-  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+  <div class="btn-row">
     <a href="/auth/register" class="btn btn-outline">{{ t('nav.register_user') }}</a>
     <a href="/auth/users/bulk-create" class="btn btn-outline">{{ t('users.create_from_players') }}</a>
     <form method="post" action="/auth/users/sync-from-players" style="margin:0;"
@@ -30,13 +30,13 @@
   </div>
 </div>
 
-<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+<div class="filter-row">
   <label style="margin:0;flex:1;min-width:180px;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('common.search') }}</span>
+    <span class="filter-label">{{ t('common.search') }}</span>
     <input type="search" id="filter-search" class="sel-inline" style="width:100%;" placeholder="{{ t('users.search_placeholder') }}" oninput="applyFilters()">
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('auth.role') }}</span>
+    <span class="filter-label">{{ t('auth.role') }}</span>
     <select id="filter-role" class="sel-inline" onchange="applyFilters()">
       <option value="">{{ t('users.all_roles') }}</option>
       <option value="admin">{{ t('auth.admin') }}</option>
@@ -45,7 +45,7 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players.active') }}</span>
+    <span class="filter-label">{{ t('players.active') }}</span>
     <select id="filter-active" class="sel-inline" onchange="applyFilters()">
       <option value="">{{ t('players_list.all') }}</option>
       <option value="true" selected>{{ t('players_list.active_only') }}</option>
@@ -53,7 +53,7 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('users.linked_player') }}</span>
+    <span class="filter-label">{{ t('users.linked_player') }}</span>
     <select id="filter-linked" class="sel-inline" onchange="applyFilters()">
       <option value="">{{ t('players_list.all') }}</option>
       <option value="yes">{{ t('users.with_player') }}</option>
@@ -76,13 +76,13 @@
 <table id="users-table">
   <thead>
     <tr>
-      <th data-col="First name" class="sortable-col" data-sort-key="firstname" style="cursor:pointer;white-space:nowrap;">
+      <th data-col="First name" class="sortable-col" data-sort-key="firstname" >
         {{ t('players_form.first_name') }} <span class="sort-arrow" data-key="firstname" style="opacity:.35;">▲</span>
       </th>
-      <th data-col="Last name" class="sortable-col" data-sort-key="lastname" style="cursor:pointer;white-space:nowrap;">
+      <th data-col="Last name" class="sortable-col" data-sort-key="lastname" >
         {{ t('players_form.last_name') }} <span class="sort-arrow" data-key="lastname" style="opacity:.35;">▲</span>
       </th>
-      <th data-col="Username" class="sortable-col" data-sort-key="username" style="cursor:pointer;white-space:nowrap;">
+      <th data-col="Username" class="sortable-col" data-sort-key="username" >
         {{ t('users.username') }} <span class="sort-arrow" data-key="username" style="opacity:.35;">▲</span>
       </th>
       <th data-col="Email">{{ t('users.email') }}</th>
@@ -90,7 +90,7 @@
       <th data-col="Phone">{{ t('users.phone') }}</th>
       <th data-col="Linked player">{{ t('users.linked_player') }}</th>
       <th data-col="Active">{{ t('players.active') }}</th>
-      <th data-col="Created" class="sortable-col" data-sort-key="created" style="cursor:pointer;white-space:nowrap;">
+      <th data-col="Created" class="sortable-col" data-sort-key="created" >
         {{ t('users.created_at') }} <span class="sort-arrow" data-key="created">▼</span>
       </th>
       <th data-col="Actions">{{ t('users.actions') }}</th>

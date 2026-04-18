@@ -112,10 +112,9 @@
   {% else %}
     <p style="color:var(--text-muted);margin-bottom:.75rem;">{{ t('users.no_linked_player') }}</p>
 
-    <form method="get" action="/auth/users/{{ target.id }}/edit" id="player-filter-form"
-          style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+    <form method="get" action="/auth/users/{{ target.id }}/edit" id="player-filter-form" class="filter-row">
       <label style="margin:0;">
-        <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.season_filter') }}</span>
+        <span class="filter-label">{{ t('players_list.season_filter') }}</span>
         <select name="player_season_id" onchange="playerFilterSubmit(this.form)" class="sel-inline">
           <option value="">{{ t('players_list.all_seasons') }}</option>
           {% for s in seasons %}
@@ -124,7 +123,7 @@
         </select>
       </label>
       <label style="margin:0;">
-        <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.team_filter') }}</span>
+        <span class="filter-label">{{ t('players_list.team_filter') }}</span>
         <select name="player_team_id" onchange="playerFilterSubmit(this.form)" class="sel-inline">
           <option value="">{{ t('players_list.all_teams') }}</option>
           {% for team_opt in teams %}
@@ -201,10 +200,10 @@
   {% else %}
   <p style="color:var(--text-muted);margin-bottom:.75rem;">{{ t('users.no_coach_teams') }}</p>
   {% endif %}
-  <form method="post" action="/auth/users/{{ target.id }}/add-team" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;">
+  <form method="post" action="/auth/users/{{ target.id }}/add-team" class="filter-row">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
     <label style="margin:0;">
-      <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players.team') }}</span>
+      <span class="filter-label">{{ t('players.team') }}</span>
       <select name="team_id" required class="sel-inline">
         <option value="">— {{ t('players.team') }} —</option>
         {% for team_opt in teams %}
@@ -213,7 +212,7 @@
       </select>
     </label>
     <label style="margin:0;">
-      <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.season_filter') }}</span>
+      <span class="filter-label">{{ t('players_list.season_filter') }}</span>
       <select name="season_id" class="sel-inline">
         <option value="">{{ t('users.all_seasons') }}</option>
         {% for s in seasons %}
@@ -227,11 +226,6 @@
 {% endif %}
 
 </div>
-{% endblock %}
-{% block head_extra %}
-<style>
-input[readonly] { cursor: not-allowed; opacity: .7; }
-</style>
 {% endblock %}
 {% block scripts %}
 <script>

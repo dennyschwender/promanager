@@ -385,7 +385,42 @@ select.sel-inline { width: auto; font-size: .875rem; height: auto; margin: 0; li
 
 /* ── Misc utilities ──────────────────────────────────────── */
 .text-muted { color: var(--tp-muted); font-size: 0.88rem; }
-.checkbox-label { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.75rem; }.badge-outline { background: transparent; border: 1px solid currentColor; color: var(--tp-muted); }
+.checkbox-label { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.75rem; }
+.badge-outline { background: transparent; border: 1px solid currentColor; color: var(--tp-muted); }
+.nowrap { white-space: nowrap; }
+
+/* ── Nav brand ───────────────────────────────────────────── */
+.nav-brand { font-weight: 700; text-decoration: none; }
+
+/* ── Impersonate banner ──────────────────────────────────── */
+.impersonate-banner {
+  background: var(--tp-warning, #e67e22);
+  color: #fff;
+  text-align: center;
+  padding: .4rem 1rem;
+  font-size: .88rem;
+}
+.impersonate-banner a { color: #fff; font-weight: 700; margin-left: 1rem; }
+
+/* ── Required field indicator ────────────────────────────── */
+.required-indicator { color: var(--tp-danger); }
+
+/* ── Filter label (small muted label above inline selects) ── */
+.filter-label {
+  display: block;
+  font-size: .78rem;
+  color: var(--tp-muted);
+  margin-bottom: .15rem;
+}
+
+/* ── Button / action row ─────────────────────────────────── */
+.btn-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* ── Sortable column header ──────────────────────────────── */
+.sortable-col { cursor: pointer; white-space: nowrap; }
+
+/* ── Readonly input ──────────────────────────────────────── */
+input[readonly] { cursor: not-allowed; opacity: .7; }
 
 /* ── Responsive table wrapper ────────────────────────────── */
 .table-responsive {

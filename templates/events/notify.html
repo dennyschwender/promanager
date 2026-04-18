@@ -38,13 +38,13 @@
 
   <!-- Title -->
   <label>
-    {{ t('notify_form.title_label') }} <span style="color:red">*</span>
+    {{ t('notify_form.title_label') }} <span class="required-indicator">*</span>
     <input type="text" name="title" id="notify-title" required maxlength="256">
   </label>
 
   <!-- Body -->
   <label>
-    {{ t('notify_form.message') }} <span style="color:red">*</span>
+    {{ t('notify_form.message') }} <span class="required-indicator">*</span>
     <textarea name="body" id="notify-body" rows="5" required></textarea>
   </label>
 

@@ -19,14 +19,13 @@
 
 <div style="margin-bottom:.5rem;">
   <label style="display:block;margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('common.search') }}</span>
+    <span class="filter-label">{{ t('common.search') }}</span>
     <input type="search" id="player-search" class="sel-inline" style="min-width:220px;" placeholder="{{ t('players_list.search_placeholder') }}" oninput="window.playerSearchApply && window.playerSearchApply()">
   </label>
 </div>
-<form method="get" action="/players" id="player-filter-form"
-      style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem;">
+<form method="get" action="/players" id="player-filter-form" class="filter-row">
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.season_filter') }}</span>
+    <span class="filter-label">{{ t('players_list.season_filter') }}</span>
     <select name="season_id" onchange="filterSubmit(this.form)" class="sel-inline">
       <option value="">{{ t('players_list.all_seasons') }}</option>
       {% for s in seasons %}
@@ -37,7 +36,7 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.team_filter') }}</span>
+    <span class="filter-label">{{ t('players_list.team_filter') }}</span>
     <select name="team_id" onchange="filterSubmit(this.form)" class="sel-inline">
       <option value="">{{ t('players_list.all_teams') }}</option>
       {% for team_opt in teams %}
@@ -46,7 +45,7 @@
     </select>
   </label>
   <label style="margin:0;">
-    <span style="display:block;font-size:.78rem;color:var(--tp-muted,#6c757d);margin-bottom:.15rem;">{{ t('players_list.archived_filter') }}</span>
+    <span class="filter-label">{{ t('players_list.archived_filter') }}</span>
     <select name="archived" onchange="filterSubmit(this.form)" class="sel-inline">
       <option value="">{{ t('players_list.active_only') }}</option>
       <option value="only" {% if archived_filter == 'only' %}selected{% endif %}>{{ t('players_list.archived_only') }}</option>
@@ -187,11 +186,11 @@
   <thead>
     <tr>
       {% if user.is_admin %}<th style="width:2rem;"><input type="checkbox" id="select-all"></th>{% endif %}
-      <th class="sortable-col" data-sort-key="first_name" style="cursor:pointer;white-space:nowrap;">
+      <th class="sortable-col" data-sort-key="first_name" >
         {{ t('players_form.first_name') }}
         {% if sort == 'first_name' %}{% if sort_dir == 'asc' %} ▲{% else %} ▼{% endif %}{% else %} <span style="opacity:.35;">▲</span>{% endif %}
       </th>
-      <th class="sortable-col" data-sort-key="last_name" style="cursor:pointer;white-space:nowrap;">
+      <th class="sortable-col" data-sort-key="last_name" >
         {{ t('players_form.last_name') }}
         {% if sort == 'last_name' %}{% if sort_dir == 'asc' %} ▲{% else %} ▼{% endif %}{% else %} <span style="opacity:.35;">▲</span>{% endif %}
       </th>

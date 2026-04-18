@@ -101,7 +101,7 @@
   <p class="text-muted">{{ t('events_detail.no_registration_note') }}</p>
 {% else %}
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
-  <div style="margin-bottom:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+  <div class="btn-row" style="margin-bottom:1rem;">
     <button type="button" class="btn btn-outline btn-sm" onclick="openBorrowDialog()">
       + {{ t('attendance.borrow_btn') }}
     </button>

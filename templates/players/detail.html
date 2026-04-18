@@ -14,7 +14,7 @@
     {% if player.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}
   </div>
   {% if user.is_admin %}
-  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+  <div class="btn-row">
     <a href="/players/{{ player.id }}/edit" class="btn btn-primary">{{ t('players_detail.edit_info') }}</a>
     <a href="/reports/player/{{ player.id }}" class="btn btn-outline">{{ t('players_detail.attendance_report') }}</a>
     <a href="/players/{{ player.id }}/absences" class="btn btn-outline">{{ t('players_detail.absences') }}</a>

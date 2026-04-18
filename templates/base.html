@@ -34,7 +34,7 @@
 
 <nav class="container-fluid">
   <ul>
-    <li><a href="/dashboard" style="font-weight:700;text-decoration:none;">⬡ {{ app_name }}</a></li>
+    <li><a href="/dashboard" class="nav-brand">⬡ {{ app_name }}</a></li>
   </ul>
   {% set path = request.url.path %}
   <ul id="nav-links">
@@ -113,9 +113,9 @@
 </nav>
 
 {% if request.cookies.get('_orig_session') %}
-<div style="background:var(--tp-warning,#e67e22);color:#fff;text-align:center;padding:.4rem 1rem;font-size:.88rem;">
+<div class="impersonate-banner">
   {{ t('users.impersonating_banner', username=user.username) }}
-  <a href="/auth/stop-impersonating" style="color:#fff;font-weight:700;margin-left:1rem;">{{ t('users.stop_impersonating') }} →</a>
+  <a href="/auth/stop-impersonating">{{ t('users.stop_impersonating') }} →</a>
 </div>
 {% endif %}
 
