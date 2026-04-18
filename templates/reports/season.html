@@ -57,21 +57,22 @@
   <div style="align-self:flex-end;margin-left:auto;">
     {% set qs = season_qs() %}
     <a href="/reports/event/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.per_event_report') }}</a>
+    <a href="/reports/matrix/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.matrix_title') }}</a>
   </div>
 </form>
 
 {% if stats %}
 <div class="table-responsive">
-<table>
+<table id="season-report-table">
   <thead>
     <tr>
-      <th>{{ t('reports.player') }}</th>
-      <th>{{ t('reports.attended') }}</th>
-      <th>{{ t('reports.absent') }}</th>
-      <th>{{ t('reports.maybe') }}</th>
-      <th>{{ t('reports.unknown') }}</th>
-      <th>{{ t('reports.total') }}</th>
-      <th>{{ t('reports.attendance_rate') }}</th>
+      <th class="sortable-th" data-col="0" style="cursor:pointer;">{{ t('reports.player') }} <span class="sort-ind">▲</span></th>
+      <th class="sortable-th" data-col="1" style="cursor:pointer;">{{ t('reports.attended') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="2" style="cursor:pointer;">{{ t('reports.absent') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="3" style="cursor:pointer;">{{ t('reports.maybe') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="4" style="cursor:pointer;">{{ t('reports.unknown') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="5" style="cursor:pointer;">{{ t('reports.total') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="6" style="cursor:pointer;">{{ t('reports.attendance_rate') }} <span class="sort-ind"></span></th>
     </tr>
   </thead>
   <tbody>
@@ -80,13 +81,13 @@
     {% set total = row.total_events %}
     {% set pct = ((row.present_count / total * 100) | round(1)) if total > 0 else 0 %}
     <tr>
-      <td><a href="/players/{{ row.player.id }}">{{ row.player.full_name }}</a></td>
-      <td><span class="badge badge-present">{{ row.present_count }}</span></td>
-      <td><span class="badge badge-absent">{{ row.absent_count }}</span></td>
-      <td><span class="badge badge-maybe">{{ row.maybe_count }}</span></td>
-      <td><span class="badge badge-unknown">{{ row.unknown_count }}</span></td>
-      <td>{{ total }}</td>
-      <td>
+      <td data-val="{{ row.player.last_name }}"><a href="/players/{{ row.player.id }}">{{ row.player.full_name }}</a></td>
+      <td data-val="{{ row.present_count }}"><span class="badge badge-present">{{ row.present_count }}</span></td>
+      <td data-val="{{ row.absent_count }}"><span class="badge badge-absent">{{ row.absent_count }}</span></td>
+      <td data-val="{{ row.maybe_count }}"><span class="badge badge-maybe">{{ row.maybe_count }}</span></td>
+      <td data-val="{{ row.unknown_count }}"><span class="badge badge-unknown">{{ row.unknown_count }}</span></td>
+      <td data-val="{{ total }}">{{ total }}</td>
+      <td data-val="{{ pct }}">
         <div class="progress-bar-wrap">
           <progress value="{{ pct }}" max="100"></progress>
           <span>{{ pct }}%</span>
@@ -101,4 +102,37 @@
 {% else %}
   <p>{{ t('reports.no_data') }}</p>
 {% endif %}
+<script>
+(function(){
+  const table = document.getElementById('season-report-table');
+  if (!table) return;
+  let sortCol = 6, sortAsc = false;
+  function getVal(row, col) {
+    const cell = row.cells[col];
+    const v = cell.dataset.val;
+    return v !== undefined ? parseFloat(v) : cell.textContent.trim().toLowerCase();
+  }
+  function sortTable(col, asc) {
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+      const va = getVal(a, col), vb = getVal(b, col);
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
+      return 0;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    table.querySelectorAll('.sort-ind').forEach(s => s.textContent = '');
+    const th = table.querySelectorAll('.sortable-th')[col];
+    if (th) th.querySelector('.sort-ind').textContent = asc ? '▲' : '▼';
+  }
+  table.querySelectorAll('.sortable-th').forEach((th, i) => {
+    th.addEventListener('click', () => {
+      if (sortCol === i) sortAsc = !sortAsc; else { sortCol = i; sortAsc = i === 0; }
+      sortTable(sortCol, sortAsc);
+    });
+  });
+  sortTable(sortCol, sortAsc);
+})();
+</script>
 {% endblock %}

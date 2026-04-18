@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ t('reports.matrix_title') }}: {{ season.name }} — ProManager{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb">
+  <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
+  <a href="/reports">{{ t('reports.season_title') }}</a><span class="breadcrumb-sep"></span>
+  <span>{{ t('reports.matrix_title') }}: {{ season.name }}</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('reports.matrix_title') }}: {{ season.name }}</h2>
+  {% if season.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% endif %}
+</div>
+
+{# ── Season switcher ── #}
+<div class="filter-row" style="margin-bottom:.5rem;">
+  <span style="font-size:.85rem;color:var(--muted-color);align-self:flex-end;">{{ t('reports.seasons_label') }}</span>
+  {% for s in all_seasons %}
+    <a href="/reports/matrix/{{ s.id }}"
+       class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}">{{ s.name }}</a>
+  {% endfor %}
+</div>
+
+{# ── Filters ── #}
+<form method="get" action="/reports/matrix/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
+  {% if teams %}
+  <label>{{ t('reports.filter_team') }}
+    <select name="team_id" onchange="this.form.submit()">
+      <option value="">{{ t('reports.all_teams') }}</option>
+      {% for team in teams %}
+        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>{{ t('reports.filter_event_type') }}
+    <select name="event_type" onchange="this.form.submit()">
+      <option value="">{{ t('reports.all_types') }}</option>
+      <option value="training" {% if selected_event_type == 'training' %}selected{% endif %}>{{ t('enums.event_type_training') }}</option>
+      <option value="match" {% if selected_event_type == 'match' %}selected{% endif %}>{{ t('enums.event_type_match') }}</option>
+      <option value="other" {% if selected_event_type == 'other' %}selected{% endif %}>{{ t('enums.event_type_other') }}</option>
+    </select>
+  </label>
+  <label>{{ t('reports.date_from') }}
+    <input type="date" name="date_from" value="{{ date_from }}" onchange="this.form.submit()" class="sel-inline">
+  </label>
+  <label>{{ t('reports.date_to') }}
+    <input type="date" name="date_to" value="{{ date_to }}" onchange="this.form.submit()" class="sel-inline">
+  </label>
+  <div style="align-self:flex-end;">
+    <button type="submit" class="btn btn-sm btn-outline">{{ t('common.apply') }}</button>
+  </div>
+  <div style="align-self:flex-end;margin-left:auto;">
+    <a href="/reports/season/{{ season.id }}" class="btn btn-sm btn-outline">{{ t('reports.per_player_report') }}</a>
+  </div>
+</form>
+
+{% if matrix.events %}
+<style>
+.matrix-table { border-collapse: collapse; font-size: .82rem; }
+.matrix-table th, .matrix-table td { border: 1px solid var(--muted-border-color, #ddd); padding: .25rem .4rem; white-space: nowrap; }
+.matrix-table thead th { background: var(--card-background-color, #f8f9fa); text-align: center; }
+.matrix-table th.player-col { text-align: left; min-width: 10rem; position: sticky; left: 0; background: var(--card-background-color, #f8f9fa); z-index: 1; }
+.matrix-table td.player-col { position: sticky; left: 0; background: var(--background-color, #fff); z-index: 1; }
+.matrix-table td.status-cell { text-align: center; width: 2.2rem; }
+.matrix-table .evt-header { writing-mode: vertical-rl; transform: rotate(180deg); max-height: 7rem; overflow: hidden; text-overflow: ellipsis; font-weight: normal; padding: .3rem .2rem; }
+.s-present { background: #d4edda; color: #155724; font-weight: 600; }
+.s-absent  { background: #fde8e8; color: #721c24; font-weight: 600; }
+.s-maybe   { background: #fff3cd; color: #856404; font-weight: 600; }
+.s-unknown { color: var(--muted-color, #6c757d); }
+.matrix-table td.pct-col { text-align: right; padding-right: .5rem; min-width: 4rem; }
+</style>
+
+<div style="overflow-x:auto;">
+<table class="matrix-table">
+  <thead>
+    <tr>
+      <th class="player-col sortable-th" data-col="0" style="cursor:pointer;">{{ t('reports.player') }} <span class="sort-ind"></span></th>
+      {% for event in matrix.events %}
+      <th title="{{ event.title }} — {{ event.event_date }}">
+        <div class="evt-header">
+          <span class="badge badge-{{ event.event_type }}" style="font-size:.7rem;padding:.1rem .25rem;">{{ event.event_type[0]|upper }}</span>
+          {{ event.event_date.strftime('%d/%m') }}
+        </div>
+      </th>
+      {% endfor %}
+      <th class="sortable-th" data-col="{{ matrix.events|length + 1 }}" style="text-align:center;cursor:pointer;">{{ t('reports.attended') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="{{ matrix.events|length + 2 }}" style="text-align:center;cursor:pointer;">{{ t('reports.attendance_rate') }} <span class="sort-ind">▼</span></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% set status_labels = {'present': 'P', 'absent': 'A', 'maybe': 'M', 'unknown': '?'} %}
+  {% for row in matrix.rows %}
+    {% set pct = ((row.present_count / row.total * 100) | round(0) | int) if row.total > 0 else 0 %}
+    <tr>
+      <td class="player-col" data-val="{{ row.player.last_name }}"><a href="/players/{{ row.player.id }}">{{ row.player.full_name }}</a></td>
+      {% for event in matrix.events %}
+        {% set s = row.statuses.get(event.id, 'unknown') %}
+        <td class="status-cell s-{{ s }}" title="{{ s|capitalize }}">{{ status_labels.get(s, '?') }}</td>
+      {% endfor %}
+      <td class="pct-col" data-val="{{ row.present_count }}">{{ row.present_count }}/{{ row.total }}</td>
+      <td class="pct-col" data-val="{{ pct }}">{{ pct }}%</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p style="margin-top:.75rem;font-size:.8rem;color:var(--muted-color);">
+  <strong>P</strong> = {{ t('common.present') }} &nbsp;
+  <strong>A</strong> = {{ t('common.absent') }} &nbsp;
+  <strong>M</strong> = {{ t('common.maybe') }} &nbsp;
+  <strong>?</strong> = {{ t('common.unknown') }}
+</p>
+<script>
+(function(){
+  const table = document.querySelector('.matrix-table');
+  if (!table) return;
+  const ths = Array.from(table.querySelectorAll('.sortable-th'));
+  const colIndices = ths.map(th => parseInt(th.dataset.col));
+  let sortThIdx = ths.length - 1, sortAsc = false;
+  function getVal(row, colIdx) {
+    const cell = row.cells[colIdx];
+    if (!cell) return '';
+    const v = cell.dataset.val;
+    return v !== undefined ? (isNaN(v) ? v : parseFloat(v)) : cell.textContent.trim().toLowerCase();
+  }
+  function sortTable(thIdx, asc) {
+    const colIdx = colIndices[thIdx];
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+      const va = getVal(a, colIdx), vb = getVal(b, colIdx);
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
+      return 0;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    ths.forEach(th => { const s = th.querySelector('.sort-ind'); if (s) s.textContent = ''; });
+    const ind = ths[thIdx].querySelector('.sort-ind');
+    if (ind) ind.textContent = asc ? '▲' : '▼';
+  }
+  ths.forEach((th, i) => {
+    th.addEventListener('click', () => {
+      if (sortThIdx === i) sortAsc = !sortAsc; else { sortThIdx = i; sortAsc = i === 0; }
+      sortTable(sortThIdx, sortAsc);
+    });
+  });
+  sortTable(sortThIdx, sortAsc);
+})();
+</script>
+
+{% else %}
+  <p>{{ t('reports.no_data') }}</p>
+{% endif %}
+{% endblock %}

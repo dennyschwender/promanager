@@ -62,19 +62,19 @@
 
 {% if stats %}
 <div class="table-responsive">
-<table>
+<table id="event-report-table">
   <thead>
     <tr>
-      <th>{{ t('reports.date_col') }}</th>
-      <th>{{ t('reports.event_col') }}</th>
-      <th>{{ t('reports.type_col') }}</th>
-      <th>{{ t('reports.team_col') }}</th>
-      <th>{{ t('reports.attended') }}</th>
-      <th>{{ t('reports.absent') }}</th>
-      <th>{{ t('reports.maybe') }}</th>
-      <th>{{ t('reports.unknown') }}</th>
-      <th>{{ t('reports.total') }}</th>
-      <th>{{ t('reports.attendance_rate') }}</th>
+      <th class="sortable-th" data-col="0" style="cursor:pointer;">{{ t('reports.date_col') }} <span class="sort-ind">▲</span></th>
+      <th class="sortable-th" data-col="1" style="cursor:pointer;">{{ t('reports.event_col') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="2" style="cursor:pointer;">{{ t('reports.type_col') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="3" style="cursor:pointer;">{{ t('reports.team_col') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="4" style="cursor:pointer;">{{ t('reports.attended') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="5" style="cursor:pointer;">{{ t('reports.absent') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="6" style="cursor:pointer;">{{ t('reports.maybe') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="7" style="cursor:pointer;">{{ t('reports.unknown') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="8" style="cursor:pointer;">{{ t('reports.total') }} <span class="sort-ind"></span></th>
+      <th class="sortable-th" data-col="9" style="cursor:pointer;">{{ t('reports.attendance_rate') }} <span class="sort-ind"></span></th>
     </tr>
   </thead>
   <tbody>
@@ -82,16 +82,16 @@
     {% set total = row.total_players %}
     {% set pct = ((row.present_count / total * 100) | round(1)) if total > 0 else 0 %}
     <tr>
-      <td>{{ row.event.event_date }}</td>
-      <td><a href="/events/{{ row.event.id }}">{{ row.event.title }}</a></td>
-      <td><span class="badge badge-{{ row.event.event_type }}">{{ enums.event_type.get(row.event.event_type, row.event.event_type|capitalize) }}</span></td>
-      <td>{{ row.event.team.name if row.event.team else '—' }}</td>
-      <td><span class="badge badge-present">{{ row.present_count }}</span></td>
-      <td><span class="badge badge-absent">{{ row.absent_count }}</span></td>
-      <td><span class="badge badge-maybe">{{ row.maybe_count }}</span></td>
-      <td><span class="badge badge-unknown">{{ row.unknown_count }}</span></td>
-      <td>{{ total }}</td>
-      <td>
+      <td data-val="{{ row.event.event_date }}">{{ row.event.event_date }}</td>
+      <td data-val="{{ row.event.title }}"><a href="/events/{{ row.event.id }}">{{ row.event.title }}</a></td>
+      <td data-val="{{ row.event.event_type }}"><span class="badge badge-{{ row.event.event_type }}">{{ enums.event_type.get(row.event.event_type, row.event.event_type|capitalize) }}</span></td>
+      <td data-val="{{ row.event.team.name if row.event.team else '' }}">{{ row.event.team.name if row.event.team else '—' }}</td>
+      <td data-val="{{ row.present_count }}"><span class="badge badge-present">{{ row.present_count }}</span></td>
+      <td data-val="{{ row.absent_count }}"><span class="badge badge-absent">{{ row.absent_count }}</span></td>
+      <td data-val="{{ row.maybe_count }}"><span class="badge badge-maybe">{{ row.maybe_count }}</span></td>
+      <td data-val="{{ row.unknown_count }}"><span class="badge badge-unknown">{{ row.unknown_count }}</span></td>
+      <td data-val="{{ total }}">{{ total }}</td>
+      <td data-val="{{ pct }}">
         <div class="progress-bar-wrap">
           <progress value="{{ pct }}" max="100"></progress>
           <span>{{ pct }}%</span>
@@ -105,4 +105,37 @@
 {% else %}
   <p>{{ t('reports.no_data') }}</p>
 {% endif %}
+<script>
+(function(){
+  const table = document.getElementById('event-report-table');
+  if (!table) return;
+  let sortCol = 0, sortAsc = true;
+  function getVal(row, col) {
+    const cell = row.cells[col];
+    const v = cell.dataset.val;
+    return v !== undefined ? (isNaN(v) ? v : parseFloat(v)) : cell.textContent.trim().toLowerCase();
+  }
+  function sortTable(col, asc) {
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+      const va = getVal(a, col), vb = getVal(b, col);
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
+      return 0;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    table.querySelectorAll('.sort-ind').forEach(s => s.textContent = '');
+    const th = table.querySelectorAll('.sortable-th')[col];
+    if (th) th.querySelector('.sort-ind').textContent = asc ? '▲' : '▼';
+  }
+  table.querySelectorAll('.sortable-th').forEach((th, i) => {
+    th.addEventListener('click', () => {
+      if (sortCol === i) sortAsc = !sortAsc; else { sortCol = i; sortAsc = i === 0; }
+      sortTable(sortCol, sortAsc);
+    });
+  });
+  sortTable(sortCol, sortAsc);
+})();
+</script>
 {% endblock %}
