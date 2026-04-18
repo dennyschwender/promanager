@@ -1,0 +1,39 @@
+{#
+  Report-type switcher dropdown.
+  Requires context: season, current_report ("season"|"event"|"matrix"),
+  and optionally selected_team_id, selected_event_type.
+  Common filters (team_id, event_type) are preserved across report types.
+#}
+{% set _qs_parts = [] %}
+{% if selected_team_id %}{% set _ = _qs_parts.append('team_id=' ~ selected_team_id) %}{% endif %}
+{% if selected_event_type %}{% set _ = _qs_parts.append('event_type=' ~ selected_event_type) %}{% endif %}
+{% set _common_qs = _qs_parts | join('&') %}
+
+<details role="list" style="width:auto;min-width:12rem;">
+  <summary aria-haspopup="listbox" role="link" style="padding:.35rem .75rem;">
+    {% if current_report == 'event' %}{{ t('reports.per_event_report') }}
+    {% elif current_report == 'matrix' %}{{ t('reports.matrix_title') }}
+    {% else %}{{ t('reports.per_player_report') }}
+    {% endif %}
+  </summary>
+  <ul role="listbox" style="min-width:13rem;right:0;left:auto;">
+    <li>
+      <a href="/reports/season/{{ season.id }}{% if _common_qs %}?{{ _common_qs }}{% endif %}"
+         {% if current_report == 'season' %}aria-current="true" style="font-weight:600;"{% endif %}>
+        {{ t('reports.per_player_report') }}
+      </a>
+    </li>
+    <li>
+      <a href="/reports/event/{{ season.id }}{% if _common_qs %}?{{ _common_qs }}{% endif %}"
+         {% if current_report == 'event' %}aria-current="true" style="font-weight:600;"{% endif %}>
+        {{ t('reports.per_event_report') }}
+      </a>
+    </li>
+    <li>
+      <a href="/reports/matrix/{{ season.id }}{% if _common_qs %}?{{ _common_qs }}{% endif %}"
+         {% if current_report == 'matrix' %}aria-current="true" style="font-weight:600;"{% endif %}>
+        {{ t('reports.matrix_title') }}
+      </a>
+    </li>
+  </ul>
+</details>

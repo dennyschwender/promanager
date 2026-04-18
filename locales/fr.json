@@ -263,7 +263,8 @@
     "all_events": "Tous les événements",
     "matrix_title": "Rapport matriciel",
     "date_from": "De",
-    "date_to": "Au"
+    "date_to": "Au",
+    "switch_report": "Type de rapport"
   },
   "notifications": {
     "title": "Notifications",

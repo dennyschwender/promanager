@@ -263,7 +263,8 @@
     "all_events": "Alle Ereignisse",
     "matrix_title": "Matrixbericht",
     "date_from": "Von",
-    "date_to": "Bis"
+    "date_to": "Bis",
+    "switch_report": "Berichtstyp"
   },
   "notifications": {
     "title": "Benachrichtigungen",

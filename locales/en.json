@@ -263,7 +263,8 @@
     "all_events": "All Events",
     "matrix_title": "Matrix Report",
     "date_from": "From",
-    "date_to": "To"
+    "date_to": "To",
+    "switch_report": "Report Type"
   },
   "notifications": {
     "title": "Notifications",

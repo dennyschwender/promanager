@@ -55,8 +55,7 @@
     </select>
   </label>
   <div style="align-self:flex-end;margin-left:auto;">
-    {% set qs = season_qs() %}
-    <a href="/reports/season/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.per_player_report') }}</a>
+    {% with current_report='event' %}{% include 'reports/_report_switcher.html' %}{% endwith %}
   </div>
 </form>
 

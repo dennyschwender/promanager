@@ -263,7 +263,8 @@
     "all_events": "Tutti gli eventi",
     "matrix_title": "Report matrice",
     "date_from": "Da",
-    "date_to": "A"
+    "date_to": "A",
+    "switch_report": "Tipo Report"
   },
   "notifications": {
     "title": "Notifiche",

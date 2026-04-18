@@ -52,7 +52,7 @@
     <button type="submit" class="btn btn-sm btn-outline">{{ t('common.apply') }}</button>
   </div>
   <div style="align-self:flex-end;margin-left:auto;">
-    <a href="/reports/season/{{ season.id }}" class="btn btn-sm btn-outline">{{ t('reports.per_player_report') }}</a>
+    {% with current_report='matrix' %}{% include 'reports/_report_switcher.html' %}{% endwith %}
   </div>
 </form>
 

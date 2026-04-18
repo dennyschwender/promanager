@@ -55,9 +55,7 @@
     </select>
   </label>
   <div style="align-self:flex-end;margin-left:auto;">
-    {% set qs = season_qs() %}
-    <a href="/reports/event/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.per_event_report') }}</a>
-    <a href="/reports/matrix/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.matrix_title') }}</a>
+    {% with current_report='season' %}{% include 'reports/_report_switcher.html' %}{% endwith %}
   </div>
 </form>
 
