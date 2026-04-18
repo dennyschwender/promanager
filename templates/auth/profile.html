@@ -24,11 +24,13 @@
 
 <!-- ── Notification Preferences ─────────────────────────────────────────── -->
 {% if current_player %}
+{% if current_player.player_type == 'player' %}
 <section style="margin-top:2rem;">
   <h3>{{ t('absences.page_title') }}</h3>
   <p style="font-size:.9rem;color:var(--tp-muted);margin-bottom:.5rem;">{{ t('absences.self_service_hint') }}</p>
   <a href="/players/{{ current_player.id }}/absences" class="btn btn-outline">{{ t('absences.manage_my_absences') }}</a>
 </section>
+{% endif %}
 
 <section style="margin-top:2rem;">
   <h3>{{ t('auth.notification_preferences') }}</h3>
