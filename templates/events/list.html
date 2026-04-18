@@ -30,9 +30,11 @@
     </select>
   </label>
   {% if user %}
-  <label style="display:flex;flex-direction:column;gap:.25rem;margin:0;justify-content:flex-end;">
-    <span style="font-size:.85rem;color:var(--muted-color);">{{ t('events.my_events') }}</span>
-    <input type="checkbox" name="my_events" value="1" {% if my_events %}checked{% endif %} onchange="this.form.submit()" style="margin:0;width:auto;">
+  <label>{{ t('events.my_events') }}
+    <select name="my_events" onchange="this.form.submit()">
+      <option value="">{{ t('events.all_events') }}</option>
+      <option value="1" {% if my_events %}selected{% endif %}>{{ t('events.my_events') }}</option>
+    </select>
   </label>
   {% endif %}
 </form>

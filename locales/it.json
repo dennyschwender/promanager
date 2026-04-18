@@ -122,7 +122,8 @@
     "delete_future_confirm": "Verranno eliminati definitivamente %{count} evento/i. Confermi?",
     "deleted_single": "Evento eliminato.",
     "deleted_series": "%{count} eventi della serie eliminati.",
-    "meeting_time": "Ritrovo"
+    "meeting_time": "Ritrovo",
+    "all_events": "Tutti gli eventi"
   },
   "attendance": {
     "title": "Registra Presenze",

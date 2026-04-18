@@ -122,7 +122,8 @@
     "delete_future_confirm": "This will permanently delete %{count} event(s). Are you sure?",
     "deleted_single": "Event deleted.",
     "deleted_series": "Deleted %{count} events in this series.",
-    "meeting_time": "Meet"
+    "meeting_time": "Meet",
+    "all_events": "All Events"
   },
   "attendance": {
     "title": "Mark Attendance",

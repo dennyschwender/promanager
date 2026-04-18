@@ -122,7 +122,8 @@
     "delete_future_confirm": "Cela supprimera définitivement %{count} événement(s). Êtes-vous sûr ?",
     "deleted_single": "Événement supprimé.",
     "deleted_series": "%{count} événements de la série supprimés.",
-    "meeting_time": "RDV"
+    "meeting_time": "RDV",
+    "all_events": "Tous les événements"
   },
   "attendance": {
     "title": "Marquer les présences",

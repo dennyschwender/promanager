@@ -122,7 +122,8 @@
     "delete_future_confirm": "Es werden %{count} Ereignis(se) dauerhaft gelöscht. Sind Sie sicher?",
     "deleted_single": "Ereignis gelöscht.",
     "deleted_series": "%{count} Ereignisse der Serie gelöscht.",
-    "meeting_time": "Treffpunkt"
+    "meeting_time": "Treffpunkt",
+    "all_events": "Alle Ereignisse"
   },
   "attendance": {
     "title": "Anwesenheit erfassen",
