@@ -99,14 +99,27 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     return detail
 
 
-def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
+def get_season_attendance_stats(
+    db: Session,
+    season_id: int,
+    team_id: int | None = None,
+    event_type: str | None = None,
+    hide_future: bool = False,
+) -> list[dict]:
     """Per-player stats for an entire season.
 
     Returns a list of dicts:
         {player, present_count, absent_count, maybe_count, unknown_count, total_events}
     """
-    # Find all events for this season
-    events = db.query(Event).filter(Event.season_id == season_id).all()
+    # Find all events for this season (with optional filters)
+    q = db.query(Event).filter(Event.season_id == season_id)
+    if team_id is not None:
+        q = q.filter(Event.team_id == team_id)
+    if event_type:
+        q = q.filter(Event.event_type == event_type)
+    if hide_future:
+        q = q.filter(Event.event_date <= date.today())
+    events = q.all()
     event_ids = [e.id for e in events]
     total_events = len(event_ids)
 
@@ -141,6 +154,56 @@ def get_season_attendance_stats(db: Session, season_id: int) -> list[dict]:
         player_map.values(),
         key=lambda x: x["player"].last_name if x["player"] else "",
     )
+
+
+def get_event_attendance_stats(
+    db: Session,
+    season_id: int,
+    team_id: int | None = None,
+    event_type: str | None = None,
+    hide_future: bool = False,
+    allowed_team_ids: set[int] | None = None,
+) -> list[dict]:
+    """Per-event attendance counts for a season.
+
+    Returns a list of dicts sorted by event_date asc:
+        {event, present_count, absent_count, maybe_count, unknown_count, total_players}
+    """
+    q = db.query(Event).filter(Event.season_id == season_id)
+    if team_id is not None:
+        q = q.filter(Event.team_id == team_id)
+    if event_type:
+        q = q.filter(Event.event_type == event_type)
+    if hide_future:
+        q = q.filter(Event.event_date <= date.today())
+    if allowed_team_ids is not None:
+        q = q.filter(Event.team_id.in_(allowed_team_ids))
+    events = q.order_by(Event.event_date.asc()).all()
+
+    if not events:
+        return []
+
+    event_ids = [e.id for e in events]
+    attendances = db.query(Attendance).filter(Attendance.event_id.in_(event_ids)).all()
+
+    counts: dict[int, dict] = {e.id: {"present": 0, "absent": 0, "maybe": 0, "unknown": 0} for e in events}
+    for att in attendances:
+        bucket = att.status if att.status in counts[att.event_id] else "unknown"
+        counts[att.event_id][bucket] += 1
+
+    results = []
+    for event in events:
+        c = counts[event.id]
+        total = c["present"] + c["absent"] + c["maybe"] + c["unknown"]
+        results.append({
+            "event": event,
+            "present_count": c["present"],
+            "absent_count": c["absent"],
+            "maybe_count": c["maybe"],
+            "unknown_count": c["unknown"],
+            "total_players": total,
+        })
+    return results
 
 
 def get_player_attendance_history(db: Session, player_id: int) -> list[dict]:

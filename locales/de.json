@@ -245,7 +245,16 @@
     "event_col": "Ereignis",
     "type_col": "Typ",
     "status_col": "Status",
-    "note_col": "Notiz"
+    "note_col": "Notiz",
+    "filter_team": "Team",
+    "all_teams": "Alle Teams",
+    "filter_event_type": "Ereignistyp",
+    "all_types": "Alle Typen",
+    "hide_future": "Zukünftige ausblenden",
+    "per_event_report": "Ereignisbericht",
+    "per_player_report": "Spielerbericht",
+    "team_col": "Team",
+    "event_report_title": "Ereignisbericht"
   },
   "notifications": {
     "title": "Benachrichtigungen",

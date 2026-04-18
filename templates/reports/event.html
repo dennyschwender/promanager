@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ t('reports.season_title') }}: {{ season.name }} — ProManager{% endblock %}
+{% block title %}{{ t('reports.event_report_title') }}: {{ season.name }} — ProManager{% endblock %}
 {% block breadcrumb %}
 <nav class="breadcrumb">
   <a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span>
   <a href="/reports">{{ t('reports.season_title') }}</a><span class="breadcrumb-sep"></span>
-  <span>{{ season.name }}</span>
+  <span>{{ t('reports.event_report_title') }}: {{ season.name }}</span>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>{{ t('reports.season_title') }}: {{ season.name }}</h2>
+  <h2>{{ t('reports.event_report_title') }}: {{ season.name }}</h2>
   {% if season.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% endif %}
 </div>
 
@@ -23,13 +23,13 @@
   <span style="font-size:.85rem;color:var(--muted-color);align-self:flex-end;">{{ t('reports.seasons_label') }}</span>
   {% for s in all_seasons %}
     {% set qs = season_qs() %}
-    <a href="/reports/season/{{ s.id }}{% if qs %}?{{ qs }}{% endif %}"
+    <a href="/reports/event/{{ s.id }}{% if qs %}?{{ qs }}{% endif %}"
        class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}">{{ s.name }}</a>
   {% endfor %}
 </div>
 
 {# ── Filters ── #}
-<form method="get" action="/reports/season/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
+<form method="get" action="/reports/event/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
   {% if teams %}
   <label style="margin:0;">
     <span style="display:block;font-size:.85rem;color:var(--muted-color);margin-bottom:.15rem;">{{ t('reports.filter_team') }}</span>
@@ -56,7 +56,7 @@
   </label>
   <div style="align-self:flex-end;margin-left:auto;">
     {% set qs = season_qs() %}
-    <a href="/reports/event/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.per_event_report') }}</a>
+    <a href="/reports/season/{{ season.id }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-sm btn-outline">{{ t('reports.per_player_report') }}</a>
   </div>
 </form>
 
@@ -65,7 +65,10 @@
 <table>
   <thead>
     <tr>
-      <th>{{ t('reports.player') }}</th>
+      <th>{{ t('reports.date_col') }}</th>
+      <th>{{ t('reports.event_col') }}</th>
+      <th>{{ t('reports.type_col') }}</th>
+      <th>{{ t('reports.team_col') }}</th>
       <th>{{ t('reports.attended') }}</th>
       <th>{{ t('reports.absent') }}</th>
       <th>{{ t('reports.maybe') }}</th>
@@ -76,11 +79,13 @@
   </thead>
   <tbody>
   {% for row in stats %}
-  {% if coach_player_ids is none or row.player.id in coach_player_ids %}
-    {% set total = row.total_events %}
+    {% set total = row.total_players %}
     {% set pct = ((row.present_count / total * 100) | round(1)) if total > 0 else 0 %}
     <tr>
-      <td><a href="/players/{{ row.player.id }}">{{ row.player.full_name }}</a></td>
+      <td>{{ row.event.event_date }}</td>
+      <td><a href="/events/{{ row.event.id }}">{{ row.event.title }}</a></td>
+      <td><span class="badge badge-{{ row.event.event_type }}">{{ enums.event_type.get(row.event.event_type, row.event.event_type|capitalize) }}</span></td>
+      <td>{{ row.event.team.name if row.event.team else '—' }}</td>
       <td><span class="badge badge-present">{{ row.present_count }}</span></td>
       <td><span class="badge badge-absent">{{ row.absent_count }}</span></td>
       <td><span class="badge badge-maybe">{{ row.maybe_count }}</span></td>
@@ -93,7 +98,6 @@
         </div>
       </td>
     </tr>
-  {% endif %}
   {% endfor %}
   </tbody>
 </table>

@@ -245,7 +245,16 @@
     "event_col": "Evento",
     "type_col": "Tipo",
     "status_col": "Stato",
-    "note_col": "Nota"
+    "note_col": "Nota",
+    "filter_team": "Squadra",
+    "all_teams": "Tutte le squadre",
+    "filter_event_type": "Tipo evento",
+    "all_types": "Tutti i tipi",
+    "hide_future": "Nascondi futuri",
+    "per_event_report": "Report per evento",
+    "per_player_report": "Report per giocatore",
+    "team_col": "Squadra",
+    "event_report_title": "Report eventi"
   },
   "notifications": {
     "title": "Notifiche",
