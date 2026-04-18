@@ -654,6 +654,27 @@ async def players_list(
         )
         player_team_map = {pt.player_id: pt for pt in pts}
 
+    # Build {player_id: User} for "Has User" column
+    player_ids = [p.id for p in players]
+    linked_users = (
+        db.query(User).filter(
+            User.id.in_(
+                db.query(Player.user_id).filter(
+                    Player.id.in_(player_ids),
+                    Player.user_id.isnot(None),
+                )
+            )
+        ).all()
+    ) if player_ids else []
+    # map player_id -> User via player lookup
+    player_id_to_user: dict[int, User] = {}
+    for p in players:
+        if p.user_id:
+            for u in linked_users:
+                if u.id == p.user_id:
+                    player_id_to_user[p.id] = u
+                    break
+
     return render(
         request,
         "players/list.html",
@@ -665,6 +686,7 @@ async def players_list(
             "selected_team_id": team_id,
             "selected_season_id": selected_season_id,
             "player_team_map": player_team_map,
+            "player_id_to_user": player_id_to_user,
             "archived_filter": archived or "",
             "sort": sort,
             "sort_dir": sort_dir,

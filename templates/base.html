@@ -37,12 +37,11 @@
     {% endif %}
     {% if user %}
     {% if user.is_admin or user.is_coach %}
-    <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.players') }}</a></li>
+    <li><a href="/players"   class="{% if path.startswith('/players') %}nav-active{% endif %}">{{ t('nav.members') }}</a></li>
     <li><a href="/teams"     class="{% if path.startswith('/teams') %}nav-active{% endif %}">{{ t('nav.teams') }}</a></li>
     {% endif %}
     {% if user.is_admin %}
       <li><a href="/seasons" class="{% if path.startswith('/seasons') %}nav-active{% endif %}">{{ t('nav.seasons') }}</a></li>
-      <li><a href="/auth/users" class="{% if path.startswith('/auth/users') or path.startswith('/auth/register') %}nav-active{% endif %}">{{ t('users.title') }}</a></li>
     {% endif %}
     {% if user.is_admin or user.is_coach %}
       <li><a href="/reports" class="{% if path.startswith('/reports') %}nav-active{% endif %}">{{ t('nav.reports') }}</a></li>
@@ -121,7 +120,7 @@
     <span>
       <a href="/dashboard">{{ t('nav.dashboard') }}</a> ·
       <a href="/events">{{ t('nav.events') }}</a> ·
-      <a href="/players">{{ t('nav.players') }}</a>
+      <a href="/players">{{ t('nav.members') }}</a>
       {% if user.is_admin %} · <a href="/seasons">{{ t('nav.seasons') }}</a>{% endif %}
     </span>
     {% endif %}

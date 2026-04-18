@@ -351,6 +351,18 @@
     if (deactivateBtn) deactivateBtn.style.display = hasActive      ? '' : 'none';
     if (archiveBtn)    archiveBtn.style.display    = hasNotArchived ? '' : 'none';
     if (unarchiveBtn)  unarchiveBtn.style.display  = hasArchived    ? '' : 'none';
+
+    // "Create User" button — only for players without a linked user
+    var createUserBtn = document.getElementById('bulk-create-user-btn');
+    var createUserIds = document.getElementById('bulk-create-user-ids');
+    if (createUserBtn && createUserIds) {
+      var noUserIds = checked
+        .filter(function (cb) { return cb.dataset.hasUser !== 'true'; })
+        .map(function (cb) { return cb.closest('tr').dataset.playerId; })
+        .filter(Boolean);
+      createUserIds.value = noUserIds.join(',');
+      createUserBtn.style.display = noUserIds.length > 0 ? '' : 'none';
+    }
   }
 
   function bulkPost(url, ids, resultKey, reloadOnCount) {

@@ -69,7 +69,7 @@
     <tbody>
     {% for p in eligible %}
     <tr>
-      <td><input type="checkbox" name="player_ids" value="{{ p.id }}" class="player-cb" checked></td>
+      <td><input type="checkbox" name="player_ids" value="{{ p.id }}" class="player-cb" {% if not preselect_ids or p.id in preselect_ids %}checked{% endif %}></td>
       <td>{{ p.full_name }}</td>
       <td>{{ p.email }}</td>
     </tr>

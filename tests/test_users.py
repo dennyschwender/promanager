@@ -17,7 +17,7 @@ def _make_user(db, username, email, role="member"):
 
 
 def test_users_list_admin_200(admin_client):
-    resp = admin_client.get("/auth/users", follow_redirects=False)
+    resp = admin_client.get("/auth/users/list", follow_redirects=False)
     assert resp.status_code == 200
 
 
@@ -29,7 +29,7 @@ def test_users_list_member_403(member_client):
 def test_users_list_shows_users(admin_client, db):
     _make_user(db, "alice", "alice@test.com", role="member")
     db.commit()
-    resp = admin_client.get("/auth/users")
+    resp = admin_client.get("/auth/users/list")
     assert b"alice" in resp.content
 
 

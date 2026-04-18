@@ -14,7 +14,8 @@
     "language": "Lingua",
     "dark_mode": "Modalità scura",
     "light_mode": "Modalità chiara",
-    "schedule": "Calendario"
+    "schedule": "Calendario",
+    "members": "Membri"
   },
   "auth": {
     "login_title": "Accedi",
@@ -187,7 +188,10 @@
     "import_submit": "Importa",
     "season_label": "Stagione",
     "no_seasons": "Nessuna stagione disponibile",
-    "no_active_season": "Nessuna stagione attiva. Attiva una stagione per assegnare i giocatori ai team."
+    "no_active_season": "Nessuna stagione attiva. Attiva una stagione per assegnare i giocatori ai team.",
+    "members_title": "Membri",
+    "has_user": "Ha Utente",
+    "create_user": "Crea Utente"
   },
   "teams": {
     "title": "Squadre",
@@ -256,7 +260,10 @@
     "per_player_report": "Report per giocatore",
     "team_col": "Squadra",
     "event_report_title": "Report eventi",
-    "all_events": "Tutti gli eventi"
+    "all_events": "Tutti gli eventi",
+    "matrix_title": "Report matrice",
+    "date_from": "Da",
+    "date_to": "A"
   },
   "notifications": {
     "title": "Notifiche",
@@ -315,7 +322,12 @@
     "security": "Sicurezza",
     "filter": "Filtra",
     "clear": "Cancella",
-    "search": "Cerca"
+    "search": "Cerca",
+    "present": "Presente",
+    "absent": "Assente",
+    "maybe": "Forse",
+    "unknown": "Sconosciuto",
+    "apply": "Applica"
   },
   "errors": {
     "404_title": "Pagina Non Trovata",

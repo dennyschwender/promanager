@@ -133,6 +133,11 @@ async def register_post(
 
 @router.get("", dependencies=[Depends(require_admin)])
 async def users_list(request: Request, db: Session = Depends(get_db), reset: str | None = None):
+    return RedirectResponse("/players", status_code=302)
+
+
+@router.get("/list", dependencies=[Depends(require_admin)])
+async def users_list_page(request: Request, db: Session = Depends(get_db), reset: str | None = None):
     users = db.query(User).order_by(User.created_at.desc()).all()
     # Build player lookup: user_id -> Player
     linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
@@ -154,6 +159,7 @@ async def bulk_create_get(
     request: Request,
     team_id: str | None = None,
     season_id: str | None = None,
+    preselect: str | None = None,
     db: Session = Depends(get_db),
 ):
     selected_team_id = int(team_id) if team_id and team_id.strip() else None
@@ -214,6 +220,7 @@ async def bulk_create_get(
             "eligible": eligible,
             "no_email_count": no_email_count,
             "results": None,
+            "preselect_ids": {int(x) for x in preselect.split(",") if x.strip().isdigit()} if preselect else set(),
         },
     )
 

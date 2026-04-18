@@ -14,7 +14,8 @@
     "language": "Langue",
     "dark_mode": "Mode sombre",
     "light_mode": "Mode clair",
-    "schedule": "Calendrier"
+    "schedule": "Calendrier",
+    "members": "Membres"
   },
   "auth": {
     "login_title": "Connexion",
@@ -187,7 +188,10 @@
     "import_submit": "Importer",
     "season_label": "Saison",
     "no_seasons": "Aucune saison disponible",
-    "no_active_season": "Aucune saison active. Veuillez activer une saison pour assigner des joueurs aux équipes."
+    "no_active_season": "Aucune saison active. Veuillez activer une saison pour assigner des joueurs aux équipes.",
+    "members_title": "Membres",
+    "has_user": "A un Compte",
+    "create_user": "Créer Compte"
   },
   "teams": {
     "title": "Équipes",
@@ -256,7 +260,10 @@
     "per_player_report": "Rapport par joueur",
     "team_col": "Équipe",
     "event_report_title": "Rapport événements",
-    "all_events": "Tous les événements"
+    "all_events": "Tous les événements",
+    "matrix_title": "Rapport matriciel",
+    "date_from": "De",
+    "date_to": "Au"
   },
   "notifications": {
     "title": "Notifications",
@@ -315,7 +322,12 @@
     "security": "Sécurité",
     "filter": "Filtrer",
     "clear": "Effacer",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "present": "Présent",
+    "absent": "Absent",
+    "maybe": "Peut-être",
+    "unknown": "Inconnu",
+    "apply": "Appliquer"
   },
   "errors": {
     "404_title": "Page introuvable",

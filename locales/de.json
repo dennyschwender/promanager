@@ -14,7 +14,8 @@
     "language": "Sprache",
     "dark_mode": "Dunkelmodus",
     "light_mode": "Hellmodus",
-    "schedule": "Spielplan"
+    "schedule": "Spielplan",
+    "members": "Mitglieder"
   },
   "auth": {
     "login_title": "Anmelden",
@@ -187,7 +188,10 @@
     "import_submit": "Importieren",
     "season_label": "Saison",
     "no_seasons": "Keine Saisons verfügbar",
-    "no_active_season": "Keine aktive Saison. Bitte aktivieren Sie eine Saison, um Spieler zu Teams zuzuweisen."
+    "no_active_season": "Keine aktive Saison. Bitte aktivieren Sie eine Saison, um Spieler zu Teams zuzuweisen.",
+    "members_title": "Mitglieder",
+    "has_user": "Hat Konto",
+    "create_user": "Konto Erstellen"
   },
   "teams": {
     "title": "Teams",
@@ -256,7 +260,10 @@
     "per_player_report": "Spielerbericht",
     "team_col": "Team",
     "event_report_title": "Ereignisbericht",
-    "all_events": "Alle Ereignisse"
+    "all_events": "Alle Ereignisse",
+    "matrix_title": "Matrixbericht",
+    "date_from": "Von",
+    "date_to": "Bis"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -315,7 +322,12 @@
     "security": "Sicherheit",
     "filter": "Filtern",
     "clear": "Zurücksetzen",
-    "search": "Suchen"
+    "search": "Suchen",
+    "present": "Anwesend",
+    "absent": "Abwesend",
+    "maybe": "Vielleicht",
+    "unknown": "Unbekannt",
+    "apply": "Anwenden"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",

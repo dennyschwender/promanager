@@ -14,7 +14,8 @@
     "language": "Language",
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
-    "schedule": "Schedule"
+    "schedule": "Schedule",
+    "members": "Members"
   },
   "auth": {
     "login_title": "Sign In",
@@ -187,7 +188,10 @@
     "import_submit": "Import",
     "season_label": "Season",
     "no_seasons": "No seasons available",
-    "no_active_season": "No active season. Please activate a season to assign players to teams."
+    "no_active_season": "No active season. Please activate a season to assign players to teams.",
+    "members_title": "Members",
+    "has_user": "Has User",
+    "create_user": "Create User"
   },
   "teams": {
     "title": "Teams",
@@ -256,7 +260,10 @@
     "per_player_report": "Per-Player Report",
     "team_col": "Team",
     "event_report_title": "Event Report",
-    "all_events": "All Events"
+    "all_events": "All Events",
+    "matrix_title": "Matrix Report",
+    "date_from": "From",
+    "date_to": "To"
   },
   "notifications": {
     "title": "Notifications",
@@ -315,7 +322,12 @@
     "security": "Security",
     "filter": "Filter",
     "clear": "Clear",
-    "search": "Search"
+    "search": "Search",
+    "present": "Present",
+    "absent": "Absent",
+    "maybe": "Maybe",
+    "unknown": "Unknown",
+    "apply": "Apply"
   },
   "errors": {
     "404_title": "Page Not Found",

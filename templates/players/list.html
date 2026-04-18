@@ -2,13 +2,13 @@
 {% block head_extra %}
 <meta name="csrf-token" content="{{ request.state.csrf_token }}">
 {% endblock %}
-{% block title %}{{ t('players.title') }} — ProManager{% endblock %}
+{% block title %}{{ t('players.members_title') }} — ProManager{% endblock %}
 {% block breadcrumb %}
-<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('players.title') }}</span></nav>
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('players.members_title') }}</span></nav>
 {% endblock %}
 {% block content %}
 <div class="page-header">
-  <h2>{{ t('players.title') }}</h2>
+  <h2>{{ t('players.members_title') }}</h2>
   {% if user.is_admin %}
   <div style="display:flex;gap:.5rem;">
     <a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>
@@ -58,7 +58,7 @@
     <div style="position:relative;display:inline-block;">
       <button type="button" class="btn btn-outline" id="columns-btn">{{ t('players_list.columns') }}</button>
       <div id="columns-popover" style="display:none;position:absolute;left:0;top:2.2rem;background:var(--card-background-color,#fff);border:1px solid var(--muted-border-color,#ddd);border-radius:.4rem;padding:.75rem 1rem;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.15);">
-        {% for col in ["Team","Email","Phone","Date of birth","Active","Role","Shirt number","Position","Status","Injured until","Absent by default","Priority","Actions"] %}
+        {% for col in ["Team","Email","Phone","Date of birth","Active","Has User","Role","Shirt number","Position","Status","Injured until","Absent by default","Priority","Actions"] %}
         <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;cursor:pointer;">
           <input type="checkbox" class="col-toggle" data-col="{{ col }}" checked> {{ col }}
         </label>
@@ -154,6 +154,10 @@
 <button type="button" class="btn btn-sm btn-outline" id="bulk-unarchive-btn"
         style="display:none;border-color:var(--tp-danger,#dc3545);color:var(--tp-danger,#dc3545);">{{ t('common.unarchive') }}</button>
 <button type="button" class="btn btn-sm btn-outline" id="clear-selection-btn">{{ t('players_list.clear_selection') }}</button>
+<form method="get" action="/auth/users/bulk-create" id="bulk-create-user-form" style="display:inline;">
+  <input type="hidden" name="preselect" id="bulk-create-user-ids" value="">
+  <button type="submit" class="btn btn-sm btn-outline" id="bulk-create-user-btn" style="display:none;">{{ t('players.create_user') }}</button>
+</form>
 </div>
 <div id="bulk-banner" style="display:none;margin-bottom:.5rem;" role="alert"></div>
 {% endif %}
@@ -180,6 +184,7 @@
       <th data-col="Phone">{{ t('players.phone') }}</th>
       <th data-col="Date of birth">{{ t('players_list.date_of_birth') }}</th>
       <th data-col="Active">{{ t('players.active') }}</th>
+      <th data-col="Has User">{{ t('players.has_user') }}</th>
       <th data-col="Role">{{ t('players_form.role') }}</th>
       <th data-col="Shirt number">{{ t('players_form.shirt_number') }}</th>
       <th data-col="Position">{{ t('players_form.position') }}</th>
@@ -198,7 +203,7 @@
         data-is-active="{{ 'true' if p.is_active else 'false' }}"
         data-archived-at="{{ p.archived_at.isoformat() if p.archived_at else '' }}"
         data-search="{{ (p.first_name ~ ' ' ~ p.last_name ~ ' ' ~ (p.email or '') ~ ' ' ~ (p.phone or ''))|lower }}">
-      {% if user.is_admin %}<td><input type="checkbox" class="row-check"></td>{% endif %}
+      {% if user.is_admin %}<td><input type="checkbox" class="row-check" data-has-user="{{ 'true' if player_id_to_user.get(p.id) else 'false' }}"></td>{% endif %}
       <td><a href="/players/{{ p.id }}"><strong>{{ p.first_name }}</strong></a></td>
       <td><a href="/players/{{ p.id }}"><strong>{{ p.last_name }}</strong></a></td>
       <td data-col="Team" data-value="{{ p.team_memberships | length }}">
@@ -233,6 +238,14 @@
       <td data-col="Active" data-field="is_active" data-value="{{ 'true' if p.is_active else 'false' }}">
         <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}</span>
         <input type="checkbox" class="cell-input" style="display:none;" {% if p.is_active %}checked{% endif %}>
+      </td>
+      <td data-col="Has User">
+        {% set linked_user = player_id_to_user.get(p.id) %}
+        {% if linked_user %}
+          <span class="badge badge-active" title="{{ linked_user.username }}">✓ {{ linked_user.username }}</span>
+        {% else %}
+          <span class="text-muted" style="font-size:.8rem;">—</span>
+        {% endif %}
       </td>
       {% set season_mems_pt = p.team_memberships | selectattr('season_id', 'equalto', selected_season_id) | sort(attribute='priority') | list if selected_season_id else [] %}
       <td data-col="Role" class="pt-field" data-field="role" data-value="{{ pt.role or '' if pt else '' }}">
