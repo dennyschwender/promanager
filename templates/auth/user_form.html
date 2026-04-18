@@ -228,6 +228,11 @@
 
 </div>
 {% endblock %}
+{% block head_extra %}
+<style>
+input[readonly] { cursor: not-allowed; opacity: .7; }
+</style>
+{% endblock %}
 {% block scripts %}
 <script>
 function playerFilterSubmit(form) {
