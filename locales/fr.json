@@ -974,5 +974,14 @@
     "audit_col_target": "Cible",
     "audit_col_extra": "Détails",
     "audit_col_ip": "IP"
+  },
+  "calendar": {
+    "section_title": "Synchronisation Calendrier",
+    "instructions": "Abonnez-vous à cette URL dans Google Calendar, Apple Calendar ou toute application de calendrier pour voir vos événements.",
+    "copy_link": "Copier le lien",
+    "generate_link": "Générer un lien calendrier",
+    "regenerate_link": "Régénérer le lien",
+    "regenerate_warning": "Régénérer interrompra les abonnements au calendrier existants.",
+    "copied": "Copié !"
   }
 }

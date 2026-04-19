@@ -974,5 +974,14 @@
     "audit_col_target": "Ziel",
     "audit_col_extra": "Details",
     "audit_col_ip": "IP"
+  },
+  "calendar": {
+    "section_title": "Kalender-Synchronisierung",
+    "instructions": "Abonnieren Sie diese URL in Google Kalender, Apple Kalender oder einer anderen Kalender-App, um Ihre Ereignisse zu sehen.",
+    "copy_link": "Link kopieren",
+    "generate_link": "Kalender-Link generieren",
+    "regenerate_link": "Link neu generieren",
+    "regenerate_warning": "Das Neu-Generieren bricht bestehende Kalender-Abonnements.",
+    "copied": "Kopiert!"
   }
 }

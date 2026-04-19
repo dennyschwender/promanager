@@ -130,6 +130,40 @@
   </form>
 </section>
 
+<!-- ── Calendar Sync ──────────────────────────────────────────────────── -->
+<section class="card mt-4">
+  <h2 class="card-title">{{ t("calendar.section_title") }}</h2>
+  <p class="text-muted">{{ t("calendar.instructions") }}</p>
+
+  {% if calendar_feed_url %}
+    <div class="input-group mb-2">
+      <input id="cal-feed-url" type="text" class="form-control" readonly
+             value="{{ calendar_feed_url }}">
+      <button type="button" class="btn btn-outline-secondary"
+              onclick="navigator.clipboard.writeText('{{ calendar_feed_url }}').then(()=>{
+                const btn=this; btn.textContent='{{ t('calendar.copied') }}';
+                setTimeout(()=>btn.textContent='{{ t('calendar.copy_link') }}',2000);
+              })">
+        {{ t("calendar.copy_link") }}
+      </button>
+    </div>
+    <form method="post" action="/calendar/regenerate-token"
+          onsubmit="return confirm('{{ t('calendar.regenerate_warning') }}')">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        {{ t("calendar.regenerate_link") }}
+      </button>
+    </form>
+  {% else %}
+    <form method="post" action="/calendar/regenerate-token">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+      <button type="submit" class="btn btn-outline-primary">
+        {{ t("calendar.generate_link") }}
+      </button>
+    </form>
+  {% endif %}
+</section>
+
 <!-- ── Security ─────────────────────────────────────────────────────────── -->
 <section style="margin-top:2rem;">
   <h3>{{ t('common.security') }}</h3>

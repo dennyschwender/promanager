@@ -974,5 +974,14 @@
     "audit_col_target": "Target",
     "audit_col_extra": "Details",
     "audit_col_ip": "IP"
+  },
+  "calendar": {
+    "section_title": "Calendar Sync",
+    "instructions": "Subscribe to this URL in Google Calendar, Apple Calendar, or any calendar app to see your events.",
+    "copy_link": "Copy link",
+    "generate_link": "Generate calendar link",
+    "regenerate_link": "Regenerate link",
+    "regenerate_warning": "Regenerating will break any existing calendar subscriptions.",
+    "copied": "Copied!"
   }
 }

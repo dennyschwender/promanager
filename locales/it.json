@@ -974,5 +974,14 @@
     "audit_col_target": "Destinatario",
     "audit_col_extra": "Dettagli",
     "audit_col_ip": "IP"
+  },
+  "calendar": {
+    "section_title": "Sincronizzazione Calendario",
+    "instructions": "Iscriviti a questo URL in Google Calendar, Apple Calendar o qualsiasi altra app per vedere i tuoi eventi.",
+    "copy_link": "Copia link",
+    "generate_link": "Genera link calendario",
+    "regenerate_link": "Rigenera link",
+    "regenerate_warning": "Rigenerare il link interromperà le iscrizioni al calendario esistenti.",
+    "copied": "Copiato!"
   }
 }

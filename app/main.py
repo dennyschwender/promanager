@@ -264,6 +264,11 @@ def create_app() -> FastAPI:
             push_device_count = (
                 db.query(WebPushSubscription).filter(WebPushSubscription.player_id == current_player.id).count()
             )
+        calendar_feed_url = (
+            f"{settings.APP_URL}/calendar/{user.calendar_token}/feed.ics"
+            if user.calendar_token
+            else None
+        )
         return render(
             request,
             "auth/profile.html",
@@ -274,6 +279,7 @@ def create_app() -> FastAPI:
                 "push_device_count": push_device_count,
                 "vapid_public_key": settings.VAPID_PUBLIC_KEY or None,
                 "flash": flash,
+                "calendar_feed_url": calendar_feed_url,
             },
         )
 
