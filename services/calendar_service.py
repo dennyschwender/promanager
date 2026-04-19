@@ -10,6 +10,10 @@ from models.user import User
 from models.user_team import UserTeam
 
 
+def _escape_text(value: str) -> str:
+    return value.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;")
+
+
 def generate_token() -> str:
     return secrets.token_hex(32)
 
@@ -30,12 +34,12 @@ def _vevent(uid: str, summary: str, dtstart: str, dtend: str, location: str | No
     lines = [
         "BEGIN:VEVENT",
         fold_line(f"UID:{uid}"),
-        fold_line(f"SUMMARY:{summary}"),
+        fold_line(f"SUMMARY:{_escape_text(summary)}"),
         dtstart,
         dtend,
     ]
     if location:
-        lines.append(fold_line(f"LOCATION:{location}"))
+        lines.append(fold_line(f"LOCATION:{_escape_text(location)}"))
     lines.append(f"DTSTAMP:{dtstamp}")
     lines.append("END:VEVENT")
     return lines
@@ -120,7 +124,7 @@ def build_ical_feed(user: User, db: Session, app_url: str, tz: str) -> str:
         )
 
         # Meeting-point VEVENT
-        if event.meeting_time and event.event_time:
+        if event.meeting_time and event.event_time and event.meeting_time < event.event_time:
             m_dtstart = f"DTSTART;TZID={tz}:{d.strftime('%Y%m%d')}T{event.meeting_time.strftime('%H%M%S')}"
             m_dtend = f"DTEND;TZID={tz}:{d.strftime('%Y%m%d')}T{event.event_time.strftime('%H%M%S')}"
             lines.extend(

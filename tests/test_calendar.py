@@ -222,3 +222,22 @@ def test_old_token_returns_404_after_regenerate(db, admin_user, admin_client, cl
 
     resp = client.get(f"/calendar/{old_token}/feed.ics", follow_redirects=False)
     assert resp.status_code == 404
+
+
+def test_ical_text_escaping(db, admin_user):
+    """Commas and semicolons in title/location are escaped per RFC 5545."""
+    event = Event(
+        title="Training, Field A; bring water",
+        event_type="training",
+        event_date=date(2026, 6, 1),
+        event_time=time(18, 0),
+        location="Gym, Building B; entrance C",
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+
+    result = build_ical_feed(admin_user, db, "http://localhost:7000", "UTC")
+
+    assert r"SUMMARY:Training\, Field A\; bring water" in result
+    assert r"LOCATION:Gym\, Building B\; entrance C" in result

@@ -34,6 +34,8 @@ async def regenerate_token(
 ):
     # Re-fetch via the route's DB session so changes are visible to callers sharing the same session.
     user = db.get(User, auth_user.id)
+    if not user:
+        raise HTTPException(status_code=404)
     user.calendar_token = generate_token()
     db.commit()
     return RedirectResponse("/profile?flash=calendar_token_regenerated", status_code=302)
