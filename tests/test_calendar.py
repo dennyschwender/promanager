@@ -160,3 +160,65 @@ def test_ical_window(db, admin_user):
 
     assert "SUMMARY:Old Event" not in result
     assert "SUMMARY:Recent Event" in result
+
+
+# ── endpoint tests ────────────────────────────────────────────────────────────
+
+def test_feed_unknown_token(client):
+    resp = client.get("/calendar/unknowntoken123/feed.ics", follow_redirects=False)
+    assert resp.status_code == 404
+
+
+def test_feed_returns_ical(db, admin_user, admin_client):
+    from services.calendar_service import generate_token
+    token = generate_token()
+    admin_user.calendar_token = token
+    db.commit()
+
+    resp = admin_client.get(f"/calendar/{token}/feed.ics", follow_redirects=False)
+    assert resp.status_code == 200
+    assert "text/calendar" in resp.headers["content-type"]
+    assert "BEGIN:VCALENDAR" in resp.text
+
+
+def test_feed_no_login_required(db, client, admin_user):
+    """Feed accessible without session cookie."""
+    from services.calendar_service import generate_token
+    token = generate_token()
+    admin_user.calendar_token = token
+    db.commit()
+
+    resp = client.get(f"/calendar/{token}/feed.ics", follow_redirects=False)
+    assert resp.status_code == 200
+
+
+def test_regenerate_token_requires_login(client):
+    resp = client.post("/calendar/regenerate-token", follow_redirects=False)
+    assert resp.status_code == 302
+    assert "/auth/login" in resp.headers["location"]
+
+
+def test_regenerate_token_changes_token(db, admin_user, admin_client):
+    from services.calendar_service import generate_token
+    old_token = generate_token()
+    admin_user.calendar_token = old_token
+    db.commit()
+
+    resp = admin_client.post("/calendar/regenerate-token", follow_redirects=False)
+    assert resp.status_code == 302
+
+    db.refresh(admin_user)
+    assert admin_user.calendar_token != old_token
+    assert admin_user.calendar_token is not None
+
+
+def test_old_token_returns_404_after_regenerate(db, admin_user, admin_client, client):
+    from services.calendar_service import generate_token
+    old_token = generate_token()
+    admin_user.calendar_token = old_token
+    db.commit()
+
+    admin_client.post("/calendar/regenerate-token", follow_redirects=False)
+
+    resp = client.get(f"/calendar/{old_token}/feed.ics", follow_redirects=False)
+    assert resp.status_code == 404
