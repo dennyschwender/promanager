@@ -53,6 +53,9 @@ class User(Base):
     # Updated on each authenticated request (throttled) — shows last activity
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
+    # Unique token for public iCal calendar feed access
+    calendar_token: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True, default=None)
+
     # ── Relationships ──────────────────────────────────────────────────────
     players: Mapped[list[Player]] = relationship("Player", back_populates="user", lazy="select")
     managed_teams: Mapped[list["UserTeam"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821

@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     # Base URL for magic login links (must include scheme+host, no trailing slash).
     # If left as the default localhost value, magic link buttons are omitted from emails.
     APP_URL: str = "http://localhost:7000"
+    APP_TIMEZONE: str = "UTC"
     REMINDER_HOURS_BEFORE: int = 24
     # Set to true when serving over HTTPS (marks session cookie Secure)
     COOKIE_SECURE: bool = False
