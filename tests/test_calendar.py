@@ -50,8 +50,8 @@ def test_ical_basic_event(db, admin_user):
     assert "END:VCALENDAR" in result
     assert f"UID:{event.id}@promanager" in result
     assert "SUMMARY:Training" in result
-    assert "DTSTART;TZID=UTC:20260601T183000" in result
-    assert "DTEND;TZID=UTC:20260601T200000" in result
+    assert "DTSTART:20260601T183000Z" in result
+    assert "DTEND:20260601T200000Z" in result
     assert "LOCATION:Sports Center" in result
 
 
@@ -87,8 +87,8 @@ def test_ical_end_time_fallback(db, admin_user):
 
     result = build_ical_feed(admin_user, db, "http://localhost:7000", "UTC")
 
-    assert "DTSTART;TZID=UTC:20260610T190000" in result
-    assert "DTEND;TZID=UTC:20260610T200000" in result
+    assert "DTSTART:20260610T190000Z" in result
+    assert "DTEND:20260610T200000Z" in result
 
 
 def test_ical_meeting_vevent(db, admin_user):
@@ -111,8 +111,8 @@ def test_ical_meeting_vevent(db, admin_user):
 
     assert f"UID:{event.id}-meet@promanager" in result
     assert "SUMMARY:Meet: Match" in result
-    assert "DTSTART;TZID=UTC:20260615T191500" in result
-    assert "DTEND;TZID=UTC:20260615T200000" in result
+    assert "DTSTART:20260615T191500Z" in result
+    assert "DTEND:20260615T200000Z" in result
     assert "LOCATION:Main Parking" in result
 
 

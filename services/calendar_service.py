@@ -105,8 +105,12 @@ def build_ical_feed(user: User, db: Session, app_url: str, tz: str) -> str:
             t_end = event.event_end_time or (
                 datetime.combine(d, t_start) + timedelta(hours=1)
             ).time()
-            dtstart = f"DTSTART;TZID={tz}:{d.strftime('%Y%m%d')}T{t_start.strftime('%H%M%S')}"
-            dtend = f"DTEND;TZID={tz}:{d.strftime('%Y%m%d')}T{t_end.strftime('%H%M%S')}"
+            if tz.upper() == "UTC":
+                dtstart = f"DTSTART:{d.strftime('%Y%m%d')}T{t_start.strftime('%H%M%S')}Z"
+                dtend = f"DTEND:{d.strftime('%Y%m%d')}T{t_end.strftime('%H%M%S')}Z"
+            else:
+                dtstart = f"DTSTART;TZID={tz}:{d.strftime('%Y%m%d')}T{t_start.strftime('%H%M%S')}"
+                dtend = f"DTEND;TZID={tz}:{d.strftime('%Y%m%d')}T{t_end.strftime('%H%M%S')}"
         else:
             next_day = d + timedelta(days=1)
             dtstart = f"DTSTART;VALUE=DATE:{d.strftime('%Y%m%d')}"
@@ -125,8 +129,12 @@ def build_ical_feed(user: User, db: Session, app_url: str, tz: str) -> str:
 
         # Meeting-point VEVENT
         if event.meeting_time and event.event_time and event.meeting_time < event.event_time:
-            m_dtstart = f"DTSTART;TZID={tz}:{d.strftime('%Y%m%d')}T{event.meeting_time.strftime('%H%M%S')}"
-            m_dtend = f"DTEND;TZID={tz}:{d.strftime('%Y%m%d')}T{event.event_time.strftime('%H%M%S')}"
+            if tz.upper() == "UTC":
+                m_dtstart = f"DTSTART:{d.strftime('%Y%m%d')}T{event.meeting_time.strftime('%H%M%S')}Z"
+                m_dtend = f"DTEND:{d.strftime('%Y%m%d')}T{event.event_time.strftime('%H%M%S')}Z"
+            else:
+                m_dtstart = f"DTSTART;TZID={tz}:{d.strftime('%Y%m%d')}T{event.meeting_time.strftime('%H%M%S')}"
+                m_dtend = f"DTEND;TZID={tz}:{d.strftime('%Y%m%d')}T{event.event_time.strftime('%H%M%S')}"
             lines.extend(
                 _vevent(
                     uid=f"{event.id}-meet@promanager",
