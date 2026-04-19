@@ -1,6 +1,7 @@
 # services/calendar_service.py
 import secrets
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,59 @@ def fold_line(line: str) -> str:
         line = " " + line[75:]
     parts.append(line)
     return "\r\n".join(parts)
+
+
+def _vtimezone(tz_name: str) -> list[str]:
+    """Build a minimal VTIMEZONE block using zoneinfo DST data."""
+    if tz_name.upper() == "UTC":
+        return []
+    try:
+        tz = ZoneInfo(tz_name)
+    except ZoneInfoNotFoundError:
+        return []
+
+    def _fmt_offset(td: object) -> str:
+        total = int(td.total_seconds())  # type: ignore[union-attr]
+        sign = "+" if total >= 0 else "-"
+        total = abs(total)
+        h, m = divmod(total // 60, 60)
+        return f"{sign}{h:02d}{m:02d}"
+
+    winter = datetime(2024, 1, 15, 12, 0, tzinfo=tz)
+    summer = datetime(2024, 7, 15, 12, 0, tzinfo=tz)
+    std_off = winter.utcoffset()
+    dst_off = summer.utcoffset()
+    std_str = _fmt_offset(std_off)
+    dst_str = _fmt_offset(dst_off)
+
+    lines = ["BEGIN:VTIMEZONE", f"TZID:{tz_name}"]
+    if std_off == dst_off:
+        lines += [
+            "BEGIN:STANDARD",
+            f"TZOFFSETFROM:{std_str}",
+            f"TZOFFSETTO:{std_str}",
+            "DTSTART:19700101T000000",
+            "END:STANDARD",
+        ]
+    else:
+        # Use European DST rules: last Sun Mar (→ DST), last Sun Oct (→ STD)
+        lines += [
+            "BEGIN:DAYLIGHT",
+            f"TZOFFSETFROM:{std_str}",
+            f"TZOFFSETTO:{dst_str}",
+            "DTSTART:19700329T020000",
+            "RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3",
+            "END:DAYLIGHT",
+            "BEGIN:STANDARD",
+            f"TZOFFSETFROM:{dst_str}",
+            f"TZOFFSETTO:{std_str}",
+            "DTSTART:19701025T030000",
+            "RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10",
+            "END:STANDARD",
+        ]
+    lines.append("END:VTIMEZONE")
+    return lines
+
 
 
 def _vevent(uid: str, summary: str, dtstart: str, dtend: str, location: str | None, dtstamp: str) -> list[str]:
@@ -95,6 +149,8 @@ def build_ical_feed(user: User, db: Session, app_url: str, tz: str) -> str:
         "X-WR-CALDESC:ProManager team events",
         "CALSCALE:GREGORIAN",
     ]
+
+    lines.extend(_vtimezone(tz))
 
     for event in events:
         created_utc = event.created_at.strftime("%Y%m%dT%H%M%SZ") if event.created_at else "19700101T000000Z"
