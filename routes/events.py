@@ -380,7 +380,7 @@ async def event_new_post(
     # ── Optional creation notification ───────────────────────────────────
     if notify_on_create.strip() and first_event is not None:
         form_data = await request.form()
-        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush"]
+        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush", "telegram"]
         date_str = first_event.event_date.strftime("%Y-%m-%d") if first_event.event_date else ""
         notif_title = first_event.title
         notif_body = date_str
@@ -392,7 +392,7 @@ async def event_new_post(
             event=first_event,
             title=notif_title,
             body=notif_body.strip(),
-            tag="announcement",
+            tag="event_new",
             recipient_statuses=None,
             admin_channels=channels,
             db=db,
