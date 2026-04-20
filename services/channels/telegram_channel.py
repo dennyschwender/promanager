@@ -54,5 +54,5 @@ class TelegramChannel:
                 )
             return resp.ok
         except Exception as exc:
-            logger.warning("TelegramChannel: request failed for player %s: %s", player.id, exc)
+            logger.warning("TelegramChannel: request failed for player %s: %s", player.id, exc, exc_info=True)
             return False
