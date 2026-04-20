@@ -112,6 +112,7 @@ async def register_post(
             )
             db.add(staff_player)
             db.commit()
+    log_action("user.create", target_type="user", target_id=new_user.id, target_label=new_user.username, extra={"role": role}, request=request)
     magic = create_magic_link(new_user.id, "/dashboard")
     send_welcome_email(
         to=new_user.email,
@@ -428,8 +429,10 @@ async def user_edit_post(
     target.phone = phone.strip() or None
     target.first_name = first_name.strip() or None
     target.last_name = last_name.strip() or None
+    extra: dict = {}
     if new_password:
         target.hashed_password = hash_password(new_password)
+        extra["password_changed"] = True
     # Sync name to linked player if present
     for player in target.players:
         if target.first_name:
@@ -437,6 +440,7 @@ async def user_edit_post(
         if target.last_name:
             player.last_name = target.last_name
     db.commit()
+    log_action("user.edit", target_type="user", target_id=target.id, target_label=target.username, extra=extra or None, request=request)
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -462,6 +466,7 @@ async def link_player(
 
     player.user_id = user_id
     db.commit()
+    log_action("user.link_player", target_type="user", target_id=target.id, target_label=target.username, extra={"player_id": player.id}, request=request)
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -475,6 +480,7 @@ async def unlink_player(
     if player:
         player.user_id = None
         db.commit()
+        log_action("user.unlink_player", target_type="user", target_id=user_id, extra={"player_id": player.id}, request=request)
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -658,6 +664,7 @@ async def user_add_team(
     if not q.first():
         db.add(UserTeam(user_id=user_id, team_id=team_id, season_id=sid))
         db.commit()
+        log_action("user.add_team", target_type="user", target_id=target.id, target_label=target.username, extra={"team_id": team_id, "season_id": sid}, request=request)
     return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 
@@ -665,13 +672,16 @@ async def user_add_team(
 async def user_remove_team(
     user_id: int,
     ut_id: int,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     from models.user_team import UserTeam
     ut = db.get(UserTeam, ut_id)
     if ut and ut.user_id == user_id:
+        team_id, season_id = ut.team_id, ut.season_id
         db.delete(ut)
         db.commit()
+        log_action("user.remove_team", target_type="user", target_id=user_id, extra={"team_id": team_id, "season_id": season_id}, request=request)
     return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 
