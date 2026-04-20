@@ -13,11 +13,13 @@ from models.notification_preference import CHANNELS, NotificationPreference
 from models.player import Player
 from services.channels.email_channel import EmailChannel
 from services.channels.inapp_channel import InAppChannel
+from services.channels.telegram_channel import TelegramChannel
 
 logger = logging.getLogger(__name__)
 
 _email_channel = EmailChannel()
 _inapp_channel = InAppChannel()
+_telegram_channel = TelegramChannel()
 
 
 # ── Preference helpers ────────────────────────────────────────────────────────
@@ -154,6 +156,9 @@ def _dispatch(
 
             if "webpush" in admin_channels and get_preference(player.id, "webpush", db):
                 _webpush_channel.send(player, notif, db=db)
+
+            if "telegram" in admin_channels and get_preference(player.id, "telegram", db):
+                _telegram_channel.send(player, notif)
 
             queued += 1
 
