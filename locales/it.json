@@ -726,7 +726,8 @@
     "channel_email": "Email",
     "channel_inbox": "In-app",
     "channel_push": "Web Push",
-    "channel_telegram": "Telegram"
+    "channel_telegram": "Telegram",
+    "notify_on_update": "Notifica il team di questo aggiornamento"
   },
   "import_form": {
     "paste_tab": "Incolla da Excel",

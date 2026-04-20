@@ -726,7 +726,8 @@
     "channel_email": "E-Mail",
     "channel_inbox": "In-App",
     "channel_push": "Web Push",
-    "channel_telegram": "Telegram"
+    "channel_telegram": "Telegram",
+    "notify_on_update": "Team über diese Aktualisierung benachrichtigen"
   },
   "import_form": {
     "paste_tab": "Aus Excel einfügen",

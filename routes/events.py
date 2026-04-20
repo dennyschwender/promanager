@@ -703,6 +703,7 @@ async def event_edit_get(
 async def event_edit_post(
     event_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     event_type: str = Form("training"),
     event_date: str = Form(...),
@@ -717,6 +718,7 @@ async def event_edit_post(
     season_id: str = Form(""),
     team_id: str = Form(""),
     edit_scope: str = Form("single"),
+    notify_on_update: str = Form(""),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -864,6 +866,25 @@ async def event_edit_post(
         extra={"scope": edit_scope},
         request=request,
     )
+    if notify_on_update.strip() and event is not None:
+        form_data = await request.form()
+        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush", "telegram"]
+        date_str = event.event_date.strftime("%Y-%m-%d") if event.event_date else ""
+        notif_body = date_str
+        if event.event_time:
+            notif_body += f" {event.event_time.strftime('%H:%M')}"
+        if event.location:
+            notif_body += f" · {event.location}"
+        send_notifications(
+            event=event,
+            title=event.title,
+            body=notif_body.strip(),
+            tag="event_update",
+            recipient_statuses=None,
+            admin_channels=channels,
+            db=db,
+            background_tasks=background_tasks,
+        )
     return RedirectResponse(f"/events/{event_id}", status_code=302)
 
 
