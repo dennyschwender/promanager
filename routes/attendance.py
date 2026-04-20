@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -182,6 +182,7 @@ async def update_attendance(
     event_id: int,
     player_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     status: str = Form(...),
     note: str = Form(""),
     user: User = Depends(require_login),
@@ -238,6 +239,8 @@ async def update_attendance(
                    "old": old_status, "new": status},
             request=request,
         )
+        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+        background_tasks.add_task(notify_coaches_via_telegram, event_id, player_id, status)
 
     if wants_json:
         return JSONResponse({"ok": True, "status": status, "note": note})
