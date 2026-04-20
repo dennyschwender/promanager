@@ -725,7 +725,8 @@
     "channels": "Kanäle",
     "channel_email": "E-Mail",
     "channel_inbox": "In-App",
-    "channel_push": "Web Push"
+    "channel_push": "Web Push",
+    "channel_telegram": "Telegram"
   },
   "import_form": {
     "paste_tab": "Aus Excel einfügen",
