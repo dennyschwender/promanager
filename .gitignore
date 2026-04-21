@@ -32,3 +32,4 @@ build/
 
 # Node
 node_modules/
+CLAUDE.original.md
