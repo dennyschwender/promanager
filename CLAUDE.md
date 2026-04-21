@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working in this repo.
 
 ## Project overview
 
-ProManager is a self-hosted player presence/absence tracker for sports teams built with FastAPI. Coaches and managers handle seasons, teams, players, events, and attendance in a single Docker container.
+ProManager = self-hosted player presence/absence tracker for sports teams, built with FastAPI. Coaches/managers handle seasons, teams, players, events, attendance in single Docker container.
 
 ## Commands
 
@@ -35,41 +35,41 @@ docker compose up -d   # app at http://localhost:7000
 
 ### Request lifecycle
 
-1. **`AuthMiddleware`** (in `app/main.py`) runs first: resolves the signed session cookie → `request.state.user`, generates CSRF token → `request.state.csrf_token`, and fetches unread notification count.
+1. **`AuthMiddleware`** (in `app/main.py`) runs first: resolves signed session cookie → `request.state.user`, generates CSRF token → `request.state.csrf_token`, fetches unread notification count.
 2. **`LocaleMiddleware`** (`app/middleware/locale.py`) runs next: resolves locale from user DB preference → locale cookie → `"en"` default → `request.state.locale`.
 3. Route handlers use FastAPI `Depends()` for auth guards (`require_login`, `require_admin` from `routes/_auth_helpers.py`) and `get_db` for DB sessions.
 
 ### Authentication & authorization
 
-- Session cookie `session_user_id` is signed with `itsdangerous.TimestampSigner` (7-day expiry).
+- Session cookie `session_user_id` signed with `itsdangerous.TimestampSigner` (7-day expiry).
 - `require_login` / `require_admin` are `Depends()` guards. Raising `NotAuthenticated` → redirect to `/auth/login`; `NotAuthorized` → 403 page.
 - Roles: `"admin"` (full CRUD, user management) vs `"member"` (view + own attendance only).
-- CSRF: stateless HMAC-SHA256 token (key = `SECRET_KEY`, message = session cookie value). Applied to all mutating endpoints via `require_csrf` dependency. Tests override this with a no-op.
+- CSRF: stateless HMAC-SHA256 token (key = `SECRET_KEY`, message = session cookie value). Applied to all mutating endpoints via `require_csrf` dependency. Tests override with no-op.
 
 ### Database
 
 - SQLAlchemy 2.x with `Mapped[]` / `mapped_column()` style. All models inherit from `Base` in `app/database.py`.
-- `models/__init__.py` imports all models so `Base.metadata` is fully populated before `create_all()` / Alembic.
-- `get_db()` in `app/database.py` is the FastAPI dependency that yields a `SessionLocal` session.
-- **Python 3.14 compat**: SQLAlchemy is pinned to `>=2.0.48` — earlier versions break on 3.14 due to `Union` type handling.
+- `models/__init__.py` imports all models so `Base.metadata` fully populated before `create_all()` / Alembic.
+- `get_db()` in `app/database.py` = FastAPI dependency yielding `SessionLocal` session.
+- **Python 3.14 compat**: SQLAlchemy pinned to `>=2.0.48` — earlier versions break on 3.14 due to `Union` type handling.
 
 ### Routes
 
-Routes are registered dynamically in `app/main.py` via `importlib.import_module`. Each `routes/*.py` exports a `router = APIRouter()`. To add a new router: create the file, add an entry to `_routers` list in `app/main.py`.
+Registered dynamically in `app/main.py` via `importlib.import_module`. Each `routes/*.py` exports `router = APIRouter()`. To add router: create file, add entry to `_routers` list in `app/main.py`.
 
 ### Templating & i18n
 
-- `app/templates.py` provides a `render()` helper that injects `t(key)` (translation) and `current_locale` into every template context.
-- Translation YAML files live in `locales/` (en, it, fr, de). Keys are dot-namespaced: `"players.form.name_label"`.
-- Setting `DEBUG=true` raises `KeyError` on missing translation keys.
+- `app/templates.py` provides `render()` helper injecting `t(key)` (translation) and `current_locale` into every template context.
+- Translation YAML files in `locales/` (en, it, fr, de). Keys dot-namespaced: `"players.form.name_label"`.
+- `DEBUG=true` raises `KeyError` on missing translation keys.
 
 ### Services layer
 
-Business logic lives in `services/` and is called from routes. Key services: `auth_service` (bcrypt hashing, session cookies), `attendance_service` (auto-create `unknown` records when an event is added), `email_service` (SMTP), `notification_service` (multi-channel dispatch via `services/channels/`).
+Business logic in `services/`, called from routes. Key services: `auth_service` (bcrypt hashing, session cookies), `attendance_service` (auto-create `unknown` records when event added), `email_service` (SMTP), `notification_service` (multi-channel dispatch via `services/channels/`).
 
 ### Testing conventions
 
-- Tests use an in-memory SQLite database (`StaticPool`); all tables are truncated between tests.
+- Tests use in-memory SQLite (`StaticPool`); all tables truncated between tests.
 - `conftest.py` provides: `client` (CSRF disabled), `csrf_client` (CSRF enabled), `admin_client`, `member_client`, `admin_user`, `member_user`.
 - Dependency overrides pattern: `app.dependency_overrides[get_db] = override_get_db`.
 
@@ -89,13 +89,13 @@ Business logic lives in `services/` and is called from routes. Key services: `au
 
 ## Claude Code autonomy
 
-- **Code changes & refactoring**: I work autonomously on feature implementation, bug fixes, and refactoring without asking for approval on each step. I commit changes using descriptive messages and run tests before claiming work is done.
-- **I will ask for approval on**: destructive operations (force push, branch deletion), PRs/publishing decisions, significant architectural changes, or when requirements are unclear.
-- **Testing expectations**: Tests must pass before committing. Use `pytest -v` and `ruff check` locally.
+- **Code changes & refactoring**: Work autonomously on features, bug fixes, refactoring without per-step approval. Commit with descriptive messages, run tests before claiming done.
+- **Ask for approval on**: destructive ops (force push, branch deletion), PRs/publishing, significant architecture changes, unclear requirements.
+- **Testing expectations**: Tests must pass before commit. Use `pytest -v` and `ruff check` locally.
 
 ## Claude Code status line
 
-A context-bar status line is configured in `~/.claude/settings.json` to show:
+Context-bar status line configured in `~/.claude/settings.json`:
 
 ```
 Haiku 4.5 | 📁promanager | 🔀master (2 files uncommitted, synced 12m ago) | ██████░░░░ 65% of 200k tokens
@@ -109,10 +109,10 @@ sudo apt-get install jq  # Ubuntu/Debian
 apk add jq              # Alpine
 ```
 
-The script is at `~/.claude/scripts/context-bar.sh` with 10 color themes available. See `~/.claude/scripts/README.md` for details.
+Script at `~/.claude/scripts/context-bar.sh` with 10 color themes. See `~/.claude/scripts/README.md` for details.
 
 ## Notes
 
-- Port **7000** is the default for both local dev and Docker.
-- Attendance records are auto-created with status `unknown` for all players when an event is added.
-- `ruff` line length is 120; `models/*.py` suppresses `F821` (SQLAlchemy forward refs).
+- Port **7000** default for local dev and Docker.
+- Attendance records auto-created with status `unknown` for all players when event added.
+- `ruff` line length 120; `models/*.py` suppresses `F821` (SQLAlchemy forward refs).
