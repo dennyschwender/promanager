@@ -6,7 +6,7 @@ import io
 import json
 from datetime import date, datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import or_
@@ -80,6 +80,7 @@ def _sync_memberships(
     player: Player,
     memberships: list[tuple[int, int, dict]],
     season_id: int,
+    background_tasks: BackgroundTasks | None = None,
 ) -> None:
     """Replace PlayerTeam rows for *player* in *season* with *memberships*.
     Memberships from other seasons are untouched.
@@ -141,7 +142,11 @@ def _sync_memberships(
             else:
                 absence.end_date = injured_until
             db.flush()
-            apply_absence_to_future_events(player.id, db)
+            updated = apply_absence_to_future_events(player.id, db)
+            if background_tasks is not None:
+                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                for event_id, pid, status in updated:
+                    background_tasks.add_task(notify_coaches_via_telegram, event_id, pid, status)
         else:
             db.query(PlayerAbsence).filter(
                 PlayerAbsence.player_id == player.id,
@@ -392,6 +397,7 @@ class BulkUpdateRequest(BaseModel):
 @router.post("/bulk-update")
 async def player_bulk_update(
     body: BulkUpdateRequest,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_coach_or_admin),
     _csrf=Depends(require_csrf_header),
     db: Session = Depends(get_db),
@@ -508,7 +514,10 @@ async def player_bulk_update(
                             db.flush()
                             # Apply absence to existing + future events
                             from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
-                            apply_absence_to_future_events(pt.player_id, db)
+                            updated = apply_absence_to_future_events(pt.player_id, db)
+                            from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                            for _event_id, _pid, _status in updated:
+                                background_tasks.add_task(notify_coaches_via_telegram, _event_id, _pid, _status)
                         else:
                             # Clear injury: delete related absence + revert attendances
                             from models.player_absence import PlayerAbsence  # noqa: PLC0415
@@ -808,6 +817,7 @@ async def player_new_get(
 @router.post("/new")
 async def player_new_post(
     request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -873,7 +883,7 @@ async def player_new_post(
     db.flush()
 
     for s in seasons:
-        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id)
+        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id, background_tasks=background_tasks)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 
@@ -1176,6 +1186,7 @@ async def player_edit_get(
 async def player_edit_post(
     player_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_admin),
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
@@ -1243,7 +1254,7 @@ async def player_edit_post(
     _apply_personal_fields(player, form)
 
     for s in seasons:
-        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id)
+        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id, background_tasks=background_tasks)
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 

@@ -40,10 +40,11 @@ def is_date_in_absence(player_id: int, check_date: date, db: Session) -> bool:
     return any(_date_matches_absence(check_date, abs_rec) for abs_rec in absences)
 
 
-def apply_absence_to_future_events(player_id: int, db: Session) -> int:
+def apply_absence_to_future_events(player_id: int, db: Session) -> list[tuple[int, int, str]]:
     """Apply an absence to all matching future event attendance records.
 
-    Returns the count of updated attendance records.
+    Returns a list of (event_id, player_id, status) tuples for each updated
+    attendance record so callers can dispatch coach notifications.
     """
     from models.attendance import Attendance
     from models.event import Event
@@ -64,7 +65,7 @@ def apply_absence_to_future_events(player_id: int, db: Session) -> int:
     # Fetch all absences for this player
     absences = db.query(PlayerAbsence).filter(PlayerAbsence.player_id == player_id).all()
 
-    count = 0
+    updated: list[tuple[int, int, str]] = []
     for att in attendances:
         # Find if this attendance date matches any absence
         matching_absence = None
@@ -81,12 +82,12 @@ def apply_absence_to_future_events(player_id: int, db: Session) -> int:
             att.status = "absent"
             att.note = f"[Absence] {reason}"
             att.updated_at = datetime.now(timezone.utc)
-            count += 1
+            updated.append((att.event_id, att.player_id, att.status))
 
-    if count > 0:
+    if updated:
         db.commit()
 
-    return count
+    return updated
 
 
 def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:

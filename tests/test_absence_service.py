@@ -176,9 +176,9 @@ def test_apply_absence_to_future_events_period(db: Session):
     db.add(absence)
     db.commit()
 
-    count = apply_absence_to_future_events(player.id, db)
+    updated = apply_absence_to_future_events(player.id, db)
 
-    assert count == 2  # e1 and e2 should be updated
+    assert len(updated) == 2  # e1 and e2 should be updated
 
     att1 = db.query(Attendance).filter_by(event_id=e1.id, player_id=player.id).first()
     assert att1.status == "absent"
@@ -239,9 +239,9 @@ def test_apply_absence_respects_all_presence_type(db: Session):
     db.add(absence)
     db.commit()
 
-    count = apply_absence_to_future_events(player.id, db)
+    updated = apply_absence_to_future_events(player.id, db)
 
-    assert count == 1
+    assert len(updated) == 1
     att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
     assert att_refreshed.status == "absent"
 
@@ -292,10 +292,10 @@ def test_apply_absence_preserves_explicit_present(db: Session):
     db.commit()
 
     # Apply absence
-    count = apply_absence_to_future_events(player.id, db)
+    updated = apply_absence_to_future_events(player.id, db)
 
     # Should NOT have updated (explicit present preserved)
-    assert count == 0
+    assert len(updated) == 0
     att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
     assert att_refreshed.status == "present"
     assert att_refreshed.note == "Coach confirmed"
