@@ -102,8 +102,9 @@ async def _send_events_list(message, user, db) -> None:
     header = t("telegram.events_header", locale, page=1)
     keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
     await message.reply_text(header, reply_markup=keyboard)
-    # Send persistent keyboard as a minimal message (zero-width space to keep it invisible).
-    await message.reply_text("​", reply_markup=main_menu_keyboard())
+    # Resend persistent keyboard on a separate message to ensure Telegram client displays it.
+    # Use a minimal marker to keep UI clean.
+    await message.reply_text("━", reply_markup=main_menu_keyboard())
 
 
 def _phone_request_keyboard(locale: str = "en") -> ReplyKeyboardMarkup:
