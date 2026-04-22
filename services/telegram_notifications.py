@@ -40,9 +40,13 @@ async def notify_coaches_via_telegram(
 
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
 
+        seen_chat_ids: set[str] = set()
         for ut in coaches:
             if not (ut.user and ut.user.telegram_chat_id):
                 continue
+            if ut.user.telegram_chat_id in seen_chat_ids:
+                continue
+            seen_chat_ids.add(ut.user.telegram_chat_id)
 
             # Bug 2 fix: check NotificationPreference for the coach's linked player.
             # A coach user may have a linked Player record; if so, respect their telegram
