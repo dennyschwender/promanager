@@ -130,6 +130,10 @@ def _sync_memberships(
                 reason="Injury",
             )
             db.add(absence)
+            db.flush()
+            # Apply absence to existing + future events
+            from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
+            apply_absence_to_future_events(player.id, db)
 
         if team_id not in existing_team_ids:
             new_team_ids.append(team_id)
@@ -485,14 +489,21 @@ async def player_bulk_update(
                                 db.add(absence)
                             else:
                                 absence.end_date = value
+                            db.flush()
+                            # Apply absence to existing + future events
+                            from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
+                            apply_absence_to_future_events(pt.player_id, db)
                         else:
-                            # Clear injury: delete related absence
+                            # Clear injury: delete related absence + revert attendances
                             from models.player_absence import PlayerAbsence  # noqa: PLC0415
+                            from services.absence_service import revert_absence_from_events  # noqa: PLC0415
                             db.query(PlayerAbsence).filter(
                                 PlayerAbsence.player_id == pt.player_id,
                                 PlayerAbsence.season_id == pt.season_id,
                                 PlayerAbsence.reason.like("%njur%"),
                             ).delete()
+                            db.flush()
+                            revert_absence_from_events(pt.player_id, db)
                     setattr(pt, field, value)
 
             sp.commit()
