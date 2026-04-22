@@ -746,6 +746,15 @@ async def players_list(
                     player_id_to_user[p.id] = u
                     break
 
+    # Staff tab: users not linked to any player (coaches, admins without player profile)
+    linked_user_ids_q = db.query(Player.user_id).filter(Player.user_id.isnot(None))
+    staff_users = (
+        db.query(User)
+        .filter(~User.id.in_(linked_user_ids_q))
+        .order_by(User.role, User.first_name, User.last_name)
+        .all()
+    ) if user.is_admin else []
+
     return render(
         request,
         "players/list.html",
@@ -761,6 +770,7 @@ async def players_list(
             "archived_filter": archived or "",
             "sort": sort,
             "sort_dir": sort_dir,
+            "staff_users": staff_users,
         },
     )
 

@@ -17,6 +17,20 @@
   {% endif %}
 </div>
 
+{% if user.is_admin %}
+<div class="tab-bar" style="display:flex;gap:0;margin-bottom:1.25rem;border-bottom:2px solid var(--muted-border-color,#ddd);">
+  <button type="button" id="tab-btn-players" class="tab-btn" onclick="switchTab('players')"
+    style="padding:.45rem 1.1rem;border:none;background:none;cursor:pointer;font-size:1rem;border-bottom:2px solid transparent;margin-bottom:-2px;">
+    {{ t('nav.members') }}
+  </button>
+  <button type="button" id="tab-btn-staff" class="tab-btn" onclick="switchTab('staff')"
+    style="padding:.45rem 1.1rem;border:none;background:none;cursor:pointer;font-size:1rem;border-bottom:2px solid transparent;margin-bottom:-2px;">
+    Staff
+  </button>
+</div>
+{% endif %}
+
+<div id="tab-players">
 <div style="margin-bottom:.5rem;">
   <label style="display:block;margin:0;">
     <span class="filter-label">{{ t('common.search') }}</span>
@@ -476,5 +490,74 @@ window.I18N = {
 </dialog>
 {% endif %}
 <script src="/static/js/players-table.js?v={{ static_v }}"></script>
+{% endif %}
+
+</div>{# end tab-players #}
+
+{% if user.is_admin %}
+<div id="tab-staff" style="display:none;">
+  <div style="margin-bottom:.75rem;">
+    <input type="search" id="staff-search" class="sel-inline" style="min-width:220px;"
+      placeholder="Search staff…" oninput="staffSearchApply()">
+  </div>
+  <div class="table-responsive">
+  <table id="staff-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Email</th>
+        <th>Active</th>
+        <th>Telegram</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for su in staff_users %}
+    <tr data-staff-name="{{ (su.first_name or '') ~ ' ' ~ (su.last_name or '') ~ ' ' ~ (su.username or '') ~ ' ' ~ (su.email or '') | lower }}">
+      <td>{{ su.first_name or '' }} {{ su.last_name or '' }}</td>
+      <td>{{ su.username or '—' }}</td>
+      <td><span class="badge">{{ su.role }}</span></td>
+      <td>{{ su.email or '—' }}</td>
+      <td>{% if su.is_active %}✓{% else %}<span style="color:var(--del-color,#c00);">✗</span>{% endif %}</td>
+      <td>{% if su.telegram_chat_id %}✓{% else %}—{% endif %}</td>
+      <td>
+        <a href="/auth/users/{{ su.id }}/edit" class="btn btn-outline btn-sm">Edit</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:var(--muted-color,#888);">No staff users found.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  var isStaff = tab === 'staff';
+  document.getElementById('tab-players').style.display = isStaff ? 'none' : '';
+  document.getElementById('tab-staff').style.display   = isStaff ? '' : 'none';
+  document.getElementById('tab-btn-players').style.borderBottomColor = isStaff ? 'transparent' : 'var(--primary,#1a73e8)';
+  document.getElementById('tab-btn-players').style.fontWeight = isStaff ? '' : 'bold';
+  document.getElementById('tab-btn-staff').style.borderBottomColor = isStaff ? 'var(--primary,#1a73e8)' : 'transparent';
+  document.getElementById('tab-btn-staff').style.fontWeight = isStaff ? 'bold' : '';
+  var url = new URL(window.location);
+  url.searchParams.set('tab', tab);
+  history.replaceState(null, '', url);
+}
+function staffSearchApply() {
+  var q = document.getElementById('staff-search').value.toLowerCase();
+  document.querySelectorAll('#staff-table tbody tr[data-staff-name]').forEach(function(row) {
+    row.style.display = row.dataset.staffName.includes(q) ? '' : 'none';
+  });
+}
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var tab = params.get('tab') || 'players';
+  switchTab(tab);
+})();
+</script>
 {% endif %}
 {% endblock %}
