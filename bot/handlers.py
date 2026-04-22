@@ -90,17 +90,56 @@ def _upcoming_events(db, user):
     return q.order_by(Event.event_date.asc()).all()
 
 
-async def _send_events_list(message, user, db) -> None:
+async def _send_events_list(message, user, db, context=None) -> None:
     """Send the upcoming events list as a new message with inline keyboard."""
+    from models.telegram_notification import TelegramNotification  # noqa: PLC0415
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    # Delete pending notification message if exists
+    if user.telegram_notification_message_id:
+        try:
+            await message.get_bot().delete_message(
+                chat_id=message.chat_id,
+                message_id=user.telegram_notification_message_id,
+            )
+            user.telegram_notification_message_id = None
+            db.commit()
+        except Exception:
+            pass
+
     locale = _locale(user)
     all_upcoming = _upcoming_events(db, user)
-    if not all_upcoming:
+
+    # Count unread notifications
+    unread_count = db.query(TelegramNotification).filter(
+        TelegramNotification.user_id == user.id
+    ).count()
+
+    # Build keyboard with notifications button if needed
+    if not all_upcoming and unread_count == 0:
         await message.reply_text(t("telegram.no_events", locale))
         return
+
+    rows = []
+    if unread_count > 0:
+        rows.append([InlineKeyboardButton(
+            f"🔔 Notifications ({unread_count})",
+            callback_data="notif:0"
+        )])
+
     total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
     page_events = all_upcoming[:PAGE_SIZE]
     header = t("telegram.events_header", locale, page=1)
-    keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
+    base_keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
+
+    # Prepend notifications button to existing keyboard
+    if rows:
+        # Extract rows from base_keyboard and prepend our notifications button
+        all_rows = rows + list(base_keyboard.inline_keyboard)
+        keyboard = InlineKeyboardMarkup(all_rows)
+    else:
+        keyboard = base_keyboard
+
     await message.reply_text(header, reply_markup=keyboard)
 
 
@@ -133,7 +172,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 t("telegram.auth_already_this", locale, username=user.username),
                 reply_markup=ReplyKeyboardRemove(),
             )
-            await _send_events_list(update.message, user, db)
+            await _send_events_list(update.message, user, db, context)
             return
 
     await update.message.reply_text(
@@ -193,7 +232,7 @@ async def handle_nav_dispatch(update: Update, context: ContextTypes.DEFAULT_TYPE
             return
         locale = _locale(user)
         if text == NAV_EVENTS or text == NAV_REFRESH:
-            await _send_events_list(update.message, user, db)
+            await _send_events_list(update.message, user, db, context)
         elif text == NAV_ABSENCES:
             await update.message.reply_text(
                 t("telegram.other_button", locale),
@@ -251,7 +290,7 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             reply_markup=main_menu_keyboard(),
         )
         with SessionLocal() as db:
-            await _send_events_list(update.message, user, db)
+            await _send_events_list(update.message, user, db, context)
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +337,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 t("telegram.welcome", "en"),
                 reply_markup=_phone_request_keyboard(),
             )
+            return
+
+        if data.startswith("notif:"):
+            await query.answer()
+            page = int(data.split(":")[1])
+            await _show_notifications(query, user, db, page)
             return
 
         if data.startswith("ref:"):
@@ -526,6 +571,66 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             from bot.absence_handlers import delete_absence  # noqa: PLC0415
             parts = data.split(":")
             await delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
+
+
+# ---------------------------------------------------------------------------
+# Notifications list
+# ---------------------------------------------------------------------------
+
+
+async def _show_notifications(query, user, db, page: int) -> None:
+    """Display recent notifications for the coach."""
+    from models.telegram_notification import TelegramNotification  # noqa: PLC0415
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    locale = _locale(user)
+
+    # Get all notifications for this user, ordered by most recent first
+    notifs = db.query(TelegramNotification).filter(
+        TelegramNotification.user_id == user.id
+    ).order_by(TelegramNotification.created_at.desc()).all()
+
+    if not notifs:
+        await query.edit_message_text(t("telegram.no_events", locale))
+        return
+
+    NOTIF_PAGE_SIZE = 5
+    total_pages = max(1, math.ceil(len(notifs) / NOTIF_PAGE_SIZE))
+    page = max(0, min(page, total_pages - 1))
+
+    page_notifs = notifs[page * NOTIF_PAGE_SIZE : (page + 1) * NOTIF_PAGE_SIZE]
+
+    # Build notification text
+    lines = ["🔔 Recent Notifications:"]
+    rows = []
+
+    for notif in page_notifs:
+        player = notif.player
+        player_name = player.full_name if player else f"Player {notif.player_id}"
+        event = notif.event
+        event_title = event.title if event else "Event"
+        status_emoji = {"present": "✓", "absent": "✗", "unknown": "?"}.get(notif.status, "?")
+        lines.append(f"{status_emoji} {player_name} → {notif.status}")
+        rows.append([InlineKeyboardButton(
+            f"👁 {event_title}",
+            callback_data=f"evt:{notif.event_id}",
+        )])
+
+    text = "\n".join(lines)
+
+    # Add pagination buttons
+    nav = []
+    if page > 0:
+        nav.append(InlineKeyboardButton("← Prev", callback_data=f"notif:{page - 1}"))
+    if page < total_pages - 1:
+        nav.append(InlineKeyboardButton("Next →", callback_data=f"notif:{page + 1}"))
+    nav.append(InlineKeyboardButton("← Back", callback_data="evts:0"))
+
+    if nav:
+        rows.append(nav)
+
+    keyboard = InlineKeyboardMarkup(rows)
+    await query.edit_message_text(text, reply_markup=keyboard)
 
 
 # ---------------------------------------------------------------------------
