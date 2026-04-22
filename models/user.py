@@ -41,6 +41,9 @@ class User(Base):
     # Telegram chat ID — set when the user authenticates via the bot
     telegram_chat_id: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, default=None)
 
+    # Telegram message ID for pinned notification summary (edited in-place for coach alerts)
+    telegram_notification_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+
     # Preferred UI locale — one of: en, it, fr, de
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
 
