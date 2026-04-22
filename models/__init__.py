@@ -8,6 +8,7 @@ from .event_message import EventMessage
 from .notification import Notification
 from .notification_preference import NotificationPreference
 from .player import Player
+from .telegram_notification import TelegramNotification
 from .player_absence import PlayerAbsence
 from .player_contact import PlayerContact
 from .player_phone import PlayerPhone
@@ -35,6 +36,7 @@ __all__ = [
     "TeamRecurringSchedule",
     "Notification",
     "NotificationPreference",
+    "TelegramNotification",
     "WebPushSubscription",
     "UserTeam",
     "AuditLog",

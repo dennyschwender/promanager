@@ -71,6 +71,9 @@ class Player(Base):
         cascade="all, delete-orphan",
         lazy="select",
     )
+    telegram_notifications: Mapped[list["TelegramNotification"]] = relationship(  # noqa: F821
+        back_populates="player", cascade="all, delete-orphan"
+    )
     notification_preferences: Mapped[list[NotificationPreference]] = relationship(
         "NotificationPreference",
         back_populates="player",

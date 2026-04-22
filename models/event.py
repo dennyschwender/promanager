@@ -68,6 +68,9 @@ class Event(Base):
         cascade="save-update, merge",  # NOT delete-orphan — DB uses ondelete="SET NULL"
         lazy="select",
     )
+    telegram_notifications: Mapped[list["TelegramNotification"]] = relationship(  # noqa: F821
+        back_populates="event", cascade="all, delete-orphan"
+    )
     externals: Mapped[list[EventExternal]] = relationship(  # noqa: F821
         "EventExternal", back_populates="event", lazy="select", cascade="all, delete-orphan"
     )
