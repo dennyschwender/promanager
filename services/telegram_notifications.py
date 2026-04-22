@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +37,10 @@ async def notify_coaches_via_telegram(
         date_str = event.event_date.strftime("%d %b") if event.event_date else ""
         text = f"📋 {player_name} → {new_status}\n{event.title} · {date_str}"
 
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("👁 View Event", callback_data=f"evt:{event_id}"),
+        ]])
+
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
         sent_chat_ids: set[str] = set()
         for ut in coaches:
@@ -43,6 +49,7 @@ async def notify_coaches_via_telegram(
                     await _bot.telegram_app.bot.send_message(
                         chat_id=ut.user.telegram_chat_id,
                         text=text,
+                        reply_markup=keyboard,
                     )
                     sent_chat_ids.add(ut.user.telegram_chat_id)
                 except Exception as exc:

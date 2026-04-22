@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 from app.i18n import t
 from models.attendance import Attendance
@@ -11,6 +11,23 @@ from models.player import Player
 
 PAGE_SIZE = 5
 PLAYER_PAGE_SIZE = 10
+
+# Persistent navigation buttons
+NAV_EVENTS = "📅 Events"
+NAV_ABSENCES = "📋 Absences"
+NAV_REFRESH = "🔄 Refresh"
+
+
+def main_menu_keyboard() -> ReplyKeyboardMarkup:
+    """Persistent bottom navigation strip. Sent once after auth."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(NAV_EVENTS), KeyboardButton(NAV_ABSENCES)],
+            [KeyboardButton(NAV_REFRESH)],
+        ],
+        resize_keyboard=True,
+        is_persistent=True,
+    )
 
 # Display icon per attendance status. "maybe" can be displayed but is not offered
 # as an action button — the bot simplifies the UI to present/absent/unknown only.

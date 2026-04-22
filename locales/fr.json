@@ -915,7 +915,8 @@
     "absence_confirm_del": "Supprimer cette absence ?",
     "absence_confirm_yes": "✅ Oui, supprimer",
     "absence_confirm_no": "❌ Non, garder",
-    "select_player": "Sélectionnez un joueur :"
+    "select_player": "Sélectionnez un joueur :",
+    "use_menu_prompt": "Utilisez les boutons ci-dessous pour naviguer."
   },
   "chat": {
     "title": "Chat",

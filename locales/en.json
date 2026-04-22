@@ -962,7 +962,8 @@
     "all_seasons": "All Seasons",
     "absence_type": "Absence Type",
     "manage_my_absences": "Manage my absences",
-    "self_service_hint": "Set periods when you are unavailable so your attendance is automatically marked absent."
+    "self_service_hint": "Set periods when you are unavailable so your attendance is automatically marked absent.",
+    "use_menu_prompt": "Use the buttons below to navigate."
   },
   "admin": {
     "audit_log_title": "Audit Log",

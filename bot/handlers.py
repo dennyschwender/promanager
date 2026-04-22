@@ -23,11 +23,16 @@ from bot.keyboards import (
     PAGE_SIZE,
     PLAYER_PAGE_SIZE,
     STATUS_ICON,
+    NAV_ABSENCES,
+    NAV_EVENTS,
+    NAV_REFRESH,
     event_admin_keyboard,
     event_status_keyboard,
     event_view_keyboard,
     events_keyboard,
+    main_menu_keyboard,
 )
+from bot.absence_keyboards import other_menu_keyboard
 from models.attendance import Attendance
 from models.event import Event
 from models.event_external import EventExternal
@@ -97,6 +102,10 @@ async def _send_events_list(message, user, db) -> None:
     header = t("telegram.events_header", locale, page=1)
     keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
     await message.reply_text(header, reply_markup=keyboard)
+    await message.reply_text(
+        t("telegram.use_menu_prompt", locale),
+        reply_markup=main_menu_keyboard(),
+    )
 
 
 def _phone_request_keyboard(locale: str = "en") -> ReplyKeyboardMarkup:
@@ -167,6 +176,33 @@ async def handle_logout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         locale = _locale(user)
         unlink_telegram(db, user)
     await update.message.reply_text(t("telegram.logout_success", locale))
+
+
+async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Recovery command to resend persistent menu if dismissed."""
+    await update.message.reply_text(
+        "Main menu:",
+        reply_markup=main_menu_keyboard(),
+    )
+
+
+async def handle_nav_dispatch(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Dispatch nav button presses to appropriate handlers."""
+    chat_id = str(update.effective_chat.id)
+    text = update.message.text
+    with SessionLocal() as db:
+        user = get_user_by_chat_id(db, chat_id)
+        if user is None:
+            await update.message.reply_text(t("telegram.not_authenticated", "en"))
+            return
+        locale = _locale(user)
+        if text == NAV_EVENTS or text == NAV_REFRESH:
+            await _send_events_list(update.message, user, db)
+        elif text == NAV_ABSENCES:
+            await update.message.reply_text(
+                t("telegram.other_button", locale),
+                reply_markup=other_menu_keyboard(0, locale),
+            )
 
 
 # ---------------------------------------------------------------------------
