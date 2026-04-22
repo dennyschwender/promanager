@@ -17,6 +17,8 @@ services:
       - ./data:/app/data
       - ./backups:/app/backups
     restart: unless-stopped
+    healthcheck:
+      disable: true
     logging:
       driver: "json-file"
       options:
