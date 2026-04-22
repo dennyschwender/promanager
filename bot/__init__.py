@@ -37,8 +37,9 @@ def build_application(token: str) -> Application:
     app.add_handler(CommandHandler("menu", handle_menu))
     app.add_handler(CommandHandler("cancel", handle_cancel))
     app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+    # Nav buttons: must be before generic TEXT handler. Use regex to match the emoji strings.
     app.add_handler(MessageHandler(
-        filters.TEXT([NAV_EVENTS, NAV_ABSENCES, NAV_REFRESH]),
+        filters.Regex(f"^({NAV_EVENTS}|{NAV_ABSENCES}|{NAV_REFRESH})$"),
         handle_nav_dispatch
     ))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
