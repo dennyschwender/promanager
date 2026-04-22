@@ -103,20 +103,34 @@ def _sync_memberships(
 
     new_team_ids: list[int] = []
     for team_id, priority, extra in memberships:
-        db.add(
-            PlayerTeam(
-                player_id=player.id,
-                team_id=team_id,
-                season_id=season_id,
-                priority=priority,
-                role=extra.get("role", "player") or "player",
-                position=extra.get("position"),
-                shirt_number=extra.get("shirt_number"),
-                membership_status=extra.get("membership_status", "active") or "active",
-                injured_until=extra.get("injured_until"),
-                absent_by_default=bool(extra.get("absent_by_default", False)),
-            )
+        pt = PlayerTeam(
+            player_id=player.id,
+            team_id=team_id,
+            season_id=season_id,
+            priority=priority,
+            role=extra.get("role", "player") or "player",
+            position=extra.get("position"),
+            shirt_number=extra.get("shirt_number"),
+            membership_status=extra.get("membership_status", "active") or "active",
+            injured_until=extra.get("injured_until"),
+            absent_by_default=bool(extra.get("absent_by_default", False)),
         )
+        db.add(pt)
+
+        # Auto-create PlayerAbsence for injury period
+        injured_until = extra.get("injured_until")
+        if injured_until:
+            from models.player_absence import PlayerAbsence  # noqa: PLC0415
+            absence = PlayerAbsence(
+                player_id=player.id,
+                season_id=season_id,
+                absence_type="period",
+                start_date=injured_until,
+                end_date=injured_until,
+                reason="Injury",
+            )
+            db.add(absence)
+
         if team_id not in existing_team_ids:
             new_team_ids.append(team_id)
 
@@ -444,11 +458,41 @@ async def player_bulk_update(
                     )
                     db.add(pt)
                 for field, value in pt_changes.items():
-                    if field == "injured_until" and isinstance(value, str) and value:
-                        try:
-                            value = date.fromisoformat(value)
-                        except ValueError:
-                            value = None
+                    if field == "injured_until":
+                        if isinstance(value, str) and value:
+                            try:
+                                value = date.fromisoformat(value)
+                            except ValueError:
+                                value = None
+                        # Auto-create/update PlayerAbsence for injury period
+                        if value:
+                            from models.player_absence import PlayerAbsence  # noqa: PLC0415
+                            absence = db.query(PlayerAbsence).filter(
+                                PlayerAbsence.player_id == pt.player_id,
+                                PlayerAbsence.season_id == pt.season_id,
+                                PlayerAbsence.absence_type == "period",
+                                PlayerAbsence.reason.like("%njur%"),
+                            ).first()
+                            if not absence:
+                                absence = PlayerAbsence(
+                                    player_id=pt.player_id,
+                                    season_id=pt.season_id,
+                                    absence_type="period",
+                                    start_date=value,
+                                    end_date=value,
+                                    reason="Injury",
+                                )
+                                db.add(absence)
+                            else:
+                                absence.end_date = value
+                        else:
+                            # Clear injury: delete related absence
+                            from models.player_absence import PlayerAbsence  # noqa: PLC0415
+                            db.query(PlayerAbsence).filter(
+                                PlayerAbsence.player_id == pt.player_id,
+                                PlayerAbsence.season_id == pt.season_id,
+                                PlayerAbsence.reason.like("%njur%"),
+                            ).delete()
                     setattr(pt, field, value)
 
             sp.commit()
