@@ -77,7 +77,27 @@
     {% if user.is_admin %}
     <dt style="padding-top:.5rem;"></dt>
     <dd style="padding-top:.5rem;">
-      <a href="/auth/users/{{ linked_user.id }}/edit" class="btn btn-outline btn-sm">{{ t('users.edit_user') }}</a>
+      <div class="action-dropdown" style="display:inline-block;">
+        <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+        <div class="action-dropdown-menu">
+          <a href="/auth/users/{{ linked_user.id }}/edit" class="btn-link">{{ t('users.edit_user') }}</a>
+          <form method="post" action="/auth/users/{{ linked_user.id }}/reset-password"
+                onsubmit="return confirm('{{ t('users.reset_password_confirm', username=linked_user.username) }}')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('users.reset_password') }}</button>
+          </form>
+          <form method="post" action="/auth/users/{{ linked_user.id }}/send-welcome"
+                onsubmit="return confirm('{{ t('users.send_welcome_confirm', username=linked_user.username) }}')">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit">{{ t('users.send_welcome') }}</button>
+          </form>
+          <form method="post" action="/auth/users/{{ linked_user.id }}/toggle-active">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <button type="submit" class="{% if not linked_user.is_active %}reactivate{% endif %}">
+              {% if linked_user.is_active %}{{ t('users.deactivate') }}{% else %}{{ t('users.reactivate') }}{% endif %}</button>
+          </form>
+        </div>
+      </div>
     </dd>
     {% endif %}
   </dl>
@@ -234,6 +254,23 @@
   }
   initLoadMore('load-more-future', 'att-row-future');
   initLoadMore('load-more-past', 'att-row-past');
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest('.action-dropdown-toggle');
+    if (toggle) {
+      e.stopPropagation();
+      var menu = toggle.nextElementSibling;
+      var isOpen = menu.classList.contains('open');
+      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
+      if (!isOpen) {
+        var rect = toggle.getBoundingClientRect();
+        menu.classList.add('open');
+        if (window.innerHeight - rect.bottom < 140) menu.classList.add('open-up');
+      }
+      return;
+    }
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
+  });
 })();
 </script>
 {% endblock %}
