@@ -11,8 +11,13 @@
   <h2>{{ t('players.members_title') }}</h2>
   {% if user.is_admin %}
   <div style="display:flex;gap:.5rem;">
-    <a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>
-    <a href="/players/import{% if selected_team_id and selected_season_id %}?team_id={{ selected_team_id }}&season_id={{ selected_season_id }}{% endif %}" class="btn btn-outline">{{ t('players.import') }}</a>
+    <span id="player-actions">
+      <a href="/players/new" class="btn btn-primary">{{ t('players.new') }}</a>
+      <a href="/players/import{% if selected_team_id and selected_season_id %}?team_id={{ selected_team_id }}&season_id={{ selected_season_id }}{% endif %}" class="btn btn-outline">{{ t('players.import') }}</a>
+    </span>
+    <span id="staff-actions" style="display:none;">
+      <a href="/auth/register" class="btn btn-primary">+ New Staff User</a>
+    </span>
   </div>
   {% endif %}
 </div>
@@ -543,6 +548,10 @@ function switchTab(tab) {
   document.getElementById('tab-btn-players').style.fontWeight = isStaff ? '' : 'bold';
   document.getElementById('tab-btn-staff').style.borderBottomColor = isStaff ? 'var(--primary,#1a73e8)' : 'transparent';
   document.getElementById('tab-btn-staff').style.fontWeight = isStaff ? 'bold' : '';
+  var pa = document.getElementById('player-actions');
+  var sa = document.getElementById('staff-actions');
+  if (pa) pa.style.display = isStaff ? 'none' : '';
+  if (sa) sa.style.display = isStaff ? '' : 'none';
   var url = new URL(window.location);
   url.searchParams.set('tab', tab);
   history.replaceState(null, '', url);
