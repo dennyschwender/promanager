@@ -9,8 +9,12 @@
 <form method="get" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
   <input type="text" name="actor" value="{{ filter_actor }}" placeholder="{{ t('admin.audit_filter_actor') }}" style="min-width:160px;">
   <input type="text" name="action" value="{{ filter_action }}" placeholder="{{ t('admin.audit_filter_action') }}" style="min-width:200px;">
+  <input type="text" name="target" value="{{ filter_target }}" placeholder="{{ t('admin.audit_filter_target') }}" style="min-width:160px;">
+  <input type="text" name="ip" value="{{ filter_ip }}" placeholder="{{ t('admin.audit_filter_ip') }}" style="min-width:140px;">
+  <input type="date" name="date_from" value="{{ filter_date_from }}" title="{{ t('admin.audit_filter_date_from') }}" style="min-width:140px;">
+  <input type="date" name="date_to" value="{{ filter_date_to }}" title="{{ t('admin.audit_filter_date_to') }}" style="min-width:140px;">
   <button type="submit" class="btn btn-secondary">{{ t('common.filter') }}</button>
-  {% if filter_actor or filter_action %}
+  {% if filter_actor or filter_action or filter_target or filter_ip or filter_date_from or filter_date_to %}
   <a href="/admin/audit" class="btn btn-secondary">{{ t('common.clear') }}</a>
   {% endif %}
 </form>
@@ -51,11 +55,11 @@
 {% if total_pages > 1 %}
 <div style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap;">
   {% if page > 1 %}
-  <a href="?page={{ page - 1 }}&actor={{ filter_actor }}&action={{ filter_action }}" class="btn btn-secondary">← {{ t('common.prev') }}</a>
+  <a href="?page={{ page - 1 }}&actor={{ filter_actor }}&action={{ filter_action }}&target={{ filter_target }}&ip={{ filter_ip }}&date_from={{ filter_date_from }}&date_to={{ filter_date_to }}" class="btn btn-secondary">← {{ t('common.prev') }}</a>
   {% endif %}
   <span style="color:var(--tp-muted);font-size:.88rem;">{{ page }} / {{ total_pages }}</span>
   {% if page < total_pages %}
-  <a href="?page={{ page + 1 }}&actor={{ filter_actor }}&action={{ filter_action }}" class="btn btn-secondary">{{ t('common.next') }} →</a>
+  <a href="?page={{ page + 1 }}&actor={{ filter_actor }}&action={{ filter_action }}&target={{ filter_target }}&ip={{ filter_ip }}&date_from={{ filter_date_from }}&date_to={{ filter_date_to }}" class="btn btn-secondary">{{ t('common.next') }} →</a>
   {% endif %}
 </div>
 {% endif %}

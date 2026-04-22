@@ -20,13 +20,13 @@ from models.user import User
 from routes._auth_helpers import require_admin, require_login, rt
 from services.audit_service import log_action
 from services.auth_service import (
-    authenticate_user,
     create_session_cookie,
     create_user,
     get_user_by_email,
     get_user_by_username,
     hash_password,
     verify_magic_link,
+    verify_password,
 )
 
 router = APIRouter()
@@ -55,9 +55,28 @@ async def login_post(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    user = authenticate_user(db, username, password)
+    user = get_user_by_username(db, username)
     if user is None:
-        log_action("auth.login_failed", actor_username=username, extra={"username": username}, request=request)
+        log_action("auth.login_failed", actor_username=username,
+                   extra={"reason": "unknown_email", "username": username}, request=request)
+        return render(
+            request,
+            "auth/login.html",
+            {"user": None, "error": rt(request, "errors.invalid_credentials")},
+            status_code=401,
+        )
+    if not user.is_active:
+        log_action("auth.login_failed", actor_username=username,
+                   extra={"reason": "inactive_account", "username": username}, request=request)
+        return render(
+            request,
+            "auth/login.html",
+            {"user": None, "error": rt(request, "errors.invalid_credentials")},
+            status_code=401,
+        )
+    if not verify_password(password, user.hashed_password):
+        log_action("auth.login_failed", actor_user_id=user.id, actor_username=user.username,
+                   extra={"reason": "wrong_password"}, request=request)
         return render(
             request,
             "auth/login.html",
@@ -176,16 +195,25 @@ async def magic_link_login(
     On failure (invalid/expired/missing token), redirect to /auth/login.
     """
     if not token:
+        log_action("auth.magic_link_failed", extra={"reason": "missing_token"}, request=request)
         return RedirectResponse("/auth/login", status_code=302)
     try:
         user_id, redirect_path = verify_magic_link(token)
     except (BadSignature, SignatureExpired, KeyError):
+        log_action("auth.magic_link_failed", extra={"reason": "invalid_or_expired"}, request=request)
         return RedirectResponse("/auth/login?error=link_expired", status_code=302)
 
     user = db.get(User, user_id)
-    if user is None or not user.is_active:
+    if user is None:
+        log_action("auth.magic_link_failed", extra={"reason": "user_not_found"}, request=request)
+        return RedirectResponse("/auth/login", status_code=302)
+    if not user.is_active:
+        log_action("auth.magic_link_failed", actor_user_id=user.id, actor_username=user.username,
+                   extra={"reason": "inactive_account"}, request=request)
         return RedirectResponse("/auth/login", status_code=302)
 
+    log_action("auth.magic_link_login", actor_user_id=user.id, actor_username=user.username,
+               target_type="user", target_id=user.id, target_label=user.username, request=request)
     cookie_val = create_session_cookie(user.id)
     response = RedirectResponse(redirect_path, status_code=302)
     response.set_cookie(
