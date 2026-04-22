@@ -91,20 +91,17 @@ def _upcoming_events(db, user):
 
 
 async def _send_events_list(message, user, db) -> None:
-    """Send the upcoming events list as a new message with inline keyboard + persistent nav menu."""
+    """Send the upcoming events list as a new message with inline keyboard."""
     locale = _locale(user)
     all_upcoming = _upcoming_events(db, user)
     if not all_upcoming:
-        await message.reply_text(t("telegram.no_events", locale), reply_markup=main_menu_keyboard())
+        await message.reply_text(t("telegram.no_events", locale))
         return
     total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
     page_events = all_upcoming[:PAGE_SIZE]
     header = t("telegram.events_header", locale, page=1)
     keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
     await message.reply_text(header, reply_markup=keyboard)
-    # Resend persistent keyboard on a separate message to ensure Telegram client displays it.
-    # Use a minimal marker to keep UI clean.
-    await message.reply_text("━", reply_markup=main_menu_keyboard())
 
 
 def _phone_request_keyboard(locale: str = "en") -> ReplyKeyboardMarkup:
@@ -249,6 +246,10 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
 
     if result in (AuthResult.SUCCESS, AuthResult.ALREADY_THIS):
+        await update.message.reply_text(
+            "✓",
+            reply_markup=main_menu_keyboard(),
+        )
         with SessionLocal() as db:
             await _send_events_list(update.message, user, db)
 
