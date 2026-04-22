@@ -117,23 +117,39 @@ def _sync_memberships(
         )
         db.add(pt)
 
-        # Auto-create PlayerAbsence for injury period
+        # Sync PlayerAbsence for injury period
         injured_until = extra.get("injured_until")
+        from models.player_absence import PlayerAbsence  # noqa: PLC0415
+        from services.absence_service import apply_absence_to_future_events, revert_absence_from_events  # noqa: PLC0415
         if injured_until:
-            from models.player_absence import PlayerAbsence  # noqa: PLC0415
-            absence = PlayerAbsence(
-                player_id=player.id,
-                season_id=season_id,
-                absence_type="period",
-                start_date=injured_until,
-                end_date=injured_until,
-                reason="Injury",
-            )
-            db.add(absence)
+            absence = db.query(PlayerAbsence).filter(
+                PlayerAbsence.player_id == player.id,
+                PlayerAbsence.season_id == season_id,
+                PlayerAbsence.absence_type == "period",
+                PlayerAbsence.reason.like("%njur%"),
+            ).first()
+            if not absence:
+                absence = PlayerAbsence(
+                    player_id=player.id,
+                    season_id=season_id,
+                    absence_type="period",
+                    start_date=injured_until,
+                    end_date=injured_until,
+                    reason="Injury",
+                )
+                db.add(absence)
+            else:
+                absence.end_date = injured_until
             db.flush()
-            # Apply absence to existing + future events
-            from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
             apply_absence_to_future_events(player.id, db)
+        else:
+            db.query(PlayerAbsence).filter(
+                PlayerAbsence.player_id == player.id,
+                PlayerAbsence.season_id == season_id,
+                PlayerAbsence.reason.like("%njur%"),
+            ).delete()
+            db.flush()
+            revert_absence_from_events(player.id, db)
 
         if team_id not in existing_team_ids:
             new_team_ids.append(team_id)
