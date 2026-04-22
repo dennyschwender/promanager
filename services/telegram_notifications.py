@@ -21,6 +21,7 @@ async def notify_coaches_via_telegram(
 
     import app.database as _db_mod  # noqa: PLC0415
     from models.event import Event  # noqa: PLC0415
+    from models.notification_preference import NotificationPreference  # noqa: PLC0415
     from models.player import Player  # noqa: PLC0415
     from models.telegram_notification import TelegramNotification  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
@@ -43,7 +44,36 @@ async def notify_coaches_via_telegram(
             if not (ut.user and ut.user.telegram_chat_id):
                 continue
 
+            # Bug 2 fix: check NotificationPreference for the coach's linked player.
+            # A coach user may have a linked Player record; if so, respect their telegram
+            # preference. If no player record or no preference row exists, default to enabled.
+            coach_player = ut.user.players[0] if ut.user.players else None
+            if coach_player is not None:
+                pref = (
+                    db.query(NotificationPreference)
+                    .filter(
+                        NotificationPreference.player_id == coach_player.id,
+                        NotificationPreference.channel == "telegram",
+                    )
+                    .first()
+                )
+                if pref is not None and not pref.enabled:
+                    continue
+
             try:
+                # Bug 1 fix: delete the previously stored notification message before
+                # sending a new one, so rapid notifications don't pile up in chat.
+                if ut.user.telegram_notification_message_id is not None:
+                    try:
+                        await _bot.telegram_app.bot.delete_message(
+                            chat_id=ut.user.telegram_chat_id,
+                            message_id=ut.user.telegram_notification_message_id,
+                        )
+                    except Exception:
+                        pass  # message may already be gone or too old
+                    ut.user.telegram_notification_message_id = None
+                    db.commit()
+
                 # Create notification record in DB
                 notif = TelegramNotification(
                     user_id=ut.user_id,
