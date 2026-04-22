@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir "pip>=26.0.1" && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY backup.sh /app/backup.sh
+RUN chmod +x /app/backup.sh
 
 # Create non-root user and set ownership
 RUN adduser --disabled-password --gecos "" appuser \

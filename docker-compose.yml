@@ -5,6 +5,20 @@ services:
       - "7000:7000"
     volumes:
       - ./data:/app/data
+      - ./backups:/app/backups
     env_file:
       - .env
     restart: unless-stopped
+
+  backup:
+    build: .
+    command: sh -c "while true; do /app/backup.sh; sleep 86400; done"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
