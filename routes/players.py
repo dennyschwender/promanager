@@ -133,7 +133,7 @@ def _sync_memberships(
                     player_id=player.id,
                     season_id=season_id,
                     absence_type="period",
-                    start_date=injured_until,
+                    start_date=date.today(),
                     end_date=injured_until,
                     reason="Injury",
                 )
@@ -498,7 +498,7 @@ async def player_bulk_update(
                                     player_id=pt.player_id,
                                     season_id=pt.season_id,
                                     absence_type="period",
-                                    start_date=value,
+                                    start_date=date.today(),
                                     end_date=value,
                                     reason="Injury",
                                 )

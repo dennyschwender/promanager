@@ -76,12 +76,7 @@ def apply_absence_to_future_events(player_id: int, db: Session) -> int:
         if not matching_absence:
             continue
 
-        # Determine if we should update this attendance
-        should_update = att.status == "unknown" or (
-            att.status == "present" and att.event.presence_type == "all"
-        )
-
-        if should_update:
+        if att.status in ("unknown", "present"):
             reason = matching_absence.reason or "On leave"
             att.status = "absent"
             att.note = f"[Absence] {reason}"
