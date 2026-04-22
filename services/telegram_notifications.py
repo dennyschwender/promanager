@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -14,7 +13,7 @@ async def notify_coaches_via_telegram(
     player_id: int,
     new_status: str,
 ) -> None:
-    """Send Telegram alert to coaches/admins via pinned notification summary."""
+    """Send/update Telegram alert to coaches/admins via single pinned notification."""
     import bot as _bot  # noqa: PLC0415
 
     if _bot.telegram_app is None:
@@ -45,49 +44,32 @@ async def notify_coaches_via_telegram(
                 continue
 
             try:
-                # Build notification text
-                notif_line = f"📋 {player_name} → {new_status} ({event.title} · {date_str})"
+                # Build notification text (latest only)
+                text = f"📬 {player_name} → {new_status}\n{event.title} · {date_str}"
+                keyboard = InlineKeyboardMarkup([[
+                    InlineKeyboardButton("👁 View Event", callback_data=f"evt:{event_id}"),
+                ]])
 
                 # Check if coach already has a pinned notification message
                 if ut.user.telegram_notification_message_id:
-                    # Edit existing message: fetch it first to append
+                    # Edit existing message with latest notification
                     try:
-                        msg = await _bot.telegram_app.bot.get_message(
-                            chat_id=ut.user.telegram_chat_id,
-                            message_id=ut.user.telegram_notification_message_id,
-                        )
-                        # Parse existing text and append new notification
-                        existing_text = msg.text or ""
-                        # Keep last 5 notifications (rough limit by line count)
-                        lines = existing_text.split("\n")
-                        # Remove old header if present
-                        if lines and lines[0].startswith("📬"):
-                            lines = lines[1:]
-                        # Keep only recent notifications (last 4 + new one = 5 total)
-                        lines = lines[-4:] if lines else []
-                        lines.append(notif_line)
-                        updated_text = "📬 Recent Notifications:\n" + "\n".join(lines)
-
-                        # Edit message with updated notifications + button
-                        keyboard = InlineKeyboardMarkup([[
-                            InlineKeyboardButton("👁 View Event", callback_data=f"evt:{event_id}"),
-                        ]])
                         await _bot.telegram_app.bot.edit_message_text(
                             chat_id=ut.user.telegram_chat_id,
                             message_id=ut.user.telegram_notification_message_id,
-                            text=updated_text,
+                            text=text,
                             reply_markup=keyboard,
                         )
                     except Exception as edit_exc:
                         # Message deleted or expired: send new one
                         logger.debug("Could not edit notification message, sending new: %s", edit_exc)
                         await _send_new_notification(
-                            _bot, ut.user.telegram_chat_id, ut.user_id, notif_line, event_id, db
+                            _bot, ut.user.telegram_chat_id, ut.user_id, text, keyboard, db
                         )
                 else:
                     # First notification: send new message
                     await _send_new_notification(
-                        _bot, ut.user.telegram_chat_id, ut.user_id, notif_line, event_id, db
+                        _bot, ut.user.telegram_chat_id, ut.user_id, text, keyboard, db
                     )
 
                 sent_chat_ids.add(ut.user.telegram_chat_id)
@@ -101,13 +83,8 @@ async def notify_coaches_via_telegram(
         db.close()
 
 
-async def _send_new_notification(bot_app, chat_id: str, user_id: int, notif_line: str, event_id: int, db) -> None:
+async def _send_new_notification(bot_app, chat_id: str, user_id: int, text: str, keyboard, db) -> None:
     """Send a new notification message and store its ID."""
-    text = "📬 Recent Notifications:\n" + notif_line
-    keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("👁 View Event", callback_data=f"evt:{event_id}"),
-    ]])
-
     msg = await bot_app.telegram_app.bot.send_message(
         chat_id=chat_id,
         text=text,
