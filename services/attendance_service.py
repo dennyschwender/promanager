@@ -446,12 +446,14 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
     for player in players:
         if player.id not in existing_player_ids:
             status = default
+            note = None
             mem = next((m for m in memberships if m.player_id == player.id), None)
             if status != "absent" and mem is not None and mem.absent_by_default:
                 status = "absent"
+                note = "[Default Absent]"
             if status != "absent" and _has_higher_prio_conflict(db, player, event):
                 status = "absent"
-            new_records.append(Attendance(event_id=event.id, player_id=player.id, status=status))
+            new_records.append(Attendance(event_id=event.id, player_id=player.id, status=status, note=note))
             new_player_ids.append(player.id)
 
     if new_records:
@@ -513,6 +515,7 @@ def backfill_attendance_for_player(
         if event.id in existing_event_ids:
             continue
 
+        note = None
         if event.event_date < today:
             # Past event — always absent, no auto-present regardless of presence_type
             status = "absent"
@@ -520,10 +523,11 @@ def backfill_attendance_for_player(
             status = _default_status(event)
             if status != "absent" and mem is not None and mem.absent_by_default:
                 status = "absent"
+                note = "[Default Absent]"
             if status != "absent" and _has_higher_prio_conflict(db, player, event):
                 status = "absent"
 
-        new_records.append(Attendance(event_id=event.id, player_id=player_id, status=status))
+        new_records.append(Attendance(event_id=event.id, player_id=player_id, status=status, note=note))
 
     if new_records:
         db.add_all(new_records)
