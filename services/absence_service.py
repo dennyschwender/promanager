@@ -171,7 +171,7 @@ def apply_default_absence_to_future_events(player_id: int, team_id: int, season_
             Event.team_id == team_id,
             Event.season_id == season_id,
             Event.event_date >= today,
-            Attendance.status == "unknown",
+            Attendance.status.in_(["unknown", "present"]),
         )
         .all()
     )
