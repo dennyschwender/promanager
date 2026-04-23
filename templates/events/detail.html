@@ -829,6 +829,9 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 .chat-msg-del:hover { opacity: 1; }
 .chat-input-row { display: flex; gap: .5rem; align-items: flex-end; }
 .chat-input { flex: 1; resize: vertical; min-height: 2.5rem; }
+[data-theme="dark"] .chat-msg { background: rgba(255,255,255,.07); }
+[data-theme="dark"] .chat-msg-announcement { background: rgba(230,126,34,.1); border-left-color: var(--tp-warning); }
+[data-theme="dark"] .chat-tab-btn { border-color: rgba(255,255,255,.18); color: inherit; }
 </style>
 
 <script>
@@ -930,6 +933,20 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
   panel.addEventListener('toggle', function () {
     if (panel.open && !loaded) loadMessages();
   });
+
+  // Load on init — auto-open panel if messages exist
+  fetch('/events/' + EVENT_ID + '/messages')
+    .then(function (r) { return r.json(); })
+    .then(function (messages) {
+      _renderedIds.clear();
+      var annEl = document.getElementById('chat-messages-announcement');
+      var discEl = document.getElementById('chat-messages-discussion');
+      while (annEl.firstChild) { annEl.removeChild(annEl.firstChild); }
+      while (discEl.firstChild) { discEl.removeChild(discEl.firstChild); }
+      messages.forEach(appendMessage);
+      loaded = true;
+      if (messages.length > 0) panel.open = true;
+    });
 
   if (window._pmSSE) {
     window._pmSSE.addEventListener('message', function (e) {

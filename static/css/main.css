@@ -4,13 +4,16 @@
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  --tp-primary:   #1a6bc4;
-  --tp-danger:    #c0392b;
-  --tp-warning:   #e67e22;
-  --tp-success:   #27ae60;
-  --tp-muted:     #6c757d;
-  --tp-radius:    0.35rem;
-  --tp-shadow:    0 1px 3px rgba(0,0,0,.12);
+  --tp-primary:        #1a6bc4;
+  --tp-danger:         #c0392b;
+  --tp-warning:        #e67e22;
+  --tp-success:        #27ae60;
+  --tp-muted:          #6c757d;
+  --tp-radius:         0.35rem;
+  --tp-shadow:         0 1px 3px rgba(0,0,0,.12);
+  --tp-surface:        #f4f4f4;
+  --tp-warning-light:  #fff8e1;
+  --tp-border:         #dee2e6;
 }
 
 /* ── Global density overrides (compact Pico) ─────────────── */
