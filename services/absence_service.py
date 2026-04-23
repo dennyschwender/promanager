@@ -141,7 +141,8 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
             # Event date is no longer in an absence period
             # Only clear if the status was set by an absence (has "[Absence]" prefix)
             if att.status == "absent" and att.note and att.note.startswith("[Absence]"):
-                att.status = "unknown"
+                from services.attendance_service import _default_status  # noqa: PLC0415
+                att.status = _default_status(event)
                 att.note = None
                 att.updated_at = datetime.now(timezone.utc)
                 count += 1
@@ -189,18 +190,19 @@ def apply_default_absence_to_future_events(player_id: int, team_id: int, season_
 
 
 def revert_default_absence_from_events(player_id: int, team_id: int, season_id: int, db: Session) -> int:
-    """Revert future attendance records set by absent_by_default back to unknown.
+    """Revert future attendance records set by absent_by_default back to event default status.
 
     Only affects events for the given team/season. Returns count of updated records.
     """
     from models.attendance import Attendance
     from models.event import Event
+    from services.attendance_service import _default_status
 
     today = date.today()
 
-    attendances = (
-        db.query(Attendance)
-        .join(Event)
+    rows = (
+        db.query(Attendance, Event)
+        .join(Event, Attendance.event_id == Event.id)
         .filter(
             Attendance.player_id == player_id,
             Event.team_id == team_id,
@@ -213,8 +215,8 @@ def revert_default_absence_from_events(player_id: int, team_id: int, season_id: 
     )
 
     count = 0
-    for att in attendances:
-        att.status = "unknown"
+    for att, event in rows:
+        att.status = _default_status(event)
         att.note = None
         att.updated_at = datetime.now(timezone.utc)
         count += 1
