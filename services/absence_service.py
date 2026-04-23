@@ -150,3 +150,40 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
         db.commit()
 
     return count
+
+
+def revert_absence_from_events(player_id: int, db: Session) -> int:
+    """Revert future attendance records auto-set absent by absence logic back to unknown.
+
+    Called when an absence is deleted or injury cleared.
+    Only affects future events where note starts with '[Absence]'.
+    Returns count of updated records.
+    """
+    from models.attendance import Attendance
+    from models.event import Event
+
+    today = date.today()
+
+    attendances = (
+        db.query(Attendance)
+        .join(Event)
+        .filter(
+            Attendance.player_id == player_id,
+            Attendance.status == "absent",
+            Attendance.note.like("[Absence]%"),
+            Event.event_date >= today,
+        )
+        .all()
+    )
+
+    count = 0
+    for att in attendances:
+        att.status = "unknown"
+        att.note = None
+        att.updated_at = datetime.now(timezone.utc)
+        count += 1
+
+    if count > 0:
+        db.commit()
+
+    return count
