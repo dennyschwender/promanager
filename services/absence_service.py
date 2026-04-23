@@ -152,6 +152,79 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
     return count
 
 
+def apply_default_absence_to_future_events(player_id: int, team_id: int, season_id: int, db: Session) -> int:
+    """Mark future 'unknown' attendance records absent due to absent_by_default flag.
+
+    Only affects events for the given team/season. Returns count of updated records.
+    """
+    from models.attendance import Attendance
+    from models.event import Event
+
+    today = date.today()
+
+    attendances = (
+        db.query(Attendance)
+        .join(Event)
+        .filter(
+            Attendance.player_id == player_id,
+            Event.team_id == team_id,
+            Event.season_id == season_id,
+            Event.event_date >= today,
+            Attendance.status == "unknown",
+        )
+        .all()
+    )
+
+    count = 0
+    for att in attendances:
+        att.status = "absent"
+        att.note = "[Default Absent]"
+        att.updated_at = datetime.now(timezone.utc)
+        count += 1
+
+    if count > 0:
+        db.commit()
+
+    return count
+
+
+def revert_default_absence_from_events(player_id: int, team_id: int, season_id: int, db: Session) -> int:
+    """Revert future attendance records set by absent_by_default back to unknown.
+
+    Only affects events for the given team/season. Returns count of updated records.
+    """
+    from models.attendance import Attendance
+    from models.event import Event
+
+    today = date.today()
+
+    attendances = (
+        db.query(Attendance)
+        .join(Event)
+        .filter(
+            Attendance.player_id == player_id,
+            Event.team_id == team_id,
+            Event.season_id == season_id,
+            Event.event_date >= today,
+            Attendance.status == "absent",
+            Attendance.note == "[Default Absent]",
+        )
+        .all()
+    )
+
+    count = 0
+    for att in attendances:
+        att.status = "unknown"
+        att.note = None
+        att.updated_at = datetime.now(timezone.utc)
+        count += 1
+
+    if count > 0:
+        db.commit()
+
+    return count
+
+
 def revert_absence_from_events(player_id: int, db: Session) -> int:
     """Revert future attendance records auto-set absent by absence logic back to unknown.
 

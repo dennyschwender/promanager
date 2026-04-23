@@ -87,15 +87,13 @@ def _sync_memberships(
     Backfills attendance records for newly added teams.
     """
     # Capture existing team_ids before deletion so we know what's new
-    existing_team_ids = {
-        pt.team_id
-        for pt in db.query(PlayerTeam)
-        .filter(
-            PlayerTeam.player_id == player.id,
-            PlayerTeam.season_id == season_id,
-        )
+    existing_pts = (
+        db.query(PlayerTeam)
+        .filter(PlayerTeam.player_id == player.id, PlayerTeam.season_id == season_id)
         .all()
-    }
+    )
+    existing_team_ids = {pt.team_id for pt in existing_pts}
+    old_absent_by_default = {pt.team_id: pt.absent_by_default for pt in existing_pts}
 
     db.query(PlayerTeam).filter(
         PlayerTeam.player_id == player.id,
@@ -155,6 +153,17 @@ def _sync_memberships(
             ).delete()
             db.flush()
             revert_absence_from_events(player.id, db)
+
+        # Sync absent_by_default changes for existing teams
+        new_absent = bool(extra.get("absent_by_default", False))
+        old_absent = old_absent_by_default.get(team_id, False)
+        if team_id in existing_team_ids:
+            if new_absent and not old_absent:
+                from services.absence_service import apply_default_absence_to_future_events  # noqa: PLC0415
+                apply_default_absence_to_future_events(player.id, team_id, season_id, db)
+            elif not new_absent and old_absent:
+                from services.absence_service import revert_default_absence_from_events  # noqa: PLC0415
+                revert_default_absence_from_events(player.id, team_id, season_id, db)
 
         if team_id not in existing_team_ids:
             new_team_ids.append(team_id)
@@ -529,6 +538,15 @@ async def player_bulk_update(
                             ).delete()
                             db.flush()
                             revert_absence_from_events(pt.player_id, db)
+                    if field == "absent_by_default":
+                        old_val = getattr(pt, "absent_by_default", False)
+                        new_val = bool(value)
+                        if new_val and not old_val:
+                            from services.absence_service import apply_default_absence_to_future_events  # noqa: PLC0415
+                            apply_default_absence_to_future_events(pt.player_id, body.team_id, body.season_id, db)
+                        elif not new_val and old_val:
+                            from services.absence_service import revert_default_absence_from_events  # noqa: PLC0415
+                            revert_default_absence_from_events(pt.player_id, body.team_id, body.season_id, db)
                     setattr(pt, field, value)
 
             sp.commit()
