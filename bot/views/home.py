@@ -72,7 +72,6 @@ def _home_keyboard(locale: str = "en") -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("telegram.events_button", locale), callback_data="el"),
         ],
         [
-            InlineKeyboardButton(t("telegram.absences_button", locale), callback_data="ab"),
             InlineKeyboardButton(t("telegram.other_button", locale), callback_data="other:0"),
         ],
     ])
