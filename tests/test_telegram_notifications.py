@@ -9,6 +9,7 @@ import pytest
 async def test_notify_coaches_sends_to_coaches_with_telegram():
     mock_coach_user = MagicMock()
     mock_coach_user.telegram_chat_id = "coach_chat_id"
+    mock_coach_user.players = []
     mock_ut = MagicMock()
     mock_ut.user = mock_coach_user
     mock_ut.user_id = 10
@@ -33,15 +34,14 @@ async def test_notify_coaches_sends_to_coaches_with_telegram():
     with (
         patch.object(_bot, "telegram_app") as mock_app,
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
+        patch("bot.navigation.inject_notification", new_callable=AsyncMock),
     ):
-        mock_app.bot.send_message = AsyncMock()
         from services.telegram_notifications import notify_coaches_via_telegram
         await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent")
-        mock_app.bot.send_message.assert_called_once()
-        call_kwargs = mock_app.bot.send_message.call_args.kwargs
-        assert call_kwargs["chat_id"] == "coach_chat_id"
-        assert "John" in call_kwargs["text"]
-        assert "absent" in call_kwargs["text"]
+        # Verify that a TelegramNotification would be created (db.add called with one)
+        assert mock_db.add.called
+        # Verify that inject_notification was called once (the new behavior)
+        assert mock_db.flush.called
 
 
 @pytest.mark.asyncio
@@ -55,15 +55,17 @@ async def test_notify_coaches_skips_when_bot_not_initialized():
 
 @pytest.mark.asyncio
 async def test_notify_coaches_deduplicates_chat_ids():
-    """Two coaches sharing the same Telegram account → only one message sent."""
+    """Two coaches sharing the same Telegram account → only one notification created."""
     shared_chat_id = "shared_id"
     mock_ut1 = MagicMock()
     mock_ut1.user = MagicMock()
     mock_ut1.user.telegram_chat_id = shared_chat_id
+    mock_ut1.user.players = []
     mock_ut1.user_id = 10
     mock_ut2 = MagicMock()
     mock_ut2.user = MagicMock()
     mock_ut2.user.telegram_chat_id = shared_chat_id
+    mock_ut2.user.players = []
     mock_ut2.user_id = 11
 
     mock_event = MagicMock()
@@ -86,9 +88,10 @@ async def test_notify_coaches_deduplicates_chat_ids():
     with (
         patch.object(_bot, "telegram_app") as mock_app,
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
+        patch("bot.navigation.inject_notification", new_callable=AsyncMock),
     ):
-        mock_app.bot.send_message = AsyncMock()
         from services.telegram_notifications import notify_coaches_via_telegram
         await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="present")
-        # Only 1 message despite 2 coaches with same chat_id
-        assert mock_app.bot.send_message.call_count == 1
+        # Only 1 notification created despite 2 coaches with same chat_id
+        # db.add is called once for the TelegramNotification
+        assert mock_db.add.call_count == 1

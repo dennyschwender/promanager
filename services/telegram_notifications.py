@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +18,7 @@ async def notify_coaches_via_telegram(
         return
 
     import app.database as _db_mod  # noqa: PLC0415
+    from bot.navigation import inject_notification  # noqa: PLC0415
     from models.event import Event  # noqa: PLC0415
     from models.notification_preference import NotificationPreference  # noqa: PLC0415
     from models.player import Player  # noqa: PLC0415
@@ -35,12 +34,9 @@ async def notify_coaches_via_telegram(
         if player is None:
             return
 
-        player_name = f"{player.first_name} {player.last_name}".strip() or f"Player {player_id}"
-        date_str = event.event_date.strftime("%d %b") if event.event_date else ""
-
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
-
         seen_chat_ids: set[str] = set()
+
         for ut in coaches:
             if not (ut.user and ut.user.telegram_chat_id):
                 continue
@@ -48,9 +44,7 @@ async def notify_coaches_via_telegram(
                 continue
             seen_chat_ids.add(ut.user.telegram_chat_id)
 
-            # Bug 2 fix: check NotificationPreference for the coach's linked player.
-            # A coach user may have a linked Player record; if so, respect their telegram
-            # preference. If no player record or no preference row exists, default to enabled.
+            # Respect notification preference
             coach_player = ut.user.players[0] if ut.user.players else None
             if coach_player is not None:
                 pref = (
@@ -65,20 +59,7 @@ async def notify_coaches_via_telegram(
                     continue
 
             try:
-                # Bug 1 fix: delete the previously stored notification message before
-                # sending a new one, so rapid notifications don't pile up in chat.
-                if ut.user.telegram_notification_message_id is not None:
-                    try:
-                        await _bot.telegram_app.bot.delete_message(
-                            chat_id=ut.user.telegram_chat_id,
-                            message_id=ut.user.telegram_notification_message_id,
-                        )
-                    except Exception:
-                        pass  # message may already be gone or too old
-                    ut.user.telegram_notification_message_id = None
-                    db.commit()
-
-                # Create notification record in DB
+                # Create notification record
                 notif = TelegramNotification(
                     user_id=ut.user_id,
                     event_id=event_id,
@@ -86,28 +67,17 @@ async def notify_coaches_via_telegram(
                     status=new_status,
                 )
                 db.add(notif)
-                db.commit()
+                db.flush()  # get notif.id before inject_notification
 
-                # Build notification text
-                text = f"📬 {player_name} → {new_status}\n{event.title} · {date_str}"
-                keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton("👁 View Event", callback_data=f"evt:{event_id}"),
-                ]])
-
-                # Send as new message (will be cleared when user navigates)
-                msg = await _bot.telegram_app.bot.send_message(
-                    chat_id=ut.user.telegram_chat_id,
-                    text=text,
-                    reply_markup=keyboard,
-                )
-                # Store message ID on user for cleanup on next nav action
-                ut.user.telegram_notification_message_id = msg.message_id
-                db.commit()
+                # Inject 🔔 button into persistent message (or send homepage if first time)
+                await inject_notification(ut.user, notif.id, _bot.telegram_app.bot, db)
 
             except Exception as exc:
                 logger.warning(
                     "notify_coaches_via_telegram: failed for user %s: %s",
                     ut.user_id, exc, exc_info=True,
                 )
+
+        db.commit()
     finally:
         db.close()
