@@ -24,7 +24,7 @@ def test_other_menu_has_absences_and_back():
     kb = other_menu_keyboard(back_page=2, locale="en")
     data = _cb_data(kb)
     assert any(d.startswith("absm:2") for d in data)
-    assert any(d == "evts:2" for d in data)
+    assert any(d == "home" for d in data)
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ def test_player_list_keyboard_buttons():
     data = _cb_data(kb)
     assert "absl:1:0:3" in data
     assert "absl:2:0:3" in data
-    assert "other:3" in data
+    assert "other:0" in data
 
 
 def test_player_list_keyboard_pagination():
@@ -80,7 +80,7 @@ def test_absence_list_has_delete_add_back_member():
     data = _cb_data(kb)
     assert "absd:10:7:0:2" in data          # delete button
     assert "absa:7:2" in data               # add button
-    assert "other:2" in data               # back → Other menu for member
+    assert "other:0" in data               # back → Other menu for member
 
 
 def test_absence_list_back_goes_to_player_list_for_coach():

@@ -19,11 +19,7 @@ from telegram.ext import ContextTypes
 
 from app.database import SessionLocal
 from app.i18n import t
-from bot.absence_keyboards import other_menu_keyboard
 from bot.keyboards import (
-    NAV_ABSENCES,
-    NAV_EVENTS,
-    NAV_REFRESH,
     PAGE_SIZE,
     PLAYER_PAGE_SIZE,
     STATUS_ICON,
@@ -31,7 +27,6 @@ from bot.keyboards import (
     event_status_keyboard,
     event_view_keyboard,
     events_keyboard,
-    main_menu_keyboard,
 )
 from models.attendance import Attendance
 from models.event import Event
@@ -90,80 +85,28 @@ def _upcoming_events(db, user):
     return q.order_by(Event.event_date.asc()).all()
 
 
-async def _send_events_list(message, user, db, context=None) -> None:
-    """Send the upcoming events list as a new message with inline keyboard."""
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+async def _send_homepage(message, user, db) -> None:
+    """Send or replace the persistent message with the homepage view."""
+    from bot.views.home import render_home  # noqa: PLC0415
 
-    from models.notification import Notification  # noqa: PLC0415
-    from models.telegram_notification import TelegramNotification  # noqa: PLC0415
+    text, keyboard = render_home(user, db)
 
-    # Delete pending notification message if exists
+    # Delete old persistent message if exists
     if user.telegram_notification_message_id:
         try:
             await message.get_bot().delete_message(
                 chat_id=message.chat_id,
                 message_id=user.telegram_notification_message_id,
             )
-            user.telegram_notification_message_id = None
-            db.commit()
         except Exception:
             pass
+        user.telegram_notification_message_id = None
 
-    locale = _locale(user)
-    all_upcoming = _upcoming_events(db, user)
-
-    # Count unread notifications
-    is_admin_or_coach = user.is_admin or user.is_coach
-    if is_admin_or_coach:
-        unread_count = db.query(TelegramNotification).filter(
-            TelegramNotification.user_id == user.id
-        ).count()
-    else:
-        # Member: count unread Notification records for their linked player
-        linked_player = db.query(Player).filter(
-            Player.user_id == user.id, Player.archived_at.is_(None)
-        ).first()
-        if linked_player:
-            unread_count = db.query(Notification).filter(
-                Notification.player_id == linked_player.id,
-                Notification.is_read == False,  # noqa: E712
-            ).count()
-        else:
-            unread_count = 0
-
-    # Build keyboard with notifications button if needed
-    if not all_upcoming and unread_count == 0:
-        await message.reply_text(t("telegram.no_events", locale))
-        return
-
-    rows = []
-    if unread_count > 0:
-        rows.append([InlineKeyboardButton(
-            f"🔔 Notifications ({unread_count})",
-            callback_data="notif:0"
-        )])
-
-    total_pages = max(1, math.ceil(len(all_upcoming) / PAGE_SIZE))
-    page_events = all_upcoming[:PAGE_SIZE]
-    header = t("telegram.events_header", locale, page=1)
-    base_keyboard = events_keyboard(page_events, 0, total_pages, locale=locale)
-
-    # Prepend notifications button to existing keyboard
-    if rows:
-        # Extract rows from base_keyboard and prepend our notifications button
-        all_rows = rows + list(base_keyboard.inline_keyboard)
-        keyboard = InlineKeyboardMarkup(all_rows)
-    else:
-        keyboard = base_keyboard
-
-    # Mark all TelegramNotification records as seen by deleting them
-    if unread_count > 0:
-        db.query(TelegramNotification).filter(
-            TelegramNotification.user_id == user.id
-        ).delete()
-        db.commit()
-
-    await message.reply_text(header, reply_markup=keyboard)
+    # Send new persistent message
+    msg = await message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+    user.telegram_notification_message_id = msg.message_id
+    user.telegram_current_view = "home"
+    db.commit()
 
 
 def _phone_request_keyboard(locale: str = "en") -> ReplyKeyboardMarkup:
@@ -195,7 +138,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 t("telegram.auth_already_this", locale, username=user.username),
                 reply_markup=ReplyKeyboardRemove(),
             )
-            await _send_events_list(update.message, user, db, context)
+            await _send_homepage(update.message, user, db)
             return
 
     await update.message.reply_text(
@@ -216,7 +159,7 @@ async def handle_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         if user is None:
             await update.message.reply_text(t("telegram.not_authenticated", "en"))
             return
-        await _send_events_list(update.message, user, db)
+        await _send_homepage(update.message, user, db)
 
 
 # ---------------------------------------------------------------------------
@@ -234,33 +177,6 @@ async def handle_logout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         locale = _locale(user)
         unlink_telegram(db, user)
     await update.message.reply_text(t("telegram.logout_success", locale))
-
-
-async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Recovery command to resend persistent menu if dismissed."""
-    await update.message.reply_text(
-        "Main menu:",
-        reply_markup=main_menu_keyboard(),
-    )
-
-
-async def handle_nav_dispatch(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Dispatch nav button presses to appropriate handlers."""
-    chat_id = str(update.effective_chat.id)
-    text = update.message.text
-    with SessionLocal() as db:
-        user = get_user_by_chat_id(db, chat_id)
-        if user is None:
-            await update.message.reply_text(t("telegram.not_authenticated", "en"))
-            return
-        locale = _locale(user)
-        if text == NAV_EVENTS or text == NAV_REFRESH:
-            await _send_events_list(update.message, user, db, context)
-        elif text == NAV_ABSENCES:
-            await update.message.reply_text(
-                t("telegram.other_button", locale),
-                reply_markup=other_menu_keyboard(0, locale),
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -308,12 +224,8 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
 
     if result in (AuthResult.SUCCESS, AuthResult.ALREADY_THIS):
-        await update.message.reply_text(
-            "✓",
-            reply_markup=main_menu_keyboard(),
-        )
         with SessionLocal() as db:
-            await _send_events_list(update.message, user, db, context)
+            await _send_homepage(update.message, user, db)
 
 
 # ---------------------------------------------------------------------------
@@ -365,26 +277,93 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             )
             return
 
+        if data == "home":
+            await query.answer()
+            from bot.views.home import render_home  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            text, keyboard = render_home(user, db)
+            await navigate(query, user, db, "home", text, keyboard)
+            return
+
+        if data == "nl" or data.startswith("nl:"):
+            await query.answer()
+            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            page = int(data.split(":")[1]) if ":" in data else 0
+            text, keyboard = render_notifications_list(user, db, page)
+            view_key = f"nl:{page}" if page > 0 else "nl"
+            await navigate(query, user, db, view_key, text, keyboard)
+            return
+
+        if data.startswith("n:") and not data.startswith("notif:") and not data.startswith("note:") and not data.startswith("noop"):
+            await query.answer()
+            from bot.views.notifications import render_notification_detail  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            notif_id = int(data.split(":")[1])
+            text, keyboard = render_notification_detail(user, db, notif_id)
+            await navigate(query, user, db, f"n:{notif_id}", text, keyboard)
+            return
+
+        if data == "el" or data.startswith("el:"):
+            await query.answer()
+            from bot.views.events import render_events_list  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            page = int(data.split(":")[1]) if ":" in data else 0
+            text, keyboard = render_events_list(user, db, page)
+            view_key = f"el:{page}" if page > 0 else "el"
+            await navigate(query, user, db, view_key, text, keyboard)
+            return
+
+        if data.startswith("ec:"):
+            await query.answer()
+            from bot.views.events import render_event_chat  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            event_id = int(data.split(":")[1])
+            text, keyboard = render_event_chat(user, db, event_id, back=f"e:{event_id}")
+            await navigate(query, user, db, f"ec:{event_id}", text, keyboard)
+            return
+
+        if data == "ab":
+            await query.answer()
+            from bot.absence_handlers import show_absence_root  # noqa: PLC0415
+            await show_absence_root(query, user, db, back_page=0)
+            user.telegram_current_view = "ab"
+            db.commit()
+            return
+
         if data.startswith("notif:"):
             await query.answer()
+            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
             page = max(0, int(data.split(":")[1]))
-            await _show_notifications(query, user, db, page)
+            text, keyboard = render_notifications_list(user, db, page)
+            await navigate(query, user, db, f"nl:{page}" if page > 0 else "nl", text, keyboard)
             return
 
         if data.startswith("ref:"):
             await query.answer()
+            from bot.views.events import render_events_list  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
             page = max(0, int(data.split(":")[1]))
-            await _show_events(query, user, db, page)
+            text, keyboard = render_events_list(user, db, page)
+            await navigate(query, user, db, f"el:{page}" if page > 0 else "el", text, keyboard)
+            return
 
         elif data.startswith("evts:"):
             await query.answer()
+            from bot.views.events import render_events_list  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
             page = max(0, int(data.split(":")[1]))
-            await _show_events(query, user, db, page)
+            text, keyboard = render_events_list(user, db, page)
+            await navigate(query, user, db, f"el:{page}" if page > 0 else "el", text, keyboard)
 
         elif data.startswith("evt:"):
             await query.answer()
             event_id = int(data.split(":")[1])
-            await _show_event_detail(query, user, db, event_id, back_page=0)
+            from bot.views.events import render_event_detail  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            text, keyboard = render_event_detail(user, db, event_id)
+            await navigate(query, user, db, f"e:{event_id}", text, keyboard)
 
         elif data.startswith("evtp:"):
             await query.answer()
@@ -554,6 +533,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 "prompt_message_id": prompt_msg.message_id,
                 "chat_id": query.message.chat_id,
             }
+
+        elif data.startswith("e:"):
+            await query.answer()
+            from bot.views.events import render_event_detail  # noqa: PLC0415
+            from bot.navigation import navigate  # noqa: PLC0415
+            event_id = int(data.split(":")[1])
+            text, keyboard = render_event_detail(user, db, event_id)
+            await navigate(query, user, db, f"e:{event_id}", text, keyboard)
 
         elif data.startswith("other:"):
             await query.answer()
