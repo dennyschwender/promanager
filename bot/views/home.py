@@ -4,6 +4,7 @@ from __future__ import annotations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.i18n import t
+from app.config import settings
 from bot.views import ViewResult
 
 
@@ -51,7 +52,7 @@ def render_home(user, db) -> ViewResult:
                 if notif.created_at:
                     last_notif_ts = notif.created_at.strftime("%d %b %H:%M")
 
-    parts = ["🏠 *ProManager*\n"]
+    parts = [f"🏠 *{settings.APP_NAME}*\n"]
     if last_notif_text:
         parts.append("📣 Last notification:")
         parts.append(last_notif_text)
