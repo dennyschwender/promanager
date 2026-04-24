@@ -899,6 +899,8 @@
     "chat_reply_prompt": "Schreibe deine Antwort (oder /cancel zum Abbrechen):",
     "chat_reply_posted": "Deine Nachricht wurde in der Eventdiskussion veröffentlicht.",
     "other_button": "⚙️ Weitere",
+    "notifications_button": "🔔 Benachrichtigungen",
+    "events_button": "📅 Termine",
     "absences_button": "📅 Abwesenheiten",
     "absences_header": "📅 Abwesenheiten — %{name}",
     "absences_empty": "Keine Abwesenheiten registriert.",

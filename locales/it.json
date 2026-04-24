@@ -899,6 +899,8 @@
     "chat_reply_prompt": "Scrivi la tua risposta (o /cancel per annullare):",
     "chat_reply_posted": "Il tuo messaggio è stato pubblicato nella discussione dell'evento.",
     "other_button": "⚙️ Altro",
+    "notifications_button": "🔔 Notifiche",
+    "events_button": "📅 Allenamenti",
     "absences_button": "📅 Assenze",
     "absences_header": "📅 Assenze — %{name}",
     "absences_empty": "Nessuna assenza registrata.",

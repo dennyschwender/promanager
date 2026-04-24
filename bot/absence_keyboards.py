@@ -14,7 +14,7 @@ def other_menu_keyboard(back_page: int, locale: str = "en") -> InlineKeyboardMar
     """'⚙️ Other' mini-menu: Absences entry + Back to events list."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(t("telegram.absences_button", locale), callback_data=f"absm:{back_page}")],
-        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")],
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home")],
     ])
 
 
@@ -56,7 +56,7 @@ def absence_player_list_keyboard(
 
     rows.append([InlineKeyboardButton(
         t("telegram.back_button", locale),
-        callback_data=f"other:{back_page}",
+        callback_data="other:0",
     )])
     return InlineKeyboardMarkup(rows)
 
@@ -103,7 +103,7 @@ def absence_list_keyboard(
         callback_data=f"absa:{player_id}:{back_page}",
     )])
 
-    back_dest = f"other:{back_page}" if is_member else f"absm:{back_page}"
+    back_dest = "other:0" if is_member else f"absm:{back_page}"
     rows.append([InlineKeyboardButton(
         t("telegram.back_button", locale),
         callback_data=back_dest,

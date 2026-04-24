@@ -899,6 +899,8 @@
     "chat_reply_prompt": "Type your reply (or /cancel to abort):",
     "chat_reply_posted": "Your message was posted to the event discussion.",
     "other_button": "⚙️ Other",
+    "notifications_button": "🔔 Notifications",
+    "events_button": "📅 Events",
     "absences_button": "📅 Absences",
     "absences_header": "📅 Absences — %{name}",
     "absences_empty": "No absences registered.",

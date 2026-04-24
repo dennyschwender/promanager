@@ -41,16 +41,16 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
         time_val = event.meeting_time or event.event_time
         time_str = f" {str(time_val)[:5]}" if time_val else ""
         label = f"{event.event_date}{time_str} — {event.title}"
-        rows.append([InlineKeyboardButton(label, callback_data=f"evt:{event.id}")])
+        rows.append([InlineKeyboardButton(label, callback_data=f"e:{event.id}")])
 
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton(t("telegram.prev_button", locale), callback_data=f"evts:{page - 1}"))
-    nav.append(InlineKeyboardButton(t("telegram.refresh_button", locale), callback_data=f"ref:{page}"))
+        nav.append(InlineKeyboardButton(t("telegram.prev_button", locale), callback_data=f"el:{page - 1}"))
+    nav.append(InlineKeyboardButton(t("telegram.refresh_button", locale), callback_data=f"el:{page}"))
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(t("telegram.view_more_button", locale), callback_data=f"evts:{page + 1}"))
+        nav.append(InlineKeyboardButton(t("telegram.view_more_button", locale), callback_data=f"el:{page + 1}"))
     rows.append(nav)
-    rows.append([InlineKeyboardButton(t("telegram.other_button", locale), callback_data=f"other:{page}")])
+    rows.append([InlineKeyboardButton(t("telegram.other_button", locale), callback_data="other:0")])
 
     return InlineKeyboardMarkup(rows)
 
@@ -65,7 +65,7 @@ def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", i
             InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
             InlineKeyboardButton(t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"),
         ])
-    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")])
+    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")])
     return InlineKeyboardMarkup(rows)
 
 
@@ -86,7 +86,7 @@ def event_status_keyboard(
             InlineKeyboardButton(t("telegram.status_unknown", locale), callback_data=f"sta:{event_id}:{player_id}:u"),
         ],
         [InlineKeyboardButton(note_label, callback_data=f"note:{event_id}:{player_id}:{back_page}")],
-        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")],
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")],
     ]
     return InlineKeyboardMarkup(rows)
 

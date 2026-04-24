@@ -899,6 +899,8 @@
     "chat_reply_prompt": "Tapez votre réponse (ou /cancel pour annuler) :",
     "chat_reply_posted": "Votre message a été publié dans la discussion de l'événement.",
     "other_button": "⚙️ Autre",
+    "notifications_button": "🔔 Notifications",
+    "events_button": "📅 Événements",
     "absences_button": "📅 Absences",
     "absences_header": "📅 Absences — %{name}",
     "absences_empty": "Aucune absence enregistrée.",
