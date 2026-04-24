@@ -44,6 +44,9 @@ class User(Base):
     # Telegram message ID for pinned notification summary (edited in-place for coach alerts)
     telegram_notification_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
 
+    # Tracks which view the persistent Telegram message is currently showing ("home", "el", "e:42", etc.)
+    telegram_current_view: Mapped[str] = mapped_column(String(20), nullable=False, default="home")
+
     # Preferred UI locale — one of: en, it, fr, de
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
 
