@@ -85,7 +85,7 @@ async def send_telegram_notifications(
     body: str,
     exclude_user_id: int | None,
 ) -> None:
-    """Send Telegram push notifications for a new chat message.
+    """Inject a 💬 chat button into each relevant user's persistent Telegram message.
 
     Targets: players with present/maybe/unknown attendance + coaches/admins
     linked to the event's team. Excludes the message author.
@@ -99,9 +99,8 @@ async def send_telegram_notifications(
     except Exception:
         return
 
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
-
     import app.database as _db_mod  # noqa: PLC0415
+    from bot.navigation import inject_chat_notification  # noqa: PLC0415
     from models.attendance import Attendance  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
 
@@ -111,10 +110,8 @@ async def send_telegram_notifications(
         if event is None:
             return
 
-        lane_label = "📢 Announcement" if lane == "announcement" else "💬 Discussion"
-        text = f"{lane_label} — {event.title}\n{author_name}: {body}"
-
-        chat_ids: set[str] = set()
+        seen_user_ids: set[int] = set()
+        users_to_notify: list[User] = []
 
         if event.team_id is not None:
             # Players with non-absent attendance
@@ -130,40 +127,20 @@ async def send_telegram_notifications(
                 player = db.get(Player, att.player_id)
                 if player and player.user_id and player.user_id != exclude_user_id:
                     u = db.get(User, player.user_id)
-                    if u and u.telegram_chat_id:
-                        chat_ids.add(u.telegram_chat_id)
+                    if u and u.telegram_chat_id and u.id not in seen_user_ids:
+                        seen_user_ids.add(u.id)
+                        users_to_notify.append(u)
 
             # Coaches/admins linked to the event's team via UserTeam
-            coach_rows = (
-                db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
-            )
-            for row in coach_rows:
+            for row in db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all():
                 if row.user_id != exclude_user_id:
                     u = db.get(User, row.user_id)
-                    if u and u.telegram_chat_id:
-                        chat_ids.add(u.telegram_chat_id)
+                    if u and u.telegram_chat_id and u.id not in seen_user_ids:
+                        seen_user_ids.add(u.id)
+                        users_to_notify.append(u)
 
-        keyboard = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "💬 Reply",
-                        callback_data=f"chatreply:{event_id}:discussion",
-                    )
-                ]
-            ]
-        )
+        for u in users_to_notify:
+            await inject_chat_notification(u, event_id, event.title, _bot.telegram_app.bot, db)
 
-        for chat_id in chat_ids:
-            try:
-                await _bot.telegram_app.bot.send_message(
-                    chat_id=chat_id,
-                    text=text,
-                    reply_markup=keyboard,
-                )
-            except Exception:
-                logger.warning(
-                    "Failed to send Telegram chat notification to %s", chat_id
-                )
     finally:
         db.close()

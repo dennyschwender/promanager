@@ -116,3 +116,45 @@ def _notif_preview(user, db, notif_id: int) -> str:
     icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(notif.status, "?")
     preview = f"{player_name} {icon}"
     return preview[:30]
+
+
+async def inject_chat_notification(user, event_id: int, event_title: str, bot, db) -> None:
+    """Inject a 💬 chat button into the user's persistent message."""
+    if not user.telegram_chat_id:
+        return
+
+    if user.telegram_notification_message_id is None:
+        from bot.views.home import render_home  # noqa: PLC0415
+        text, keyboard = render_home(user, db)
+        try:
+            msg = await bot.send_message(
+                chat_id=user.telegram_chat_id,
+                text=text,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            user.telegram_notification_message_id = msg.message_id
+            user.telegram_current_view = "home"
+            db.commit()
+        except Exception as exc:
+            logger.warning("inject_chat_notification: failed to send homepage for user %s: %s", user.id, exc)
+            return
+
+    view_key = user.telegram_current_view or "home"
+    text, keyboard = _render_view(user, db, view_key)
+
+    label = f"💬 {event_title[:28]}"
+    chat_row = [InlineKeyboardButton(label, callback_data=f"ec:{event_id}")]
+    new_rows = [chat_row] + list(keyboard.inline_keyboard)
+    new_keyboard = InlineKeyboardMarkup(new_rows)
+
+    try:
+        await bot.edit_message_text(
+            chat_id=user.telegram_chat_id,
+            message_id=user.telegram_notification_message_id,
+            text=text,
+            reply_markup=new_keyboard,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    except Exception as exc:
+        logger.warning("inject_chat_notification: failed to edit message for user %s: %s", user.id, exc)
