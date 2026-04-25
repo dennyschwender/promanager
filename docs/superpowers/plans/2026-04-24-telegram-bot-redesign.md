@@ -1,6 +1,6 @@
 # Telegram Bot Redesign — Single Persistent Message Navigation
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace the Telegram bot's reply keyboard with a single persistent inline-keyboard message per user that edits in-place as a mini-app, with new notification delivery injecting a 🔔 button without interrupting navigation.
 
@@ -53,7 +53,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
 - Modify: `models/user.py`
 - Create: `alembic/versions/s7t8u9v0w1x2_add_telegram_current_view.py`
 
-- [ ] **Step 1.1: Add column to User model**
+- [x] **Step 1.1: Add column to User model**
 
   In `models/user.py`, after the `telegram_notification_message_id` line, add:
 
@@ -62,7 +62,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
   telegram_current_view: Mapped[str] = mapped_column(String(20), nullable=False, default="home")
   ```
 
-- [ ] **Step 1.2: Create alembic migration**
+- [x] **Step 1.2: Create alembic migration**
 
   ```bash
   cd /home/denny/Development/promanager && source .venv/bin/activate
@@ -82,7 +82,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
       op.drop_column("users", "telegram_current_view")
   ```
 
-- [ ] **Step 1.3: Apply migration**
+- [x] **Step 1.3: Apply migration**
 
   ```bash
   alembic upgrade head
@@ -90,7 +90,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
 
   Expected: migration applies cleanly, no errors.
 
-- [ ] **Step 1.4: Verify column exists**
+- [x] **Step 1.4: Verify column exists**
 
   ```bash
   python3 -c "
@@ -105,7 +105,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
   "
   ```
 
-- [ ] **Step 1.5: Commit**
+- [x] **Step 1.5: Commit**
 
   ```bash
   git add models/user.py alembic/versions/
@@ -120,7 +120,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
 - Create: `bot/views/__init__.py`
 - Create: `bot/views/home.py`
 
-- [ ] **Step 2.1: Create package init**
+- [x] **Step 2.1: Create package init**
 
   Create `bot/views/__init__.py`:
 
@@ -133,7 +133,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
   ViewResult = tuple[str, InlineKeyboardMarkup]
   ```
 
-- [ ] **Step 2.2: Create `bot/views/home.py`**
+- [x] **Step 2.2: Create `bot/views/home.py`**
 
   ```python
   """bot/views/home.py — Homepage view renderer."""
@@ -218,13 +218,13 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
 
   > **Note on i18n:** `t()` raises `KeyError` in DEBUG mode for missing keys. `notifications_button` and `events_button` do NOT exist yet — they must be added in Task 7, Step 7.7 before this view is called.
 
-- [ ] **Step 2.3: Verify import works**
+- [x] **Step 2.3: Verify import works**
 
   ```bash
   python3 -c "from bot.views.home import render_home; print('OK')"
   ```
 
-- [ ] **Step 2.4: Commit**
+- [x] **Step 2.4: Commit**
 
   ```bash
   git add bot/views/
@@ -240,7 +240,7 @@ Old sub-action callbacks (`evte:`, `evtp:`, `evtn:`, `evtx:`, `sta:`, `note:`, `
 
 This is adapted from `_show_events` (lines 735–761), `_show_event_detail` (lines 762–890), and new `render_event_chat`.
 
-- [ ] **Step 3.1: Create `bot/views/events.py`**
+- [x] **Step 3.1: Create `bot/views/events.py`**
 
   ```python
   """bot/views/events.py — Events view renderers."""
@@ -499,13 +499,13 @@ This is adapted from `_show_events` (lines 735–761), `_show_event_detail` (lin
       return text, keyboard
   ```
 
-- [ ] **Step 3.2: Verify import**
+- [x] **Step 3.2: Verify import**
 
   ```bash
   python3 -c "from bot.views.events import render_events_list, render_event_detail, render_event_chat; print('OK')"
   ```
 
-- [ ] **Step 3.3: Commit**
+- [x] **Step 3.3: Commit**
 
   ```bash
   git add bot/views/events.py
@@ -521,7 +521,7 @@ This is adapted from `_show_events` (lines 735–761), `_show_event_detail` (lin
 
 Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
 
-- [ ] **Step 4.1: Create `bot/views/notifications.py`**
+- [x] **Step 4.1: Create `bot/views/notifications.py`**
 
   ```python
   """bot/views/notifications.py — Notification view renderers."""
@@ -668,13 +668,13 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       return text, InlineKeyboardMarkup(rows)
   ```
 
-- [ ] **Step 4.2: Verify import**
+- [x] **Step 4.2: Verify import**
 
   ```bash
   python3 -c "from bot.views.notifications import render_notifications_list, render_notification_detail; print('OK')"
   ```
 
-- [ ] **Step 4.3: Commit**
+- [x] **Step 4.3: Commit**
 
   ```bash
   git add bot/views/notifications.py
@@ -688,7 +688,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
 **Files:**
 - Create: `bot/views/other.py`
 
-- [ ] **Step 5.1: Create `bot/views/other.py`**
+- [x] **Step 5.1: Create `bot/views/other.py`**
 
   ```python
   """bot/views/other.py — 'Other' menu view renderer."""
@@ -710,13 +710,13 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       return text, keyboard
   ```
 
-- [ ] **Step 5.2: Verify import**
+- [x] **Step 5.2: Verify import**
 
   ```bash
   python3 -c "from bot.views.other import render_other; print('OK')"
   ```
 
-- [ ] **Step 5.3: Commit**
+- [x] **Step 5.3: Commit**
 
   ```bash
   git add bot/views/other.py
@@ -730,7 +730,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
 **Files:**
 - Create: `bot/navigation.py`
 
-- [ ] **Step 6.1: Create `bot/navigation.py`**
+- [x] **Step 6.1: Create `bot/navigation.py`**
 
   ```python
   """bot/navigation.py — Persistent message navigation and notification injection."""
@@ -854,13 +854,13 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       return preview[:30]
   ```
 
-- [ ] **Step 6.2: Verify import**
+- [x] **Step 6.2: Verify import**
 
   ```bash
   python3 -c "from bot.navigation import navigate, inject_notification; print('OK')"
   ```
 
-- [ ] **Step 6.3: Commit**
+- [x] **Step 6.3: Commit**
 
   ```bash
   git add bot/navigation.py
@@ -875,7 +875,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
 - Modify: `bot/keyboards.py`
 - Modify: `bot/absence_keyboards.py`
 
-- [ ] **Step 7.1: Update `events_keyboard` to use new callback scheme**
+- [x] **Step 7.1: Update `events_keyboard` to use new callback scheme**
 
   In `bot/keyboards.py`, find `events_keyboard()` and make these changes:
 
@@ -909,7 +909,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       return InlineKeyboardMarkup(rows)
   ```
 
-- [ ] **Step 7.2: Update `event_view_keyboard` back button**
+- [x] **Step 7.2: Update `event_view_keyboard` back button**
 
   Change `callback_data=f"evts:{back_page}"` → `callback_data=f"el:{back_page}"` in `event_view_keyboard`. This ensures the back button from event detail always routes to the events list renderer.
 
@@ -927,7 +927,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       return InlineKeyboardMarkup(rows)
   ```
 
-- [ ] **Step 7.3: Update `event_status_keyboard` back button**
+- [x] **Step 7.3: Update `event_status_keyboard` back button**
 
   Change `callback_data=f"evts:{back_page}"` → `callback_data=f"el:{back_page}"` in `event_status_keyboard`:
 
@@ -939,7 +939,7 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
   ]
   ```
 
-- [ ] **Step 7.4: Update `other_menu_keyboard` back button**
+- [x] **Step 7.4: Update `other_menu_keyboard` back button**
 
   In `bot/absence_keyboards.py`, change:
 
@@ -951,20 +951,20 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
       ])
   ```
 
-- [ ] **Step 7.5: Update `absence_player_list_keyboard` back button**
+- [x] **Step 7.5: Update `absence_player_list_keyboard` back button**
 
   In `bot/absence_keyboards.py`, find `absence_player_list_keyboard` and change:
 
   `callback_data=f"other:{back_page}"` → `callback_data="other:0"`
 
-- [ ] **Step 7.6: Update `absence_list_keyboard` back buttons**
+- [x] **Step 7.6: Update `absence_list_keyboard` back buttons**
 
   In `bot/absence_keyboards.py`, find `absence_list_keyboard` and change:
 
   `callback_data=f"other:{back_page}"` → `callback_data="other:0"` (for member back)
   `callback_data=f"absm:{back_page}"` → `callback_data=f"absm:{back_page}"` (keep for coach back — already correct)
 
-- [ ] **Step 7.7: Check i18n keys exist**
+- [x] **Step 7.7: Check i18n keys exist**
 
   ```bash
   python3 -c "
@@ -988,14 +988,14 @@ Adapted from `_show_notifications` (lines 615–734 in `handlers.py`).
 
   After adding keys, verify home.py imports cleanly: `python3 -c "from bot.views.home import render_home; print('OK')"`
 
-- [ ] **Step 7.8: Verify keyboards import cleanly**
+- [x] **Step 7.8: Verify keyboards import cleanly**
 
   ```bash
   python3 -c "from bot.keyboards import events_keyboard, event_view_keyboard; print('OK')"
   python3 -c "from bot.absence_keyboards import other_menu_keyboard; print('OK')"
   ```
 
-- [ ] **Step 7.9: Commit**
+- [x] **Step 7.9: Commit**
 
   ```bash
   git add bot/keyboards.py bot/absence_keyboards.py locales/
@@ -1015,7 +1015,7 @@ This is the largest change. Key goals:
 3. Remove `handle_nav_dispatch` and `handle_menu`
 4. Update auth handlers to use homepage
 
-- [ ] **Step 8.1: Add `_send_homepage` helper, remove `_send_events_list`**
+- [x] **Step 8.1: Add `_send_homepage` helper, remove `_send_events_list`**
 
   At the top of `handlers.py`, remove the entire `_send_events_list` async function (lines 93–167).
 
@@ -1047,7 +1047,7 @@ This is the largest change. Key goals:
       db.commit()
   ```
 
-- [ ] **Step 8.2: Update `handle_start` to use `_send_homepage`**
+- [x] **Step 8.2: Update `handle_start` to use `_send_homepage`**
 
   Replace the `await _send_events_list(...)` call in `handle_start`:
 
@@ -1071,7 +1071,7 @@ This is the largest change. Key goals:
       )
   ```
 
-- [ ] **Step 8.3: Update `handle_refresh` to use `_send_homepage`**
+- [x] **Step 8.3: Update `handle_refresh` to use `_send_homepage`**
 
   ```python
   async def handle_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -1084,7 +1084,7 @@ This is the largest change. Key goals:
           await _send_homepage(update.message, user, db)
   ```
 
-- [ ] **Step 8.4: Update `handle_contact` auth success to use `_send_homepage` and remove reply keyboard**
+- [x] **Step 8.4: Update `handle_contact` auth success to use `_send_homepage` and remove reply keyboard**
 
   In `handle_contact`, find the auth success block (around line 315):
 
@@ -1096,7 +1096,7 @@ This is the largest change. Key goals:
 
   Remove the `await update.message.reply_text("✓", reply_markup=main_menu_keyboard())` line.
 
-- [ ] **Step 8.5: Add new callback routing to `handle_callback`**
+- [x] **Step 8.5: Add new callback routing to `handle_callback`**
 
   In `handle_callback`, after the `"noop"` and `"restart:"` blocks, add new routing blocks before the existing `notif:` block:
 
@@ -1167,7 +1167,7 @@ This is the largest change. Key goals:
 
   > **Important:** `data.startswith("e:")` does NOT match `"evts:"`, `"evt:"`, `"evte:"`, `"ext:"` etc. — the second character differs (`e:v...` vs `e:`). Place the new `e:` block AFTER all `evts:`, `evt:`, `evte:`, `evtp:`, `evtn:`, `evtx:`, `ext*:` blocks to avoid any ambiguity.
 
-- [ ] **Step 8.6: Keep existing `notif:` routing as alias**
+- [x] **Step 8.6: Keep existing `notif:` routing as alias**
 
   The existing `notif:` block can stay as-is — it routes to `_show_notifications` which still works fine on the persistent message. Or replace it to use the new renderer:
 
@@ -1182,11 +1182,11 @@ This is the largest change. Key goals:
       return
   ```
 
-- [ ] **Step 8.7: Remove `handle_nav_dispatch` and `handle_menu` functions**
+- [x] **Step 8.7: Remove `handle_nav_dispatch` and `handle_menu` functions**
 
   Delete the entire `handle_nav_dispatch` function (lines 247–270) and `handle_menu` function (lines 239–245). These are no longer used.
 
-- [ ] **Step 8.8: Remove unused imports**
+- [x] **Step 8.8: Remove unused imports**
 
   Remove from top of `handlers.py`:
   - `KeyboardButton`
@@ -1196,7 +1196,7 @@ This is the largest change. Key goals:
 
   Keep `ReplyKeyboardRemove` — still used in auth flow.
 
-- [ ] **Step 8.9: Run tests**
+- [x] **Step 8.9: Run tests**
 
   ```bash
   cd /home/denny/Development/promanager && source .venv/bin/activate && pytest -v 2>&1 | tail -40
@@ -1204,7 +1204,7 @@ This is the largest change. Key goals:
 
   Fix any import errors or test failures before committing.
 
-- [ ] **Step 8.10: Commit**
+- [x] **Step 8.10: Commit**
 
   ```bash
   git add bot/handlers.py
@@ -1218,7 +1218,7 @@ This is the largest change. Key goals:
 **Files:**
 - Modify: `bot/__init__.py`
 
-- [ ] **Step 9.1: Remove `handle_nav_dispatch` and `handle_menu` registrations**
+- [x] **Step 9.1: Remove `handle_nav_dispatch` and `handle_menu` registrations**
 
   In `bot/__init__.py`, update `build_application`:
 
@@ -1247,17 +1247,17 @@ This is the largest change. Key goals:
 
   Remove the `handle_menu`, `handle_nav_dispatch` imports, the `NAV_*` imports, and the nav regex handler.
 
-- [ ] **Step 9.2: Remove unused imports from `bot/__init__.py`**
+- [x] **Step 9.2: Remove unused imports from `bot/__init__.py`**
 
   Remove: `KeyboardButton`, `ReplyKeyboardMarkup` if they were imported. Remove: `filters.Regex` MessageHandler block.
 
-- [ ] **Step 9.3: Verify**
+- [x] **Step 9.3: Verify**
 
   ```bash
   python3 -c "from bot import build_application; print('OK')"
   ```
 
-- [ ] **Step 9.4: Commit**
+- [x] **Step 9.4: Commit**
 
   ```bash
   git add bot/__init__.py
@@ -1273,7 +1273,7 @@ This is the largest change. Key goals:
 
 Replace the delete-and-resend pattern with `inject_notification`.
 
-- [ ] **Step 10.1: Rewrite `notify_coaches_via_telegram`**
+- [x] **Step 10.1: Rewrite `notify_coaches_via_telegram`**
 
   Replace the entire function body with:
 
@@ -1355,13 +1355,13 @@ Replace the delete-and-resend pattern with `inject_notification`.
           db.close()
   ```
 
-- [ ] **Step 10.2: Run tests**
+- [x] **Step 10.2: Run tests**
 
   ```bash
   pytest -v 2>&1 | tail -40
   ```
 
-- [ ] **Step 10.3: Commit**
+- [x] **Step 10.3: Commit**
 
   ```bash
   git add services/telegram_notifications.py
@@ -1372,7 +1372,7 @@ Replace the delete-and-resend pattern with `inject_notification`.
 
 ## Task 11: Push and deploy
 
-- [ ] **Step 11.1: Run full test suite**
+- [x] **Step 11.1: Run full test suite**
 
   ```bash
   cd /home/denny/Development/promanager && source .venv/bin/activate
@@ -1382,19 +1382,19 @@ Replace the delete-and-resend pattern with `inject_notification`.
 
   All tests must pass before deploying.
 
-- [ ] **Step 11.2: Push to GitHub**
+- [x] **Step 11.2: Push to GitHub**
 
   ```bash
   git push
   ```
 
-- [ ] **Step 11.3: Deploy to Docker**
+- [x] **Step 11.3: Deploy to Docker**
 
   ```bash
   cd ~/dockerimages && ./updateDocker.sh proManager
   ```
 
-- [ ] **Step 11.4: Verify logs clean**
+- [x] **Step 11.4: Verify logs clean**
 
   ```bash
   cd ~/dockerimages/proManager && docker compose logs --tail=30

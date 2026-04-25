@@ -13,7 +13,7 @@ A self-hosted **player presence and absence tracker** for sports teams. ProManag
 - Automatic attendance record creation when events are created
 - **Player absence management** — period absences and recurring absence rules (RFC 5545 RRULE); auto-applied to future events; self-service for members, team-scoped for coaches
 - Real-time event chat with SSE push (announcements + discussion lanes)
-- Telegram bot — mark attendance, view events, add notes, reply to chat
+- Telegram bot — persistent inline-keyboard mini-app; navigate events, notifications, absences; attendance updates; read-only event chat; notification and chat alerts injected without disrupting navigation
 - Multi-channel notifications: email reminders (with magic login links), in-app, and web push
 - Season and player attendance reports
 - User management with player linking (one-to-one); linked fields (name, email, phone) auto-sync from player on save
@@ -176,17 +176,22 @@ Each event has a real-time chat panel with two lanes:
 - **Announcements** — coach/admin only
 - **Discussion** — all attendees
 
-Messages are pushed live to all connected clients via Server-Sent Events (SSE). Telegram users receive a push notification and can reply directly from the bot.
+Messages are pushed live to all connected clients via Server-Sent Events (SSE). Telegram users receive a 💬 button injected into their persistent bot message; tapping it opens the event chat (read-only) inline.
 
 ### Telegram Bot
 
-Connect players to the bot via phone number matching. Once authenticated, players can:
-- View upcoming events and their attendance status
-- Mark themselves present / absent / maybe
-- Add or edit attendance notes
-- View and reply to event chat messages
+Connect players to the bot via phone number matching. Once authenticated, players interact through a **single persistent inline-keyboard message** that edits in-place — a mini-app rather than a chat.
 
-Enable the bot by setting `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_URL` in `.env`.
+Navigation views:
+- **Home** — shows last notification and four nav buttons (Notifications, Events, Absences, Other)
+- **Notifications** — paginated list; tap to open detail
+- **Events** — paginated list; tap to open event detail with attendance update, notes, external participants, and chat
+- **Event Chat** — read-only last 20 messages, accessible from event detail
+- **Absences** — manage period and recurring absences
+
+When a new notification or chat message arrives, a 🔔/💬 button is **injected into the current view** without navigating away or sending a new message. Tapping it goes to the relevant detail.
+
+Enable the bot by setting `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_URL`, and `TELEGRAM_WEBHOOK_SECRET` in `.env`.
 
 ### Notifications
 

@@ -67,6 +67,14 @@ Registered dynamically in `app/main.py` via `importlib.import_module`. Each `rou
 
 Business logic in `services/`, called from routes. Key services: `auth_service` (bcrypt hashing, session cookies), `attendance_service` (auto-create `unknown` records when event added), `email_service` (SMTP), `notification_service` (multi-channel dispatch via `services/channels/`).
 
+### Telegram bot
+
+Single persistent inline-keyboard message per user (`User.telegram_notification_message_id`). Navigation = `edit_message_text` on that message — no new messages during navigation. `User.telegram_current_view VARCHAR(20)` tracks the active view so notification injection works regardless of where the user is.
+
+- `bot/views/` — renderers returning `ViewResult = (str, InlineKeyboardMarkup)`: `home.py`, `events.py`, `notifications.py`, `other.py`
+- `bot/navigation.py` — `navigate()` edits the persistent message + updates `telegram_current_view`; `inject_notification()` / `inject_chat_notification()` prepend a 🔔/💬 row to current view without navigating
+- Callback scheme: `home`, `nl`, `nl:N`, `n:ID`, `el`, `el:N`, `e:ID`, `ec:ID`, `ab`, `other:0`
+
 ### Testing conventions
 
 - Tests use in-memory SQLite (`StaticPool`); all tables truncated between tests.
@@ -86,6 +94,9 @@ Business logic in `services/`, called from routes. Key services: `auth_service` 
 | `COOKIE_SECURE` | `False` | Set `True` for HTTPS |
 | `DEBUG` | `False` | Raises on missing i18n keys |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `""` | Web Push credentials |
+| `TELEGRAM_BOT_TOKEN` | `""` | Bot token from @BotFather — leave empty to disable |
+| `TELEGRAM_WEBHOOK_URL` | `""` | Public HTTPS base URL of the app (required for webhook mode) |
+| `TELEGRAM_WEBHOOK_SECRET` | `""` | Secret to validate incoming Telegram webhook requests |
 
 ## Claude Code autonomy
 
