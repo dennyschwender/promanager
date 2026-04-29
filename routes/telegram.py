@@ -26,7 +26,10 @@ def _get_app():
     try:
         import bot as _bot  # noqa: PLC0415
 
-        return _bot.telegram_app
+        app = _bot.telegram_app
+        if app is not None and not getattr(app, "_initialized", False):
+            return None
+        return app
     except Exception:
         return None
 

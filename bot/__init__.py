@@ -41,8 +41,9 @@ def build_application(token: str) -> Application:
 async def init_application(token: str) -> Application:
     """Build and initialise the Application. Stores it in `telegram_app`."""
     global telegram_app
-    telegram_app = build_application(token)
-    await telegram_app.initialize()
+    app = build_application(token)
+    await app.initialize()
+    telegram_app = app  # only expose globally after successful initialize
     logger.info("Telegram Application initialised.")
     return telegram_app
 
