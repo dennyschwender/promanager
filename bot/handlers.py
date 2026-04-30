@@ -319,7 +319,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             from bot.views.events import render_event_chat  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
             event_id = int(data.split(":")[1])
-            text, keyboard = render_event_chat(user, db, event_id, back=f"e:{event_id}")
+            back = user.telegram_current_view or "el"
+            text, keyboard = render_event_chat(user, db, event_id, back=back)
             await navigate(query, user, db, f"ec:{event_id}", text, keyboard)
             return
 
@@ -854,6 +855,9 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             players, att_by_player, ext_rows, locale, grouped=True, markdown=True
         )
 
+        from models.event_message import EventMessage  # noqa: PLC0415
+        msg_count = db.query(EventMessage).filter(EventMessage.event_id == event_id).count()
+
         if edit_mode:
             total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
             player_page = max(0, min(player_page, total_player_pages - 1))
@@ -862,7 +866,7 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
             )
         else:
-            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale, is_privileged=True)
+            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale, is_privileged=True, msg_count=msg_count)
 
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)

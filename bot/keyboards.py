@@ -55,7 +55,7 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     return InlineKeyboardMarkup(rows)
 
 
-def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", is_privileged: bool = False) -> InlineKeyboardMarkup:
+def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", is_privileged: bool = False, msg_count: int = 0) -> InlineKeyboardMarkup:
     """Read-only event detail keyboard: Modify Attendance + Back."""
     rows = [
         [InlineKeyboardButton(t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}")],
@@ -65,6 +65,8 @@ def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", i
             InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
             InlineKeyboardButton(t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"),
         ])
+    if msg_count > 0:
+        rows.append([InlineKeyboardButton(f"💬 Chat ({msg_count})", callback_data=f"ec:{event_id}")])
     rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")])
     return InlineKeyboardMarkup(rows)
 
