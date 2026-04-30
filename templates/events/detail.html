@@ -253,11 +253,16 @@
     var oldStatus = btn.dataset.status;
     btn.dataset.status = newStatus;
     btn.dataset.note = note;
-    var li = btn.closest('li');
-    var targetList = document.querySelector('.att-col[data-bucket="' + newStatus + '"] .att-player-list');
-    targetList.appendChild(li);
-    updateColumn(oldStatus);
-    updateColumn(newStatus);
+    if (oldStatus !== newStatus) {
+      var li = btn.closest('li');
+      var targetList = document.querySelector('.att-col[data-bucket="' + newStatus + '"] .att-player-list');
+      targetList.appendChild(li);
+      updateColumn(oldStatus);
+      updateColumn(newStatus);
+      var _g = null;
+      try { _g = localStorage.getItem('att_pos_grouping'); } catch(e) {}
+      applyGrouping(_g === null || _g === '1');
+    }
   }
 
   function updateColumn(bucket) {
