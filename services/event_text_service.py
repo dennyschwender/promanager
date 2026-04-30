@@ -83,11 +83,17 @@ def format_attendance_body(
             continue
         lines.append(f"\n{status_header[s]}")
         if grouped:
+            ext_by_pos: dict[str | None, list] = {pos: [] for pos in _POS_ORDER}
+            for ext in exts:
+                ext_pos = ext.position if ext.position in _POS_ORDER[:-1] else None
+                ext_by_pos[ext_pos].append(ext)
+
             for pos in _POS_ORDER:
                 group = pos_group[pos]
-                if not group:
+                ext_group = ext_by_pos[pos]
+                if not group and not ext_group:
                     continue
-                label = f"{pos_label[pos]} ({len(group)})"
+                label = f"{pos_label[pos]} ({len(group) + len(ext_group)})"
                 lines.append(_italic(label))
                 for p in group:
                     att = att_by_player.get(p.id)
@@ -95,6 +101,11 @@ def format_attendance_body(
                     if att and att.note:
                         line += f" — {att.note}"
                     lines.append(line)
+                for ext in ext_group:
+                    ext_line = f"👤 {ext.full_name}"
+                    if ext.note:
+                        ext_line += f" — {ext.note}"
+                    lines.append(ext_line)
         else:
             # Flat list — merge all positions and sort by name
             all_players = [p for pos in _POS_ORDER for p in pos_group[pos]]
@@ -105,12 +116,11 @@ def format_attendance_body(
                 if att and att.note:
                     line += f" — {att.note}"
                 lines.append(line)
-        # Externals for this status, integrated here
-        for ext in exts:
-            ext_line = f"👤 {ext.full_name}"
-            if ext.note:
-                ext_line += f" — {ext.note}"
-            lines.append(ext_line)
+            for ext in exts:
+                ext_line = f"👤 {ext.full_name}"
+                if ext.note:
+                    ext_line += f" — {ext.note}"
+                lines.append(ext_line)
 
     return "\n".join(lines)
 
