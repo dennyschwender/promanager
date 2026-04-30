@@ -72,7 +72,7 @@ def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", i
 
 
 def event_status_keyboard(
-    event_id: int, player_id: int, back_page: int = 0, locale: str = "en", note: str = ""
+    event_id: int, player_id: int, back_page: int = 0, locale: str = "en", note: str = "", msg_count: int = 0
 ) -> InlineKeyboardMarkup:
     """Status buttons for a single player (member self-service).
 
@@ -88,8 +88,10 @@ def event_status_keyboard(
             InlineKeyboardButton(t("telegram.status_unknown", locale), callback_data=f"sta:{event_id}:{player_id}:u"),
         ],
         [InlineKeyboardButton(note_label, callback_data=f"note:{event_id}:{player_id}:{back_page}")],
-        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")],
     ]
+    if msg_count > 0:
+        rows.append([InlineKeyboardButton(f"💬 Chat ({msg_count})", callback_data=f"ec:{event_id}")])
+    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")])
     return InlineKeyboardMarkup(rows)
 
 

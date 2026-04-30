@@ -799,6 +799,9 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
 
     text = "\n".join(lines)
 
+    from models.event_message import EventMessage  # noqa: PLC0415
+    msg_count = db.query(EventMessage).filter(EventMessage.event_id == event_id).count()
+
     is_admin_or_coach = user.is_admin or user.is_coach
 
     if not is_admin_or_coach:
@@ -812,7 +815,7 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             text += f"\n\n{t('telegram.your_status_label', locale)}: {status_label}"
             if own_note:
                 text += f"\n_{t('telegram.note_label', locale)}: {own_note}_"
-            keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "")
+            keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "", msg_count=msg_count)
         else:
             keyboard = InlineKeyboardMarkup(
                 [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]]
@@ -854,9 +857,6 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
         text += "\n" + format_attendance_body(
             players, att_by_player, ext_rows, locale, grouped=True, markdown=True
         )
-
-        from models.event_message import EventMessage  # noqa: PLC0415
-        msg_count = db.query(EventMessage).filter(EventMessage.event_id == event_id).count()
 
         if edit_mode:
             total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))

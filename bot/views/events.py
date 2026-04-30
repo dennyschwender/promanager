@@ -157,7 +157,7 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
             if own_note:
                 text += f"\n_{t('telegram.note_label', locale)}: {own_note}_"
             keyboard = event_status_keyboard(
-                event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or ""
+                event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "", msg_count=msg_count
             )
         else:
             keyboard = InlineKeyboardMarkup([[
