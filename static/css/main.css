@@ -1084,9 +1084,9 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 /* ── Notification inbox ──────────────────────────────────────────────────── */
 
 /* ── Notification inbox cards ─────────────────────────────────────────────── */
-.notification-list { display: flex; flex-direction: column; gap: .75rem; }
-.notification-card { border: 1px solid var(--pico-muted-border-color, #e0e0e0); border-radius: 8px; overflow: hidden; transition: box-shadow .15s; }
-.notification-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.notification-list { display: flex; flex-direction: column; gap: 1rem; }
+.notification-card { border: 1px solid var(--pico-muted-border-color, #e0e0e0); border-radius: 8px; overflow: hidden; transition: box-shadow .15s; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.notification-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.13); }
 .notification-card.unread { border-left: 3px solid var(--pico-primary, #1a6bc4); background: var(--pico-primary-background, #eef4ff); }
 [data-theme="dark"] .notification-card.unread { background: rgba(26,107,196,.1); }
 .notification-link { display: flex; flex-direction: column; gap: .3rem; padding: .85rem 1rem; text-decoration: none; color: inherit; }
