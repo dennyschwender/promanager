@@ -38,10 +38,13 @@ async def test_notify_coaches_sends_to_coaches_with_telegram():
     ):
         from services.telegram_notifications import notify_coaches_via_telegram
         await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent")
-        # Verify that a TelegramNotification would be created (db.add called with one)
         assert mock_db.add.called
-        # Verify that inject_notification was called once (the new behavior)
         assert mock_db.flush.called
+        # Verify push notification message sent (edit_message_text is silent — new message triggers push)
+        mock_app.bot.send_message.assert_called_once()
+        call_kwargs = mock_app.bot.send_message.call_args
+        assert call_kwargs.kwargs["chat_id"] == "coach_chat_id"
+        assert "✗" in call_kwargs.kwargs["text"]
 
 
 @pytest.mark.asyncio

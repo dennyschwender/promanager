@@ -72,6 +72,14 @@ async def notify_coaches_via_telegram(
                 # Inject 🔔 button into persistent message (or send homepage if first time)
                 await inject_notification(ut.user, notif.id, _bot.telegram_app.bot, db)
 
+                # edit_message_text is silent — send a separate message to trigger push notification
+                icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(new_status, "?")
+                alert_text = f"🔔 {player.full_name} {icon} — {event.title}"
+                await _bot.telegram_app.bot.send_message(
+                    chat_id=ut.user.telegram_chat_id,
+                    text=alert_text,
+                )
+
             except Exception as exc:
                 logger.warning(
                     "notify_coaches_via_telegram: failed for user %s: %s",
