@@ -55,6 +55,7 @@
     <th>{{ t('events.title_col') }}</th>
     <th class="col-hide-mobile col-nowrap">{{ t('events.type') }}</th>
     <th class="col-hide-tablet">{{ t('events.location') }}</th>
+    {% if user and (user.is_admin or user.is_coach) %}<th class="col-nowrap col-hide-mobile">✓/n</th>{% endif %}
     {% if my_player_id %}<th class="col-nowrap">{{ t('dashboard.my_status') }}</th>{% endif %}
     {% if user %}<th class="col-nowrap">{{ t('events.actions') }}</th>{% endif %}
   </tr></thead>
@@ -73,6 +74,12 @@
       </td>
       <td class="col-hide-mobile"><span class="badge badge-{{ e.event_type }}">{{ enums.event_type.get(e.event_type, e.event_type|capitalize) }}</span></td>
       <td class="col-hide-tablet">{{ e.location or '—' }}</td>
+      {% if user and (user.is_admin or user.is_coach) %}
+      {% set _s = attendance_summary.get(e.id, (0, 0)) %}
+      <td class="col-nowrap col-hide-mobile" style="text-align:center;">
+        <span style="font-size:.85rem;color:{% if _s[1] > 0 and _s[0] == _s[1] %}#166534{% elif _s[0] > 0 %}#92400e{% else %}inherit{% endif %};">{{ _s[0] }}/{{ _s[1] }}</span>
+      </td>
+      {% endif %}
       {% if my_player_id %}
       <td>
         {% set status_labels = {'present': t('attendance.status_present'), 'absent': t('attendance.status_absent'), 'maybe': t('attendance.status_maybe'), 'unknown': t('attendance.status_unknown')} %}

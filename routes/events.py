@@ -192,6 +192,27 @@ async def events_list(
             ).all()
             my_attendance = {a.event_id: a for a in records}
 
+    # Attendance summary (present/total) for all visible events — 2 queries, no N+1
+    visible_event_ids = [e.id for e in upcoming + past]
+    present_rows = (
+        db.query(Attendance.event_id, func.count(Attendance.id))
+        .filter(Attendance.event_id.in_(visible_event_ids), Attendance.status == "present")
+        .group_by(Attendance.event_id)
+        .all()
+    )
+    total_rows = (
+        db.query(Attendance.event_id, func.count(Attendance.id))
+        .filter(Attendance.event_id.in_(visible_event_ids))
+        .group_by(Attendance.event_id)
+        .all()
+    )
+    present_map = {eid: cnt for eid, cnt in present_rows}
+    total_map = {eid: cnt for eid, cnt in total_rows}
+    attendance_summary = {
+        eid: (present_map.get(eid, 0), total_map.get(eid, 0))
+        for eid in visible_event_ids
+    }
+
     return render(
         request,
         "events/list.html",
@@ -212,6 +233,7 @@ async def events_list(
             "flash": request.query_params.get("flash"),
             "my_player_id": my_player_id,
             "my_attendance": my_attendance,
+            "attendance_summary": attendance_summary,
             "today": today,
         },
     )
