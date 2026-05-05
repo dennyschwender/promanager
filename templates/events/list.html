@@ -76,8 +76,11 @@
       <td class="col-hide-tablet">{{ e.location or '—' }}</td>
       {% if user and (user.is_admin or user.is_coach) %}
       {% set _s = attendance_summary.get(e.id, (0, 0)) %}
+      {% set _pct = (_s[0] / _s[1] * 100) if _s[1] > 0 else -1 %}
       <td class="col-nowrap col-hide-mobile" style="text-align:center;">
-        <span style="font-size:.85rem;color:{% if _s[1] > 0 and _s[0] == _s[1] %}#166534{% elif _s[0] > 0 %}#92400e{% else %}inherit{% endif %};">{{ _s[0] }}/{{ _s[1] }}</span>
+        {% if _s[1] > 0 %}
+        <span class="att-badge {% if _pct >= 90 %}att-badge--green{% elif _pct >= 80 %}att-badge--amber{% else %}att-badge--red{% endif %}">{{ _s[0] }}/{{ _s[1] }}</span>
+        {% else %}<span class="att-badge att-badge--none">—</span>{% endif %}
       </td>
       {% endif %}
       {% if my_player_id %}
