@@ -75,6 +75,21 @@
              placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
              value="{{ event.event_end_time.strftime("%H:%M") if event and event.event_end_time else "" }}">
     </label>
+    <label>{{ t('events_form.end_date') }}
+      <input type="date" name="event_end_date"
+             value="{{ event.event_end_date.isoformat() if event and event.event_end_date else '' }}"
+             min="{{ event.event_date.isoformat() if event and event.event_date else '' }}">
+    </label>
+    <script>
+    (function(){
+      var start = document.querySelector('[name="event_date"]');
+      var end = document.querySelector('[name="event_end_date"]');
+      if (!start || !end) return;
+      function sync(){ end.min = start.value || ''; }
+      start.addEventListener('change', sync);
+      sync();
+    })();
+    </script>
   </fieldset>
 
   {% if is_new %}

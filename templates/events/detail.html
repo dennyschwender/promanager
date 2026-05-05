@@ -24,7 +24,7 @@
 <article class="event-info-card">
   <dl class="event-info-dl">
     <dt class="text-muted">📅 {{ t('events.date') }}</dt>
-    <dd>{{ event.event_date }}</dd>
+    <dd>{%- if event.event_end_date and event.event_end_date != event.event_date -%}{%- if event.event_date.year != event.event_end_date.year -%}{{ event.event_date.strftime('%d %b %Y') }} – {{ event.event_end_date.strftime('%d %b %Y') }}{%- elif event.event_date.month != event.event_end_date.month -%}{{ event.event_date.strftime('%d %b') }} – {{ event.event_end_date.strftime('%d %b %Y') }}{%- else -%}{{ event.event_date.strftime('%d') }}–{{ event.event_end_date.strftime('%d %b %Y') }}{%- endif -%}{%- else -%}{{ event.event_date }}{%- endif -%}</dd>
     {% if event.event_time %}
     <dt class="text-muted">🕐 {{ t('events.time') }}</dt>
     <dd>{{ event.event_time.strftime('%H:%M') }}{% if event.event_end_time %} → {{ event.event_end_time.strftime('%H:%M') }}{% endif %}</dd>

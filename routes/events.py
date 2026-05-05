@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from types import SimpleNamespace
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
@@ -71,6 +71,7 @@ def _form_ns(
     location, meeting_time, meeting_location, presence_type,
     hide_attendance, description, season_id, team_id,
     is_recurring, recurrence_rule, recurrence_end_date,
+    event_end_date: str = "",
 ) -> SimpleNamespace:
     """Build a SimpleNamespace from raw POST strings for form repopulation on error."""
     try:
@@ -89,11 +90,16 @@ def _form_ns(
         m_time = _parse_time(meeting_time)
     except ValueError:
         m_time = None
+    try:
+        e_end_date = _parse_date(event_end_date) if event_end_date.strip() else None
+    except ValueError:
+        e_end_date = None
     return SimpleNamespace(
         id=None,
         title=title,
         event_type=event_type,
         event_date=e_date,
+        event_end_date=e_end_date,
         event_time=e_time,
         event_end_time=e_end_time,
         location=location or None,
@@ -161,8 +167,12 @@ async def events_list(
             } if player else set()
             q = q.filter(Event.team_id.in_(my_team_ids))
     all_events = q.order_by(Event.event_date.asc()).all()
-    all_upcoming = [e for e in all_events if e.event_date >= today]
-    all_past = sorted([e for e in all_events if e.event_date < today], key=lambda e: e.event_date, reverse=True)
+
+    def _effective_end(e) -> date:
+        return e.event_end_date if e.event_end_date is not None else e.event_date
+
+    all_upcoming = [e for e in all_events if _effective_end(e) >= today]
+    all_past = sorted([e for e in all_events if _effective_end(e) < today], key=_effective_end, reverse=True)
 
     upcoming_total = math.ceil(len(all_upcoming) / PAGE_SIZE) or 1
     past_total = math.ceil(len(all_past) / PAGE_SIZE) or 1
@@ -290,6 +300,7 @@ async def event_new_post(
     is_recurring: str = Form(""),
     recurrence_rule: str = Form(""),
     recurrence_end_date: str = Form(""),
+    event_end_date: str = Form(""),
     notify_on_create: str = Form(""),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf),
@@ -307,6 +318,7 @@ async def event_new_post(
         location, meeting_time, meeting_location, presence_type,
         hide_attendance, description, season_id, team_id,
         is_recurring, recurrence_rule, recurrence_end_date,
+        event_end_date=event_end_date,
     )
 
     def _err(msg):
@@ -337,6 +349,21 @@ async def event_new_post(
     if e_date is None:
         return _err(rt(request, "errors.field_required", field="Event date"))
 
+    e_end_date = _parse_date(event_end_date) if event_end_date.strip() else None
+    if e_end_date is not None and e_end_date < e_date:
+        return render(request, "events/form.html", {
+            "user": user,
+            "event": _form_ns(title, event_type, event_date, event_time, event_end_time,
+                              location, meeting_time, meeting_location, presence_type,
+                              hide_attendance, description, season_id, team_id,
+                              is_recurring, recurrence_rule, recurrence_end_date,
+                              event_end_date=event_end_date),
+            "error": "End date cannot be before start date.",
+            "seasons": seasons,
+            "teams": teams,
+            "is_new": True,
+        })
+
     # ── Recurrence setup ──────────────────────────────────────────────────
     recurring = bool(is_recurring.strip())
     rule = recurrence_rule.strip() if recurring else None
@@ -366,6 +393,7 @@ async def event_new_post(
         event_type=event_type,
         event_time=e_time,
         event_end_time=e_end_time,
+        event_end_date=e_end_date,
         location=location.strip() or None,
         meeting_time=m_time,
         meeting_location=meeting_location.strip() or None,
@@ -739,6 +767,7 @@ async def event_edit_post(
     description: str = Form(""),
     season_id: str = Form(""),
     team_id: str = Form(""),
+    event_end_date: str = Form(""),
     edit_scope: str = Form("single"),
     notify_on_update: str = Form(""),
     user: User = Depends(require_coach_or_admin),
@@ -823,6 +852,21 @@ async def event_edit_post(
             status_code=400,
         )
 
+    e_end_date = _parse_date(event_end_date) if event_end_date.strip() else None
+    if e_end_date is not None and e_end_date < e_date:
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": event,
+                "seasons": seasons,
+                "teams": teams,
+                "error": "End date cannot be before start date.",
+            },
+            status_code=400,
+        )
+
     old_title = event.title
     # Capture old date to detect changes
     old_event_date = event.event_date
@@ -837,6 +881,7 @@ async def event_edit_post(
     event.event_date = e_date
     event.event_time = e_time
     event.event_end_time = e_end_time
+    event.event_end_date = e_end_date
     event.location = location.strip() or None
     event.meeting_time = m_time
     event.meeting_location = meeting_location.strip() or None
@@ -859,6 +904,7 @@ async def event_edit_post(
                 "event_type": event_type,
                 "event_time": e_time,
                 "event_end_time": e_end_time,
+                "event_end_date": e_end_date,
                 "location": location.strip() or None,
                 "meeting_time": m_time,
                 "meeting_location": meeting_location.strip() or None,

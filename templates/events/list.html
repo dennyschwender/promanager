@@ -10,6 +10,7 @@
 <nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('events.title') }}</span></nav>
 {% endblock %}
 {% block content %}
+{% macro date_range(e) %}{%- if e.event_end_date and e.event_end_date != e.event_date -%}{%- if e.event_date.year != e.event_end_date.year -%}{{ e.event_date.strftime('%d %b %Y') }}–{{ e.event_end_date.strftime('%d %b %Y') }}{%- elif e.event_date.month != e.event_end_date.month -%}{{ e.event_date.strftime('%d %b') }}–{{ e.event_end_date.strftime('%d %b %Y') }}{%- else -%}{{ e.event_date.strftime('%d') }}–{{ e.event_end_date.strftime('%d %b %Y') }}{%- endif -%}{%- else -%}{{ e.event_date }}{%- endif -%}{% endmacro %}
 {% if flash %}
   <div class="alert alert-success">{{ flash }}</div>
 {% endif %}
@@ -65,7 +66,7 @@
     {% set att_status = att.status if att else 'unknown' %}
     {% set att_note = att.note if att and att.note else '' %}
     <tr>
-      <td class="nowrap">{{ e.event_date }}</td>
+      <td class="nowrap">{{ date_range(e) }}</td>
       <td class="col-nowrap">{{ (e.meeting_time or e.event_time).strftime('%H:%M') if (e.meeting_time or e.event_time) else '—' }}</td>
       <td class="col-hide-mobile nowrap">{{ e.event_time.strftime('%H:%M') if e.event_time else '—' }}</td>
       <td>

@@ -681,7 +681,8 @@
     "notify_channels": "Canaux de notification",
     "edit_scope_legend": "Appliquer les modifications à",
     "edit_scope_single": "Cet événement uniquement",
-    "edit_scope_future": "Cet événement et les %{count} suivants de la série"
+    "edit_scope_future": "Cet événement et les %{count} suivants de la série",
+    "end_date": "Date de fin (optionnel)"
   },
   "events_detail": {
     "season": "Saison",
