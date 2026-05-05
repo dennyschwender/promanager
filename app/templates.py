@@ -9,6 +9,7 @@ Use render() to get t() and current_locale automatically injected.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from datetime import datetime, timezone
 from urllib.parse import quote_plus
@@ -20,14 +21,18 @@ from fastapi.templating import Jinja2Templates
 from app.i18n import DEFAULT_LOCALE
 from app.i18n import t as _t
 
+
 def _git_rev() -> str:
     try:
         return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
     except Exception:
-        return "0"
+        try:
+            return str(int(os.path.getmtime("static/css/main.css")))
+        except Exception:
+            return "0"
 
 
-from app.config import settings as _settings  # noqa: PLC0415
+from app.config import settings as _settings  # noqa: E402,PLC0415
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["now"] = lambda: datetime.now(timezone.utc)
