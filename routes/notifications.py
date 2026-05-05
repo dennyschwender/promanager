@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from dataclasses import dataclass
+from datetime import datetime
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -22,6 +24,18 @@ from models.web_push_subscription import WebPushSubscription
 from routes._auth_helpers import require_login
 from services.channels.inapp_channel import register_connection, unregister_connection
 from services.notification_service import create_default_preferences
+
+
+@dataclass
+class _TelegramNotifView:
+    """Read-only view adapter for TelegramNotification shown in the web inbox."""
+    id: int
+    event_id: int | None
+    tag: str
+    title: str
+    body: str
+    created_at: datetime
+    is_read: bool = True
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -148,7 +162,7 @@ async def inbox(
     db: Session = Depends(get_db),
 ):
     player_ids = _player_ids_for_user(user, db)
-    notifications = []
+    notifications: list = []
     if player_ids:
         notifications = (
             db.query(Notification)
@@ -156,6 +170,26 @@ async def inbox(
             .order_by(Notification.created_at.desc())
             .all()
         )
+    elif user.is_admin or user.is_coach:
+        from models.telegram_notification import TelegramNotification  # noqa: PLC0415
+        _icon = {"present": "✓", "absent": "✗", "unknown": "?"}
+        tg_notifs = (
+            db.query(TelegramNotification)
+            .filter(TelegramNotification.user_id == user.id)
+            .order_by(TelegramNotification.created_at.desc())
+            .all()
+        )
+        notifications = [
+            _TelegramNotifView(
+                id=tn.id,
+                event_id=tn.event_id,
+                tag="direct",
+                title=f"{_icon.get(tn.status, '?')} {tn.player.full_name if tn.player else '?'} → {tn.status}",
+                body=tn.event.title if tn.event else "",
+                created_at=tn.created_at,
+            )
+            for tn in tg_notifs
+        ]
     return render(
         request,
         "notifications/inbox.html",

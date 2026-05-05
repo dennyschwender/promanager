@@ -20,6 +20,7 @@ async def notify_coaches_via_telegram(
     import app.database as _db_mod  # noqa: PLC0415
     from bot.navigation import inject_notification  # noqa: PLC0415
     from models.event import Event  # noqa: PLC0415
+    from models.notification import Notification  # noqa: PLC0415
     from models.notification_preference import NotificationPreference  # noqa: PLC0415
     from models.player import Player  # noqa: PLC0415
     from models.telegram_notification import TelegramNotification  # noqa: PLC0415
@@ -79,6 +80,16 @@ async def notify_coaches_via_telegram(
                     chat_id=ut.user.telegram_chat_id,
                     text=alert_text,
                 )
+
+                # Create Notification record so attendance changes appear at /notifications
+                if coach_player is not None:
+                    db.add(Notification(
+                        player_id=coach_player.id,
+                        event_id=event_id,
+                        title=f"{icon} {player.full_name} → {new_status}",
+                        body=event.title,
+                        tag="direct",
+                    ))
 
             except Exception as exc:
                 logger.warning(

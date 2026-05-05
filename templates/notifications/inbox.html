@@ -30,7 +30,7 @@
           <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         </form>
         <a href="{% if n.event_id %}/events/{{ n.event_id }}{% else %}/notifications{% endif %}"
-           onclick="document.getElementById('read-form-{{ n.id }}').submit(); return true;"
+           {% if not n.is_read %}onclick="document.getElementById('read-form-{{ n.id }}').submit(); return true;"{% endif %}
            class="notification-link">
           <span class="notif-tag notif-tag--{{ n.tag }}">{{ n.tag | title }}</span>
           <span class="notif-title">{{ n.title }}</span>
