@@ -1083,7 +1083,7 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 
 /* ── Notification inbox ──────────────────────────────────────────────────── */
 .notification-list { list-style: none; padding: 0; margin: 0; }
-.notification-item { border-bottom: 1px solid var(--pico-muted-border-color, #e0e0e0); }
+.notification-item { list-style: none; border-bottom: 1px solid var(--pico-muted-border-color, #e0e0e0); }
 .notification-item.unread { background: var(--pico-primary-background, #eef4ff); }
 [data-theme="dark"] .notification-item.unread { background: rgba(26,107,196,.1); }
 .notification-link { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: .15rem .5rem; padding: .75rem .5rem; text-decoration: none; color: inherit; }
