@@ -23,22 +23,24 @@
 {% if not notifications %}
   <p class="text-muted">{{ t('notifications.no_notifications') }}</p>
 {% else %}
-  <ul class="notification-list">
+  <div class="notification-list">
     {% for n in notifications %}
-      <li class="notification-item{% if not n.is_read %} unread{% endif %}">
+      <div class="notification-card{% if not n.is_read %} unread{% endif %}">
         <form method="post" action="/notifications/{{ n.id }}/read" style="display:none;" id="read-form-{{ n.id }}">
           <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         </form>
         <a href="{% if n.event_id %}/events/{{ n.event_id }}{% else %}/notifications{% endif %}"
            {% if not n.is_read %}onclick="document.getElementById('read-form-{{ n.id }}').submit(); return true;"{% endif %}
            class="notification-link">
-          <span class="notif-tag notif-tag--{{ n.tag }}">{{ n.tag | title }}</span>
+          <div class="notif-header">
+            <span class="notif-tag notif-tag--{{ n.tag }}">{{ n.tag | title }}</span>
+            <span class="notif-time">{{ n.created_at.strftime("%d %b %Y %H:%M") }}</span>
+          </div>
           <span class="notif-title">{{ n.title }}</span>
-          <span class="notif-body">{{ n.body | truncate(100) }}</span>
-          <span class="notif-time">{{ n.created_at.strftime("%d %b %Y %H:%M") }}</span>
+          <span class="notif-body">{{ n.body | truncate(120) }}</span>
         </a>
-      </li>
+      </div>
     {% endfor %}
-  </ul>
+  </div>
 {% endif %}
 {% endblock %}
