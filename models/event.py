@@ -24,6 +24,7 @@ class Event(Base):
     event_type: Mapped[str] = mapped_column(String(32), nullable=False, default="training")
 
     event_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    event_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     event_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     event_end_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     location: Mapped[str | None] = mapped_column(String(256), nullable=True)
