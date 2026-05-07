@@ -65,7 +65,13 @@ class User(Base):
     # ── Relationships ──────────────────────────────────────────────────────
     players: Mapped[list[Player]] = relationship("Player", back_populates="user", lazy="select")
     managed_teams: Mapped[list["UserTeam"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
-    telegram_notifications: Mapped[list["TelegramNotification"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
+    telegram_notifications: Mapped[list["TelegramNotification"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )  # noqa: F821
+    notifications: Mapped[list["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
+    web_push_subscriptions: Mapped[list["WebPushSubscription"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )  # noqa: F821
 
     # ── Helpers ────────────────────────────────────────────────────────────
     @property

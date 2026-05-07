@@ -18,12 +18,16 @@ class WebPushSubscription(Base):
     __tablename__ = "web_push_subscriptions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    player_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False, index=True
+    player_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
     endpoint: Mapped[str] = mapped_column(String(512), nullable=False)
     p256dh_key: Mapped[str] = mapped_column(String(256), nullable=False)
     auth_key: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
-    player: Mapped[Player] = relationship("Player", back_populates="web_push_subscriptions")
+    player: Mapped[Player | None] = relationship("Player", back_populates="web_push_subscriptions")
+    user: Mapped[User | None] = relationship("User", back_populates="web_push_subscriptions")

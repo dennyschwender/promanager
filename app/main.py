@@ -66,14 +66,20 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 ]
                 if player_ids:
                     request.state.nav_player_id = player_ids[0]
-                    request.state.unread_count = (
-                        db.query(Notification)
-                        .filter(
-                            Notification.player_id.in_(player_ids),
-                            Notification.is_read.is_(False),
-                        )
-                        .count()
+
+                from sqlalchemy import or_  # noqa: PLC0415
+
+                request.state.unread_count = (
+                    db.query(Notification)
+                    .filter(
+                        or_(
+                            Notification.player_id.in_(player_ids) if player_ids else False,
+                            Notification.user_id == request.state.user.id,
+                        ),
+                        Notification.is_read.is_(False),
                     )
+                    .count()
+                )
 
                 # Throttled last_seen_at update (max once per 5 min)
                 now = datetime.now(timezone.utc)
@@ -91,7 +97,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 db.close()
         # Force password change before any other page
         _CHANGE_PW_PATH = "/auth/change-password"
-        _CHANGE_PW_ALLOWED = {_CHANGE_PW_PATH, "/auth/logout", "/auth/magic", "/auth/stop-impersonating", "/auth/logout-all", "/healthz"}
+        _CHANGE_PW_ALLOWED = {
+            _CHANGE_PW_PATH,
+            "/auth/logout",
+            "/auth/magic",
+            "/auth/stop-impersonating",
+            "/auth/logout-all",
+            "/healthz",
+        }
         if (
             request.state.user is not None
             and getattr(request.state.user, "must_change_password", False)
@@ -265,9 +278,7 @@ def create_app() -> FastAPI:
                 db.query(WebPushSubscription).filter(WebPushSubscription.player_id == current_player.id).count()
             )
         calendar_feed_url = (
-            f"{settings.APP_URL}/calendar/{user.calendar_token}/feed.ics"
-            if user.calendar_token
-            else None
+            f"{settings.APP_URL}/calendar/{user.calendar_token}/feed.ics" if user.calendar_token else None
         )
         return render(
             request,
@@ -295,7 +306,9 @@ def create_app() -> FastAPI:
         request: Request,
         user=_Depends(_require_login),
     ):
-        return render(request, "auth/user_form.html", {"user": user, "target": user, "is_admin_edit": False, "error": None})
+        return render(
+            request, "auth/user_form.html", {"user": user, "target": user, "is_admin_edit": False, "error": None}
+        )
 
     @app.post("/profile/edit", include_in_schema=False)
     async def profile_edit_post(
@@ -319,7 +332,12 @@ def create_app() -> FastAPI:
         email = email.strip()
 
         def _error(msg: str):
-            return render(request, "auth/user_form.html", {"user": user, "target": user, "is_admin_edit": False, "error": msg}, status_code=400)
+            return render(
+                request,
+                "auth/user_form.html",
+                {"user": user, "target": user, "is_admin_edit": False, "error": msg},
+                status_code=400,
+            )
 
         if not username:
             return _error(_rt(request, "errors.field_required", field="Username"))
@@ -358,8 +376,10 @@ def create_app() -> FastAPI:
         from urllib.parse import quote as _quote  # noqa: PLC0415
 
         from routes._auth_helpers import rt as _rt2  # noqa: PLC0415
+
         flash = _quote(_rt2(request, "users.profile_saved"))
         from fastapi.responses import RedirectResponse as _RedirectResponse  # noqa: PLC0415
+
         return _RedirectResponse(f"/profile?flash={flash}", status_code=302)
 
     # ── Health check ──────────────────────────────────────────────────────
@@ -381,7 +401,6 @@ def create_app() -> FastAPI:
     # ── PWA: dynamic manifest (uses APP_NAME from settings) ───────────────
     @app.get("/manifest.json", include_in_schema=False)
     async def web_manifest():
-        import json  # noqa: PLC0415
 
         return JSONResponse(
             {

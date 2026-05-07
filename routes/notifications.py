@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
-from datetime import datetime
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -22,20 +21,13 @@ from models.notification_preference import CHANNELS, NotificationPreference
 from models.player import Player
 from models.web_push_subscription import WebPushSubscription
 from routes._auth_helpers import require_login
-from services.channels.inapp_channel import register_connection, unregister_connection
+from services.channels.inapp_channel import (
+    register_connection,
+    register_user_connection,
+    unregister_connection,
+    unregister_user_connection,
+)
 from services.notification_service import create_default_preferences
-
-
-@dataclass
-class _TelegramNotifView:
-    """Read-only view adapter for TelegramNotification shown in the web inbox."""
-    id: int
-    event_id: int | None
-    tag: str
-    title: str
-    body: str
-    created_at: datetime
-    is_read: bool = True
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -55,6 +47,14 @@ def _get_linked_players(user, db: Session) -> list[Player]:
 
 def _player_ids_for_user(user, db: Session) -> list[int]:
     return [p.id for p in _get_linked_players(user, db)]
+
+
+def _notification_filter(user, player_ids: list[int]):
+    """SQLAlchemy filter clause: notifications owned by this user via player OR user_id."""
+    conditions = [Notification.user_id == user.id]
+    if player_ids:
+        conditions.append(Notification.player_id.in_(player_ids))
+    return or_(*conditions)
 
 
 # ── VAPID public key ──────────────────────────────────────────────────────────
@@ -84,7 +84,6 @@ async def notification_stream(request: Request):
     from app.main import shutdown_event
 
     async def _sleep_or_shutdown(seconds: float) -> bool:
-        """Sleep for *seconds* OR return True immediately if shutdown is signalled."""
         done, pending = await asyncio.wait(
             [
                 asyncio.ensure_future(asyncio.sleep(seconds)),
@@ -96,24 +95,15 @@ async def notification_stream(request: Request):
             t.cancel()
         return shutdown_event.is_set()
 
-    if not player_ids:
-
-        async def keepalive() -> AsyncGenerator[str, None]:
-            elapsed = 0
-            while True:
-                if await request.is_disconnected():
-                    break
-                if await _sleep_or_shutdown(2):
-                    break
-                elapsed += 2
-                if elapsed >= 30:
-                    yield ": keepalive\n\n"
-                    elapsed = 0
-
-        return StreamingResponse(keepalive(), media_type="text/event-stream")
-
-    player_id = player_ids[0]
-    q = register_connection(player_id)
+    # Choose connection key: player-keyed for members, user-keyed for unlinked admins
+    if player_ids:
+        conn_id = player_ids[0]
+        q = register_connection(conn_id)
+        unregister = lambda: unregister_connection(conn_id, q)  # noqa: E731
+    else:
+        conn_id = user.id
+        q = register_user_connection(conn_id)
+        unregister = lambda: unregister_user_connection(conn_id, q)  # noqa: E731
 
     async def event_generator() -> AsyncGenerator[str, None]:
         ticks = 0
@@ -137,7 +127,6 @@ async def notification_stream(request: Request):
                         yield f"data: {get_task.result()}\n\n"
                         ticks = 0
                     else:
-                        # timeout
                         if await request.is_disconnected():
                             break
                         ticks += 1
@@ -147,7 +136,7 @@ async def notification_stream(request: Request):
                 except asyncio.CancelledError:
                     break
         finally:
-            unregister_connection(player_id, q)
+            unregister()
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -162,34 +151,12 @@ async def inbox(
     db: Session = Depends(get_db),
 ):
     player_ids = _player_ids_for_user(user, db)
-    notifications: list = []
-    if player_ids:
-        notifications = (
-            db.query(Notification)
-            .filter(Notification.player_id.in_(player_ids))
-            .order_by(Notification.created_at.desc())
-            .all()
-        )
-    elif user.is_admin or user.is_coach:
-        from models.telegram_notification import TelegramNotification  # noqa: PLC0415
-        _icon = {"present": "✓", "absent": "✗", "unknown": "?"}
-        tg_notifs = (
-            db.query(TelegramNotification)
-            .filter(TelegramNotification.user_id == user.id)
-            .order_by(TelegramNotification.created_at.desc())
-            .all()
-        )
-        notifications = [
-            _TelegramNotifView(
-                id=tn.id,
-                event_id=tn.event_id,
-                tag="direct",
-                title=f"{_icon.get(tn.status, '?')} {tn.player.full_name if tn.player else '?'} → {tn.status}",
-                body=tn.event.title if tn.event else "",
-                created_at=tn.created_at,
-            )
-            for tn in tg_notifs
-        ]
+    notifications = (
+        db.query(Notification)
+        .filter(_notification_filter(user, player_ids))
+        .order_by(Notification.created_at.desc())
+        .all()
+    )
     return render(
         request,
         "notifications/inbox.html",
@@ -210,7 +177,11 @@ async def mark_read(
 ):
     player_ids = _player_ids_for_user(user, db)
     notif = db.get(Notification, notification_id)
-    if notif is None or notif.player_id not in player_ids:
+    if notif is None:
+        raise HTTPException(status_code=404)
+    # Verify ownership: either via player or via user_id
+    owns = (notif.player_id in player_ids) or (notif.user_id == user.id)
+    if not owns:
         raise HTTPException(status_code=404)
     notif.is_read = True
     db.commit()
@@ -226,12 +197,11 @@ async def mark_read_all(
     db: Session = Depends(get_db),
 ):
     player_ids = _player_ids_for_user(user, db)
-    if player_ids:
-        db.query(Notification).filter(
-            Notification.player_id.in_(player_ids),
-            Notification.is_read.is_(False),
-        ).update({"is_read": True}, synchronize_session="fetch")
-        db.commit()
+    db.query(Notification).filter(
+        _notification_filter(user, player_ids),
+        Notification.is_read.is_(False),
+    ).update({"is_read": True}, synchronize_session="fetch")
+    db.commit()
     return RedirectResponse("/notifications", status_code=302)
 
 
@@ -268,6 +238,26 @@ async def update_preferences(
 # ── Web Push subscribe / unsubscribe ──────────────────────────────────────────
 
 
+def _save_subscription(
+    db: Session, *, player_id: int | None, user_id: int | None, endpoint: str, p256dh: str, auth: str
+) -> None:
+    """Upsert a WebPushSubscription keyed by player_id or user_id + endpoint."""
+    existing = (
+        db.query(WebPushSubscription)
+        .filter(
+            WebPushSubscription.player_id == player_id if player_id else WebPushSubscription.user_id == user_id,
+            WebPushSubscription.endpoint == endpoint,
+        )
+        .first()
+    )
+    if existing is None:
+        db.add(
+            WebPushSubscription(
+                player_id=player_id, user_id=user_id, endpoint=endpoint, p256dh_key=p256dh, auth_key=auth
+            )
+        )
+
+
 @router.post("/webpush/subscribe")
 async def webpush_subscribe(
     request: Request,
@@ -279,27 +269,11 @@ async def webpush_subscribe(
     db: Session = Depends(get_db),
 ):
     player_ids = _player_ids_for_user(user, db)
-    if not player_ids:
-        return JSONResponse({"detail": "No linked player"}, status_code=400)
-
-    for player_id in player_ids:
-        existing = (
-            db.query(WebPushSubscription)
-            .filter(
-                WebPushSubscription.player_id == player_id,
-                WebPushSubscription.endpoint == endpoint,
-            )
-            .first()
-        )
-        if existing is None:
-            db.add(
-                WebPushSubscription(
-                    player_id=player_id,
-                    endpoint=endpoint,
-                    p256dh_key=p256dh,
-                    auth_key=auth,
-                )
-            )
+    if player_ids:
+        for player_id in player_ids:
+            _save_subscription(db, player_id=player_id, user_id=None, endpoint=endpoint, p256dh=p256dh, auth=auth)
+    else:
+        _save_subscription(db, player_id=None, user_id=user.id, endpoint=endpoint, p256dh=p256dh, auth=auth)
     db.commit()
     return JSONResponse({"status": "ok"})
 
@@ -312,11 +286,13 @@ async def webpush_unsubscribe_all(
     db: Session = Depends(get_db),
 ):
     player_ids = _player_ids_for_user(user, db)
-    if player_ids:
-        db.query(WebPushSubscription).filter(WebPushSubscription.player_id.in_(player_ids)).delete(
-            synchronize_session="fetch"
+    db.query(WebPushSubscription).filter(
+        or_(
+            WebPushSubscription.player_id.in_(player_ids) if player_ids else False,
+            WebPushSubscription.user_id == user.id,
         )
-        db.commit()
+    ).delete(synchronize_session="fetch")
+    db.commit()
     return RedirectResponse("/profile", status_code=302)
 
 
@@ -331,25 +307,10 @@ async def webpush_resubscribe(
 ):
     """CSRF-exempt endpoint for service worker pushsubscriptionchange renewal."""
     player_ids = _player_ids_for_user(user, db)
-    if not player_ids:
-        return JSONResponse({"detail": "No linked player"}, status_code=400)
-    for player_id in player_ids:
-        existing = (
-            db.query(WebPushSubscription)
-            .filter(
-                WebPushSubscription.player_id == player_id,
-                WebPushSubscription.endpoint == endpoint,
-            )
-            .first()
-        )
-        if existing is None:
-            db.add(
-                WebPushSubscription(
-                    player_id=player_id,
-                    endpoint=endpoint,
-                    p256dh_key=p256dh,
-                    auth_key=auth,
-                )
-            )
+    if player_ids:
+        for player_id in player_ids:
+            _save_subscription(db, player_id=player_id, user_id=None, endpoint=endpoint, p256dh=p256dh, auth=auth)
+    else:
+        _save_subscription(db, player_id=None, user_id=user.id, endpoint=endpoint, p256dh=p256dh, auth=auth)
     db.commit()
     return JSONResponse({"status": "ok"})

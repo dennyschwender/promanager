@@ -1,4 +1,5 @@
 """services/telegram_notifications.py — Telegram notifications for attendance changes."""
+
 from __future__ import annotations
 
 import logging
@@ -25,6 +26,10 @@ async def notify_coaches_via_telegram(
     from models.player import Player  # noqa: PLC0415
     from models.telegram_notification import TelegramNotification  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
+    from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
+    from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
+
+    _webpush = WebPushChannel()
 
     db = _db_mod.SessionLocal()
     try:
@@ -34,6 +39,8 @@ async def notify_coaches_via_telegram(
         player = db.get(Player, player_id)
         if player is None:
             return
+
+        icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(new_status, "?")
 
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
         seen_chat_ids: set[str] = set()
@@ -45,7 +52,7 @@ async def notify_coaches_via_telegram(
                 continue
             seen_chat_ids.add(ut.user.telegram_chat_id)
 
-            # Respect notification preference
+            # Respect notification preference (check via linked player if exists)
             coach_player = ut.user.players[0] if ut.user.players else None
             if coach_player is not None:
                 pref = (
@@ -60,41 +67,63 @@ async def notify_coaches_via_telegram(
                     continue
 
             try:
-                # Create notification record
-                notif = TelegramNotification(
+                # Create TelegramNotification for bot UI state (inject_notification)
+                tg_notif = TelegramNotification(
                     user_id=ut.user_id,
                     event_id=event_id,
                     player_id=player_id,
                     status=new_status,
                 )
-                db.add(notif)
-                db.flush()  # get notif.id before inject_notification
+                db.add(tg_notif)
+                db.flush()
 
                 # Inject 🔔 button into persistent message (or send homepage if first time)
-                await inject_notification(ut.user, notif.id, _bot.telegram_app.bot, db)
+                await inject_notification(ut.user, tg_notif.id, _bot.telegram_app.bot, db)
 
-                # edit_message_text is silent — send a separate message to trigger push notification
-                icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(new_status, "?")
+                # edit_message_text is silent — separate message triggers phone push
                 alert_text = f"🔔 {player.full_name} {icon} — {event.title}"
                 await _bot.telegram_app.bot.send_message(
                     chat_id=ut.user.telegram_chat_id,
                     text=alert_text,
                 )
 
-                # Create Notification record so attendance changes appear at /notifications
-                if coach_player is not None:
-                    db.add(Notification(
-                        player_id=coach_player.id,
-                        event_id=event_id,
-                        title=f"{icon} {player.full_name} → {new_status}",
-                        body=event.title,
-                        tag="direct",
-                    ))
+                # Create unified Notification record for inbox + badge + SSE + web push.
+                # Use player_id when coach has a linked player, user_id otherwise.
+                web_notif = Notification(
+                    player_id=coach_player.id if coach_player else None,
+                    user_id=ut.user_id if coach_player is None else None,
+                    event_id=event_id,
+                    title=f"{icon} {player.full_name} → {new_status}",
+                    body=event.title,
+                    tag="direct",
+                )
+                db.add(web_notif)
+                db.flush()
+
+                # Push SSE badge update
+                unread = (
+                    db.query(Notification)
+                    .filter(
+                        Notification.player_id == coach_player.id
+                        if coach_player
+                        else Notification.user_id == ut.user_id,
+                        Notification.is_read.is_(False),
+                    )
+                    .count()
+                )
+                if coach_player:
+                    push_unread_count(coach_player.id, unread)
+                    _webpush.send(coach_player, web_notif, db)
+                else:
+                    push_unread_count_to_user(ut.user_id, unread)
+                    _webpush.send_to_user(ut.user_id, web_notif, db)
 
             except Exception as exc:
                 logger.warning(
                     "notify_coaches_via_telegram: failed for user %s: %s",
-                    ut.user_id, exc, exc_info=True,
+                    ut.user_id,
+                    exc,
+                    exc_info=True,
                 )
 
         db.commit()

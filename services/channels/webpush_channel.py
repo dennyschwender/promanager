@@ -23,6 +23,23 @@ class WebPushChannel:
     """Sends browser push notifications via pywebpush."""
 
     def send(self, player: Player, notification: Notification, db: Session) -> bool:
+        return self._send_to_subscriptions(
+            db.query(WebPushSubscription).filter(WebPushSubscription.player_id == player.id).all(),
+            notification,
+            db,
+        )
+
+    def send_to_user(self, user_id: int, notification: Notification, db: Session) -> bool:
+        """Send to subscriptions registered against a user_id (unlinked admin/coach)."""
+        return self._send_to_subscriptions(
+            db.query(WebPushSubscription).filter(WebPushSubscription.user_id == user_id).all(),
+            notification,
+            db,
+        )
+
+    def _send_to_subscriptions(
+        self, subscriptions: list[WebPushSubscription], notification: Notification, db: Session
+    ) -> bool:
         if not _is_configured():
             logger.debug("WebPushChannel: VAPID not configured, skipping")
             return False
@@ -33,7 +50,6 @@ class WebPushChannel:
             logger.warning("pywebpush not installed — Web Push unavailable")
             return False
 
-        subscriptions = db.query(WebPushSubscription).filter(WebPushSubscription.player_id == player.id).all()
         if not subscriptions:
             return False
 
