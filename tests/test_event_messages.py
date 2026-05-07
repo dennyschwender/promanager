@@ -107,9 +107,7 @@ def test_delete_own_message_as_member(member_client, db, event, member_user):
 
 
 def test_delete_others_message_as_member_forbidden(member_client, db, event, admin_user):
-    msg = EventMessage(
-        event_id=event.id, user_id=admin_user.id, lane="discussion", body="Admin's"
-    )
+    msg = EventMessage(event_id=event.id, user_id=admin_user.id, lane="discussion", body="Admin's")
     db.add(msg)
     db.commit()
     db.refresh(msg)
@@ -119,9 +117,7 @@ def test_delete_others_message_as_member_forbidden(member_client, db, event, adm
 
 
 def test_delete_any_message_as_admin(admin_client, db, event, member_user):
-    msg = EventMessage(
-        event_id=event.id, user_id=member_user.id, lane="discussion", body="Member's"
-    )
+    msg = EventMessage(event_id=event.id, user_id=member_user.id, lane="discussion", body="Member's")
     db.add(msg)
     db.commit()
     db.refresh(msg)

@@ -29,11 +29,12 @@ router = APIRouter()
 def _generate_username(db: Session, first_name: str | None, last_name: str | None, fallback: str) -> str:
     """Build firstname.lastname username, falling back to email prefix, with collision suffix."""
     import re
+
     base = ""
     if first_name and last_name:
         base = f"{first_name.strip().lower()}.{last_name.strip().lower()}"
     elif first_name or last_name:
-        base = (first_name or last_name).strip().lower()
+        base = (first_name or last_name).strip().lower()  # type: ignore[union-attr]
     if not base:
         base = fallback.split("@")[0].lower()
     base = re.sub(r"[^a-z0-9._-]", "", base)[:50] or "user"
@@ -48,6 +49,7 @@ def _generate_username(db: Session, first_name: str | None, last_name: str | Non
 @router.get("/register", dependencies=[Depends(require_admin)])
 async def register_get(request: Request):
     from models.user import User as _User  # noqa: F401
+
     return render(request, "auth/register.html", {"user": request.state.user, "error": None, "flash": None})
 
 
@@ -112,7 +114,14 @@ async def register_post(
             )
             db.add(staff_player)
             db.commit()
-    log_action("user.create", target_type="user", target_id=new_user.id, target_label=new_user.username, extra={"role": role}, request=request)
+    log_action(
+        "user.create",
+        target_type="user",
+        target_id=new_user.id,
+        target_label=new_user.username,
+        extra={"role": role},
+        request=request,
+    )
     magic = create_magic_link(new_user.id, "/dashboard")
     send_welcome_email(
         to=new_user.email,
@@ -142,7 +151,7 @@ async def users_list_page(request: Request, db: Session = Depends(get_db), reset
     users = db.query(User).order_by(User.created_at.desc()).all()
     # Build player lookup: user_id -> Player
     linked_players = db.query(Player).filter(Player.user_id.isnot(None)).all()
-    player_by_user: dict[int, Player] = {p.user_id: p for p in linked_players}
+    player_by_user: dict[int, Player] = {p.user_id: p for p in linked_players}  # type: ignore[misc]
     return render(
         request,
         "auth/users_list.html",
@@ -300,7 +309,11 @@ async def bulk_create_post(
     db.commit()
 
     if created:
-        log_action("user.bulk_create", extra={"created": created, "skipped": skipped, "role": role, "locale": locale}, request=request)
+        log_action(
+            "user.bulk_create",
+            extra={"created": created, "skipped": skipped, "role": role, "locale": locale},
+            request=request,
+        )
 
     teams = db.query(Team).order_by(Team.name).all()
     seasons = db.query(Season).order_by(Season.name).all()
@@ -348,30 +361,37 @@ async def user_edit_get(
     q = db.query(Player).filter(Player.user_id.is_(None), Player.archived_at.is_(None))
     if p_team_id:
         from models.player_team import PlayerTeam
+
         player_ids = [r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id == p_team_id).all()]
         q = q.filter(Player.id.in_(player_ids))
     if p_season_id:
         from models.player_team import PlayerTeam
+
         player_ids = [r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.season_id == p_season_id).all()]
         q = q.filter(Player.id.in_(player_ids))
     unlinked_players = q.order_by(Player.last_name, Player.first_name).all()
 
     from models.user_team import UserTeam
+
     managed_teams = db.query(UserTeam).filter(UserTeam.user_id == user_id).all()
 
-    return render(request, "auth/user_form.html", {
-        "user": request.state.user,
-        "target": target,
-        "is_admin_edit": True,
-        "error": None,
-        "linked_player": linked_player,
-        "unlinked_players": unlinked_players,
-        "teams": teams,
-        "seasons": seasons,
-        "selected_team_id": p_team_id,
-        "selected_season_id": p_season_id,
-        "managed_teams": managed_teams,
-    })
+    return render(
+        request,
+        "auth/user_form.html",
+        {
+            "user": request.state.user,
+            "target": target,
+            "is_admin_edit": True,
+            "error": None,
+            "linked_player": linked_player,
+            "unlinked_players": unlinked_players,
+            "teams": teams,
+            "seasons": seasons,
+            "selected_team_id": p_team_id,
+            "selected_season_id": p_season_id,
+            "managed_teams": managed_teams,
+        },
+    )
 
 
 @router.post("/{user_id}/edit", dependencies=[Depends(require_admin), Depends(require_csrf)])
@@ -397,14 +417,26 @@ async def user_edit_post(
 
     def _edit_error(msg: str, code: int = 400):
         linked_player = db.query(Player).filter(Player.user_id == user_id).first()
-        return render(request, "auth/user_form.html", {
-            "user": request.state.user, "target": target, "is_admin_edit": True, "error": msg,
-            "linked_player": linked_player,
-            "unlinked_players": db.query(Player).filter(Player.user_id.is_(None), Player.archived_at.is_(None)).order_by(Player.last_name, Player.first_name).all(),
-            "teams": db.query(Team).order_by(Team.name).all(),
-            "seasons": db.query(Season).order_by(Season.name).all(),
-            "selected_team_id": None, "selected_season_id": None,
-        }, status_code=code)
+        return render(
+            request,
+            "auth/user_form.html",
+            {
+                "user": request.state.user,
+                "target": target,
+                "is_admin_edit": True,
+                "error": msg,
+                "linked_player": linked_player,
+                "unlinked_players": db.query(Player)
+                .filter(Player.user_id.is_(None), Player.archived_at.is_(None))
+                .order_by(Player.last_name, Player.first_name)
+                .all(),
+                "teams": db.query(Team).order_by(Team.name).all(),
+                "seasons": db.query(Season).order_by(Season.name).all(),
+                "selected_team_id": None,
+                "selected_season_id": None,
+            },
+            status_code=code,
+        )
 
     if not username:
         return _edit_error(rt(request, "errors.field_required", field="Username"))
@@ -440,7 +472,14 @@ async def user_edit_post(
         if target.last_name:
             player.last_name = target.last_name
     db.commit()
-    log_action("user.edit", target_type="user", target_id=target.id, target_label=target.username, extra=extra or None, request=request)
+    log_action(
+        "user.edit",
+        target_type="user",
+        target_id=target.id,
+        target_label=target.username,
+        extra=extra or None,
+        request=request,
+    )
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -466,7 +505,14 @@ async def link_player(
 
     player.user_id = user_id
     db.commit()
-    log_action("user.link_player", target_type="user", target_id=target.id, target_label=target.username, extra={"player_id": player.id}, request=request)
+    log_action(
+        "user.link_player",
+        target_type="user",
+        target_id=target.id,
+        target_label=target.username,
+        extra={"player_id": player.id},
+        request=request,
+    )
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -480,7 +526,9 @@ async def unlink_player(
     if player:
         player.user_id = None
         db.commit()
-        log_action("user.unlink_player", target_type="user", target_id=user_id, extra={"player_id": player.id}, request=request)
+        log_action(
+            "user.unlink_player", target_type="user", target_id=user_id, extra={"player_id": player.id}, request=request
+        )
     return RedirectResponse("/auth/users", status_code=302)
 
 
@@ -543,7 +591,9 @@ async def reset_password(
         magic_link=magic,
     )
 
-    log_action("user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request)
+    log_action(
+        "user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request
+    )
     return RedirectResponse("/auth/users?reset=1", status_code=302)
 
 
@@ -571,7 +621,9 @@ async def send_welcome(
         magic_link=magic,
     )
 
-    log_action("user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request)
+    log_action(
+        "user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request
+    )
     return RedirectResponse("/auth/users?welcome=1", status_code=302)
 
 
@@ -627,6 +679,7 @@ async def impersonate_user(
     from itsdangerous import BadSignature, SignatureExpired  # noqa: PLC0415
 
     from app.session import _signer  # noqa: PLC0415
+
     raw_orig = request.cookies.get(COOKIE_NAME, "")
     orig_session = ""
     if raw_orig:
@@ -638,11 +691,22 @@ async def impersonate_user(
 
     new_session = create_session_cookie(target.id)
 
-    log_action("auth.impersonate", target_type="user", target_id=target.id, target_label=target.username, request=request)
+    log_action(
+        "auth.impersonate", target_type="user", target_id=target.id, target_label=target.username, request=request
+    )
     response = RedirectResponse("/dashboard", status_code=302)
-    response.set_cookie(COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7)
+    response.set_cookie(
+        COOKIE_NAME, new_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 24 * 7
+    )
     if orig_session:
-        response.set_cookie("_orig_session", orig_session, httponly=True, samesite="lax", secure=settings.COOKIE_SECURE, max_age=60 * 60 * 8)
+        response.set_cookie(
+            "_orig_session",
+            orig_session,
+            httponly=True,
+            samesite="lax",
+            secure=settings.COOKIE_SECURE,
+            max_age=60 * 60 * 8,
+        )
     return response
 
 
@@ -655,6 +719,7 @@ async def user_add_team(
     season_id: str = Form(""),
 ):
     from models.user_team import UserTeam
+
     target = db.get(User, user_id)
     if target is None or target.role not in ("admin", "coach"):
         return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
@@ -664,7 +729,14 @@ async def user_add_team(
     if not q.first():
         db.add(UserTeam(user_id=user_id, team_id=team_id, season_id=sid))
         db.commit()
-        log_action("user.add_team", target_type="user", target_id=target.id, target_label=target.username, extra={"team_id": team_id, "season_id": sid}, request=request)
+        log_action(
+            "user.add_team",
+            target_type="user",
+            target_id=target.id,
+            target_label=target.username,
+            extra={"team_id": team_id, "season_id": sid},
+            request=request,
+        )
     return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 
@@ -676,12 +748,19 @@ async def user_remove_team(
     db: Session = Depends(get_db),
 ):
     from models.user_team import UserTeam
+
     ut = db.get(UserTeam, ut_id)
     if ut and ut.user_id == user_id:
         team_id, season_id = ut.team_id, ut.season_id
         db.delete(ut)
         db.commit()
-        log_action("user.remove_team", target_type="user", target_id=user_id, extra={"team_id": team_id, "season_id": season_id}, request=request)
+        log_action(
+            "user.remove_team",
+            target_type="user",
+            target_id=user_id,
+            extra={"team_id": team_id, "season_id": season_id},
+            request=request,
+        )
     return RedirectResponse("/auth/users/" + str(int(user_id)) + "/edit", status_code=302)
 
 

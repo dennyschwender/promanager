@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from models.event import Event
+    from models.player_team import PlayerTeam
 
 
 class Season(Base):

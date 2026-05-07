@@ -1,4 +1,5 @@
 """Tests that required email locale keys exist in all locale files."""
+
 import json
 from pathlib import Path
 

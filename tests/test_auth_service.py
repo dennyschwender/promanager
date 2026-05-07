@@ -15,10 +15,13 @@ def _reload_settings(monkeypatch, app_url: str):
     """
     monkeypatch.setenv("APP_URL", app_url)
     import app.config as cfg_mod
+
     importlib.reload(cfg_mod)
     from app.config import Settings
+
     cfg_mod.settings = Settings()
     import services.auth_service as svc
+
     importlib.reload(svc)
     return svc
 
@@ -30,10 +33,13 @@ def _restore_app_config(monkeypatch):
     # Reload config back to defaults after test
     monkeypatch.delenv("APP_URL", raising=False)
     import app.config as cfg_mod
+
     importlib.reload(cfg_mod)
     from app.config import Settings
+
     cfg_mod.settings = Settings()
     import services.auth_service as svc
+
     importlib.reload(svc)
 
 
@@ -65,5 +71,6 @@ def test_verify_magic_link_round_trip(monkeypatch):
 def test_verify_magic_link_invalid_raises():
     """A tampered token raises an exception."""
     from services.auth_service import verify_magic_link
+
     with pytest.raises(Exception):
         verify_magic_link("this.is.not.a.valid.token")

@@ -1,18 +1,14 @@
 """bot/views/events.py — Events view renderers."""
+
 from __future__ import annotations
 
 import math
 from datetime import datetime
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import ParseMode
 
 from app.i18n import t
 from bot.keyboards import (
-    PLAYER_PAGE_SIZE,
-    STATUS_ICON,
-    event_admin_keyboard,
-    event_view_keyboard,
     event_status_keyboard,
 )
 from bot.views import ViewResult
@@ -61,9 +57,13 @@ def render_events_list(user, db, page: int = 0) -> ViewResult:
     page_events = all_events[page * PAGE_SIZE : (page + 1) * PAGE_SIZE]
 
     if not all_events:
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
-        ]])
+        keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
+                ]
+            ]
+        )
         return t("telegram.no_events", locale), keyboard
 
     header = t("telegram.events_header", locale, page=page + 1)
@@ -89,9 +89,13 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
     locale = _locale(user)
     event = db.get(Event, event_id)
     if event is None:
-        return t("telegram.no_events", locale), InlineKeyboardMarkup([[
-            InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
-        ]])
+        return t("telegram.no_events", locale), InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
+                ]
+            ]
+        )
 
     if event.event_type in ("training", "match"):
         event_type_str = t(f"telegram.event_type_{event.event_type}", locale)
@@ -122,10 +126,7 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
     atts = db.query(Attendance).filter(Attendance.event_id == event_id).all()
     att_by_player: dict[int, Attendance] = {a.player_id: a for a in atts}
     ext_rows = (
-        db.query(EventExternal)
-        .filter(EventExternal.event_id == event_id)
-        .order_by(EventExternal.created_at)
-        .all()
+        db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
     )
     counts: dict[str, int] = {"present": 0, "absent": 0, "unknown": 0, "maybe": 0}
     for a in atts:
@@ -137,6 +138,7 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
     )
 
     from models.event_message import EventMessage  # noqa: PLC0415
+
     msg_count = db.query(EventMessage).filter(EventMessage.event_id == event_id).count()
 
     text = "\n".join(lines)
@@ -145,9 +147,7 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
     back_page = 0
 
     if not is_admin_or_coach:
-        own_player = db.query(Player).filter(
-            Player.user_id == user.id, Player.archived_at.is_(None)
-        ).first()
+        own_player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
         if own_player:
             own_att = att_by_player.get(own_player.id)
             own_status = own_att.status if own_att else "unknown"
@@ -160,9 +160,13 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
                 event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "", msg_count=msg_count
             )
         else:
-            keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
-            ]])
+            keyboard = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
+                    ]
+                ]
+            )
     else:
         if event.team_id and event.season_id:
             pt_rows = (
@@ -193,21 +197,33 @@ def render_event_detail(user, db, event_id: int, back: str = "el") -> ViewResult
                 p._position = None  # type: ignore[attr-defined]
 
         from services.event_text_service import format_attendance_body  # noqa: PLC0415
-        text += "\n" + format_attendance_body(
-            players, att_by_player, ext_rows, locale, grouped=True, markdown=True
-        )
+
+        text += "\n" + format_attendance_body(players, att_by_player, ext_rows, locale, grouped=True, markdown=True)
 
         rows = [
-            [InlineKeyboardButton(t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}")],
+            [
+                InlineKeyboardButton(
+                    t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}"
+                )
+            ],
         ]
-        rows.append([
-            InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
-            InlineKeyboardButton(t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"),
-        ])
+        rows.append(
+            [
+                InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
+                InlineKeyboardButton(
+                    t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"
+                ),
+            ]
+        )
         if msg_count > 0:
-            rows.append([InlineKeyboardButton(
-                f"💬 Chat ({msg_count})", callback_data=f"ec:{event_id}",
-            )])
+            rows.append(
+                [
+                    InlineKeyboardButton(
+                        f"💬 Chat ({msg_count})",
+                        callback_data=f"ec:{event_id}",
+                    )
+                ]
+            )
         rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back)])
         keyboard = InlineKeyboardMarkup(rows)
 
@@ -220,9 +236,13 @@ def render_event_chat(user, db, event_id: int, back: str = "el") -> ViewResult:
     locale = _locale(user)
     event = db.get(Event, event_id)
     if event is None:
-        return t("telegram.no_events", locale), InlineKeyboardMarkup([[
-            InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
-        ]])
+        return t("telegram.no_events", locale), InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
+                ]
+            ]
+        )
 
     messages = (
         db.query(EventMessage)
@@ -245,7 +265,11 @@ def render_event_chat(user, db, event_id: int, back: str = "el") -> ViewResult:
             lines.append("")
 
     text = "\n".join(lines)
-    keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
-    ]])
+    keyboard = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(t("telegram.back_button", locale), callback_data=back),
+            ]
+        ]
+    )
     return text, keyboard

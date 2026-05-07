@@ -37,6 +37,11 @@ def _locale(user) -> str:
     return user.locale if user and user.locale else "en"
 
 
+def _user_data(context: ContextTypes.DEFAULT_TYPE) -> dict:
+    assert context.user_data is not None
+    return context.user_data
+
+
 # ---------------------------------------------------------------------------
 # Other menu
 # ---------------------------------------------------------------------------
@@ -135,7 +140,7 @@ async def show_absence_list(query, user, db, player_id: int, page: int, back_pag
     page = max(0, min(page, total_pages - 1))
     page_absences = absences[page * ABSENCE_PAGE_SIZE : (page + 1) * ABSENCE_PAGE_SIZE]
 
-    header = t("telegram.absences_header", locale, name=player.full_name)
+    header = t("telegram.absences_header", locale, name=player.full_name)  # type: ignore[union-attr]
     if not absences:
         header += f"\n\n{t('telegram.absences_empty', locale)}"
 
@@ -152,7 +157,7 @@ async def start_add_absence(query, user, context: ContextTypes.DEFAULT_TYPE, pla
     """Begin the add-absence multi-step flow (step 1: start date)."""
     locale = _locale(user)
     prompt_msg = await query.message.reply_text(t("telegram.absence_start_prompt", locale))
-    context.user_data["awaiting_absence"] = {
+    _user_data(context)["awaiting_absence"] = {
         "player_id": player_id,
         "back_page": back_page,
         "step": "start",
@@ -171,7 +176,10 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     Steps: start date → end date → reason → create absence → show list.
     """
-    pending = context.user_data.get("awaiting_absence")
+    if update.effective_chat is None or update.message is None:
+        return False
+
+    pending = _user_data(context).get("awaiting_absence")
     if not pending:
         return False
 
@@ -195,7 +203,7 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
         if user is None:
-            context.user_data.pop("awaiting_absence", None)
+            _user_data(context).pop("awaiting_absence", None)
             return True
         locale = _locale(user)
 
@@ -203,16 +211,16 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             try:
                 parsed = date.fromisoformat(text)
             except ValueError:
-                new_prompt = await update.message.reply_text(t("telegram.absence_date_error", locale))
+                new_prompt = await update.message.reply_text(t("telegram.absence_date_error", locale))  # type: ignore[union-attr]
                 pending["prompt_message_id"] = new_prompt.message_id
                 return True
             if parsed < date.today():
-                new_prompt = await update.message.reply_text(t("telegram.absence_past_error", locale))
+                new_prompt = await update.message.reply_text(t("telegram.absence_past_error", locale))  # type: ignore[union-attr]
                 pending["prompt_message_id"] = new_prompt.message_id
                 return True
             pending["start_date"] = parsed.isoformat()
             pending["step"] = "end"
-            new_prompt = await update.message.reply_text(t("telegram.absence_end_prompt", locale))
+            new_prompt = await update.message.reply_text(t("telegram.absence_end_prompt", locale))  # type: ignore[union-attr]
             pending["prompt_message_id"] = new_prompt.message_id
             return True
 
@@ -220,17 +228,17 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             try:
                 parsed = date.fromisoformat(text)
             except ValueError:
-                new_prompt = await update.message.reply_text(t("telegram.absence_date_error", locale))
+                new_prompt = await update.message.reply_text(t("telegram.absence_date_error", locale))  # type: ignore[union-attr]
                 pending["prompt_message_id"] = new_prompt.message_id
                 return True
             start = date.fromisoformat(pending["start_date"])
             if parsed < start:
-                new_prompt = await update.message.reply_text(t("telegram.absence_range_error", locale))
+                new_prompt = await update.message.reply_text(t("telegram.absence_range_error", locale))  # type: ignore[union-attr]
                 pending["prompt_message_id"] = new_prompt.message_id
                 return True
             pending["end_date"] = parsed.isoformat()
             pending["step"] = "reason"
-            new_prompt = await update.message.reply_text(t("telegram.absence_reason_prompt", locale))
+            new_prompt = await update.message.reply_text(t("telegram.absence_reason_prompt", locale))  # type: ignore[union-attr]
             pending["prompt_message_id"] = new_prompt.message_id
             return True
 
@@ -260,9 +268,9 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
                 for ev_id, pid, status in updated:
                     await notify_coaches_attendance_change(ev_id, pid, status)
 
-            context.user_data.pop("awaiting_absence", None)
+            _user_data(context).pop("awaiting_absence", None)
 
-            conf = await update.message.reply_text(t("telegram.absence_added", locale, count=count))
+            conf = await update.message.reply_text(t("telegram.absence_added", locale, count=count))  # type: ignore[union-attr]
             await asyncio.sleep(2)
             try:
                 await conf.delete()
@@ -282,9 +290,9 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             total_pages = max(1, math.ceil(len(absences) / ABSENCE_PAGE_SIZE)) if absences else 1
             page_absences = absences[page * ABSENCE_PAGE_SIZE : (page + 1) * ABSENCE_PAGE_SIZE]
 
-            header = t("telegram.absences_header", locale, name=player.full_name)
+            header = t("telegram.absences_header", locale, name=player.full_name)  # type: ignore[union-attr]
             keyboard = absence_list_keyboard(page_absences, player_id, page, total_pages, back_page, is_member, locale)
-            await update.message.reply_text(header, reply_markup=keyboard)
+            await update.message.reply_text(header, reply_markup=keyboard)  # type: ignore[union-attr]
             return True
 
     return True

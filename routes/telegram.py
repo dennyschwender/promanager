@@ -12,10 +12,12 @@ from app.config import settings
 try:
     from telegram import Update
 except ModuleNotFoundError:
+
     class Update:  # type: ignore[no-redef]
         @staticmethod
         def de_json(data, bot):
             return None
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

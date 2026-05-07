@@ -73,34 +73,25 @@ def _make_absence(id_, start, end):
 
 def test_absence_list_has_delete_add_back_member():
     absences = [_make_absence(10, "2026-05-01", "2026-05-05")]
-    kb = absence_list_keyboard(
-        absences, player_id=7, page=0, total_pages=1,
-        back_page=2, is_member=True, locale="en"
-    )
+    kb = absence_list_keyboard(absences, player_id=7, page=0, total_pages=1, back_page=2, is_member=True, locale="en")
     data = _cb_data(kb)
-    assert "absd:10:7:0:2" in data          # delete button
-    assert "absa:7:2" in data               # add button
-    assert "other:0" in data               # back → Other menu for member
+    assert "absd:10:7:0:2" in data  # delete button
+    assert "absa:7:2" in data  # add button
+    assert "other:0" in data  # back → Other menu for member
 
 
 def test_absence_list_back_goes_to_player_list_for_coach():
-    kb = absence_list_keyboard(
-        [], player_id=5, page=0, total_pages=1,
-        back_page=1, is_member=False, locale="en"
-    )
+    kb = absence_list_keyboard([], player_id=5, page=0, total_pages=1, back_page=1, is_member=False, locale="en")
     data = _cb_data(kb)
-    assert "absm:1" in data                # back → player list for coach
+    assert "absm:1" in data  # back → player list for coach
 
 
 def test_absence_list_pagination():
-    absences = [_make_absence(i, f"2026-05-{i:02d}", f"2026-05-{i+1:02d}") for i in range(1, 4)]
-    kb = absence_list_keyboard(
-        absences, player_id=3, page=1, total_pages=3,
-        back_page=0, is_member=False, locale="en"
-    )
+    absences = [_make_absence(i, f"2026-05-{i:02d}", f"2026-05-{i + 1:02d}") for i in range(1, 4)]
+    kb = absence_list_keyboard(absences, player_id=3, page=1, total_pages=3, back_page=0, is_member=False, locale="en")
     data = _cb_data(kb)
-    assert "absl:3:0:0" in data   # Prev
-    assert "absl:3:2:0" in data   # Next
+    assert "absl:3:0:0" in data  # Prev
+    assert "absl:3:2:0" in data  # Next
 
 
 # ---------------------------------------------------------------------------
@@ -109,9 +100,7 @@ def test_absence_list_pagination():
 
 
 def test_delete_confirm_keyboard():
-    kb = absence_delete_confirm_keyboard(
-        absence_id=99, player_id=7, page=0, back_page=2, locale="en"
-    )
+    kb = absence_delete_confirm_keyboard(absence_id=99, player_id=7, page=0, back_page=2, locale="en")
     data = _cb_data(kb)
-    assert "absdc:99:7:0:2" in data   # confirm
-    assert "absl:7:0:2" in data       # cancel → back to list
+    assert "absdc:99:7:0:2" in data  # confirm
+    assert "absl:7:0:2" in data  # cancel → back to list

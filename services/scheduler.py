@@ -151,7 +151,7 @@ def backup_database() -> str | None:
         logger.debug("Backup skipped — not a SQLite database (%s)", url)
         return None
 
-    raw_path = url[len("sqlite:///"):]
+    raw_path = url[len("sqlite:///") :]
     src = os.path.abspath(raw_path)
     if not os.path.isfile(src):
         logger.warning("Backup skipped — database file not found at %r", src)

@@ -1,4 +1,5 @@
 """bot/navigation.py — Persistent message navigation and notification injection."""
+
 from __future__ import annotations
 
 import logging
@@ -30,6 +31,7 @@ async def inject_notification(user, notif_id: int, bot, db) -> None:
     if user.telegram_notification_message_id is None:
         # No persistent message yet — send homepage first
         from bot.views.home import render_home  # noqa: PLC0415
+
         text, keyboard = render_home(user, db)
         try:
             msg = await bot.send_message(
@@ -74,9 +76,9 @@ def _rerender_current_view(user, db, notif_id: int) -> tuple[str, InlineKeyboard
 
 def _render_view(user, db, view_key: str) -> tuple[str, InlineKeyboardMarkup]:
     """Dispatch view key string to the appropriate renderer."""
+    from bot.views.events import render_event_chat, render_event_detail, render_events_list  # noqa: PLC0415
     from bot.views.home import render_home  # noqa: PLC0415
-    from bot.views.events import render_events_list, render_event_detail, render_event_chat  # noqa: PLC0415
-    from bot.views.notifications import render_notifications_list, render_notification_detail  # noqa: PLC0415
+    from bot.views.notifications import render_notification_detail, render_notifications_list  # noqa: PLC0415
     from bot.views.other import render_other  # noqa: PLC0415
 
     locale = user.locale or "en"
@@ -125,6 +127,7 @@ async def inject_chat_notification(user, event_id: int, event_title: str, bot, d
 
     if user.telegram_notification_message_id is None:
         from bot.views.home import render_home  # noqa: PLC0415
+
         text, keyboard = render_home(user, db)
         try:
             msg = await bot.send_message(

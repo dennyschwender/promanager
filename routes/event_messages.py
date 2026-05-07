@@ -38,10 +38,7 @@ async def list_messages(
     if db.get(Event, event_id) is None:
         raise HTTPException(status_code=404)
     messages = (
-        db.query(EventMessage)
-        .filter(EventMessage.event_id == event_id)
-        .order_by(EventMessage.created_at.asc())
-        .all()
+        db.query(EventMessage).filter(EventMessage.event_id == event_id).order_by(EventMessage.created_at.asc()).all()
     )
     result = []
     for msg in messages:

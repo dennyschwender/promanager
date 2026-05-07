@@ -1,10 +1,11 @@
 """bot/views/home.py — Homepage view renderer."""
+
 from __future__ import annotations
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from app.i18n import t
 from app.config import settings
+from app.i18n import t
 from bot.views import ViewResult
 
 
@@ -36,9 +37,7 @@ def render_home(user, db) -> ViewResult:
             if notif.created_at:
                 last_notif_ts = notif.created_at.strftime("%d %b %H:%M")
     else:
-        linked_player = db.query(Player).filter(
-            Player.user_id == user.id, Player.archived_at.is_(None)
-        ).first()
+        linked_player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
         if linked_player:
             notif = (
                 db.query(Notification)
@@ -67,12 +66,14 @@ def render_home(user, db) -> ViewResult:
 
 
 def _home_keyboard(locale: str = "en") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(t("telegram.notifications_button", locale), callback_data="nl"),
-            InlineKeyboardButton(t("telegram.events_button", locale), callback_data="el"),
-        ],
-        [
-            InlineKeyboardButton(t("telegram.other_button", locale), callback_data="other:0"),
-        ],
-    ])
+            [
+                InlineKeyboardButton(t("telegram.notifications_button", locale), callback_data="nl"),
+                InlineKeyboardButton(t("telegram.events_button", locale), callback_data="el"),
+            ],
+            [
+                InlineKeyboardButton(t("telegram.other_button", locale), callback_data="other:0"),
+            ],
+        ]
+    )

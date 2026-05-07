@@ -40,7 +40,7 @@ def _check_player_access(current_user, player_id: int, db: Session) -> None:
                     db.query(PlayerTeam)
                     .filter(
                         PlayerTeam.player_id == player_id,
-                        PlayerTeam.team_id.in_(team_ids) if team_ids else False,
+                        PlayerTeam.team_id.in_(team_ids) if team_ids else False,  # type: ignore[arg-type]
                     )
                     .all()
                 )
@@ -146,7 +146,7 @@ async def create_player_absence(
             if rrule_until_input
             else season.end_date
         )
-        if rrule_until < date.today():
+        if rrule_until < date.today():  # type: ignore[operator]
             raise HTTPException(status_code=400, detail="rrule_until must be in the future")
 
     # Create absence

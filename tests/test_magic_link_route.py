@@ -10,6 +10,7 @@ def _make_token(user_id: int, path: str) -> str:
     from itsdangerous import URLSafeTimedSerializer
 
     import app.config
+
     s = URLSafeTimedSerializer(app.config.settings.SECRET_KEY, salt="magic-link")
     return s.dumps({"u": user_id, "p": path})
 

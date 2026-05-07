@@ -4,10 +4,10 @@ Revision ID: q5r6s7t8u9v0
 Revises: p4q5r6s7t8u9
 Create Date: 2026-04-20
 """
+
 from collections.abc import Sequence
 from typing import Union
 
-import sqlalchemy as sa
 from alembic import op
 
 revision: str = "q5r6s7t8u9v0"

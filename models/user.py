@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,6 +13,14 @@ from app.database import Base
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+if TYPE_CHECKING:
+    from models.notification import Notification
+    from models.player import Player
+    from models.telegram_notification import TelegramNotification
+    from models.user_team import UserTeam
+    from models.web_push_subscription import WebPushSubscription
 
 
 class User(Base):

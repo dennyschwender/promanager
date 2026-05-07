@@ -24,7 +24,9 @@ from app.i18n import t as _t
 
 def _git_rev() -> str:
     try:
-        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+        return (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+        )
     except Exception:
         try:
             return str(int(os.path.getmtime("static/css/main.css")))

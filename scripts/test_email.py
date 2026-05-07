@@ -114,7 +114,7 @@ def main() -> None:
                     sys.exit(1)
                 event_title = event.title
                 event_date = event.event_date
-                event_time = event.event_time
+                event_time = event.event_time  # type: ignore[assignment]
                 event_location = event.location or ""
                 attendance_url = f"http://localhost:7000/events/{event.id}"
                 print(f"Using event: {event_title} on {event_date}")

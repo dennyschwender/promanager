@@ -35,6 +35,7 @@ def format_attendance_body(
     Externals are integrated into their matching status section, not appended
     at the end. Position sub-headers include a player count when grouped=True.
     """
+
     def _bold(s: str) -> str:
         return f"*{s}*" if markdown else s
 
@@ -62,9 +63,7 @@ def format_attendance_body(
         ext_by_status[s].append(ext)
 
     # Group players by status → position
-    status_groups: dict[str, dict[str | None, list]] = {
-        s: {pos: [] for pos in _POS_ORDER} for s in _STATUS_ORDER
-    }
+    status_groups: dict[str, dict[str | None, list]] = {s: {pos: [] for pos in _POS_ORDER} for s in _STATUS_ORDER}
     for p in players:
         att = att_by_player.get(p.id)
         s = (att.status if att else "unknown") or "unknown"
@@ -137,6 +136,7 @@ def format_attendance_text(
     Includes the event header block (title, date, time, location, counts)
     followed by the full player+external listing.
     """
+
     def _bold(s: str) -> str:
         return f"*{s}*" if markdown else s
 
@@ -168,10 +168,7 @@ def format_attendance_text(
     atts = db.query(Attendance).filter(Attendance.event_id == event.id).all()
     att_by_player: dict[int, Attendance] = {a.player_id: a for a in atts}
     ext_rows = (
-        db.query(EventExternal)
-        .filter(EventExternal.event_id == event.id)
-        .order_by(EventExternal.created_at)
-        .all()
+        db.query(EventExternal).filter(EventExternal.event_id == event.id).order_by(EventExternal.created_at).all()
     )
 
     # Counts line
@@ -206,17 +203,12 @@ def format_attendance_text(
             p._position = player_ids.get(p.id)  # type: ignore[attr-defined]
     else:
         players_q = (
-            db.query(Player)
-            .filter(Player.archived_at.is_(None))
-            .order_by(Player.first_name, Player.last_name)
-            .all()
+            db.query(Player).filter(Player.archived_at.is_(None)).order_by(Player.first_name, Player.last_name).all()
         )
         for p in players_q:
             p._position = None  # type: ignore[attr-defined]
 
-    body = format_attendance_body(
-        players_q, att_by_player, ext_rows, locale, grouped=grouped, markdown=markdown
-    )
+    body = format_attendance_body(players_q, att_by_player, ext_rows, locale, grouped=grouped, markdown=markdown)
     lines.append(body)
 
     return "\n".join(lines)

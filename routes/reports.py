@@ -29,12 +29,7 @@ _EVENT_TYPES = ("training", "match", "other")
 
 def _season_teams(db: Session, season_id: int) -> list[Team]:
     """Teams that have at least one event in this season."""
-    team_ids = (
-        db.query(Event.team_id)
-        .filter(Event.season_id == season_id, Event.team_id.isnot(None))
-        .distinct()
-        .all()
-    )
+    team_ids = db.query(Event.team_id).filter(Event.season_id == season_id, Event.team_id.isnot(None)).distinct().all()
     ids = [r[0] for r in team_ids]
     if not ids:
         return []
@@ -61,7 +56,9 @@ async def reports_index(
             managed = get_coach_teams(_user, db)
             if managed:
                 first_team_id = next(iter(sorted(managed)))
-                return RedirectResponse(f"/reports/season/{season.id}?team_id={first_team_id}&hide_future=1", status_code=302)
+                return RedirectResponse(
+                    f"/reports/season/{season.id}?team_id={first_team_id}&hide_future=1", status_code=302
+                )
         return RedirectResponse(f"/reports/season/{season.id}?hide_future=1", status_code=302)
     return RedirectResponse("/seasons", status_code=302)
 
@@ -100,9 +97,7 @@ async def report_season(
         coach_player_ids: set[int] | None = (
             {
                 row.player_id
-                for row in db.query(_PT)
-                .filter(_PT.team_id.in_(coach_team_ids), _PT.season_id == season_id)
-                .all()
+                for row in db.query(_PT).filter(_PT.team_id.in_(coach_team_ids), _PT.season_id == season_id).all()
             }
             if coach_team_ids
             else set()
@@ -113,7 +108,9 @@ async def report_season(
     else:
         coach_player_ids = None
 
-    stats = get_season_attendance_stats(db, season_id, team_id=team_id_int, event_type=event_type_val, hide_future=hide_future_bool)
+    stats = get_season_attendance_stats(
+        db, season_id, team_id=team_id_int, event_type=event_type_val, hide_future=hide_future_bool
+    )
 
     return render(
         request,
@@ -167,7 +164,8 @@ async def report_event(
             team_id_int = None
 
     stats = get_event_attendance_stats(
-        db, season_id,
+        db,
+        season_id,
         team_id=team_id_int,
         event_type=event_type_val,
         hide_future=hide_future_bool,
@@ -238,7 +236,8 @@ async def report_matrix(
             team_id_int = None
 
     matrix = get_matrix_attendance_stats(
-        db, season_id,
+        db,
+        season_id,
         team_id=team_id_int,
         event_type=event_type_val,
         date_from=date_from_val,

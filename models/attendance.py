@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,6 +13,12 @@ from app.database import Base
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+if TYPE_CHECKING:
+    from models.event import Event
+    from models.player import Player
+    from models.team import Team
 
 
 class Attendance(Base):

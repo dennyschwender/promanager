@@ -12,10 +12,12 @@ PLAYER_PAGE_SIZE = 10
 
 def other_menu_keyboard(back_page: int, locale: str = "en") -> InlineKeyboardMarkup:
     """'⚙️ Other' mini-menu: Absences entry + Back to events list."""
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(t("telegram.absences_button", locale), callback_data=f"absm:{back_page}")],
-        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home")],
-    ])
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(t("telegram.absences_button", locale), callback_data=f"absm:{back_page}")],
+            [InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home")],
+        ]
+    )
 
 
 def absence_player_list_keyboard(
@@ -33,31 +35,41 @@ def absence_player_list_keyboard(
     """
     rows = []
     for player in players:
-        rows.append([
-            InlineKeyboardButton(
-                player.full_name,
-                callback_data=f"absl:{player.id}:0:{back_page}",
-            )
-        ])
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    player.full_name,
+                    callback_data=f"absl:{player.id}:0:{back_page}",
+                )
+            ]
+        )
 
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton(
-            t("telegram.prev_button", locale),
-            callback_data=f"absp:{page - 1}:{back_page}",
-        ))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.prev_button", locale),
+                callback_data=f"absp:{page - 1}:{back_page}",
+            )
+        )
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(
-            t("telegram.next_button", locale),
-            callback_data=f"absp:{page + 1}:{back_page}",
-        ))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.next_button", locale),
+                callback_data=f"absp:{page + 1}:{back_page}",
+            )
+        )
     if nav:
         rows.append(nav)
 
-    rows.append([InlineKeyboardButton(
-        t("telegram.back_button", locale),
-        callback_data="other:0",
-    )])
+    rows.append(
+        [
+            InlineKeyboardButton(
+                t("telegram.back_button", locale),
+                callback_data="other:0",
+            )
+        ]
+    )
     return InlineKeyboardMarkup(rows)
 
 
@@ -79,35 +91,51 @@ def absence_list_keyboard(
     rows = []
     for absence in absences:
         dates = f"{absence.start_date} → {absence.end_date}"
-        rows.append([InlineKeyboardButton(
-            t("telegram.absence_del_button", locale, dates=dates),
-            callback_data=f"absd:{absence.id}:{player_id}:{page}:{back_page}",
-        )])
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    t("telegram.absence_del_button", locale, dates=dates),
+                    callback_data=f"absd:{absence.id}:{player_id}:{page}:{back_page}",
+                )
+            ]
+        )
 
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton(
-            t("telegram.prev_button", locale),
-            callback_data=f"absl:{player_id}:{page - 1}:{back_page}",
-        ))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.prev_button", locale),
+                callback_data=f"absl:{player_id}:{page - 1}:{back_page}",
+            )
+        )
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(
-            t("telegram.next_button", locale),
-            callback_data=f"absl:{player_id}:{page + 1}:{back_page}",
-        ))
+        nav.append(
+            InlineKeyboardButton(
+                t("telegram.next_button", locale),
+                callback_data=f"absl:{player_id}:{page + 1}:{back_page}",
+            )
+        )
     if nav:
         rows.append(nav)
 
-    rows.append([InlineKeyboardButton(
-        t("telegram.absence_add_button", locale),
-        callback_data=f"absa:{player_id}:{back_page}",
-    )])
+    rows.append(
+        [
+            InlineKeyboardButton(
+                t("telegram.absence_add_button", locale),
+                callback_data=f"absa:{player_id}:{back_page}",
+            )
+        ]
+    )
 
     back_dest = "other:0" if is_member else f"absm:{back_page}"
-    rows.append([InlineKeyboardButton(
-        t("telegram.back_button", locale),
-        callback_data=back_dest,
-    )])
+    rows.append(
+        [
+            InlineKeyboardButton(
+                t("telegram.back_button", locale),
+                callback_data=back_dest,
+            )
+        ]
+    )
     return InlineKeyboardMarkup(rows)
 
 
@@ -119,13 +147,17 @@ def absence_delete_confirm_keyboard(
     locale: str = "en",
 ) -> InlineKeyboardMarkup:
     """Yes/No confirmation before deleting an absence."""
-    return InlineKeyboardMarkup([[
-        InlineKeyboardButton(
-            t("telegram.absence_confirm_yes", locale),
-            callback_data=f"absdc:{absence_id}:{player_id}:{page}:{back_page}",
-        ),
-        InlineKeyboardButton(
-            t("telegram.absence_confirm_no", locale),
-            callback_data=f"absl:{player_id}:{page}:{back_page}",
-        ),
-    ]])
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    t("telegram.absence_confirm_yes", locale),
+                    callback_data=f"absdc:{absence_id}:{player_id}:{page}:{back_page}",
+                ),
+                InlineKeyboardButton(
+                    t("telegram.absence_confirm_no", locale),
+                    callback_data=f"absl:{player_id}:{page}:{back_page}",
+                ),
+            ]
+        ]
+    )

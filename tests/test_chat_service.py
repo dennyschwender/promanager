@@ -68,9 +68,7 @@ def test_author_display_name_full_name():
 
 
 def test_author_display_name_first_only():
-    user = User(
-        username="jdoe", email="j@t.com", hashed_password="x", role="member", first_name="John"
-    )
+    user = User(username="jdoe", email="j@t.com", hashed_password="x", role="member", first_name="John")
     assert author_display_name(user) == "John"
 
 

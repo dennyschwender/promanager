@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,6 +13,10 @@ from app.database import Base
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+if TYPE_CHECKING:
+    from models.event import Event
 
 
 class EventExternal(Base):

@@ -130,6 +130,7 @@ def test_is_date_in_absence_recurring_expired(db: Session):
 def test_apply_absence_to_future_events_period(db: Session):
     """Creating a period absence should auto-set matching future events to absent."""
     from datetime import timedelta
+
     today = date.today()
 
     player = Player(first_name="David", last_name="Test", is_active=True)
@@ -181,20 +182,25 @@ def test_apply_absence_to_future_events_period(db: Session):
     assert len(updated) == 2  # e1 and e2 should be updated
 
     att1 = db.query(Attendance).filter_by(event_id=e1.id, player_id=player.id).first()
+    assert att1 is not None
     assert att1.status == "absent"
+    assert att1.note is not None
     assert "[Absence]" in att1.note
     assert "Vacation" in att1.note
 
     att2 = db.query(Attendance).filter_by(event_id=e2.id, player_id=player.id).first()
+    assert att2 is not None
     assert att2.status == "absent"
 
     att3 = db.query(Attendance).filter_by(event_id=e3.id, player_id=player.id).first()
+    assert att3 is not None
     assert att3.status == "unknown"
 
 
 def test_apply_absence_respects_all_presence_type(db: Session):
     """Absence should override presence_type='all' (auto-present default)."""
     from datetime import timedelta
+
     today = date.today()
 
     player = Player(first_name="Eve", last_name="Test", is_active=True)
@@ -243,6 +249,7 @@ def test_apply_absence_respects_all_presence_type(db: Session):
 
     assert len(updated) == 1
     att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
+    assert att_refreshed is not None
     assert att_refreshed.status == "absent"
 
 
@@ -297,5 +304,6 @@ def test_apply_absence_preserves_explicit_present(db: Session):
     # Should NOT have updated (explicit present preserved)
     assert len(updated) == 0
     att_refreshed = db.query(Attendance).filter_by(event_id=event.id, player_id=player.id).first()
+    assert att_refreshed is not None
     assert att_refreshed.status == "present"
     assert att_refreshed.note == "Coach confirmed"

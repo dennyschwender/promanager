@@ -37,10 +37,7 @@ async def audit_log(
     if actor:
         query = query.filter(AuditLog.actor_username.ilike(f"%{actor}%"))
     if target:
-        query = query.filter(
-            (AuditLog.target_label.ilike(f"%{target}%")) |
-            (AuditLog.target_type.ilike(f"%{target}%"))
-        )
+        query = query.filter((AuditLog.target_label.ilike(f"%{target}%")) | (AuditLog.target_type.ilike(f"%{target}%")))
     if ip:
         query = query.filter(AuditLog.ip_address.ilike(f"%{ip}%"))
     if date_from:

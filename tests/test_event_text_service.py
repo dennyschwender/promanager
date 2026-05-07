@@ -96,7 +96,7 @@ def test_body_markdown_bold_italic():
     players = [_make_player(1, "Alice", "A", "goalie")]
     att = {1: _make_att(1, "present")}
     result = format_attendance_body(players, att, [], "en", grouped=True, markdown=True)
-    assert "*" in result   # bold status header
+    assert "*" in result  # bold status header
     assert "_Goalies" in result  # italic position label
 
 

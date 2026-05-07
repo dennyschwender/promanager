@@ -202,7 +202,9 @@ async def season_activate(
         db.add(season)
     db.commit()
     if season:
-        log_action("season.activate", target_type="season", target_id=season.id, target_label=season.name, request=request)
+        log_action(
+            "season.activate", target_type="season", target_id=season.id, target_label=season.name, request=request
+        )
     return RedirectResponse("/seasons", status_code=302)
 
 

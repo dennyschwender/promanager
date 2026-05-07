@@ -1,4 +1,5 @@
 """bot/views/notifications.py — Notification view renderers."""
+
 from __future__ import annotations
 
 import math
@@ -27,9 +28,13 @@ def render_notifications_list(user, db, page: int = 0) -> ViewResult:
             .all()
         )
         if not notifs:
-            keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
-            ]])
+            keyboard = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
+                    ]
+                ]
+            )
             return t("telegram.no_events", locale), keyboard
 
         total_pages = max(1, math.ceil(len(notifs) / NOTIF_PAGE_SIZE))
@@ -43,18 +48,24 @@ def render_notifications_list(user, db, page: int = 0) -> ViewResult:
             event_title = notif.event.title if notif.event else "Event"
             icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(notif.status, "?")
             text_lines.append(f"{icon} {player_name} → {notif.status}")
-            rows.append([InlineKeyboardButton(
-                f"👁 {event_title}",
-                callback_data=f"n:{notif.id}",
-            )])
+            rows.append(
+                [
+                    InlineKeyboardButton(
+                        f"👁 {event_title}",
+                        callback_data=f"n:{notif.id}",
+                    )
+                ]
+            )
     else:
-        linked_player = db.query(Player).filter(
-            Player.user_id == user.id, Player.archived_at.is_(None)
-        ).first()
+        linked_player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
         if linked_player is None:
-            keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
-            ]])
+            keyboard = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
+                    ]
+                ]
+            )
             return t("telegram.no_events", locale), keyboard
 
         notifs = (
@@ -64,9 +75,13 @@ def render_notifications_list(user, db, page: int = 0) -> ViewResult:
             .all()
         )
         if not notifs:
-            keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
-            ]])
+            keyboard = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(t("telegram.back_button", locale), callback_data="home"),
+                    ]
+                ]
+            )
             return t("telegram.no_events", locale), keyboard
 
         db.query(Notification).filter(
@@ -90,10 +105,14 @@ def render_notifications_list(user, db, page: int = 0) -> ViewResult:
             text_lines.append(header)
             text_lines.append(notif.body)
             if event:
-                rows.append([InlineKeyboardButton(
-                    f"👁 {event.title}",
-                    callback_data=f"e:{notif.event_id}",
-                )])
+                rows.append(
+                    [
+                        InlineKeyboardButton(
+                            f"👁 {event.title}",
+                            callback_data=f"e:{notif.event_id}",
+                        )
+                    ]
+                )
 
     nav = []
     if page > 0:
@@ -114,9 +133,13 @@ def render_notification_detail(user, db, notif_id: int) -> ViewResult:
     locale = user.locale or "en"
     notif = db.get(TelegramNotification, notif_id)
     if notif is None or notif.user_id != user.id:
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(t("telegram.back_button", locale), callback_data="nl"),
-        ]])
+        keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(t("telegram.back_button", locale), callback_data="nl"),
+                ]
+            ]
+        )
         return "Notification not found.", keyboard
 
     player_name = notif.player.full_name if notif.player else f"Player {notif.player_id}"

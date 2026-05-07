@@ -12,7 +12,6 @@ Create Date: 2026-05-07
 from __future__ import annotations
 
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy import text
 
 
@@ -26,7 +25,8 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     # Find TelegramNotification rows with no corresponding Notification for the same user+event+player
-    rows = conn.execute(text("""
+    rows = conn.execute(
+        text("""
         SELECT tn.user_id, tn.event_id, tn.player_id, tn.status, tn.created_at
         FROM telegram_notifications tn
         WHERE NOT EXISTS (
@@ -36,7 +36,8 @@ def upgrade() -> None:
               AND n.is_read = 0
         )
         ORDER BY tn.created_at ASC
-    """)).fetchall()
+    """)
+    ).fetchall()
 
     if not rows:
         return
@@ -80,16 +81,18 @@ def upgrade() -> None:
         seen.add(key)
         icon = icon_map.get(status, "?")
         pname = player_names.get(player_id, f"Player {player_id}")
-        to_insert.append({
-            "user_id": user_id,
-            "player_id": None,
-            "event_id": event_id,
-            "title": f"{icon} {pname} → {status}",
-            "body": event_titles.get(event_id, ""),
-            "tag": "direct",
-            "is_read": True,  # mark historical records as already read
-            "created_at": created_at,
-        })
+        to_insert.append(
+            {
+                "user_id": user_id,
+                "player_id": None,
+                "event_id": event_id,
+                "title": f"{icon} {pname} → {status}",
+                "body": event_titles.get(event_id, ""),
+                "tag": "direct",
+                "is_read": True,  # mark historical records as already read
+                "created_at": created_at,
+            }
+        )
 
     for rec in to_insert:
         conn.execute(

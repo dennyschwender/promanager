@@ -1,4 +1,5 @@
 """services/channels/telegram_channel.py — Telegram notification channel."""
+
 from __future__ import annotations
 
 import logging
@@ -35,10 +36,12 @@ class TelegramChannel:
 
         if notification.event_id:
             payload["reply_markup"] = {
-                "inline_keyboard": [[
-                    {"text": "📅 This event", "callback_data": f"evt:{notification.event_id}"},
-                    {"text": "📋 All events", "callback_data": "evts:0"},
-                ]]
+                "inline_keyboard": [
+                    [
+                        {"text": "📅 This event", "callback_data": f"evt:{notification.event_id}"},
+                        {"text": "📋 All events", "callback_data": "evts:0"},
+                    ]
+                ]
             }
 
         try:
@@ -50,7 +53,9 @@ class TelegramChannel:
             if not resp.ok:
                 logger.warning(
                     "TelegramChannel: API error %s for player %s: %s",
-                    resp.status_code, player.id, resp.text,
+                    resp.status_code,
+                    player.id,
+                    resp.text,
                 )
             return resp.ok
         except Exception as exc:

@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 """Test script for sending Telegram notifications."""
+
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import app.database as db_module
-from models.user import User
-from models.player import Player
 from models.event import Event
+from models.player import Player
+from models.user import User
 from services.telegram_notifications import notify_coaches_attendance_change
 
 
@@ -36,6 +37,7 @@ async def send_test_notification(user_id: int, event_id: int, player_id: int, st
 
         # Initialize bot if needed
         import bot as _bot
+
         if _bot.telegram_app is None:
             token = os.getenv("TELEGRAM_BOT_TOKEN")
             if not token:

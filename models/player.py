@@ -3,12 +3,25 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 from models.player_absence import PlayerAbsence  # noqa: F401
+
+if TYPE_CHECKING:
+    from models.attendance import Attendance
+    from models.notification import Notification
+    from models.notification_preference import NotificationPreference
+    from models.player_absence import PlayerAbsence
+    from models.player_contact import PlayerContact
+    from models.player_phone import PlayerPhone
+    from models.player_team import PlayerTeam
+    from models.telegram_notification import TelegramNotification
+    from models.user import User
+    from models.web_push_subscription import WebPushSubscription
 
 
 class Player(Base):

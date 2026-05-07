@@ -29,6 +29,7 @@ def main_menu_keyboard() -> ReplyKeyboardMarkup:
         is_persistent=True,
     )
 
+
 # Display icon per attendance status. "maybe" can be displayed but is not offered
 # as an action button — the bot simplifies the UI to present/absent/unknown only.
 STATUS_ICON: dict[str, str] = {"present": "✓", "absent": "✗", "unknown": "?", "maybe": "~"}
@@ -55,16 +56,26 @@ def events_keyboard(events: list[Event], page: int, total_pages: int, locale: st
     return InlineKeyboardMarkup(rows)
 
 
-def event_view_keyboard(event_id: int, back_page: int = 0, locale: str = "en", is_privileged: bool = False, msg_count: int = 0) -> InlineKeyboardMarkup:
+def event_view_keyboard(
+    event_id: int, back_page: int = 0, locale: str = "en", is_privileged: bool = False, msg_count: int = 0
+) -> InlineKeyboardMarkup:
     """Read-only event detail keyboard: Modify Attendance + Back."""
     rows = [
-        [InlineKeyboardButton(t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}")],
+        [
+            InlineKeyboardButton(
+                t("telegram.edit_attendance_button", locale), callback_data=f"evte:{event_id}:0:{back_page}"
+            )
+        ],
     ]
     if is_privileged:
-        rows.append([
-            InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
-            InlineKeyboardButton(t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"),
-        ])
+        rows.append(
+            [
+                InlineKeyboardButton(t("telegram.notes_button", locale), callback_data=f"evtn:{event_id}:{back_page}"),
+                InlineKeyboardButton(
+                    t("telegram.externals_button", locale), callback_data=f"evtx:{event_id}:{back_page}"
+                ),
+            ]
+        )
     if msg_count > 0:
         rows.append([InlineKeyboardButton(f"💬 Chat ({msg_count})", callback_data=f"ec:{event_id}")])
     rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"el:{back_page}")])
@@ -143,5 +154,7 @@ def event_admin_keyboard(
         rows.append(nav)
 
     # Back returns to view mode (not the events list)
-    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")])
+    rows.append(
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")]
+    )
     return InlineKeyboardMarkup(rows)

@@ -46,15 +46,17 @@ async def dashboard(
             team_ids = get_coach_teams(user, db)
         else:
             # member: get team(s) from PlayerTeam memberships of linked player
-            player = db.query(Player).filter(
-                Player.user_id == user.id,
-                Player.archived_at.is_(None),
-            ).first()
+            player = (
+                db.query(Player)
+                .filter(
+                    Player.user_id == user.id,
+                    Player.archived_at.is_(None),
+                )
+                .first()
+            )
             if player:
                 team_ids = {
-                    row[0] for row in db.query(PlayerTeam.team_id).filter(
-                        PlayerTeam.player_id == player.id
-                    ).all()
+                    row[0] for row in db.query(PlayerTeam.team_id).filter(PlayerTeam.player_id == player.id).all()
                 }
             else:
                 team_ids = set()
@@ -81,17 +83,25 @@ async def dashboard(
     my_attendance: dict[int, Attendance] = {}
     my_player_id: int | None = None
     if not user.is_admin and not user.is_coach and top_events:
-        my_player = db.query(Player).filter(
-            Player.user_id == user.id,
-            Player.archived_at.is_(None),
-        ).first()
+        my_player = (
+            db.query(Player)
+            .filter(
+                Player.user_id == user.id,
+                Player.archived_at.is_(None),
+            )
+            .first()
+        )
         if my_player:
             my_player_id = my_player.id
             top_event_ids = [e.id for e in top_events]
-            records = db.query(Attendance).filter(
-                Attendance.event_id.in_(top_event_ids),
-                Attendance.player_id == my_player.id,
-            ).all()
+            records = (
+                db.query(Attendance)
+                .filter(
+                    Attendance.event_id.in_(top_event_ids),
+                    Attendance.player_id == my_player.id,
+                )
+                .all()
+            )
             my_attendance = {a.event_id: a for a in records}
 
     # Admin extras

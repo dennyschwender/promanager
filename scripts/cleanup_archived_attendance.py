@@ -47,12 +47,10 @@ def run(dry_run: bool = False) -> None:
                 print(
                     f"  {'[DRY RUN] Would delete' if dry_run else 'Deleting'} "
                     f"{len(future_ids)} future attendance row(s) for "
-                    f"{player.full_name} (archived {player.archived_at.date()})"
+                    f"{player.full_name} (archived {player.archived_at.date()})"  # type: ignore[union-attr]
                 )
                 if not dry_run:
-                    db.query(Attendance).filter(Attendance.id.in_(future_ids)).delete(
-                        synchronize_session=False
-                    )
+                    db.query(Attendance).filter(Attendance.id.in_(future_ids)).delete(synchronize_session=False)
                 total_deleted += len(future_ids)
 
         if not dry_run and total_deleted:

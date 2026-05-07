@@ -1,11 +1,12 @@
 # tests/test_telegram_notifications.py
 from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
-def _make_coach(user_id: int, chat_id: str | None, players: list = None):
+def _make_coach(user_id: int, chat_id: str | None, players: list | None = None):
     user = MagicMock()
     user.telegram_chat_id = chat_id
     user.players = players or []
@@ -62,8 +63,9 @@ async def test_notify_coaches_sends_telegram_to_coach_with_chat_id():
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach])
     mock_app = _make_bot_app()
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", mock_app),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -72,6 +74,7 @@ async def test_notify_coaches_sends_telegram_to_coach_with_chat_id():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_attendance_change
+
         await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     mock_app.bot.send_message.assert_called_once()
@@ -87,8 +90,9 @@ async def test_notify_coaches_creates_notification_for_coach_without_telegram():
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach])
     mock_app = _make_bot_app()
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", mock_app),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -96,10 +100,12 @@ async def test_notify_coaches_creates_notification_for_coach_without_telegram():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_attendance_change
+
         await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     mock_app.bot.send_message.assert_not_called()
     from models.notification import Notification
+
     added = [c.args[0] for c in mock_db.add.call_args_list]
     assert any(isinstance(obj, Notification) for obj in added)
 
@@ -110,8 +116,9 @@ async def test_notify_coaches_skips_telegram_when_bot_not_initialized():
     coach = _make_coach(user_id=10, chat_id="chat123")
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach])
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", None),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -119,9 +126,11 @@ async def test_notify_coaches_skips_telegram_when_bot_not_initialized():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_attendance_change
+
         await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     from models.notification import Notification
+
     added = [c.args[0] for c in mock_db.add.call_args_list]
     assert any(isinstance(obj, Notification) for obj in added)
 
@@ -134,8 +143,9 @@ async def test_notify_coaches_deduplicates_by_user_id():
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach1, coach2])
     mock_app = _make_bot_app()
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", mock_app),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -144,10 +154,12 @@ async def test_notify_coaches_deduplicates_by_user_id():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_attendance_change
+
         await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="present")
 
     mock_app.bot.send_message.assert_called_once()
     from models.notification import Notification
+
     notif_adds = [c for c in mock_db.add.call_args_list if isinstance(c.args[0], Notification)]
     assert len(notif_adds) == 1
 
@@ -161,8 +173,9 @@ async def test_notify_coaches_deduplicates_shared_telegram_chat_id():
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach1, coach2])
     mock_app = _make_bot_app()
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", mock_app),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -171,10 +184,12 @@ async def test_notify_coaches_deduplicates_shared_telegram_chat_id():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_attendance_change
+
         await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="present")
 
     mock_app.bot.send_message.assert_called_once()
     from models.notification import Notification
+
     notif_adds = [c for c in mock_db.add.call_args_list if isinstance(c.args[0], Notification)]
     assert len(notif_adds) == 2  # one per distinct user_id
 
@@ -198,8 +213,9 @@ async def test_notify_about_external_change_sends_telegram_and_notification():
     )
     mock_app = _make_bot_app()
 
-    import bot as _bot
     import app.database as _db_mod
+    import bot as _bot
+
     with (
         patch.object(_bot, "telegram_app", mock_app),
         patch.object(_db_mod, "SessionLocal", return_value=mock_db),
@@ -207,6 +223,7 @@ async def test_notify_about_external_change_sends_telegram_and_notification():
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
         from services.telegram_notifications import notify_coaches_about_external_change
+
         await notify_coaches_about_external_change(event_id=1, ext_id=99, new_status="absent")
 
     mock_app.bot.send_message.assert_called_once()
@@ -214,5 +231,6 @@ async def test_notify_about_external_change_sends_telegram_and_notification():
     assert "ext" in text
     assert "✗" in text
     from models.notification import Notification
+
     notif_adds = [c for c in mock_db.add.call_args_list if isinstance(c.args[0], Notification)]
     assert len(notif_adds) == 1

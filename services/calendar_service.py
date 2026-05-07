@@ -41,7 +41,7 @@ def _vtimezone(tz_name: str) -> list[str]:
         return []
 
     def _fmt_offset(td: object) -> str:
-        total = int(td.total_seconds())  # type: ignore[union-attr]
+        total = int(td.total_seconds())  # type: ignore[union-attr, attr-defined]
         sign = "+" if total >= 0 else "-"
         total = abs(total)
         h, m = divmod(total // 60, 60)
@@ -83,7 +83,6 @@ def _vtimezone(tz_name: str) -> list[str]:
     return lines
 
 
-
 def _vevent(uid: str, summary: str, dtstart: str, dtend: str, location: str | None, dtstamp: str) -> list[str]:
     lines = [
         "BEGIN:VEVENT",
@@ -103,12 +102,7 @@ def _get_events_for_user(user: User, db: Session) -> list[Event]:
     cutoff = datetime.now(timezone.utc).date() - timedelta(days=30)
 
     if user.is_admin:
-        return (
-            db.query(Event)
-            .filter(Event.event_date >= cutoff)
-            .order_by(Event.event_date)
-            .all()
-        )
+        return db.query(Event).filter(Event.event_date >= cutoff).order_by(Event.event_date).all()
 
     if user.is_coach:
         team_ids = [ut.team_id for ut in db.query(UserTeam).filter(UserTeam.user_id == user.id).all()]
@@ -131,10 +125,7 @@ def _get_events_for_user(user: User, db: Session) -> list[Event]:
     if not team_ids:
         return []
     return (
-        db.query(Event)
-        .filter(Event.team_id.in_(team_ids), Event.event_date >= cutoff)
-        .order_by(Event.event_date)
-        .all()
+        db.query(Event).filter(Event.team_id.in_(team_ids), Event.event_date >= cutoff).order_by(Event.event_date).all()
     )
 
 
@@ -158,9 +149,7 @@ def build_ical_feed(user: User, db: Session, app_url: str, tz: str) -> str:
 
         if event.event_time:
             t_start = event.event_time
-            t_end = event.event_end_time or (
-                datetime.combine(d, t_start) + timedelta(hours=1)
-            ).time()
+            t_end = event.event_end_time or (datetime.combine(d, t_start) + timedelta(hours=1)).time()
             if tz.upper() == "UTC":
                 dtstart = f"DTSTART:{d.strftime('%Y%m%d')}T{t_start.strftime('%H%M%S')}Z"
                 dtend = f"DTEND:{d.strftime('%Y%m%d')}T{t_end.strftime('%H%M%S')}Z"

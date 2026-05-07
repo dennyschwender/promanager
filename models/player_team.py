@@ -4,11 +4,17 @@ role, position, shirt number, membership status, and season scope."""
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from models.player import Player
+    from models.season import Season
+    from models.team import Team
 
 
 class PlayerTeam(Base):

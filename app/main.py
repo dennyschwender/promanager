@@ -203,7 +203,7 @@ def create_app() -> FastAPI:
 
     # ── Rate limiting ─────────────────────────────────────────────────────
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     # ── Middleware ────────────────────────────────────────────────────────
     app.add_middleware(LocaleMiddleware)  # added first → executes second (inner)
@@ -358,6 +358,7 @@ def create_app() -> FastAPI:
             return _error(_rt(request, "errors.email_taken", email=email))
 
         db_user = db.get(_User, user.id)
+        assert db_user is not None
         db_user.username = username
         db_user.email = email
         db_user.locale = locale

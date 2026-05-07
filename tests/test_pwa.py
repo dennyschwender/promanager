@@ -1,6 +1,5 @@
 """Tests for PWA endpoints: service worker, manifest."""
 
-import pytest
 from app.config import settings
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from dateutil.rrule import rrulestr
+from dateutil.rrule import rrulestr  # type: ignore[import-untyped]
 from sqlalchemy.orm import Session
 
 from models.player_absence import PlayerAbsence
@@ -13,7 +13,7 @@ from models.player_absence import PlayerAbsence
 def _date_matches_absence(check_date: date, absence: PlayerAbsence) -> bool:
     """Check if a date matches a specific absence record (pure logic, no DB)."""
     if absence.absence_type == "period":
-        return absence.start_date and absence.end_date and absence.start_date <= check_date <= absence.end_date
+        return absence.start_date and absence.end_date and absence.start_date <= check_date <= absence.end_date  # type: ignore[return-value]
     elif absence.absence_type == "recurring":
         if not (absence.rrule and absence.rrule_until):
             return False

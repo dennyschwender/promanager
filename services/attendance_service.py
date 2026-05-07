@@ -195,14 +195,16 @@ def get_event_attendance_stats(
     for event in events:
         c = counts[event.id]
         total = c["present"] + c["absent"] + c["maybe"] + c["unknown"]
-        results.append({
-            "event": event,
-            "present_count": c["present"],
-            "absent_count": c["absent"],
-            "maybe_count": c["maybe"],
-            "unknown_count": c["unknown"],
-            "total_players": total,
-        })
+        results.append(
+            {
+                "event": event,
+                "present_count": c["present"],
+                "absent_count": c["absent"],
+                "maybe_count": c["maybe"],
+                "unknown_count": c["unknown"],
+                "total_players": total,
+            }
+        )
     return results
 
 
@@ -251,10 +253,7 @@ def get_matrix_attendance_stats(
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
     attendances = (
-        db.query(Attendance)
-        .options(joinedload(Attendance.player))
-        .filter(Attendance.event_id.in_(event_ids))
-        .all()
+        db.query(Attendance).options(joinedload(Attendance.player)).filter(Attendance.event_id.in_(event_ids)).all()
     )
 
     # Build player → {event_id: status}
@@ -270,12 +269,14 @@ def get_matrix_attendance_stats(
     for entry in sorted(player_map.values(), key=lambda x: (x["player"].last_name or "", x["player"].first_name or "")):
         statuses = entry["statuses"]
         present = sum(1 for s in statuses.values() if s == "present")
-        rows.append({
-            "player": entry["player"],
-            "statuses": statuses,
-            "present_count": present,
-            "total": len(event_ids),
-        })
+        rows.append(
+            {
+                "player": entry["player"],
+                "statuses": statuses,
+                "present_count": present,
+                "total": len(event_ids),
+            }
+        )
 
     return {"events": events, "rows": rows}
 
@@ -292,7 +293,7 @@ def get_player_attendance_history(db: Session, player_id: int, season_id: int | 
     for att in attendances:
         if att.event:
             results.append({"event": att.event, "attendance": att})
-    results.sort(key=lambda x: x["event"].event_date, reverse=True)
+    results.sort(key=lambda x: x["event"].event_date, reverse=True)  # type: ignore[attr-defined]
     return results
 
 
@@ -315,7 +316,6 @@ def get_player_season_matrix(db: Session, player_id: int, season_id: int) -> dic
         }
     """
     from collections import defaultdict  # noqa: PLC0415
-    from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
     events = db.query(Event).filter(Event.season_id == season_id).order_by(Event.event_date.asc()).all()
     if not events:
@@ -323,9 +323,7 @@ def get_player_season_matrix(db: Session, player_id: int, season_id: int) -> dic
 
     event_ids = [e.id for e in events]
     attendances = (
-        db.query(Attendance)
-        .filter(Attendance.player_id == player_id, Attendance.event_id.in_(event_ids))
-        .all()
+        db.query(Attendance).filter(Attendance.player_id == player_id, Attendance.event_id.in_(event_ids)).all()
     )
     status_map = {att.event_id: att.status for att in attendances}
 
@@ -436,7 +434,9 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
         )
         .all()
     )
-    players = [m.player for m in memberships if m.player is not None and m.player.is_active and m.player.archived_at is None]
+    players = [
+        m.player for m in memberships if m.player is not None and m.player.is_active and m.player.archived_at is None
+    ]
 
     existing_player_ids = {att.player_id for att in db.query(Attendance).filter(Attendance.event_id == event.id).all()}
 
@@ -462,6 +462,7 @@ def ensure_attendance_records(db: Session, event: Event) -> None:
 
         # Apply active absences to newly created records
         from services.absence_service import apply_absence_to_future_events, is_date_in_absence
+
         for player_id in new_player_ids:
             if is_date_in_absence(player_id, event.event_date, db):
                 # Re-apply absences for this specific player (handles override logic)

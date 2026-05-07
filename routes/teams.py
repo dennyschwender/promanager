@@ -44,20 +44,20 @@ def _parse_schedule_rows(form, count: int) -> list[dict]:
     for i in range(count):
         rows.append(
             {
-                "id": (form.get(f"sched_id_{i}") or "").strip(),
-                "title": (form.get(f"sched_title_{i}") or "").strip(),
-                "event_type": (form.get(f"sched_event_type_{i}") or "training").strip(),
-                "recurrence_rule": (form.get(f"sched_rule_{i}") or "weekly").strip(),
-                "start_date": (form.get(f"sched_start_{i}") or "").strip(),
-                "end_date": (form.get(f"sched_end_{i}") or "").strip(),
-                "event_time": (form.get(f"sched_time_{i}") or "").strip(),
-                "event_end_time": (form.get(f"sched_end_time_{i}") or "").strip(),
-                "location": (form.get(f"sched_location_{i}") or "").strip(),
-                "meeting_time": (form.get(f"sched_meeting_time_{i}") or "").strip(),
-                "meeting_location": (form.get(f"sched_meeting_location_{i}") or "").strip(),
-                "presence_type": (form.get(f"sched_presence_{i}") or "normal").strip(),
-                "description": (form.get(f"sched_desc_{i}") or "").strip(),
-                "season_id": (form.get(f"sched_season_{i}") or "").strip(),
+                "id": str(form.get(f"sched_id_{i}") or "").strip(),
+                "title": str(form.get(f"sched_title_{i}") or "").strip(),
+                "event_type": str(form.get(f"sched_event_type_{i}") or "training").strip(),
+                "recurrence_rule": str(form.get(f"sched_rule_{i}") or "weekly").strip(),
+                "start_date": str(form.get(f"sched_start_{i}") or "").strip(),
+                "end_date": str(form.get(f"sched_end_{i}") or "").strip(),
+                "event_time": str(form.get(f"sched_time_{i}") or "").strip(),
+                "event_end_time": str(form.get(f"sched_end_time_{i}") or "").strip(),
+                "location": str(form.get(f"sched_location_{i}") or "").strip(),
+                "meeting_time": str(form.get(f"sched_meeting_time_{i}") or "").strip(),
+                "meeting_location": str(form.get(f"sched_meeting_location_{i}") or "").strip(),
+                "presence_type": str(form.get(f"sched_presence_{i}") or "normal").strip(),
+                "description": str(form.get(f"sched_desc_{i}") or "").strip(),
+                "season_id": str(form.get(f"sched_season_{i}") or "").strip(),
             }
         )
     return rows
@@ -319,7 +319,7 @@ async def team_edit_post(
 
     # ── CONFIRMATION POST ────────────────────────────────────────────────────
     if confirm_step == "1":
-        raw_json = (form.get("_schedules_json") or "").strip()
+        raw_json = str(form.get("_schedules_json") or "").strip()
         try:
             payload = verify_payload(raw_json)
         except ValueError:
@@ -361,7 +361,7 @@ async def team_edit_post(
                     sched_id = int(sched_id_str)
                 except ValueError:
                     continue
-                sched = stored_map.get(sched_id)
+                sched = stored_map.get(sched_id)  # type: ignore[assignment]
                 if sched is None:
                     continue
                 if confirmed:
@@ -412,7 +412,7 @@ async def team_edit_post(
 
     # ── FIRST POST ───────────────────────────────────────────────────────────
     try:
-        sched_count = int((form.get("sched_count") or "0").strip() or "0")
+        sched_count = int(str(form.get("sched_count") or "0").strip() or "0")
     except ValueError:
         sched_count = 0
     submitted_rows = _parse_schedule_rows(form, sched_count)
@@ -541,8 +541,8 @@ async def add_team_coach(
         raise HTTPException(status_code=404)
 
     form = await request.form()
-    user_id = int(form.get("user_id", 0))
-    season_id_raw = form.get("season_id", "").strip()
+    user_id = int(str(form.get("user_id", 0) or 0))
+    season_id_raw = str(form.get("season_id", "") or "").strip()
     season_id = int(season_id_raw) if season_id_raw else None
 
     existing_q = db.query(UserTeam).filter(
@@ -670,19 +670,27 @@ async def team_absences_view(
         raise HTTPException(status_code=404, detail="Season not found")
 
     # Check if user coaches this team or is admin
-    user_team = db.query(UserTeam).filter(
-        UserTeam.user_id == current_user.id,
-        UserTeam.team_id == team_id,
-    ).first()
+    user_team = (
+        db.query(UserTeam)
+        .filter(
+            UserTeam.user_id == current_user.id,
+            UserTeam.team_id == team_id,
+        )
+        .first()
+    )
 
     if not current_user.is_admin and not user_team:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     # Get all players in team for this season
-    player_teams = db.query(PlayerTeam).filter(
-        PlayerTeam.team_id == team_id,
-        PlayerTeam.season_id == season_id,
-    ).all()
+    player_teams = (
+        db.query(PlayerTeam)
+        .filter(
+            PlayerTeam.team_id == team_id,
+            PlayerTeam.season_id == season_id,
+        )
+        .all()
+    )
 
     # Collect absences for each player
     player_absences = []

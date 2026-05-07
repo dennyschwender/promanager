@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,6 +13,11 @@ from app.database import Base
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+if TYPE_CHECKING:
+    from models.event import Event
+    from models.user import User
 
 
 class EventMessage(Base):
@@ -27,9 +33,7 @@ class EventMessage(Base):
     # "announcement" | "discussion"
     lane: Mapped[str] = mapped_column(String(16), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     user: Mapped["User"] = relationship("User", lazy="select")  # noqa: F821
     event: Mapped["Event"] = relationship(  # noqa: F821

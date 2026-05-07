@@ -57,8 +57,12 @@ async def login_post(
 ):
     user = get_user_by_username(db, username)
     if user is None:
-        log_action("auth.login_failed", actor_username=username,
-                   extra={"reason": "unknown_email", "username": username}, request=request)
+        log_action(
+            "auth.login_failed",
+            actor_username=username,
+            extra={"reason": "unknown_email", "username": username},
+            request=request,
+        )
         return render(
             request,
             "auth/login.html",
@@ -66,8 +70,12 @@ async def login_post(
             status_code=401,
         )
     if not user.is_active:
-        log_action("auth.login_failed", actor_username=username,
-                   extra={"reason": "inactive_account", "username": username}, request=request)
+        log_action(
+            "auth.login_failed",
+            actor_username=username,
+            extra={"reason": "inactive_account", "username": username},
+            request=request,
+        )
         return render(
             request,
             "auth/login.html",
@@ -75,8 +83,13 @@ async def login_post(
             status_code=401,
         )
     if not verify_password(password, user.hashed_password):
-        log_action("auth.login_failed", actor_user_id=user.id, actor_username=user.username,
-                   extra={"reason": "wrong_password"}, request=request)
+        log_action(
+            "auth.login_failed",
+            actor_user_id=user.id,
+            actor_username=user.username,
+            extra={"reason": "wrong_password"},
+            request=request,
+        )
         return render(
             request,
             "auth/login.html",
@@ -141,7 +154,15 @@ async def register_post(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
-    form_data = {"username": username, "email": email, "role": role, "phone": phone, "locale": locale, "first_name": first_name, "last_name": last_name}
+    form_data = {
+        "username": username,
+        "email": email,
+        "role": role,
+        "phone": phone,
+        "locale": locale,
+        "first_name": first_name,
+        "last_name": last_name,
+    }
 
     def error(msg: str):
         return render(
@@ -161,10 +182,21 @@ async def register_post(
     if len(password) < 8:
         return error(rt(request, "errors.password_too_short"))
 
-    create_user(db, username=username, email=email, password=password, role=role, phone=phone or None, locale=locale or None, first_name=first_name or None, last_name=last_name or None)
+    create_user(
+        db,
+        username=username,
+        email=email,
+        password=password,
+        role=role,
+        phone=phone or None,
+        locale=locale or None,
+        first_name=first_name or None,
+        last_name=last_name or None,
+    )
 
     if send_welcome_email == "1" and email:
         from services.email_service import send_welcome_email as _send_welcome  # noqa: PLC0415
+
         _send_welcome(to=email, username=username, password=password, locale=locale or "en")
 
     return render(
@@ -208,12 +240,24 @@ async def magic_link_login(
         log_action("auth.magic_link_failed", extra={"reason": "user_not_found"}, request=request)
         return RedirectResponse("/auth/login", status_code=302)
     if not user.is_active:
-        log_action("auth.magic_link_failed", actor_user_id=user.id, actor_username=user.username,
-                   extra={"reason": "inactive_account"}, request=request)
+        log_action(
+            "auth.magic_link_failed",
+            actor_user_id=user.id,
+            actor_username=user.username,
+            extra={"reason": "inactive_account"},
+            request=request,
+        )
         return RedirectResponse("/auth/login", status_code=302)
 
-    log_action("auth.magic_link_login", actor_user_id=user.id, actor_username=user.username,
-               target_type="user", target_id=user.id, target_label=user.username, request=request)
+    log_action(
+        "auth.magic_link_login",
+        actor_user_id=user.id,
+        actor_username=user.username,
+        target_type="user",
+        target_id=user.id,
+        target_label=user.username,
+        request=request,
+    )
     cookie_val = create_session_cookie(user.id)
     response = RedirectResponse(redirect_path, status_code=302)
     response.set_cookie(
@@ -265,6 +309,7 @@ async def change_password_post(
         return _error(rt(request, "auth.change_password_mismatch"))
 
     db_user = db.get(User, user.id)
+    assert db_user is not None
     db_user.hashed_password = hash_password(new_password)
     db_user.must_change_password = False
     db.commit()
@@ -287,6 +332,7 @@ async def stop_impersonating(request: Request):
         from itsdangerous import BadSignature, SignatureExpired  # noqa: PLC0415
 
         from app.session import _signer  # noqa: PLC0415
+
         try:
             user_id_bytes = _signer.unsign(orig_session, max_age=60 * 60 * 24 * 7)
             restored_cookie = create_session_cookie(int(user_id_bytes))
@@ -317,6 +363,7 @@ async def logout_all_post(
     db: Session = Depends(get_db),
 ):
     db_user = db.get(User, user.id)
+    assert db_user is not None
     db_user.logout_all_at = datetime.now(timezone.utc)
     db.commit()
 
@@ -373,7 +420,8 @@ async def forgot_password_post(
         )
 
     if user and user.is_active:
-        log_action("auth.forgot_password", target_type="user", target_id=user.id,
-                   target_label=user.username, request=request)
+        log_action(
+            "auth.forgot_password", target_type="user", target_id=user.id, target_label=user.username, request=request
+        )
     # Always show success to avoid user enumeration
     return render(request, "auth/forgot_password.html", {"user": None, "sent": True, "error": None})

@@ -55,13 +55,13 @@ def _parse_team_memberships(form) -> list[tuple[int, int, dict]]:
                 priority = int(form.get(f"priority_{tid}", 1))
             except (ValueError, TypeError):
                 priority = 1
-            shirt_raw = form.get(f"shirt_{tid}", "").strip()
-            injured_raw = form.get(f"injured_until_{tid}", "").strip()
+            shirt_raw = str(form.get(f"shirt_{tid}", "") or "").strip()
+            injured_raw = str(form.get(f"injured_until_{tid}", "") or "").strip()
             extra = {
-                "role": (form.get(f"role_{tid}") or "player").strip(),
-                "position": (form.get(f"position_{tid}") or "").strip() or None,
+                "role": str(form.get(f"role_{tid}") or "player").strip(),
+                "position": str(form.get(f"position_{tid}") or "").strip() or None,  # type: ignore[union-attr]
                 "shirt_number": int(shirt_raw) if shirt_raw.isdigit() else None,
-                "membership_status": (form.get(f"status_{tid}") or "active").strip(),
+                "membership_status": str(form.get(f"status_{tid}") or "active").strip(),
                 "injured_until": _parse_date(injured_raw),
                 "absent_by_default": form.get(f"absent_default_{tid}") in ("on", "1", "true", "yes"),
             }
@@ -200,17 +200,17 @@ def _sync_phones(db: Session, player: Player, form) -> None:
     """Rebuild PlayerPhone records from phone_N / phone_label_N form fields."""
     db.query(PlayerPhone).filter(PlayerPhone.player_id == player.id).delete()
     for i in range(1, 11):
-        number = (form.get(f"phone_{i}") or "").strip()
+        number = str(form.get(f"phone_{i}") or "").strip()
         if not number:
             continue
-        label = (form.get(f"phone_label_{i}") or "").strip() or None
+        label = str(form.get(f"phone_label_{i}") or "").strip() or None
         db.add(PlayerPhone(player_id=player.id, phone=number, label=label))
 
 
 def _sync_contact(db: Session, player: Player, form) -> None:
     """Upsert PlayerContact record from contact_* form fields."""
-    first = (form.get("contact_first_name") or "").strip()
-    last = (form.get("contact_last_name") or "").strip()
+    first = str(form.get("contact_first_name") or "").strip()
+    last = str(form.get("contact_last_name") or "").strip()
     # If both names are blank, remove existing contact
     if not first and not last:
         db.query(PlayerContact).filter(PlayerContact.player_id == player.id).delete()
@@ -223,13 +223,13 @@ def _sync_contact(db: Session, player: Player, form) -> None:
 
     contact.first_name = first
     contact.last_name = last
-    contact.relationship_label = (form.get("contact_relationship") or "").strip() or None
-    contact.email = (form.get("contact_email") or "").strip() or None
-    contact.phone = (form.get("contact_phone") or "").strip() or None
-    contact.phone2 = (form.get("contact_phone2") or "").strip() or None
-    contact.street = (form.get("contact_street") or "").strip() or None
-    contact.postcode = (form.get("contact_postcode") or "").strip() or None
-    contact.city = (form.get("contact_city") or "").strip() or None
+    contact.relationship_label = str(form.get("contact_relationship") or "").strip() or None
+    contact.email = str(form.get("contact_email") or "").strip() or None
+    contact.phone = str(form.get("contact_phone") or "").strip() or None
+    contact.phone2 = str(form.get("contact_phone2") or "").strip() or None
+    contact.street = str(form.get("contact_street") or "").strip() or None
+    contact.postcode = str(form.get("contact_postcode") or "").strip() or None
+    contact.city = str(form.get("contact_city") or "").strip() or None
 
 
 def _sync_user_from_player(db: Session, player: Player) -> None:
@@ -251,11 +251,11 @@ def _sync_user_from_player(db: Session, player: Player) -> None:
 
 def _apply_personal_fields(player: Player, form) -> None:
     """Write personal-info form values onto a Player instance."""
-    player.sex = (form.get("sex") or "").strip() or None
-    player.date_of_birth = _parse_date((form.get("date_of_birth") or "").strip())
-    player.street = (form.get("street") or "").strip() or None
-    player.postcode = (form.get("postcode") or "").strip() or None
-    player.city = (form.get("city") or "").strip() or None
+    player.sex = str(form.get("sex") or "").strip() or None
+    player.date_of_birth = _parse_date(str(form.get("date_of_birth") or "").strip())  # type: ignore[union-attr]
+    player.street = str(form.get("street") or "").strip() or None
+    player.postcode = str(form.get("postcode") or "").strip() or None
+    player.city = str(form.get("city") or "").strip() or None
 
 
 def _active_season_id(db: Session) -> int | None:
@@ -291,13 +291,13 @@ def _parse_team_memberships_for_season(form, season_id: int) -> list[tuple[int, 
             priority = int(form.get(f"priority_{season_id}_{tid}", 1))
         except (ValueError, TypeError):
             priority = 1
-        shirt_raw = form.get(f"shirt_{season_id}_{tid}", "").strip()
-        injured_raw = form.get(f"injured_until_{season_id}_{tid}", "").strip()
+        shirt_raw = str(form.get(f"shirt_{season_id}_{tid}", "") or "").strip()
+        injured_raw = str(form.get(f"injured_until_{season_id}_{tid}", "") or "").strip()
         extra = {
-            "role": (form.get(f"role_{season_id}_{tid}") or "player").strip(),
-            "position": (form.get(f"position_{season_id}_{tid}") or "").strip() or None,
+            "role": str(form.get(f"role_{season_id}_{tid}") or "player").strip(),
+            "position": str(form.get(f"position_{season_id}_{tid}") or "").strip() or None,
             "shirt_number": int(shirt_raw) if shirt_raw.isdigit() else None,
-            "membership_status": (form.get(f"status_{season_id}_{tid}") or "active").strip(),
+            "membership_status": str(form.get(f"status_{season_id}_{tid}") or "active").strip(),
             "injured_until": _parse_date(injured_raw),
             "absent_by_default": form.get(f"absent_default_{season_id}_{tid}") in ("on", "1", "true", "yes"),
         }
@@ -541,7 +541,9 @@ async def player_bulk_update(
                             from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
 
                             updated = apply_absence_to_future_events(pt.player_id, db)
-                            from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
+                            from services.telegram_notifications import (
+                                notify_coaches_attendance_change,  # noqa: PLC0415
+                            )
 
                             for _event_id, _pid, _status in updated:
                                 background_tasks.add_task(notify_coaches_attendance_change, _event_id, _pid, _status)
@@ -558,7 +560,9 @@ async def player_bulk_update(
                             db.flush()
                             reverted = revert_absence_from_events(pt.player_id, db)
                             if reverted and background_tasks is not None:
-                                from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
+                                from services.telegram_notifications import (
+                                    notify_coaches_attendance_change,  # noqa: PLC0415
+                                )
 
                                 for _ev_id, _pid, _status in reverted:
                                     background_tasks.add_task(notify_coaches_attendance_change, _ev_id, _pid, _status)
@@ -568,11 +572,13 @@ async def player_bulk_update(
                         if new_val and not old_val:
                             from services.absence_service import apply_default_absence_to_future_events  # noqa: PLC0415
 
-                            apply_default_absence_to_future_events(pt.player_id, body.team_id, body.season_id, db)
+                            apply_default_absence_to_future_events(
+                                pt.player_id, body.team_id or 0, body.season_id or 0, db
+                            )
                         elif not new_val and old_val:
                             from services.absence_service import revert_default_absence_from_events  # noqa: PLC0415
 
-                            revert_default_absence_from_events(pt.player_id, body.team_id, body.season_id, db)
+                            revert_default_absence_from_events(pt.player_id, body.team_id or 0, body.season_id or 0, db)
                     setattr(pt, field, value)
 
             sp.commit()
@@ -877,11 +883,11 @@ async def player_new_post(
     db: Session = Depends(get_db),
 ):  # audit: player.create logged after commit
     form = await request.form()
-    first_name = (form.get("first_name") or "").strip()
-    last_name = (form.get("last_name") or "").strip()
-    email = (form.get("email") or "").strip()
-    phone = (form.get("phone") or "").strip()
-    user_id_s = (form.get("user_id") or "").strip()
+    first_name = str(form.get("first_name") or "").strip()
+    last_name = str(form.get("last_name") or "").strip()
+    email = str(form.get("email") or "").strip()
+    phone = str(form.get("phone") or "").strip()
+    user_id_s = str(form.get("user_id") or "").strip()
 
     teams = db.query(Team).order_by(Team.name).all()
     users = db.query(User).order_by(User.username).all()
@@ -1017,12 +1023,12 @@ async def player_import_post(
     form = await request.form()
     context_team = db.get(Team, team_id) if team_id else None
 
-    season_id_s = (form.get("season_id") or "").strip()
+    season_id_s = str(form.get("season_id") or "").strip()
     selected_season_id = (
         int(season_id_s) if season_id_s else (season_id or (_active_season_id(db) if team_id else None))
     )
 
-    import_source = (form.get("import_source") or "").strip()
+    import_source = str(form.get("import_source") or "").strip()
     error: str | None = None
     result: ImportResult | None = None
 
@@ -1047,7 +1053,7 @@ async def player_import_post(
         )
 
     if import_source == "paste":
-        rows_json = (form.get("rows_json") or "").strip()
+        rows_json = str(form.get("rows_json") or "").strip()
         try:
             rows = json.loads(rows_json)
             if not isinstance(rows, list):
@@ -1059,16 +1065,16 @@ async def player_import_post(
 
     elif import_source == "file":
         upload = form.get("import_file")
-        if upload is None or not upload.filename:
+        if upload is None or not upload.filename:  # type: ignore[union-attr]
             error = rt(request, "errors.no_file")
             return _render(400)
 
-        content = await upload.read()
+        content = await upload.read()  # type: ignore[union-attr]
         if len(content) > MAX_UPLOAD_BYTES:
             error = rt(request, "errors.file_too_large")
             return _render(400)
 
-        filename = upload.filename.lower()
+        filename = upload.filename.lower()  # type: ignore[union-attr]
         try:
             if filename.endswith(".csv"):
                 rows = parse_csv(io.BytesIO(content))
@@ -1256,11 +1262,11 @@ async def player_edit_post(
         return RedirectResponse("/players", status_code=302)
 
     form = await request.form()
-    first_name = (form.get("first_name") or "").strip()
-    last_name = (form.get("last_name") or "").strip()
-    email = (form.get("email") or "").strip()
-    phone = (form.get("phone") or "").strip()
-    user_id_s = (form.get("user_id") or "").strip()
+    first_name = str(form.get("first_name") or "").strip()
+    last_name = str(form.get("last_name") or "").strip()
+    email = str(form.get("email") or "").strip()
+    phone = str(form.get("phone") or "").strip()
+    user_id_s = str(form.get("user_id") or "").strip()
     is_active = form.get("is_active") or ""
 
     teams = db.query(Team).order_by(Team.name).all()

@@ -6,6 +6,7 @@ from services.calendar_service import build_ical_feed, fold_line, generate_token
 
 # ── token ────────────────────────────────────────────────────────────────────
 
+
 def test_generate_token_length():
     token = generate_token()
     assert len(token) == 64
@@ -16,6 +17,7 @@ def test_generate_token_unique():
 
 
 # ── fold_line ────────────────────────────────────────────────────────────────
+
 
 def test_fold_line_short():
     assert fold_line("SHORT:value") == "SHORT:value"
@@ -30,6 +32,7 @@ def test_fold_line_long():
 
 
 # ── build_ical_feed ──────────────────────────────────────────────────────────
+
 
 def test_ical_basic_event(db, admin_user):
     event = Event(
@@ -135,7 +138,7 @@ def test_ical_meeting_falls_back_to_location(db, admin_user):
     result = build_ical_feed(admin_user, db, "http://localhost:7000", "UTC")
 
     meet_block_start = result.find("UID:" + str(event.id) + "-meet@promanager")
-    meet_block = result[meet_block_start:result.find("END:VEVENT", meet_block_start)]
+    meet_block = result[meet_block_start : result.find("END:VEVENT", meet_block_start)]
     assert "LOCATION:Field B" in meet_block
 
 
@@ -164,6 +167,7 @@ def test_ical_window(db, admin_user):
 
 # ── endpoint tests ────────────────────────────────────────────────────────────
 
+
 def test_feed_unknown_token(client):
     resp = client.get("/calendar/unknowntoken123/feed.ics", follow_redirects=False)
     assert resp.status_code == 404
@@ -171,6 +175,7 @@ def test_feed_unknown_token(client):
 
 def test_feed_returns_ical(db, admin_user, admin_client):
     from services.calendar_service import generate_token
+
     token = generate_token()
     admin_user.calendar_token = token
     db.commit()
@@ -184,6 +189,7 @@ def test_feed_returns_ical(db, admin_user, admin_client):
 def test_feed_no_login_required(db, client, admin_user):
     """Feed accessible without session cookie."""
     from services.calendar_service import generate_token
+
     token = generate_token()
     admin_user.calendar_token = token
     db.commit()
@@ -200,6 +206,7 @@ def test_regenerate_token_requires_login(client):
 
 def test_regenerate_token_changes_token(db, admin_user, admin_client):
     from services.calendar_service import generate_token
+
     old_token = generate_token()
     admin_user.calendar_token = old_token
     db.commit()
@@ -214,6 +221,7 @@ def test_regenerate_token_changes_token(db, admin_user, admin_client):
 
 def test_old_token_returns_404_after_regenerate(db, admin_user, admin_client, client):
     from services.calendar_service import generate_token
+
     old_token = generate_token()
     admin_user.calendar_token = old_token
     db.commit()

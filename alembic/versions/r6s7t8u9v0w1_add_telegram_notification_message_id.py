@@ -1,4 +1,5 @@
 """Add telegram_notification_message_id column to users table."""
+
 from alembic import op
 import sqlalchemy as sa
 

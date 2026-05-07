@@ -67,10 +67,22 @@ def _parse_time(val: str):
 
 
 def _form_ns(
-    title, event_type, event_date, event_time, event_end_time,
-    location, meeting_time, meeting_location, presence_type,
-    hide_attendance, description, season_id, team_id,
-    is_recurring, recurrence_rule, recurrence_end_date,
+    title,
+    event_type,
+    event_date,
+    event_time,
+    event_end_time,
+    location,
+    meeting_time,
+    meeting_location,
+    presence_type,
+    hide_attendance,
+    description,
+    season_id,
+    team_id,
+    is_recurring,
+    recurrence_rule,
+    recurrence_end_date,
     event_end_date: str = "",
 ) -> SimpleNamespace:
     """Build a SimpleNamespace from raw POST strings for form repopulation on error."""
@@ -137,10 +149,11 @@ async def events_list(
     import math  # noqa: PLC0415
 
     from models.player import Player as _Player
+
     PAGE_SIZE = 10
     season_id = int(season_id) if season_id and season_id.strip() else None  # type: ignore[assignment]
     team_id = int(team_id) if team_id and team_id.strip() else None  # type: ignore[assignment]
-    my_events = bool(my_events) and user is not None
+    my_events = bool(my_events) and user is not None  # type: ignore[assignment]
     today = datetime.today().date()
 
     q = db.query(Event)
@@ -156,15 +169,20 @@ async def events_list(
             q = q.filter(Event.team_id.in_(my_team_ids))
         else:
             from models.player_team import PlayerTeam as _PlayerTeam
-            player = db.query(_Player).filter(
-                _Player.user_id == user.id,
-                _Player.archived_at.is_(None),
-            ).first()
-            my_team_ids = {
-                row[0] for row in db.query(_PlayerTeam.team_id).filter(
-                    _PlayerTeam.player_id == player.id
-                ).all()
-            } if player else set()
+
+            player = (
+                db.query(_Player)
+                .filter(
+                    _Player.user_id == user.id,
+                    _Player.archived_at.is_(None),
+                )
+                .first()
+            )
+            my_team_ids = (
+                {row[0] for row in db.query(_PlayerTeam.team_id).filter(_PlayerTeam.player_id == player.id).all()}
+                if player
+                else set()
+            )
             q = q.filter(Event.team_id.in_(my_team_ids))
     all_events = q.order_by(Event.event_date.asc()).all()
 
@@ -189,17 +207,25 @@ async def events_list(
     my_attendance: dict[int, Attendance] = {}
     my_player_id: int | None = None
     if user is not None and not user.is_admin and not user.is_coach:
-        my_player = db.query(Player).filter(
-            Player.user_id == user.id,
-            Player.archived_at.is_(None),
-        ).first()
+        my_player = (
+            db.query(Player)
+            .filter(
+                Player.user_id == user.id,
+                Player.archived_at.is_(None),
+            )
+            .first()
+        )
         if my_player:
             my_player_id = my_player.id
             all_event_ids = [e.id for e in upcoming] + [e.id for e in past]
-            records = db.query(Attendance).filter(
-                Attendance.event_id.in_(all_event_ids),
-                Attendance.player_id == my_player.id,
-            ).all()
+            records = (
+                db.query(Attendance)
+                .filter(
+                    Attendance.event_id.in_(all_event_ids),
+                    Attendance.player_id == my_player.id,
+                )
+                .all()
+            )
             my_attendance = {a.event_id: a for a in records}
 
     # Attendance summary (present/total) for all visible events — 2 queries, no N+1
@@ -218,10 +244,7 @@ async def events_list(
     )
     present_map = {eid: cnt for eid, cnt in present_rows}
     total_map = {eid: cnt for eid, cnt in total_rows}
-    attendance_summary = {
-        eid: (present_map.get(eid, 0), total_map.get(eid, 0))
-        for eid in visible_event_ids
-    }
+    attendance_summary = {eid: (present_map.get(eid, 0), total_map.get(eid, 0)) for eid in visible_event_ids}
 
     return render(
         request,
@@ -314,10 +337,22 @@ async def event_new_post(
         teams = db.query(Team).filter(Team.id.in_(managed_ids)).order_by(Team.name).all()
 
     form_ns = _form_ns(
-        title, event_type, event_date, event_time, event_end_time,
-        location, meeting_time, meeting_location, presence_type,
-        hide_attendance, description, season_id, team_id,
-        is_recurring, recurrence_rule, recurrence_end_date,
+        title,
+        event_type,
+        event_date,
+        event_time,
+        event_end_time,
+        location,
+        meeting_time,
+        meeting_location,
+        presence_type,
+        hide_attendance,
+        description,
+        season_id,
+        team_id,
+        is_recurring,
+        recurrence_rule,
+        recurrence_end_date,
         event_end_date=event_end_date,
     )
 
@@ -351,18 +386,36 @@ async def event_new_post(
 
     e_end_date = _parse_date(event_end_date) if event_end_date.strip() else None
     if e_end_date is not None and e_end_date < e_date:
-        return render(request, "events/form.html", {
-            "user": user,
-            "event": _form_ns(title, event_type, event_date, event_time, event_end_time,
-                              location, meeting_time, meeting_location, presence_type,
-                              hide_attendance, description, season_id, team_id,
-                              is_recurring, recurrence_rule, recurrence_end_date,
-                              event_end_date=event_end_date),
-            "error": "End date cannot be before start date.",
-            "seasons": seasons,
-            "teams": teams,
-            "is_new": True,
-        })
+        return render(
+            request,
+            "events/form.html",
+            {
+                "user": user,
+                "event": _form_ns(
+                    title,
+                    event_type,
+                    event_date,
+                    event_time,
+                    event_end_time,
+                    location,
+                    meeting_time,
+                    meeting_location,
+                    presence_type,
+                    hide_attendance,
+                    description,
+                    season_id,
+                    team_id,
+                    is_recurring,
+                    recurrence_rule,
+                    recurrence_end_date,
+                    event_end_date=event_end_date,
+                ),
+                "error": "End date cannot be before start date.",
+                "seasons": seasons,
+                "teams": teams,
+                "is_new": True,
+            },
+        )
 
     # ── Recurrence setup ──────────────────────────────────────────────────
     recurring = bool(is_recurring.strip())
@@ -411,7 +464,9 @@ async def event_new_post(
     if recurring:
         cur = e_date
         while True:
-            cur = _advance_date(cur, rule)
+            cur = _advance_date(cur, rule)  # type: ignore[arg-type]
+            assert r_end is not None  # guarded above
+            assert rule is not None  # guarded above
             if cur > r_end:
                 break
             dates_to_create.append(cur)
@@ -426,11 +481,17 @@ async def event_new_post(
             first_event = ev
 
     db.commit()
+    assert first_event is not None  # dates_to_create always has at least e_date
 
     # ── Optional creation notification ───────────────────────────────────
     if notify_on_create.strip() and first_event is not None:
         form_data = await request.form()
-        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush", "telegram"]
+        channels: list[str] = [str(ch) for ch in form_data.getlist("notify_channels")] or [
+            "email",
+            "inapp",
+            "webpush",
+            "telegram",
+        ]
         date_str = first_event.event_date.strftime("%Y-%m-%d") if first_event.event_date else ""
         notif_title = first_event.title
         notif_body = date_str
@@ -450,10 +511,14 @@ async def event_new_post(
         )
 
     count = len(dates_to_create)
-    log_action("event.create", target_type="event", target_id=first_event.id,
-               target_label=first_event.title,
-               extra={"occurrences": count, "team_id": parsed_team_id},
-               request=request)
+    log_action(
+        "event.create",
+        target_type="event",
+        target_id=first_event.id,
+        target_label=first_event.title,
+        extra={"occurrences": count, "team_id": parsed_team_id},
+        request=request,
+    )
     return RedirectResponse(f"/events/{first_event.id}", status_code=302)
 
 
@@ -472,7 +537,8 @@ async def notify_get(
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
-    check_team_access(user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     counts_q = (
         db.query(Attendance.status, func.count(Attendance.id))
@@ -480,14 +546,10 @@ async def notify_get(
         .group_by(Attendance.status)
         .all()
     )
-    status_counts = dict(counts_q)
+    status_counts = dict(counts_q)  # type: ignore[arg-type, var-annotated]
 
     # Players with their attendance status for custom selection
-    att_rows = (
-        db.query(Attendance.player_id, Attendance.status)
-        .filter(Attendance.event_id == event_id)
-        .all()
-    )
+    att_rows = db.query(Attendance.player_id, Attendance.status).filter(Attendance.event_id == event_id).all()
     att_by_player = {pid: status for pid, status in att_rows}
     event_players = (
         db.query(Player)
@@ -498,7 +560,8 @@ async def notify_get(
         )
         .order_by(Player.last_name, Player.first_name)
         .all()
-        if event.team_id else []
+        if event.team_id
+        else []
     )
     players_with_status = [
         {"id": p.id, "name": f"{p.first_name} {p.last_name}", "status": att_by_player.get(p.id, "unknown")}
@@ -530,19 +593,20 @@ async def notify_post(
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
-    check_team_access(user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     form = await request.form()
-    title = (form.get("title") or "").strip()
-    body = (form.get("body") or "").strip()
-    tag = (form.get("tag") or "direct").strip()
-    recipients_raw = form.getlist("recipients")
-    channels_raw = form.getlist("channels")
+    title = str(form.get("title") or "").strip()
+    body = str(form.get("body") or "").strip()
+    tag = str(form.get("tag") or "direct").strip()
+    recipients_raw: list[str] = [str(x) for x in form.getlist("recipients")]
+    channels_raw: list[str] = [str(x) for x in form.getlist("channels")]
 
     custom_player_ids: list[int] | None = None
     if "custom" in recipients_raw:
         raw_ids = form.getlist("player_ids")
-        custom_player_ids = [int(x) for x in raw_ids if x.isdigit()]
+        custom_player_ids = [int(str(x)) for x in raw_ids if str(x).isdigit()]
         recipient_statuses = None
     else:
         recipient_statuses = None if "all" in recipients_raw else recipients_raw or None
@@ -587,18 +651,30 @@ async def event_detail(
 
     if not user.is_admin:
         if user.is_coach:
-            check_team_access(user, event.team_id, db, season_id=event.season_id)
+            if event.team_id is not None:
+                check_team_access(user, event.team_id, db, season_id=event.season_id)
         else:
             # member: must have a player with a PlayerTeam record for this event's team
             from models.player_team import PlayerTeam as _PlayerTeam
-            player = db.query(Player).filter(
-                Player.user_id == user.id,
-                Player.archived_at.is_(None),
-            ).first()
-            has_access = player is not None and db.query(_PlayerTeam).filter(
-                _PlayerTeam.player_id == player.id,
-                _PlayerTeam.team_id == event.team_id,
-            ).first() is not None
+
+            player = (
+                db.query(Player)
+                .filter(
+                    Player.user_id == user.id,
+                    Player.archived_at.is_(None),
+                )
+                .first()
+            )
+            has_access = (
+                player is not None
+                and db.query(_PlayerTeam)
+                .filter(
+                    _PlayerTeam.player_id == player.id,
+                    _PlayerTeam.team_id == event.team_id,
+                )
+                .first()
+                is not None
+            )
             if not has_access:
                 raise NotAuthorized
 
@@ -608,10 +684,14 @@ async def event_detail(
     _POS_ORDER = ["goalie", "defender", "center", "forward"]
     pos_by_player: dict[int, str | None] = {}
     if event.team_id and event.season_id:
-        pt_rows = db.query(PlayerTeam).filter(
-            PlayerTeam.team_id == event.team_id,
-            PlayerTeam.season_id == event.season_id,
-        ).all()
+        pt_rows = (
+            db.query(PlayerTeam)
+            .filter(
+                PlayerTeam.team_id == event.team_id,
+                PlayerTeam.season_id == event.season_id,
+            )
+            .all()
+        )
         pos_by_player = {pt.player_id: pt.position for pt in pt_rows}
 
     def _att_sort_key(entry: dict) -> tuple:
@@ -648,13 +728,12 @@ async def event_detail(
     else:
         user_player_ids = set()
 
-    externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    externals = (
+        db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    )
 
     chat_msgs_raw = (
-        db.query(EventMessage)
-        .filter(EventMessage.event_id == event_id)
-        .order_by(EventMessage.created_at.asc())
-        .all()
+        db.query(EventMessage).filter(EventMessage.event_id == event_id).order_by(EventMessage.created_at.asc()).all()
     )
     chat_messages = [
         message_to_dict(
@@ -724,7 +803,8 @@ async def event_edit_get(
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
-    check_team_access(user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     seasons = db.query(Season).order_by(Season.name).all()
     if user.is_admin:
@@ -778,7 +858,8 @@ async def event_edit_post(
     if event is None:
         return RedirectResponse("/events", status_code=302)
 
-    check_team_access(user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
 
     if not user.is_admin:
         team_id = str(event.team_id) if event.team_id is not None else ""
@@ -925,6 +1006,7 @@ async def event_edit_post(
     # If event date changed, re-evaluate attendance against active absences
     if old_event_date != e_date:
         from services.absence_service import sync_attendance_to_absences_for_event  # noqa: PLC0415
+
         sync_attendance_to_absences_for_event(event_id, db)
     log_action(
         "event.update",
@@ -936,7 +1018,12 @@ async def event_edit_post(
     )
     if notify_on_update.strip() and event is not None:
         form_data = await request.form()
-        channels = list(form_data.getlist("notify_channels")) or ["email", "inapp", "webpush", "telegram"]
+        channels: list[str] = [str(ch) for ch in form_data.getlist("notify_channels")] or [
+            "email",
+            "inapp",
+            "webpush",
+            "telegram",
+        ]
         date_str = event.event_date.strftime("%Y-%m-%d") if event.event_date else ""
         notif_body = date_str
         if event.event_time:
@@ -976,13 +1063,20 @@ async def event_delete(
     if not event:
         return RedirectResponse("/events", status_code=302)
 
-    check_team_access(_user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(_user, event.team_id, db, season_id=event.season_id)
 
     if scope == "future" and event.recurrence_group_id:
         n = delete_future_events(db, event.recurrence_group_id)
         db.commit()
-        log_action("event.delete", target_type="event", target_id=event_id, target_label=event.title,
-                   extra={"scope": "future", "count": n}, request=request)
+        log_action(
+            "event.delete",
+            target_type="event",
+            target_id=event_id,
+            target_label=event.title,
+            extra={"scope": "future", "count": n},
+            request=request,
+        )
         msg = quote(rt(request, "events.deleted_series", count=n))
         return RedirectResponse(f"/events?flash={msg}", status_code=302)
 
@@ -990,8 +1084,14 @@ async def event_delete(
     label = event.title
     db.delete(event)
     db.commit()
-    log_action("event.delete", target_type="event", target_id=event_id, target_label=label,
-               extra={"scope": "single"}, request=request)
+    log_action(
+        "event.delete",
+        target_type="event",
+        target_id=event_id,
+        target_label=label,
+        extra={"scope": "single"},
+        request=request,
+    )
     msg = quote(rt(request, "events.deleted_single"))
     return RedirectResponse(f"/events?flash={msg}", status_code=302)
 
@@ -1012,7 +1112,8 @@ async def send_reminders(
     event = db.get(Event, event_id)
     if event is None:
         return RedirectResponse("/events", status_code=302)
-    check_team_access(_user, event.team_id, db, season_id=event.season_id)
+    if event.team_id is not None:
+        check_team_access(_user, event.team_id, db, season_id=event.season_id)
 
     # Find all attendances with status 'unknown' that have a player email
     attendances = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.status == "unknown").all()
@@ -1034,14 +1135,20 @@ async def send_reminders(
 
     # Telegram reminders to present/maybe/unknown players
     import os  # noqa: PLC0415
+
     if os.environ.get("TELEGRAM_BOT_TOKEN"):
         from models.notification import Notification  # noqa: PLC0415
         from services.channels.telegram_channel import TelegramChannel  # noqa: PLC0415
+
         tg = TelegramChannel()
-        tg_attendances = db.query(Attendance).filter(
-            Attendance.event_id == event_id,
-            Attendance.status.in_(["present", "maybe", "unknown"]),
-        ).all()
+        tg_attendances = (
+            db.query(Attendance)
+            .filter(
+                Attendance.event_id == event_id,
+                Attendance.status.in_(["present", "maybe", "unknown"]),
+            )
+            .all()
+        )
         date_str = event.event_date.strftime("%Y-%m-%d") if event.event_date else ""
         notif_body = date_str
         if event.event_time:

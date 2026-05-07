@@ -36,7 +36,9 @@ def log_action(
         if ip_address is None:
             # Handle X-Forwarded-For for reverse proxies
             forwarded = request.headers.get("x-forwarded-for")
-            ip_address = forwarded.split(",")[0].strip() if forwarded else request.client.host if request.client else None
+            ip_address = (
+                forwarded.split(",")[0].strip() if forwarded else request.client.host if request.client else None
+            )
 
     try:
         import app.database as _db_mod  # noqa: PLC0415

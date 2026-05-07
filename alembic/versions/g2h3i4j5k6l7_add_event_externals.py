@@ -24,7 +24,9 @@ def upgrade() -> None:
         op.create_table(
             "event_externals",
             sa.Column("id", sa.Integer(), primary_key=True, index=True),
-            sa.Column("event_id", sa.Integer(), sa.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column(
+                "event_id", sa.Integer(), sa.ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True
+            ),
             sa.Column("first_name", sa.String(128), nullable=False),
             sa.Column("last_name", sa.String(128), nullable=False),
             sa.Column("note", sa.String(512), nullable=True),

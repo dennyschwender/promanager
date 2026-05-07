@@ -30,7 +30,8 @@ async def notify_coaches_attendance_change(
     from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
 
-    has_bot = _bot.telegram_app is not None
+    tg_app = _bot.telegram_app
+    has_bot = tg_app is not None
     _webpush = WebPushChannel()
 
     db = _db_mod.SessionLocal()
@@ -91,8 +92,9 @@ async def notify_coaches_attendance_change(
                     )
                     db.add(tg_notif)
                     db.flush()
-                    await inject_notification(ut.user, tg_notif.id, _bot.telegram_app.bot, db)
-                    await _bot.telegram_app.bot.send_message(
+                    assert tg_app is not None
+                    await inject_notification(ut.user, tg_notif.id, tg_app.bot, db)
+                    await tg_app.bot.send_message(  # type: ignore[union-attr]
                         chat_id=ut.user.telegram_chat_id,
                         text=tg_alert,
                     )
@@ -124,6 +126,7 @@ async def notify_coaches_attendance_change(
                     _webpush.send(coach_player, web_notif, db)
                     from services.channels.email_channel import EmailChannel  # noqa: PLC0415
                     from services.notification_service import get_preference  # noqa: PLC0415
+
                     if get_preference(coach_player.id, "email", db):
                         EmailChannel().send(coach_player, web_notif)
                 else:
@@ -159,7 +162,8 @@ async def notify_coaches_about_external_change(
     from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
 
-    has_bot = _bot.telegram_app is not None
+    tg_app = _bot.telegram_app
+    has_bot = tg_app is not None
     _webpush = WebPushChannel()
 
     db = _db_mod.SessionLocal()
@@ -210,7 +214,7 @@ async def notify_coaches_about_external_change(
 
             try:
                 if has_telegram and telegram_enabled:
-                    await _bot.telegram_app.bot.send_message(
+                    await tg_app.bot.send_message(  # type: ignore[union-attr]
                         chat_id=ut.user.telegram_chat_id,
                         text=tg_alert,
                     )
@@ -241,6 +245,7 @@ async def notify_coaches_about_external_change(
                     _webpush.send(coach_player, web_notif, db)
                     from services.channels.email_channel import EmailChannel  # noqa: PLC0415
                     from services.notification_service import get_preference  # noqa: PLC0415
+
                     if get_preference(coach_player.id, "email", db):
                         EmailChannel().send(coach_player, web_notif)
                 else:

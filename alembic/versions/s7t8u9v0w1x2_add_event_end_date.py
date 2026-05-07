@@ -1,4 +1,5 @@
 """Add event_end_date column to events table."""
+
 from alembic import op
 import sqlalchemy as sa
 

@@ -126,13 +126,17 @@ def send_event_reminder(
     when = f"{date_str} {time_str}".strip()
 
     subject = _t("email.reminder_subject", locale, event_name=event_title, date=date_str)
-    body_html = render_email_template("reminder", {
-        "name": player_name,
-        "event_title": event_title,
-        "when": when,
-        "location": event_location or "TBD",
-        "magic_link": magic_link,
-    }, locale=locale)
+    body_html = render_email_template(
+        "reminder",
+        {
+            "name": player_name,
+            "event_title": event_title,
+            "when": when,
+            "location": event_location or "TBD",
+            "magic_link": magic_link,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(player_email, subject, body_html, body_text)
 
@@ -150,13 +154,17 @@ def send_attendance_request(
     date_str = event_date.strftime("%Y-%m-%d") if event_date else str(event_date)
 
     subject = _t("email.attendance_subject", locale, event_name=event_title, date=date_str)
-    body_html = render_email_template("attendance", {
-        "name": player_name,
-        "event_title": event_title,
-        "date": date_str,
-        "attendance_url": attendance_url,
-        "magic_link": magic_link,
-    }, locale=locale)
+    body_html = render_email_template(
+        "attendance",
+        {
+            "name": player_name,
+            "event_title": event_title,
+            "date": date_str,
+            "attendance_url": attendance_url,
+            "magic_link": magic_link,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(player_email, subject, body_html, body_text)
 
@@ -170,12 +178,16 @@ def send_welcome_email(
 ) -> bool:
     """Send a welcome email with login credentials to a new user."""
     subject = _t("email.welcome_subject", locale, app_name=settings.APP_NAME)
-    body_html = render_email_template("welcome", {
-        "username": username,
-        "password": password,
-        "magic_link": magic_link,
-        "telegram_bot_username": settings.TELEGRAM_BOT_USERNAME or None,
-    }, locale=locale)
+    body_html = render_email_template(
+        "welcome",
+        {
+            "username": username,
+            "password": password,
+            "magic_link": magic_link,
+            "telegram_bot_username": settings.TELEGRAM_BOT_USERNAME or None,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)
 
@@ -189,11 +201,15 @@ def send_reset_email(
 ) -> bool:
     """Send a password-reset email with new credentials."""
     subject = _t("email.reset_subject", locale, app_name=settings.APP_NAME)
-    body_html = render_email_template("reset", {
-        "username": username,
-        "password": password,
-        "magic_link": magic_link,
-    }, locale=locale)
+    body_html = render_email_template(
+        "reset",
+        {
+            "username": username,
+            "password": password,
+            "magic_link": magic_link,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)
 
@@ -207,11 +223,15 @@ def send_notification_email(
 ) -> bool:
     """Send a generic notification email."""
     subject = _t("email.notification_subject", locale, title=title)
-    body_html = render_email_template("notification", {
-        "title": title,
-        "body": body,
-        "magic_link": magic_link,
-    }, locale=locale)
+    body_html = render_email_template(
+        "notification",
+        {
+            "title": title,
+            "body": body,
+            "magic_link": magic_link,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)
 
@@ -224,9 +244,13 @@ def send_forgot_password_email(
 ) -> bool:
     """Send a forgot-password email with new temporary credentials."""
     subject = _t("email.forgot_password_subject", locale, app_name=settings.APP_NAME)
-    body_html = render_email_template("forgot_password", {
-        "username": username,
-        "password": password,
-    }, locale=locale)
+    body_html = render_email_template(
+        "forgot_password",
+        {
+            "username": username,
+            "password": password,
+        },
+        locale=locale,
+    )
     body_text = _strip_html(body_html)
     return send_email(to, subject, body_html, body_text)

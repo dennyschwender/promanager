@@ -1,10 +1,12 @@
 """Tests that email_channel uses send_notification_email."""
+
 from unittest.mock import MagicMock, patch
 
 
 def test_email_channel_calls_send_notification_email():
     """EmailChannel.send() calls send_notification_email, not raw send_email."""
     from services.channels.email_channel import EmailChannel
+
     channel = EmailChannel()
 
     mock_user = MagicMock()

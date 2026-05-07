@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
 CHANNELS = ("email", "inapp", "webpush", "telegram")
+
+
+if TYPE_CHECKING:
+    from models.player import Player
 
 
 class NotificationPreference(Base):

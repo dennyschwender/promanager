@@ -46,6 +46,13 @@ from services.telegram_service import (
 
 logger = logging.getLogger(__name__)
 
+
+def _user_data(context: ContextTypes.DEFAULT_TYPE) -> dict:
+    """Return context.user_data, asserting it is not None (PTB always provides dict)."""
+    assert context.user_data is not None
+    return context.user_data
+
+
 # Status char → full status string
 _STATUS_MAP = {"p": "present", "a": "absent", "u": "unknown"}
 
@@ -129,19 +136,21 @@ def _start_over_keyboard(locale: str = "en") -> InlineKeyboardMarkup:
 
 
 async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
         if user is not None:
             locale = _locale(user)
-            await update.message.reply_text(
+            await update.message.reply_text(  # type: ignore[union-attr]
                 t("telegram.auth_already_this", locale, username=user.username),
                 reply_markup=ReplyKeyboardRemove(),
             )
             await _send_homepage(update.message, user, db)
             return
 
-    await update.message.reply_text(
+    await update.message.reply_text(  # type: ignore[union-attr]
         t("telegram.welcome", "en"),
         reply_markup=_phone_request_keyboard(),
     )
@@ -153,11 +162,13 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def handle_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
         if user is None:
-            await update.message.reply_text(t("telegram.not_authenticated", "en"))
+            await update.message.reply_text(t("telegram.not_authenticated", "en"))  # type: ignore[union-attr]
             return
         await _send_homepage(update.message, user, db)
 
@@ -168,15 +179,17 @@ async def handle_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def handle_logout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
         if user is None:
-            await update.message.reply_text(t("telegram.not_authenticated", "en"))
+            await update.message.reply_text(t("telegram.not_authenticated", "en"))  # type: ignore[union-attr]
             return
         locale = _locale(user)
         unlink_telegram(db, user)
-    await update.message.reply_text(t("telegram.logout_success", locale))
+    await update.message.reply_text(t("telegram.logout_success", locale))  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------
@@ -185,9 +198,13 @@ async def handle_logout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or update.effective_chat is None:
+        return
     contact = update.message.contact
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
-    telegram_phone = normalize_phone(contact.phone_number)
+    telegram_phone = normalize_phone(contact.phone_number)  # type: ignore[union-attr]
 
     with SessionLocal() as db:
         user = find_user_by_phone(db, telegram_phone)
@@ -235,6 +252,9 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
+    assert query is not None
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
 
     with SessionLocal() as db:
@@ -244,7 +264,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             try:
                 await query.edit_message_text(t("telegram.not_authenticated", "en"))
             except Exception:
-                await query.message.reply_text(t("telegram.not_authenticated", "en"))
+                await query.message.reply_text(t("telegram.not_authenticated", "en"))  # type: ignore[union-attr]
             return
 
         data = query.data or ""
@@ -258,7 +278,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             + (() if _skip_ext_cleanup else ("awaiting_external",))
             + (() if _skip_extn_cleanup else ("awaiting_ext_note",))
         ):
-            _pending = context.user_data.pop(_key, None)
+            _pending = _user_data(context).pop(_key, None)
             if _pending:
                 _pmid = _pending.get("prompt_message_id")
                 _pcid = _pending.get("chat_id")
@@ -275,7 +295,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if data == "restart:":
             await query.answer()
             await query.edit_message_reply_markup(reply_markup=None)
-            await query.message.reply_text(
+            await query.message.reply_text(  # type: ignore[union-attr]
                 t("telegram.welcome", "en"),
                 reply_markup=_phone_request_keyboard(),
             )
@@ -420,12 +440,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # extadd:{event_id}:{back_page} — start add-external flow
             parts = data.split(":")
             event_id_x, back_page_x = int(parts[1]), int(parts[2])
-            prompt_msg = await query.message.reply_text(t("telegram.external_name_prompt", _locale(user)))
-            context.user_data["awaiting_external"] = {
+            prompt_msg = await query.message.reply_text(t("telegram.external_name_prompt", _locale(user)))  # type: ignore[union-attr]
+            _user_data(context)["awaiting_external"] = {
                 "event_id": event_id_x,
                 "back_page": back_page_x,
                 "prompt_message_id": prompt_msg.message_id,
-                "chat_id": query.message.chat_id,
+                "chat_id": query.message.chat_id,  # type: ignore[union-attr]
                 "step": "name",
             }
 
@@ -479,12 +499,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                         parse_mode=ParseMode.MARKDOWN,
                     )
                 except Exception:
-                    await query.message.reply_text(
+                    await query.message.reply_text(  # type: ignore[union-attr]
                         _extedit_text,
                         reply_markup=keyboard_e,
                         parse_mode=ParseMode.MARKDOWN,
-                    )
-
+                    )  # type: ignore[union-attr]
         elif data.startswith("exts:"):
             await query.answer()
             # exts:{ext_id}:{status_char}:{event_id}:{back_page} — update existing external status
@@ -507,19 +526,19 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # extn:{ext_id}:{event_id}:{back_page} — add/edit note for existing external
             parts = data.split(":")
             ext_id_n2, event_id_n2, back_page_n2 = int(parts[1]), int(parts[2]), int(parts[3])
-            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
-            context.user_data["awaiting_ext_note"] = {
+            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))  # type: ignore[union-attr]
+            _user_data(context)["awaiting_ext_note"] = {
                 "ext_id": ext_id_n2,
                 "event_id": event_id_n2,
                 "back_page": back_page_n2,
                 "prompt_message_id": prompt_msg.message_id,
-                "chat_id": query.message.chat_id,
+                "chat_id": query.message.chat_id,  # type: ignore[union-attr]
             }
 
         elif data.startswith("extsta:"):
             await query.answer()
             # extsta:{status} — select status for pending external
-            pending_ext = context.user_data.get("awaiting_external")
+            pending_ext = _user_data(context).get("awaiting_external")
             if pending_ext and pending_ext.get("step") == "status":
                 status_char = data.split(":")[1]
                 status = _STATUS_MAP.get(status_char, "unknown")
@@ -531,9 +550,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 )
                 db.add(ext)
                 db.commit()
-                context.user_data.pop("awaiting_external", None)
+                _user_data(context).pop("awaiting_external", None)
                 locale_x = _locale(user)
-                conf = await query.message.reply_text(t("telegram.external_added", locale_x))
+                conf = await query.message.reply_text(t("telegram.external_added", locale_x))  # type: ignore[union-attr]
                 import asyncio  # noqa: PLC0415
 
                 await asyncio.sleep(2)
@@ -550,13 +569,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # note:{event_id}:{player_id}:{back_page}
             parts = data.split(":")
             event_id_n, player_id_n, back_page_n = int(parts[1]), int(parts[2]), int(parts[3])
-            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))
-            context.user_data["awaiting_note"] = {
+            prompt_msg = await query.message.reply_text(t("telegram.note_prompt", _locale(user)))  # type: ignore[union-attr]
+            _user_data(context)["awaiting_note"] = {
                 "event_id": event_id_n,
                 "player_id": player_id_n,
                 "back_page": back_page_n,
                 "prompt_message_id": prompt_msg.message_id,
-                "chat_id": query.message.chat_id,
+                "chat_id": query.message.chat_id,  # type: ignore[union-attr]
             }
             return
 
@@ -571,11 +590,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             event_id_cr = int(parts[1])
             locale_cr = _locale(user)
-            prompt_msg = await query.message.reply_text(t("telegram.chat_reply_prompt", locale_cr))
-            context.user_data["awaiting_chat_reply"] = {
+            prompt_msg = await query.message.reply_text(t("telegram.chat_reply_prompt", locale_cr))  # type: ignore[union-attr]
+            _user_data(context)["awaiting_chat_reply"] = {
                 "event_id": event_id_cr,
                 "prompt_message_id": prompt_msg.message_id,
-                "chat_id": query.message.chat_id,
+                "chat_id": query.message.chat_id,  # type: ignore[union-attr]
             }
 
         elif data.startswith("e:"):
@@ -778,7 +797,7 @@ async def _show_notifications(query, user, db, page: int) -> None:
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
     except Exception:
-        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------
@@ -805,7 +824,7 @@ async def _show_events(query, user, db, page: int) -> None:
     try:
         await query.edit_message_text(header, reply_markup=keyboard)
     except Exception:
-        await query.message.reply_text(header, reply_markup=keyboard)
+        await query.message.reply_text(header, reply_markup=keyboard)  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------
@@ -951,7 +970,7 @@ async def _show_event_detail(
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
     except Exception:
-        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------
@@ -960,21 +979,23 @@ async def _show_event_detail(
 
 
 async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
     cancelled = (
-        context.user_data.pop("awaiting_note", None)
-        or context.user_data.pop("awaiting_ext_note", None)
-        or context.user_data.pop("awaiting_external", None)
-        or context.user_data.pop("awaiting_chat_reply", None)
-        or context.user_data.pop("awaiting_absence", None)
+        _user_data(context).pop("awaiting_note", None)
+        or _user_data(context).pop("awaiting_ext_note", None)
+        or _user_data(context).pop("awaiting_external", None)
+        or _user_data(context).pop("awaiting_chat_reply", None)
+        or _user_data(context).pop("awaiting_absence", None)
     )
     if cancelled:
         with SessionLocal() as db:
             user = get_user_by_chat_id(db, chat_id)
             locale = _locale(user) if user else "en"
-        await update.message.reply_text(t("telegram.note_cancelled", locale))
+        await update.message.reply_text(t("telegram.note_cancelled", locale))  # type: ignore[union-attr]
     else:
-        await update.message.reply_text("OK.")
+        await update.message.reply_text("OK.")  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------
@@ -983,6 +1004,10 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None:
+        return
+    if update.effective_chat is None:
+        return
     chat_id = str(update.effective_chat.id)
 
     with SessionLocal() as db:
@@ -997,7 +1022,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     # Handle external name input
-    pending_ext = context.user_data.get("awaiting_external")
+    pending_ext = _user_data(context).get("awaiting_external")
     if pending_ext and pending_ext.get("step") == "name":
         name_text = (update.message.text or "").strip()
         parts = name_text.split(None, 1)
@@ -1040,7 +1065,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     # Handle external note input
-    pending_ext_note = context.user_data.get("awaiting_ext_note")
+    pending_ext_note = _user_data(context).get("awaiting_ext_note")
     if pending_ext_note:
         note_text = (update.message.text or "").strip()
         prompt_msg_id = pending_ext_note.get("prompt_message_id")
@@ -1061,7 +1086,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                 if ext:
                     ext.note = note_text or None
                     db.commit()
-        context.user_data.pop("awaiting_ext_note", None)
+        _user_data(context).pop("awaiting_ext_note", None)
         import asyncio as _asyncio  # noqa: PLC0415
 
         conf = await update.message.reply_text(t("telegram.note_saved", _locale(user) if user else "en"))
@@ -1073,7 +1098,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     # Handle chat reply input
-    pending_chat = context.user_data.get("awaiting_chat_reply")
+    pending_chat = _user_data(context).get("awaiting_chat_reply")
     if pending_chat:
         body_text = (update.message.text or "").strip()
         prompt_msg_id = pending_chat.get("prompt_message_id")
@@ -1087,7 +1112,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             await update.message.delete()
         except Exception:
             pass
-        context.user_data.pop("awaiting_chat_reply", None)
+        _user_data(context).pop("awaiting_chat_reply", None)
         locale_cr = "en"
         if body_text:
             with SessionLocal() as db:
@@ -1123,7 +1148,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             pass
         return
 
-    pending = context.user_data.get("awaiting_note")
+    pending = _user_data(context).get("awaiting_note")
     if not pending:
         return  # ignore unrecognised text
 
@@ -1153,7 +1178,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     prompt_message_id = pending.get("prompt_message_id")
     chat_id = pending.get("chat_id")
-    context.user_data.pop("awaiting_note", None)
+    _user_data(context).pop("awaiting_note", None)
 
     # Delete the prompt message and the user's note message to keep chat clean
     if prompt_message_id and chat_id:
@@ -1245,7 +1270,7 @@ async def _show_event_notes(query, user, db, event_id: int, back_page: int = 0) 
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
     except Exception:
-        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)  # type: ignore[union-attr]
 
 
 # ---------------------------------------------------------------------------

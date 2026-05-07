@@ -1,4 +1,5 @@
 """Tests for EventMessage model."""
+
 from datetime import date
 
 from models.event import Event

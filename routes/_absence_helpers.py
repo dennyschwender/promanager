@@ -43,10 +43,14 @@ async def require_absence_ownership_or_coach(
         user_teams = db.query(UserTeam).filter(UserTeam.user_id == current_user.id).all()
         team_ids = {ut.team_id for ut in user_teams if season_id is None or ut.season_id == season_id}
 
-        player_teams = db.query(PlayerTeam).filter(
-            PlayerTeam.player_id == player_id,
-            PlayerTeam.team_id.in_(team_ids) if team_ids else False,
-        ).all()
+        player_teams = (
+            db.query(PlayerTeam)
+            .filter(
+                PlayerTeam.player_id == player_id,
+                PlayerTeam.team_id.in_(team_ids) if team_ids else False,  # type: ignore[arg-type]
+            )
+            .all()
+        )
 
         if player_teams:
             return absence

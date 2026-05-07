@@ -1,4 +1,5 @@
 """Tests that users routes call new send functions (not raw send_email)."""
+
 from unittest.mock import patch
 
 

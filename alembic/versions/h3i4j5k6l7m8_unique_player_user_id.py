@@ -21,7 +21,8 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     # Remove duplicate user_id links — keep the first player (lowest id) for each user_id
-    conn.execute(sa.text("""
+    conn.execute(
+        sa.text("""
         UPDATE players SET user_id = NULL
         WHERE user_id IS NOT NULL
           AND id NOT IN (
@@ -29,7 +30,8 @@ def upgrade() -> None:
               WHERE user_id IS NOT NULL
               GROUP BY user_id
           )
-    """))
+    """)
+    )
 
     with op.batch_alter_table("players", schema=None) as batch_op:
         batch_op.create_unique_constraint("uq_players_user_id", ["user_id"])

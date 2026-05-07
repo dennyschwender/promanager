@@ -94,7 +94,8 @@ async def send_telegram_notifications(
     try:
         import bot as _bot  # noqa: PLC0415
 
-        if _bot.telegram_app is None:
+        tg_app = _bot.telegram_app
+        if tg_app is None:
             return
     except Exception:
         return
@@ -140,7 +141,7 @@ async def send_telegram_notifications(
                         users_to_notify.append(u)
 
         for u in users_to_notify:
-            await inject_chat_notification(u, event_id, event.title, _bot.telegram_app.bot, db)
+            await inject_chat_notification(u, event_id, event.title, tg_app.bot, db)
 
     finally:
         db.close()

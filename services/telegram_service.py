@@ -58,20 +58,20 @@ def find_user_by_phone(db: Session, telegram_phone: str) -> User | None:
     # 1. Direct user phone match
     users_with_phone = db.query(User).filter(User.phone.isnot(None)).all()
     for user in users_with_phone:
-        if phones_match(user.phone, norm):
+        if phones_match(user.phone or "", norm):
             return user
 
     # Search legacy Player.phone
     players = db.query(Player).filter(Player.phone.isnot(None)).all()
     for player in players:
-        if phones_match(player.phone, norm) and player.user_id is not None:
+        if phones_match(player.phone or "", norm) and player.user_id is not None:
             return db.get(User, player.user_id)
 
     # Search PlayerPhone table
     phone_rows = db.query(PlayerPhone).all()
     for row in phone_rows:
-        if phones_match(row.phone, norm):
-            player = db.get(Player, row.player_id)
+        if phones_match(row.phone or "", norm):
+            player = db.get(Player, row.player_id)  # type: ignore[assignment]
             if player and player.user_id is not None:
                 return db.get(User, player.user_id)
 

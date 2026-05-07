@@ -8,6 +8,7 @@ user_id:   used for admin/coach notifications when no linked player exists.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,6 +18,12 @@ from app.database import Base
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+if TYPE_CHECKING:
+    from models.event import Event
+    from models.player import Player
+    from models.user import User
 
 
 class Notification(Base):
