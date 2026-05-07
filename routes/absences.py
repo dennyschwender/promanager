@@ -188,6 +188,7 @@ async def create_player_absence(
 async def delete_player_absence(
     player_id: int,
     absence_id: int,
+    background_tasks: BackgroundTasks,
     current_user=Depends(require_login),
     db: Session = Depends(get_db),
 ) -> dict[str, bool]:
@@ -197,5 +198,14 @@ async def delete_player_absence(
 
     db.delete(absence)
     db.commit()
+
+    from services.absence_service import revert_absence_from_events  # noqa: PLC0415
+
+    reverted = revert_absence_from_events(player_id, db)
+    if reverted:
+        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+        for ev_id, pid, status in reverted:
+            background_tasks.add_task(notify_coaches_via_telegram, ev_id, pid, status)
 
     return {"success": True}

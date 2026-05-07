@@ -88,9 +88,7 @@ def _sync_memberships(
     """
     # Capture existing team_ids before deletion so we know what's new
     existing_pts = (
-        db.query(PlayerTeam)
-        .filter(PlayerTeam.player_id == player.id, PlayerTeam.season_id == season_id)
-        .all()
+        db.query(PlayerTeam).filter(PlayerTeam.player_id == player.id, PlayerTeam.season_id == season_id).all()
     )
     existing_team_ids = {pt.team_id for pt in existing_pts}
     old_absent_by_default = {pt.team_id: pt.absent_by_default for pt in existing_pts}
@@ -120,13 +118,18 @@ def _sync_memberships(
         injured_until = extra.get("injured_until")
         from models.player_absence import PlayerAbsence  # noqa: PLC0415
         from services.absence_service import apply_absence_to_future_events, revert_absence_from_events  # noqa: PLC0415
+
         if injured_until:
-            absence = db.query(PlayerAbsence).filter(
-                PlayerAbsence.player_id == player.id,
-                PlayerAbsence.season_id == season_id,
-                PlayerAbsence.absence_type == "period",
-                PlayerAbsence.reason.like("%njur%"),
-            ).first()
+            absence = (
+                db.query(PlayerAbsence)
+                .filter(
+                    PlayerAbsence.player_id == player.id,
+                    PlayerAbsence.season_id == season_id,
+                    PlayerAbsence.absence_type == "period",
+                    PlayerAbsence.reason.like("%njur%"),
+                )
+                .first()
+            )
             if not absence:
                 absence = PlayerAbsence(
                     player_id=player.id,
@@ -143,6 +146,7 @@ def _sync_memberships(
             updated = apply_absence_to_future_events(player.id, db)
             if background_tasks is not None:
                 from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
                 for event_id, pid, status in updated:
                     background_tasks.add_task(notify_coaches_via_telegram, event_id, pid, status)
         else:
@@ -152,7 +156,12 @@ def _sync_memberships(
                 PlayerAbsence.reason.like("%njur%"),
             ).delete()
             db.flush()
-            revert_absence_from_events(player.id, db)
+            reverted = revert_absence_from_events(player.id, db)
+            if reverted and background_tasks is not None:
+                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+                for _ev_id, _pid, _status in reverted:
+                    background_tasks.add_task(notify_coaches_via_telegram, _ev_id, _pid, _status)
 
         # Sync absent_by_default changes for existing teams
         new_absent = bool(extra.get("absent_by_default", False))
@@ -160,9 +169,11 @@ def _sync_memberships(
         if team_id in existing_team_ids:
             if new_absent and not old_absent:
                 from services.absence_service import apply_default_absence_to_future_events  # noqa: PLC0415
+
                 apply_default_absence_to_future_events(player.id, team_id, season_id, db)
             elif not new_absent and old_absent:
                 from services.absence_service import revert_default_absence_from_events  # noqa: PLC0415
+
                 revert_default_absence_from_events(player.id, team_id, season_id, db)
 
         if team_id not in existing_team_ids:
@@ -502,12 +513,17 @@ async def player_bulk_update(
                         # Auto-create/update PlayerAbsence for injury period
                         if value:
                             from models.player_absence import PlayerAbsence  # noqa: PLC0415
-                            absence = db.query(PlayerAbsence).filter(
-                                PlayerAbsence.player_id == pt.player_id,
-                                PlayerAbsence.season_id == pt.season_id,
-                                PlayerAbsence.absence_type == "period",
-                                PlayerAbsence.reason.like("%njur%"),
-                            ).first()
+
+                            absence = (
+                                db.query(PlayerAbsence)
+                                .filter(
+                                    PlayerAbsence.player_id == pt.player_id,
+                                    PlayerAbsence.season_id == pt.season_id,
+                                    PlayerAbsence.absence_type == "period",
+                                    PlayerAbsence.reason.like("%njur%"),
+                                )
+                                .first()
+                            )
                             if not absence:
                                 absence = PlayerAbsence(
                                     player_id=pt.player_id,
@@ -523,29 +539,39 @@ async def player_bulk_update(
                             db.flush()
                             # Apply absence to existing + future events
                             from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
+
                             updated = apply_absence_to_future_events(pt.player_id, db)
                             from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
                             for _event_id, _pid, _status in updated:
                                 background_tasks.add_task(notify_coaches_via_telegram, _event_id, _pid, _status)
                         else:
                             # Clear injury: delete related absence + revert attendances
                             from models.player_absence import PlayerAbsence  # noqa: PLC0415
                             from services.absence_service import revert_absence_from_events  # noqa: PLC0415
+
                             db.query(PlayerAbsence).filter(
                                 PlayerAbsence.player_id == pt.player_id,
                                 PlayerAbsence.season_id == pt.season_id,
                                 PlayerAbsence.reason.like("%njur%"),
                             ).delete()
                             db.flush()
-                            revert_absence_from_events(pt.player_id, db)
+                            reverted = revert_absence_from_events(pt.player_id, db)
+                            if reverted and background_tasks is not None:
+                                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+                                for _ev_id, _pid, _status in reverted:
+                                    background_tasks.add_task(notify_coaches_via_telegram, _ev_id, _pid, _status)
                     if field == "absent_by_default":
                         old_val = getattr(pt, "absent_by_default", False)
                         new_val = bool(value)
                         if new_val and not old_val:
                             from services.absence_service import apply_default_absence_to_future_events  # noqa: PLC0415
+
                             apply_default_absence_to_future_events(pt.player_id, body.team_id, body.season_id, db)
                         elif not new_val and old_val:
                             from services.absence_service import revert_default_absence_from_events  # noqa: PLC0415
+
                             revert_default_absence_from_events(pt.player_id, body.team_id, body.season_id, db)
                     setattr(pt, field, value)
 
@@ -755,15 +781,21 @@ async def players_list(
     # Build {player_id: User} for "Has User" column
     player_ids = [p.id for p in players]
     linked_users = (
-        db.query(User).filter(
-            User.id.in_(
-                db.query(Player.user_id).filter(
-                    Player.id.in_(player_ids),
-                    Player.user_id.isnot(None),
+        (
+            db.query(User)
+            .filter(
+                User.id.in_(
+                    db.query(Player.user_id).filter(
+                        Player.id.in_(player_ids),
+                        Player.user_id.isnot(None),
+                    )
                 )
             )
-        ).all()
-    ) if player_ids else []
+            .all()
+        )
+        if player_ids
+        else []
+    )
     # map player_id -> User via player lookup
     player_id_to_user: dict[int, User] = {}
     for p in players:
@@ -776,11 +808,15 @@ async def players_list(
     # Staff tab: users not linked to any player (coaches, admins without player profile)
     linked_user_ids_q = db.query(Player.user_id).filter(Player.user_id.isnot(None))
     staff_users = (
-        db.query(User)
-        .filter(~User.id.in_(linked_user_ids_q))
-        .order_by(User.role, User.first_name, User.last_name)
-        .all()
-    ) if user.is_admin else []
+        (
+            db.query(User)
+            .filter(~User.id.in_(linked_user_ids_q))
+            .order_by(User.role, User.first_name, User.last_name)
+            .all()
+        )
+        if user.is_admin
+        else []
+    )
 
     return render(
         request,
@@ -901,7 +937,13 @@ async def player_new_post(
     db.flush()
 
     for s in seasons:
-        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id, background_tasks=background_tasks)
+        _sync_memberships(
+            db,
+            player,
+            _parse_team_memberships_for_season(form, s.id),
+            season_id=s.id,
+            background_tasks=background_tasks,
+        )
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 
@@ -1272,7 +1314,13 @@ async def player_edit_post(
     _apply_personal_fields(player, form)
 
     for s in seasons:
-        _sync_memberships(db, player, _parse_team_memberships_for_season(form, s.id), season_id=s.id, background_tasks=background_tasks)
+        _sync_memberships(
+            db,
+            player,
+            _parse_team_memberships_for_season(form, s.id),
+            season_id=s.id,
+            background_tasks=background_tasks,
+        )
     _sync_phones(db, player, form)
     _sync_contact(db, player, form)
 

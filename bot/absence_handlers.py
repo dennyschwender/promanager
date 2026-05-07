@@ -316,5 +316,13 @@ async def delete_absence(query, user, db, absence_id: int, player_id: int, page:
     if absence and absence.player_id == player_id:
         db.delete(absence)
         db.commit()
+        from services.absence_service import revert_absence_from_events  # noqa: PLC0415
+
+        reverted = revert_absence_from_events(player_id, db)
+        if reverted:
+            from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+            for ev_id, pid, status in reverted:
+                await notify_coaches_via_telegram(ev_id, pid, status)
     is_member = not (user.is_admin or user.is_coach)
     await show_absence_list(query, user, db, player_id, page, back_page, is_member)

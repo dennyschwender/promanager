@@ -13,11 +13,7 @@ from models.player_absence import PlayerAbsence
 def _date_matches_absence(check_date: date, absence: PlayerAbsence) -> bool:
     """Check if a date matches a specific absence record (pure logic, no DB)."""
     if absence.absence_type == "period":
-        return (
-            absence.start_date
-            and absence.end_date
-            and absence.start_date <= check_date <= absence.end_date
-        )
+        return absence.start_date and absence.end_date and absence.start_date <= check_date <= absence.end_date
     elif absence.absence_type == "recurring":
         if not (absence.rrule and absence.rrule_until):
             return False
@@ -127,9 +123,7 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
                     break
 
             # Determine if we should update
-            should_update = att.status == "unknown" or (
-                att.status == "present" and event.presence_type == "all"
-            )
+            should_update = att.status == "unknown" or (att.status == "present" and event.presence_type == "all")
 
             if should_update:
                 reason = matching_absence.reason if matching_absence else "On leave"
@@ -142,6 +136,7 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
             # Only clear if the status was set by an absence (has "[Absence]" prefix)
             if att.status == "absent" and att.note and att.note.startswith("[Absence]"):
                 from services.attendance_service import _default_status  # noqa: PLC0415
+
                 att.status = _default_status(event)
                 att.note = None
                 att.updated_at = datetime.now(timezone.utc)
@@ -227,12 +222,12 @@ def revert_default_absence_from_events(player_id: int, team_id: int, season_id: 
     return count
 
 
-def revert_absence_from_events(player_id: int, db: Session) -> int:
+def revert_absence_from_events(player_id: int, db: Session) -> list[tuple[int, int, str]]:
     """Revert future attendance records auto-set absent by absence logic back to unknown.
 
     Called when an absence is deleted or injury cleared.
-    Only affects future events where note starts with '[Absence]'.
-    Returns count of updated records.
+    Only affects future events where note starts with "[Absence]".
+    Returns list of (event_id, player_id, new_status) for notification dispatch.
     """
     from models.attendance import Attendance
     from models.event import Event
@@ -251,14 +246,14 @@ def revert_absence_from_events(player_id: int, db: Session) -> int:
         .all()
     )
 
-    count = 0
+    updated: list[tuple[int, int, str]] = []
     for att in attendances:
         att.status = "unknown"
         att.note = None
         att.updated_at = datetime.now(timezone.utc)
-        count += 1
+        updated.append((att.event_id, att.player_id, "unknown"))
 
-    if count > 0:
+    if updated:
         db.commit()
 
-    return count
+    return updated
