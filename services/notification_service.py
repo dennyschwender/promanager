@@ -95,7 +95,7 @@ def _resolve_players(
         )
         .subquery()
     )
-    return base_q.filter(Player.id.in_(player_ids_with_status)).all()
+    return base_q.filter(Player.id.in_(player_ids_with_status.select())).all()
 
 
 # ── Core dispatch ─────────────────────────────────────────────────────────────
