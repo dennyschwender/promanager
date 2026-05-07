@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -27,17 +27,23 @@ def _check_player_access(current_user, player_id: int, db: Session) -> None:
     # Check if user owns this player or coaches them
     if not current_user.is_admin:
         # Check if player owns it (explicit query avoids lazy-load DetachedInstanceError)
-        owns_player = db.query(Player).filter(Player.user_id == current_user.id, Player.id == player_id).first() is not None
+        owns_player = (
+            db.query(Player).filter(Player.user_id == current_user.id, Player.id == player_id).first() is not None
+        )
         if not owns_player:
             # Check if coach
             if current_user.is_coach:
                 user_teams = db.query(UserTeam).filter(UserTeam.user_id == current_user.id).all()
                 team_ids = {ut.team_id for ut in user_teams}
 
-                player_teams = db.query(PlayerTeam).filter(
-                    PlayerTeam.player_id == player_id,
-                    PlayerTeam.team_id.in_(team_ids) if team_ids else False,
-                ).all()
+                player_teams = (
+                    db.query(PlayerTeam)
+                    .filter(
+                        PlayerTeam.player_id == player_id,
+                        PlayerTeam.team_id.in_(team_ids) if team_ids else False,
+                    )
+                    .all()
+                )
 
                 if not player_teams:
                     raise HTTPException(status_code=403, detail="Not authorized")
@@ -81,6 +87,7 @@ async def get_player_absences(
 @router.post("/players/{player_id}/absences")
 async def create_player_absence(
     player_id: int,
+    background_tasks: BackgroundTasks,
     body: dict[str, Any] = Body(...),
     current_user=Depends(require_login),
     db: Session = Depends(get_db),
@@ -135,7 +142,9 @@ async def create_player_absence(
         rrule_until = (
             date.fromisoformat(rrule_until_input)
             if isinstance(rrule_until_input, str)
-            else rrule_until_input if rrule_until_input else season.end_date
+            else rrule_until_input
+            if rrule_until_input
+            else season.end_date
         )
         if rrule_until < date.today():
             raise HTTPException(status_code=400, detail="rrule_until must be in the future")
@@ -155,8 +164,13 @@ async def create_player_absence(
     db.commit()
     db.refresh(absence)
 
-    # Apply to future events
-    apply_absence_to_future_events(player_id, db)
+    # Apply to future events and notify coaches of each affected attendance change
+    updated = apply_absence_to_future_events(player_id, db)
+    if updated:
+        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+        for ev_id, pid, status in updated:
+            background_tasks.add_task(notify_coaches_via_telegram, ev_id, pid, status)
 
     return {
         "id": absence.id,
