@@ -16,6 +16,7 @@ from routes._auth_helpers import require_login
 from services.chat_service import (
     author_display_name,
     message_to_dict,
+    notify_members_of_chat,
     push_chat_delete_sse,
     push_chat_message_sse,
     send_telegram_notifications,
@@ -84,6 +85,13 @@ async def post_message(
         event_id,
         author_name,
         body.lane,
+        body.body.strip(),
+        user.id,
+    )
+    background_tasks.add_task(
+        notify_members_of_chat,
+        event_id,
+        author_name,
         body.body.strip(),
         user.id,
     )

@@ -1138,6 +1138,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     author_name = author_display_name(user)
                     msg_dict = message_to_dict(msg, author_name)
                     push_chat_message_sse(pending_chat["event_id"], msg_dict, db)
+                    from services.chat_service import notify_members_of_chat  # noqa: PLC0415
+                    await notify_members_of_chat(pending_chat["event_id"], author_name, body_text, user.id)
         import asyncio as _asyncio  # noqa: PLC0415
 
         conf = await update.message.reply_text(t("telegram.chat_reply_posted", locale_cr))

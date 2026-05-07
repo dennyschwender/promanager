@@ -145,3 +145,76 @@ async def send_telegram_notifications(
 
     finally:
         db.close()
+
+
+async def notify_members_of_chat(
+    event_id: int,
+    author_name: str,
+    body_text: str,
+    exclude_user_id: int | None,
+) -> None:
+    """Create Notification records + push badge/web-push for all non-absent members.
+
+    Complements push_chat_message_sse (real-time chat update) with a persistent
+    Notification so members see the bell badge and receive a web push when away.
+    Opens its own DB session — safe to call as a BackgroundTask.
+    """
+    import app.database as _db_mod  # noqa: PLC0415
+    from models.attendance import Attendance  # noqa: PLC0415
+    from models.notification import Notification  # noqa: PLC0415
+    from services.channels.inapp_channel import push_unread_count  # noqa: PLC0415
+    from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
+
+    _webpush = WebPushChannel()
+    db = _db_mod.SessionLocal()
+    try:
+        event = db.get(Event, event_id)
+        if event is None:
+            return
+
+        preview = body_text[:50] + ("…" if len(body_text) > 50 else "")
+        notif_title = f"💬 {author_name}: {preview}"
+        notif_body = event.title
+
+        seen_player_ids: set[int] = set()
+
+        att_rows = (
+            db.query(Attendance)
+            .filter(
+                Attendance.event_id == event_id,
+                Attendance.status.in_(["present", "maybe", "unknown"]),
+            )
+            .all()
+        )
+        for att in att_rows:
+            player = db.get(Player, att.player_id)
+            if not player or not player.user_id or player.user_id == exclude_user_id:
+                continue
+            if player.id in seen_player_ids:
+                continue
+            seen_player_ids.add(player.id)
+
+            notif = Notification(
+                player_id=player.id,
+                event_id=event_id,
+                title=notif_title,
+                body=notif_body,
+                tag="chat",
+            )
+            db.add(notif)
+            db.flush()
+
+            unread = (
+                db.query(Notification)
+                .filter(Notification.player_id == player.id, Notification.is_read.is_(False))
+                .count()
+            )
+            push_unread_count(player.id, unread)
+            _webpush.send(player, notif, db)
+
+        db.commit()
+    except Exception:
+        logger.exception("notify_members_of_chat failed for event %d", event_id)
+        db.rollback()
+    finally:
+        db.close()
