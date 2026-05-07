@@ -1,6 +1,9 @@
 """services/channels/inapp_channel.py — In-app channel + SSE connection registry.
 
-The SSE registry is a module-level dict keyed by player_id.
+The SSE registry has two dicts:
+  _connections      keyed by player_id  (member recipients)
+  _user_connections keyed by user_id    (admin/coach recipients without a linked player)
+
 Each connected browser tab has its own asyncio.Queue.
 
 Constraint: in-process only — does not work with multiple Uvicorn workers.
@@ -20,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 # player_id → list of queues (one per open browser tab/connection)
 _connections: dict[int, list[asyncio.Queue]] = {}
+
+# user_id → list of queues (for admins/coaches with no linked player)
+_user_connections: dict[int, list[asyncio.Queue]] = {}
 
 
 def register_connection(player_id: int) -> asyncio.Queue:
@@ -42,13 +48,28 @@ def unregister_connection(player_id: int, q: asyncio.Queue) -> None:
     logger.debug("SSE: unregistered connection for player %s", player_id)
 
 
-def push_unread_count(player_id: int, unread_count: int) -> None:
-    """Push an unread-count update to all connected tabs for *player_id*.
+def register_user_connection(user_id: int) -> asyncio.Queue:
+    """Create and register a new SSE queue for *user_id* (unlinked admin/coach)."""
+    q: asyncio.Queue = asyncio.Queue()
+    _user_connections.setdefault(user_id, []).append(q)
+    logger.debug("SSE: registered user connection for user %s (%d total)", user_id, len(_user_connections[user_id]))
+    return q
 
-    Safe to call from sync context (puts items into thread-safe queues).
-    If the player has no open connection the event is silently dropped —
-    the badge will update on next page load via the middleware-embedded count.
-    """
+
+def unregister_user_connection(user_id: int, q: asyncio.Queue) -> None:
+    """Remove the user-keyed queue when the SSE connection closes."""
+    queues = _user_connections.get(user_id, [])
+    try:
+        queues.remove(q)
+    except ValueError:
+        pass
+    if not queues:
+        _user_connections.pop(user_id, None)
+    logger.debug("SSE: unregistered user connection for user %s", user_id)
+
+
+def push_unread_count(player_id: int, unread_count: int) -> None:
+    """Push an unread-count update to all connected tabs for *player_id*."""
     queues = _connections.get(player_id, [])
     payload = json.dumps({"unread_count": unread_count})
     for q in queues:
@@ -56,6 +77,17 @@ def push_unread_count(player_id: int, unread_count: int) -> None:
             q.put_nowait(payload)
         except asyncio.QueueFull:
             logger.warning("SSE queue full for player %s — dropping event", player_id)
+
+
+def push_unread_count_to_user(user_id: int, unread_count: int) -> None:
+    """Push an unread-count update to all connected tabs for *user_id* (unlinked admin/coach)."""
+    queues = _user_connections.get(user_id, [])
+    payload = json.dumps({"unread_count": unread_count})
+    for q in queues:
+        try:
+            q.put_nowait(payload)
+        except asyncio.QueueFull:
+            logger.warning("SSE queue full for user %s — dropping event", user_id)
 
 
 def push_payload(player_id: int, payload: dict) -> None:
