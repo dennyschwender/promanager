@@ -18,16 +18,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # notifications: make player_id nullable, add user_id
+    # SQLite batch mode raises ValueError("Constraint must have a name") when ForeignKey
+    # is passed inline to add_column. Omit FK here — integrity enforced at app layer.
     with op.batch_alter_table("notifications") as batch_op:
         batch_op.alter_column("player_id", existing_type=sa.Integer(), nullable=True)
-        batch_op.add_column(sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=True))
+        batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
         batch_op.create_index("ix_notifications_user_id", ["user_id"])
 
-    # web_push_subscriptions: make player_id nullable, add user_id
     with op.batch_alter_table("web_push_subscriptions") as batch_op:
         batch_op.alter_column("player_id", existing_type=sa.Integer(), nullable=True)
-        batch_op.add_column(sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=True))
+        batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
         batch_op.create_index("ix_web_push_subscriptions_user_id", ["user_id"])
 
 
