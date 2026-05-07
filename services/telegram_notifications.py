@@ -122,6 +122,10 @@ async def notify_coaches_via_telegram(
                 if coach_player:
                     push_unread_count(coach_player.id, unread)
                     _webpush.send(coach_player, web_notif, db)
+                    from services.channels.email_channel import EmailChannel  # noqa: PLC0415
+                    from services.notification_service import get_preference  # noqa: PLC0415
+                    if get_preference(coach_player.id, "email", db):
+                        EmailChannel().send(coach_player, web_notif)
                 else:
                     push_unread_count_to_user(ut.user_id, unread)
                     _webpush.send_to_user(ut.user_id, web_notif, db)
@@ -235,6 +239,10 @@ async def notify_coaches_about_external_change(
                 if coach_player:
                     push_unread_count(coach_player.id, unread)
                     _webpush.send(coach_player, web_notif, db)
+                    from services.channels.email_channel import EmailChannel  # noqa: PLC0415
+                    from services.notification_service import get_preference  # noqa: PLC0415
+                    if get_preference(coach_player.id, "email", db):
+                        EmailChannel().send(coach_player, web_notif)
                 else:
                     push_unread_count_to_user(ut.user_id, unread)
                     _webpush.send_to_user(ut.user_id, web_notif, db)
