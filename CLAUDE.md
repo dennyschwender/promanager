@@ -65,7 +65,7 @@ Registered dynamically in `app/main.py` via `importlib.import_module`. Each `rou
 
 ### Services layer
 
-Business logic in `services/`, called from routes. Key services: `auth_service` (bcrypt hashing, session cookies), `attendance_service` (auto-create `unknown` records when event added), `email_service` (SMTP), `notification_service` (multi-channel dispatch via `services/channels/`).
+Business logic in `services/`, called from routes. Key services: `auth_service` (bcrypt hashing, session cookies), `attendance_service` (auto-create `unknown` records when event added), `email_service` (SMTP), `notification_service` (multi-channel dispatch via `services/channels/`), `calendar_service` (RFC 5545 iCal feed at `/{token}/feed.ics` — token stored on `User.calendar_token`).
 
 ### Telegram bot
 
@@ -73,7 +73,42 @@ Single persistent inline-keyboard message per user (`User.telegram_notification_
 
 - `bot/views/` — renderers returning `ViewResult = (str, InlineKeyboardMarkup)`: `home.py`, `events.py`, `notifications.py`, `other.py`
 - `bot/navigation.py` — `navigate()` edits the persistent message + updates `telegram_current_view`; `inject_notification()` / `inject_chat_notification()` prepend a 🔔/💬 row to current view without navigating
-- Callback scheme: `home`, `nl`, `nl:N`, `n:ID`, `el`, `el:N`, `e:ID`, `ec:ID`, `ab`, `other:0`
+- Callback scheme (full):
+
+| Pattern | Description |
+|---------|-------------|
+| `home` | Home view |
+| `restart:` | Reset bot session |
+| `noop` | No-op dummy button |
+| `nl` / `nl:N` | Notifications list (page N) |
+| `notif:N` | Notifications pagination alias |
+| `n:ID` | Notification detail |
+| `ref:N` | Refresh events list |
+| `el` / `el:N` | Events list (page N) |
+| `evts:N` | Events list (back context) |
+| `evt:ID` | Event detail (from notification link) |
+| `e:ID` | Event detail |
+| `ec:ID` | Event chat messages |
+| `evtp:EID:PAGE:BACK` | Event detail / player attendance view |
+| `evte:EID:PAGE:BACK` | Edit attendance for all players |
+| `evtn:EID:BACK` | Event notes |
+| `evtx:EID:BACK` | Externals list |
+| `sta:EID:PID:S` | Set player attendance (S = p/a/u) |
+| `note:EID:PID:BACK` | Add/edit player note |
+| `chatreply:EID:LANE` | Reply to event chat |
+| `extadd:EID:BACK` | Add external player |
+| `extedit:XID:EID:BACK` | Edit external player |
+| `extdel:XID:EID:BACK` | Delete external player |
+| `exts:XID:S:EID:BACK` | Set external player status |
+| `extn:XID:EID:BACK` | Add/edit external note |
+| `extsta:S` | Confirm status in add-external flow |
+| `other:N` | Other / settings menu |
+| `absm:BACK` | Absence root menu |
+| `absp:PAGE:BACK` | Absence player list (coach/admin) |
+| `absl:PID:PAGE:BACK` | Absence list for player |
+| `absd:AID:PID:PAGE:BACK` | Confirm absence deletion |
+| `absdc:AID:PID:PAGE:BACK` | Execute absence deletion |
+| `absa:PID:BACK` | Add absence for player |
 
 ### Testing conventions
 

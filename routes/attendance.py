@@ -124,14 +124,16 @@ async def add_external(
     db.add(ext)
     db.commit()
     db.refresh(ext)
-    return JSONResponse({
-        "ok": True,
-        "id": ext.id,
-        "full_name": ext.full_name,
-        "status": ext.status,
-        "note": ext.note or "",
-        "position": ext.position or "",
-    })
+    return JSONResponse(
+        {
+            "ok": True,
+            "id": ext.id,
+            "full_name": ext.full_name,
+            "status": ext.status,
+            "note": ext.note or "",
+            "position": ext.position or "",
+        }
+    )
 
 
 @router.post("/{event_id}/externals/{ext_id}/delete")
@@ -154,6 +156,7 @@ async def delete_external(
 async def update_external(
     event_id: int,
     ext_id: int,
+    background_tasks: BackgroundTasks,
     status: str = Form("unknown"),
     note: str = Form(""),
     position: str = Form(""),
@@ -164,11 +167,16 @@ async def update_external(
     ext = db.query(EventExternal).filter(EventExternal.id == ext_id, EventExternal.event_id == event_id).first()
     if ext is None:
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    old_status = ext.status
     if status in _VALID_STATUSES:
         ext.status = status
     ext.note = note.strip() or None
     ext.position = position.strip() if position.strip() in _VALID_POSITIONS else None
     db.commit()
+    if old_status != ext.status:
+        from services.telegram_notifications import notify_coaches_about_external_change  # noqa: PLC0415
+
+        background_tasks.add_task(notify_coaches_about_external_change, event_id, ext_id, ext.status)
     return JSONResponse({"ok": True, "status": ext.status, "note": ext.note or "", "position": ext.position or ""})
 
 
@@ -235,11 +243,16 @@ async def update_attendance(
             target_type="attendance",
             target_id=player_id,
             target_label=player_label,
-            extra={"event_id": event_id, "event": event_obj.title if event_obj else None,
-                   "old": old_status, "new": status},
+            extra={
+                "event_id": event_id,
+                "event": event_obj.title if event_obj else None,
+                "old": old_status,
+                "new": status,
+            },
             request=request,
         )
         from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
         background_tasks.add_task(notify_coaches_via_telegram, event_id, player_id, status)
 
     if wants_json:

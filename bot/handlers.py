@@ -492,8 +492,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ext_id_s, status_char_s, event_id_s, back_page_s = int(parts[1]), parts[2], int(parts[3]), int(parts[4])
             ext = db.get(EventExternal, ext_id_s)
             if ext:
-                ext.status = _STATUS_MAP.get(status_char_s, "unknown")
+                old_ext_status = ext.status
+                new_ext_status = _STATUS_MAP.get(status_char_s, "unknown")
+                ext.status = new_ext_status
                 db.commit()
+                if old_ext_status != new_ext_status:
+                    from services.telegram_notifications import notify_coaches_about_external_change  # noqa: PLC0415
+
+                    await notify_coaches_about_external_change(event_id_s, ext_id_s, new_ext_status)
             await _show_event_externals(query, user, db, event_id_s, back_page=back_page_s)
 
         elif data.startswith("extn:"):

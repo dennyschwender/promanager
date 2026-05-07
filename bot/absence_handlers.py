@@ -65,10 +65,14 @@ async def show_absence_root(query, user, db, back_page: int) -> None:
     if user.is_admin or user.is_coach:
         await show_absence_player_list(query, user, db, page=0, back_page=back_page)
     else:
-        player = db.query(Player).filter(
-            Player.user_id == user.id,
-            Player.archived_at.is_(None),
-        ).first()
+        player = (
+            db.query(Player)
+            .filter(
+                Player.user_id == user.id,
+                Player.archived_at.is_(None),
+            )
+            .first()
+        )
         if player is None:
             await query.edit_message_text(t("telegram.not_authenticated", _locale(user)))
             return
@@ -86,18 +90,11 @@ async def show_absence_player_list(query, user, db, page: int, back_page: int) -
 
     if user.is_admin:
         players_q = (
-            db.query(Player)
-            .filter(Player.archived_at.is_(None))
-            .order_by(Player.first_name, Player.last_name)
-            .all()
+            db.query(Player).filter(Player.archived_at.is_(None)).order_by(Player.first_name, Player.last_name).all()
         )
     else:
-        team_ids = {
-            r[0] for r in db.query(UserTeam.team_id).filter(UserTeam.user_id == user.id).all()
-        }
-        player_ids = {
-            r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id.in_(team_ids)).all()
-        }
+        team_ids = {r[0] for r in db.query(UserTeam.team_id).filter(UserTeam.user_id == user.id).all()}
+        player_ids = {r[0] for r in db.query(PlayerTeam.player_id).filter(PlayerTeam.team_id.in_(team_ids)).all()}
         players_q = (
             db.query(Player)
             .filter(Player.id.in_(player_ids), Player.archived_at.is_(None))
@@ -253,13 +250,19 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             )
             db.add(absence)
             db.commit()
-            count = apply_absence_to_future_events(player_id, db)
+            updated = apply_absence_to_future_events(player_id, db)
+            count = len(updated)
+
+            # Notify coaches about each attendance change caused by the absence
+            if updated:
+                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+                for ev_id, pid, status in updated:
+                    await notify_coaches_via_telegram(ev_id, pid, status)
 
             context.user_data.pop("awaiting_absence", None)
 
-            conf = await update.message.reply_text(
-                t("telegram.absence_added", locale, count=count)
-            )
+            conf = await update.message.reply_text(t("telegram.absence_added", locale, count=count))
             await asyncio.sleep(2)
             try:
                 await conf.delete()
