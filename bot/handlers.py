@@ -253,7 +253,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Don't clean up awaiting_external when user is selecting the status (extsta: callbacks)
         _skip_ext_cleanup = data.startswith("extsta:")
         _skip_extn_cleanup = data.startswith("extn:")
-        for _key in ("awaiting_note", "awaiting_chat_reply", "awaiting_absence") + (() if _skip_ext_cleanup else ("awaiting_external",)) + (() if _skip_extn_cleanup else ("awaiting_ext_note",)):
+        for _key in (
+            ("awaiting_note", "awaiting_chat_reply", "awaiting_absence")
+            + (() if _skip_ext_cleanup else ("awaiting_external",))
+            + (() if _skip_extn_cleanup else ("awaiting_ext_note",))
+        ):
             _pending = context.user_data.pop(_key, None)
             if _pending:
                 _pmid = _pending.get("prompt_message_id")
@@ -279,26 +283,34 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data == "home":
             await query.answer()
-            from bot.views.home import render_home  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.home import render_home  # noqa: PLC0415
+
             text, keyboard = render_home(user, db)
             await navigate(query, user, db, "home", text, keyboard)
             return
 
         if data == "nl" or data.startswith("nl:"):
             await query.answer()
-            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
+
             page = int(data.split(":")[1]) if ":" in data else 0
             text, keyboard = render_notifications_list(user, db, page)
             view_key = f"nl:{page}" if page > 0 else "nl"
             await navigate(query, user, db, view_key, text, keyboard)
             return
 
-        if data.startswith("n:") and not data.startswith("notif:") and not data.startswith("note:") and not data.startswith("noop"):
+        if (
+            data.startswith("n:")
+            and not data.startswith("notif:")
+            and not data.startswith("note:")
+            and not data.startswith("noop")
+        ):
             await query.answer()
-            from bot.views.notifications import render_notification_detail  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.notifications import render_notification_detail  # noqa: PLC0415
+
             notif_id = int(data.split(":")[1])
             text, keyboard = render_notification_detail(user, db, notif_id)
             await navigate(query, user, db, f"n:{notif_id}", text, keyboard)
@@ -306,8 +318,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data == "el" or data.startswith("el:"):
             await query.answer()
-            from bot.views.events import render_events_list  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_events_list  # noqa: PLC0415
+
             page = int(data.split(":")[1]) if ":" in data else 0
             text, keyboard = render_events_list(user, db, page)
             view_key = f"el:{page}" if page > 0 else "el"
@@ -316,8 +329,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data.startswith("ec:"):
             await query.answer()
-            from bot.views.events import render_event_chat  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_event_chat  # noqa: PLC0415
+
             event_id = int(data.split(":")[1])
             back = user.telegram_current_view or "el"
             text, keyboard = render_event_chat(user, db, event_id, back=back)
@@ -327,6 +341,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if data == "ab":
             await query.answer()
             from bot.absence_handlers import show_absence_root  # noqa: PLC0415
+
             await show_absence_root(query, user, db, back_page=0)
             user.telegram_current_view = "ab"
             db.commit()
@@ -334,8 +349,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data.startswith("notif:"):
             await query.answer()
-            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.notifications import render_notifications_list  # noqa: PLC0415
+
             page = max(0, int(data.split(":")[1]))
             text, keyboard = render_notifications_list(user, db, page)
             await navigate(query, user, db, f"nl:{page}" if page > 0 else "nl", text, keyboard)
@@ -343,8 +359,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if data.startswith("ref:"):
             await query.answer()
-            from bot.views.events import render_events_list  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_events_list  # noqa: PLC0415
+
             page = max(0, int(data.split(":")[1]))
             text, keyboard = render_events_list(user, db, page)
             await navigate(query, user, db, f"el:{page}" if page > 0 else "el", text, keyboard)
@@ -352,8 +369,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         elif data.startswith("evts:"):
             await query.answer()
-            from bot.views.events import render_events_list  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_events_list  # noqa: PLC0415
+
             page = max(0, int(data.split(":")[1]))
             text, keyboard = render_events_list(user, db, page)
             await navigate(query, user, db, f"el:{page}" if page > 0 else "el", text, keyboard)
@@ -361,8 +379,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         elif data.startswith("evt:"):
             await query.answer()
             event_id = int(data.split(":")[1])
-            from bot.views.events import render_event_detail  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_event_detail  # noqa: PLC0415
+
             text, keyboard = render_event_detail(user, db, event_id)
             await navigate(query, user, db, f"e:{event_id}", text, keyboard)
 
@@ -371,14 +390,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # evtp:{event_id}:{player_page}:{back_page}
             parts = data.split(":")
             back_page = max(0, int(parts[3]))
-            await _show_event_detail(query, user, db, int(parts[1]), back_page=back_page, player_page=max(0, int(parts[2])))
+            await _show_event_detail(
+                query, user, db, int(parts[1]), back_page=back_page, player_page=max(0, int(parts[2]))
+            )
 
         elif data.startswith("evte:"):
             await query.answer()
             # evte:{event_id}:{player_page}:{back_page}
             parts = data.split(":")
             back_page = max(0, int(parts[3]))
-            await _show_event_detail(query, user, db, int(parts[1]), back_page=back_page, player_page=max(0, int(parts[2])), edit_mode=True)
+            await _show_event_detail(
+                query, user, db, int(parts[1]), back_page=back_page, player_page=max(0, int(parts[2])), edit_mode=True
+            )
 
         elif data.startswith("evtn:"):
             await query.answer()
@@ -425,17 +448,30 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ext = db.get(EventExternal, ext_id_e)
             if ext:
                 locale_e = _locale(user)
-                keyboard_e = InlineKeyboardMarkup([
+                keyboard_e = InlineKeyboardMarkup(
                     [
-                        InlineKeyboardButton("✓", callback_data=f"exts:{ext_id_e}:p:{event_id_e}:{back_page_e}"),
-                        InlineKeyboardButton("✗", callback_data=f"exts:{ext_id_e}:a:{event_id_e}:{back_page_e}"),
-                        InlineKeyboardButton("?", callback_data=f"exts:{ext_id_e}:u:{event_id_e}:{back_page_e}"),
-                    ],
-                    [InlineKeyboardButton(t("telegram.note_button", locale_e) + (" ✓" if ext.note else ""), callback_data=f"extn:{ext_id_e}:{event_id_e}:{back_page_e}")],
-                    [InlineKeyboardButton(t("telegram.back_button", locale_e), callback_data=f"evtx:{event_id_e}:{back_page_e}")],
-                ])
+                        [
+                            InlineKeyboardButton("✓", callback_data=f"exts:{ext_id_e}:p:{event_id_e}:{back_page_e}"),
+                            InlineKeyboardButton("✗", callback_data=f"exts:{ext_id_e}:a:{event_id_e}:{back_page_e}"),
+                            InlineKeyboardButton("?", callback_data=f"exts:{ext_id_e}:u:{event_id_e}:{back_page_e}"),
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                t("telegram.note_button", locale_e) + (" ✓" if ext.note else ""),
+                                callback_data=f"extn:{ext_id_e}:{event_id_e}:{back_page_e}",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                t("telegram.back_button", locale_e), callback_data=f"evtx:{event_id_e}:{back_page_e}"
+                            )
+                        ],
+                    ]
+                )
                 icon = STATUS_ICON.get(ext.status, "?")
-                _extedit_text = f"*{ext.full_name}* {icon}\n_{ext.note or ''}_" if ext.note else f"*{ext.full_name}* {icon}"
+                _extedit_text = (
+                    f"*{ext.full_name}* {icon}\n_{ext.note or ''}_" if ext.note else f"*{ext.full_name}* {icon}"
+                )
                 try:
                     await query.edit_message_text(
                         _extedit_text,
@@ -493,12 +529,15 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 locale_x = _locale(user)
                 conf = await query.message.reply_text(t("telegram.external_added", locale_x))
                 import asyncio  # noqa: PLC0415
+
                 await asyncio.sleep(2)
                 try:
                     await conf.delete()
                 except Exception:
                     pass
-                await _show_event_externals(query, user, db, pending_ext["event_id"], back_page=pending_ext["back_page"])
+                await _show_event_externals(
+                    query, user, db, pending_ext["event_id"], back_page=pending_ext["back_page"]
+                )
 
         elif data.startswith("note:"):
             await query.answer()
@@ -526,9 +565,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parts = data.split(":")
             event_id_cr = int(parts[1])
             locale_cr = _locale(user)
-            prompt_msg = await query.message.reply_text(
-                t("telegram.chat_reply_prompt", locale_cr)
-            )
+            prompt_msg = await query.message.reply_text(t("telegram.chat_reply_prompt", locale_cr))
             context.user_data["awaiting_chat_reply"] = {
                 "event_id": event_id_cr,
                 "prompt_message_id": prompt_msg.message_id,
@@ -537,8 +574,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         elif data.startswith("e:"):
             await query.answer()
-            from bot.views.events import render_event_detail  # noqa: PLC0415
             from bot.navigation import navigate  # noqa: PLC0415
+            from bot.views.events import render_event_detail  # noqa: PLC0415
+
             event_id = int(data.split(":")[1])
             text, keyboard = render_event_detail(user, db, event_id)
             await navigate(query, user, db, f"e:{event_id}", text, keyboard)
@@ -547,6 +585,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # other:{back_page}
             from bot.absence_handlers import show_other_menu  # noqa: PLC0415
+
             back_page_o = int(data.split(":")[1])
             await show_other_menu(query, user, back_page=back_page_o)
 
@@ -554,6 +593,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absm:{back_page}
             from bot.absence_handlers import show_absence_root  # noqa: PLC0415
+
             back_page_am = int(data.split(":")[1])
             await show_absence_root(query, user, db, back_page=back_page_am)
 
@@ -561,6 +601,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absp:{page}:{back_page}
             from bot.absence_handlers import show_absence_player_list  # noqa: PLC0415
+
             parts = data.split(":")
             await show_absence_player_list(query, user, db, page=int(parts[1]), back_page=int(parts[2]))
 
@@ -568,6 +609,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absl:{player_id}:{page}:{back_page}
             from bot.absence_handlers import show_absence_list  # noqa: PLC0415
+
             parts = data.split(":")
             player_id_al, page_al, back_page_al = int(parts[1]), int(parts[2]), int(parts[3])
             is_member_al = not (user.is_admin or user.is_coach)
@@ -577,6 +619,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absa:{player_id}:{back_page}
             from bot.absence_handlers import start_add_absence  # noqa: PLC0415
+
             parts = data.split(":")
             await start_add_absence(query, user, context, int(parts[1]), int(parts[2]))
 
@@ -584,6 +627,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absd:{absence_id}:{player_id}:{page}:{back_page}
             from bot.absence_handlers import confirm_delete_absence  # noqa: PLC0415
+
             parts = data.split(":")
             await confirm_delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
 
@@ -591,6 +635,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer()
             # absdc:{absence_id}:{player_id}:{page}:{back_page}
             from bot.absence_handlers import delete_absence  # noqa: PLC0415
+
             parts = data.split(":")
             await delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
 
@@ -614,9 +659,12 @@ async def _show_notifications(query, user, db, page: int) -> None:
 
     if is_admin_or_coach:
         # Coach/Admin: show TelegramNotification records (attendance change alerts)
-        notifs = db.query(TelegramNotification).filter(
-            TelegramNotification.user_id == user.id
-        ).order_by(TelegramNotification.created_at.desc()).all()
+        notifs = (
+            db.query(TelegramNotification)
+            .filter(TelegramNotification.user_id == user.id)
+            .order_by(TelegramNotification.created_at.desc())
+            .all()
+        )
 
         if not notifs:
             try:
@@ -638,16 +686,18 @@ async def _show_notifications(query, user, db, page: int) -> None:
             event_title = event.title if event else "Event"
             status_emoji = {"present": "✓", "absent": "✗", "unknown": "?"}.get(notif.status, "?")
             lines.append(f"{status_emoji} {player_name} → {notif.status}")
-            rows.append([InlineKeyboardButton(
-                f"👁 {event_title}",
-                callback_data=f"evt:{notif.event_id}",
-            )])
+            rows.append(
+                [
+                    InlineKeyboardButton(
+                        f"👁 {event_title}",
+                        callback_data=f"evt:{notif.event_id}",
+                    )
+                ]
+            )
 
     else:
         # Member: show Notification records for their linked player, mark them read
-        linked_player = db.query(Player).filter(
-            Player.user_id == user.id, Player.archived_at.is_(None)
-        ).first()
+        linked_player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
 
         if linked_player is None:
             try:
@@ -656,9 +706,12 @@ async def _show_notifications(query, user, db, page: int) -> None:
                 await query.message.reply_text(t("telegram.no_events", locale))
             return
 
-        notifs = db.query(Notification).filter(
-            Notification.player_id == linked_player.id
-        ).order_by(Notification.created_at.desc()).all()
+        notifs = (
+            db.query(Notification)
+            .filter(Notification.player_id == linked_player.id)
+            .order_by(Notification.created_at.desc())
+            .all()
+        )
 
         if not notifs:
             try:
@@ -690,10 +743,14 @@ async def _show_notifications(query, user, db, page: int) -> None:
             lines.append(header_line)
             lines.append(notif.body)
             if event:
-                rows.append([InlineKeyboardButton(
-                    f"👁 {event_title}",
-                    callback_data=f"evt:{notif.event_id}",
-                )])
+                rows.append(
+                    [
+                        InlineKeyboardButton(
+                            f"👁 {event_title}",
+                            callback_data=f"evt:{notif.event_id}",
+                        )
+                    ]
+                )
 
     text = "\n".join(lines)
 
@@ -747,7 +804,9 @@ async def _show_events(query, user, db, page: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0, player_page: int = 0, edit_mode: bool = False) -> None:
+async def _show_event_detail(
+    query, user, db, event_id: int, back_page: int = 0, player_page: int = 0, edit_mode: bool = False
+) -> None:
     locale = _locale(user)
     event = db.get(Event, event_id)
     if event is None:
@@ -787,7 +846,9 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
     # Attendance summary (players + externals)
     atts = db.query(Attendance).filter(Attendance.event_id == event_id).all()
     att_by_player: dict[int, Attendance] = {a.player_id: a for a in atts}
-    ext_rows = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    ext_rows = (
+        db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    )
     counts: dict[str, int] = {"present": 0, "absent": 0, "unknown": 0, "maybe": 0}
     for a in atts:
         counts[a.status] = counts.get(a.status, 0) + 1
@@ -800,6 +861,7 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
     text = "\n".join(lines)
 
     from models.event_message import EventMessage  # noqa: PLC0415
+
     msg_count = db.query(EventMessage).filter(EventMessage.event_id == event_id).count()
 
     is_admin_or_coach = user.is_admin or user.is_coach
@@ -815,7 +877,9 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
             text += f"\n\n{t('telegram.your_status_label', locale)}: {status_label}"
             if own_note:
                 text += f"\n_{t('telegram.note_label', locale)}: {own_note}_"
-            keyboard = event_status_keyboard(event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "", msg_count=msg_count)
+            keyboard = event_status_keyboard(
+                event_id, own_player.id, back_page=back_page, locale=locale, note=own_note or "", msg_count=msg_count
+            )
         else:
             keyboard = InlineKeyboardMarkup(
                 [[InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evts:{back_page}")]]
@@ -854,19 +918,26 @@ async def _show_event_detail(query, user, db, event_id: int, back_page: int = 0,
                 p._position = None  # type: ignore[attr-defined]
 
         from services.event_text_service import format_attendance_body
-        text += "\n" + format_attendance_body(
-            players, att_by_player, ext_rows, locale, grouped=True, markdown=True
-        )
+
+        text += "\n" + format_attendance_body(players, att_by_player, ext_rows, locale, grouped=True, markdown=True)
 
         if edit_mode:
             total_player_pages = max(1, math.ceil(len(players) / PLAYER_PAGE_SIZE))
             player_page = max(0, min(player_page, total_player_pages - 1))
             page_players = players[player_page * PLAYER_PAGE_SIZE : (player_page + 1) * PLAYER_PAGE_SIZE]
             keyboard = event_admin_keyboard(
-                event_id, page_players, att_by_player, player_page, total_player_pages, back_page=back_page, locale=locale
+                event_id,
+                page_players,
+                att_by_player,
+                player_page,
+                total_player_pages,
+                back_page=back_page,
+                locale=locale,
             )
         else:
-            keyboard = event_view_keyboard(event_id, back_page=back_page, locale=locale, is_privileged=True, msg_count=msg_count)
+            keyboard = event_view_keyboard(
+                event_id, back_page=back_page, locale=locale, is_privileged=True, msg_count=msg_count
+            )
 
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
@@ -912,6 +983,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     # Handle absence multi-step input
     from bot.absence_handlers import handle_absence_text  # noqa: PLC0415
+
     if await handle_absence_text(update, context):
         return
 
@@ -941,11 +1013,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         with SessionLocal() as db:
             user = get_user_by_chat_id(db, chat_id)
             locale = _locale(user) if user else "en"
-        status_keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("✓ Present", callback_data="extsta:p"),
-            InlineKeyboardButton("✗ Absent", callback_data="extsta:a"),
-            InlineKeyboardButton("? Unknown", callback_data="extsta:u"),
-        ]])
+        status_keyboard = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("✓ Present", callback_data="extsta:p"),
+                    InlineKeyboardButton("✗ Absent", callback_data="extsta:a"),
+                    InlineKeyboardButton("? Unknown", callback_data="extsta:u"),
+                ]
+            ]
+        )
         full_name = f"{first} {last}".strip()
         prompt2 = await update.message.reply_text(
             t("telegram.external_select_status", locale, name=full_name),
@@ -978,6 +1054,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     db.commit()
         context.user_data.pop("awaiting_ext_note", None)
         import asyncio as _asyncio  # noqa: PLC0415
+
         conf = await update.message.reply_text(t("telegram.note_saved", _locale(user) if user else "en"))
         await _asyncio.sleep(2)
         try:
@@ -1014,6 +1091,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                         message_to_dict,
                         push_chat_message_sse,
                     )
+
                     msg = _EventMessage(
                         event_id=pending_chat["event_id"],
                         user_id=user.id,
@@ -1027,6 +1105,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     msg_dict = message_to_dict(msg, author_name)
                     push_chat_message_sse(pending_chat["event_id"], msg_dict, db)
         import asyncio as _asyncio  # noqa: PLC0415
+
         conf = await update.message.reply_text(t("telegram.chat_reply_posted", locale_cr))
         await _asyncio.sleep(2)
         try:
@@ -1048,12 +1127,17 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         if user is None:
             return
         locale = _locale(user)
-        att = db.query(Attendance).filter(
-            Attendance.event_id == event_id,
-            Attendance.player_id == player_id,
-        ).first()
+        att = (
+            db.query(Attendance)
+            .filter(
+                Attendance.event_id == event_id,
+                Attendance.player_id == player_id,
+            )
+            .first()
+        )
         if att is None:
             from services.attendance_service import get_or_create_attendance  # noqa: PLC0415
+
             att = get_or_create_attendance(db, event_id, player_id)
         att.note = note_text or None
         db.commit()
@@ -1074,6 +1158,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         pass
 
     import asyncio  # noqa: PLC0415
+
     confirmation = await update.message.reply_text(t("telegram.note_saved", locale))
     await asyncio.sleep(2)
     try:
@@ -1089,7 +1174,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def _show_event_externals(query, user, db, event_id: int, back_page: int = 0) -> None:
     locale = _locale(user)
-    externals = db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    externals = (
+        db.query(EventExternal).filter(EventExternal.event_id == event_id).order_by(EventExternal.created_at).all()
+    )
 
     rows = []
     if externals:
@@ -1100,16 +1187,24 @@ async def _show_event_externals(query, user, db, event_id: int, back_page: int =
             if ext.note:
                 line += f" — {ext.note}"
             lines.append(line)
-            rows.append([
-                InlineKeyboardButton(f"✎ {ext.full_name}", callback_data=f"extedit:{ext.id}:{event_id}:{back_page}"),
-                InlineKeyboardButton("🗑", callback_data=f"extdel:{ext.id}:{event_id}:{back_page}"),
-            ])
+            rows.append(
+                [
+                    InlineKeyboardButton(
+                        f"✎ {ext.full_name}", callback_data=f"extedit:{ext.id}:{event_id}:{back_page}"
+                    ),
+                    InlineKeyboardButton("🗑", callback_data=f"extdel:{ext.id}:{event_id}:{back_page}"),
+                ]
+            )
         text = "\n".join(lines)
     else:
         text = t("telegram.no_externals", locale)
 
-    rows.append([InlineKeyboardButton(f"+ {t('externals.add', locale)}", callback_data=f"extadd:{event_id}:{back_page}")])
-    rows.append([InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")])
+    rows.append(
+        [InlineKeyboardButton(f"+ {t('externals.add', locale)}", callback_data=f"extadd:{event_id}:{back_page}")]
+    )
+    rows.append(
+        [InlineKeyboardButton(t("telegram.back_button", locale), callback_data=f"evtp:{event_id}:0:{back_page}")]
+    )
     try:
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows), parse_mode=ParseMode.MARKDOWN)
     except Exception:
@@ -1123,11 +1218,7 @@ async def _show_event_externals(query, user, db, event_id: int, back_page: int =
 
 async def _show_event_notes(query, user, db, event_id: int, back_page: int = 0) -> None:
     locale = _locale(user)
-    atts = (
-        db.query(Attendance)
-        .filter(Attendance.event_id == event_id, Attendance.note.isnot(None))
-        .all()
-    )
+    atts = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.note.isnot(None)).all()
     if not atts:
         text = t("telegram.no_notes", locale)
     else:
@@ -1164,7 +1255,15 @@ async def _set_status(query, user, db, event_id: int, player_id: int, status_cha
             await query.answer("Not authorized.", show_alert=True)
             return
 
+    old_att = db.query(Attendance).filter(Attendance.event_id == event_id, Attendance.player_id == player_id).first()
+    old_status = old_att.status if old_att else None
+
     set_attendance(db, event_id, player_id, status)
+
+    if old_status != status:
+        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+
+        await notify_coaches_via_telegram(event_id, player_id, status)
 
     status_label = t(f"telegram.status_{status}", locale)
     await query.answer(t("telegram.status_updated", locale, status=status_label), show_alert=False)
