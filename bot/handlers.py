@@ -652,11 +652,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def _show_notifications(query, user, db, page: int) -> None:
-    """Display recent notifications for coaches (TelegramNotification) or members (Notification)."""
+    """Display recent notifications using the unified Notification table for all roles."""
+    from sqlalchemy import or_  # noqa: PLC0415
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
 
     from models.notification import Notification  # noqa: PLC0415
-    from models.telegram_notification import TelegramNotification  # noqa: PLC0415
 
     locale = _locale(user)
     is_admin_or_coach = user.is_admin or user.is_coach
@@ -664,13 +664,13 @@ async def _show_notifications(query, user, db, page: int) -> None:
     NOTIF_PAGE_SIZE = 5
 
     if is_admin_or_coach:
-        # Coach/Admin: show TelegramNotification records (attendance change alerts)
-        notifs = (
-            db.query(TelegramNotification)
-            .filter(TelegramNotification.user_id == user.id)
-            .order_by(TelegramNotification.created_at.desc())
-            .all()
+        # Coach/Admin: unified Notification records — covers attendance, external, and absence changes
+        linked_player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
+        _filter = or_(
+            Notification.player_id == linked_player.id if linked_player else False,
+            Notification.user_id == user.id,
         )
+        notifs = db.query(Notification).filter(_filter).order_by(Notification.created_at.desc()).all()
 
         if not notifs:
             try:
@@ -679,6 +679,11 @@ async def _show_notifications(query, user, db, page: int) -> None:
                 await query.message.reply_text(t("telegram.no_events", locale))
             return
 
+        db.query(Notification).filter(_filter, Notification.is_read.is_(False)).update(
+            {"is_read": True}, synchronize_session="fetch"
+        )
+        db.commit()
+
         total_pages = max(1, math.ceil(len(notifs) / NOTIF_PAGE_SIZE))
         page = max(0, min(page, total_pages - 1))
         page_notifs = notifs[page * NOTIF_PAGE_SIZE : (page + 1) * NOTIF_PAGE_SIZE]
@@ -686,20 +691,18 @@ async def _show_notifications(query, user, db, page: int) -> None:
         lines = ["🔔 Recent Notifications:"]
         rows = []
         for notif in page_notifs:
-            player = notif.player
-            player_name = player.full_name if player else f"Player {notif.player_id}"
             event = notif.event
-            event_title = event.title if event else "Event"
-            status_emoji = {"present": "✓", "absent": "✗", "unknown": "?"}.get(notif.status, "?")
-            lines.append(f"{status_emoji} {player_name} → {notif.status}")
-            rows.append(
-                [
-                    InlineKeyboardButton(
-                        f"👁 {event_title}",
-                        callback_data=f"evt:{notif.event_id}",
-                    )
-                ]
-            )
+            event_title = event.title if event else ""
+            lines.append(notif.title)
+            if event_title and notif.event_id:
+                rows.append(
+                    [
+                        InlineKeyboardButton(
+                            f"👁 {event_title}",
+                            callback_data=f"evt:{notif.event_id}",
+                        )
+                    ]
+                )
 
     else:
         # Member: show Notification records for their linked player, mark them read
