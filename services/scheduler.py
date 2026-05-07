@@ -99,6 +99,25 @@ def send_due_reminders() -> int:
                 if ok:
                     sent += 1
 
+            # Dispatch in-app / web push / Telegram for the same recipients.
+            # Email is handled above with personalized magic links — exclude here.
+            if attendances:
+                from services.notification_service import send_notifications  # noqa: PLC0415
+                event_time_str = event.event_time.strftime("%H:%M") if event.event_time else ""
+                notif_body = str(event.event_date) + (f" {event_time_str}" if event_time_str else "")
+                if event.location:
+                    notif_body += f" · {event.location}"
+                send_notifications(
+                    event=event,
+                    title=f"⏰ Reminder: {event.title}",
+                    body=notif_body,
+                    tag="reminder",
+                    recipient_statuses=["unknown"],
+                    admin_channels=["inapp", "webpush", "telegram"],
+                    db=db,
+                    background_tasks=None,
+                )
+
             event.reminder_sent = True
             db.add(event)
             total_sent += sent
