@@ -217,14 +217,31 @@ async def update_preferences(
 ):
     form = await request.form()
     player_ids = _player_ids_for_user(user, db)
-    for player_id in player_ids:
-        create_default_preferences(player_id, db)
+    if player_ids:
+        for player_id in player_ids:
+            create_default_preferences(player_id, db)
+            for channel in CHANNELS:
+                enabled = form.get(channel) == "on"
+                pref = (
+                    db.query(NotificationPreference)
+                    .filter(
+                        NotificationPreference.player_id == player_id,
+                        NotificationPreference.channel == channel,
+                    )
+                    .first()
+                )
+                if pref:
+                    pref.enabled = enabled
+    else:
+        # Unlinked admin/coach: save user-keyed preferences
+        from services.notification_service import create_default_user_preferences  # noqa: PLC0415
+        create_default_user_preferences(user.id, db)
         for channel in CHANNELS:
             enabled = form.get(channel) == "on"
             pref = (
                 db.query(NotificationPreference)
                 .filter(
-                    NotificationPreference.player_id == player_id,
+                    NotificationPreference.user_id == user.id,
                     NotificationPreference.channel == channel,
                 )
                 .first()

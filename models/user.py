@@ -78,6 +78,7 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )  # noqa: F821
     notifications: Mapped[list["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
+    notification_preferences: Mapped[list["NotificationPreference"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
     web_push_subscriptions: Mapped[list["WebPushSubscription"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )  # noqa: F821

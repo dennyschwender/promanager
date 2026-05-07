@@ -277,6 +277,13 @@ def create_app() -> FastAPI:
             push_device_count = (
                 db.query(WebPushSubscription).filter(WebPushSubscription.player_id == current_player.id).count()
             )
+        else:
+            # Unlinked admin/coach: load user-keyed preferences
+            prefs = db.query(NotificationPreference).filter(NotificationPreference.user_id == user.id).all()
+            player_prefs = {p.channel: p.enabled for p in prefs}
+            push_device_count = (
+                db.query(WebPushSubscription).filter(WebPushSubscription.user_id == user.id).count()
+            )
         calendar_feed_url = (
             f"{settings.APP_URL}/calendar/{user.calendar_token}/feed.ics" if user.calendar_token else None
         )

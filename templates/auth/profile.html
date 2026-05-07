@@ -23,7 +23,7 @@
 </dl>
 
 <!-- ── Notification Preferences ─────────────────────────────────────────── -->
-{% if current_player %}
+{% if current_player or (user.is_admin or user.is_coach) %}
 {% if current_player.player_type == 'player' %}
 <section style="margin-top:2rem;">
   <h3>{{ t('absences.page_title') }}</h3>

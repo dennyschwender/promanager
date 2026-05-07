@@ -29,6 +29,7 @@ async def notify_coaches_attendance_change(
     from models.user_team import UserTeam  # noqa: PLC0415
     from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
+    from services.notification_service import get_user_preference  # noqa: PLC0415
 
     tg_app = _bot.telegram_app
     has_bot = tg_app is not None
@@ -76,6 +77,10 @@ async def notify_coaches_attendance_change(
                     .first()
                 )
                 if pref is not None and not pref.enabled:
+                    telegram_enabled = False
+            elif has_telegram and coach_player is None:
+                # Unlinked admin: check user-keyed preference
+                if not get_user_preference(ut.user_id, "telegram", db):
                     telegram_enabled = False
 
             if has_telegram and telegram_enabled:

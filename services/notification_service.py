@@ -54,6 +54,38 @@ def get_preference(player_id: int, channel: str, db: Session) -> bool:
     return pref.enabled if pref is not None else True
 
 
+def get_user_preference(user_id: int, channel: str, db: Session) -> bool:
+    """Return True if the user (unlinked admin/coach) has the channel enabled.
+
+    Defaults to True when no preference row exists.
+    """
+    pref = (
+        db.query(NotificationPreference)
+        .filter(
+            NotificationPreference.user_id == user_id,
+            NotificationPreference.channel == channel,
+        )
+        .first()
+    )
+    return pref.enabled if pref is not None else True
+
+
+def create_default_user_preferences(user_id: int, db: Session) -> None:
+    """Create enabled preferences for all channels for an unlinked admin/coach."""
+    for channel in CHANNELS:
+        existing = (
+            db.query(NotificationPreference)
+            .filter(
+                NotificationPreference.user_id == user_id,
+                NotificationPreference.channel == channel,
+            )
+            .first()
+        )
+        if existing is None:
+            db.add(NotificationPreference(user_id=user_id, player_id=None, channel=channel, enabled=True))
+    db.commit()
+
+
 # ── Recipient resolution ──────────────────────────────────────────────────────
 
 
