@@ -167,10 +167,10 @@ async def create_player_absence(
     # Apply to future events and notify coaches of each affected attendance change
     updated = apply_absence_to_future_events(player_id, db)
     if updated:
-        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+        from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
         for ev_id, pid, status in updated:
-            background_tasks.add_task(notify_coaches_via_telegram, ev_id, pid, status)
+            background_tasks.add_task(notify_coaches_attendance_change, ev_id, pid, status)
 
     return {
         "id": absence.id,
@@ -203,9 +203,9 @@ async def delete_player_absence(
 
     reverted = revert_absence_from_events(player_id, db)
     if reverted:
-        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+        from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
         for ev_id, pid, status in reverted:
-            background_tasks.add_task(notify_coaches_via_telegram, ev_id, pid, status)
+            background_tasks.add_task(notify_coaches_attendance_change, ev_id, pid, status)
 
     return {"success": True}

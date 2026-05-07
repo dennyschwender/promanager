@@ -251,9 +251,9 @@ async def update_attendance(
             },
             request=request,
         )
-        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+        from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
-        background_tasks.add_task(notify_coaches_via_telegram, event_id, player_id, status)
+        background_tasks.add_task(notify_coaches_attendance_change, event_id, player_id, status)
 
     if wants_json:
         return JSONResponse({"ok": True, "status": status, "note": note})

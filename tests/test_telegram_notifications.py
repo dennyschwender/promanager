@@ -71,8 +71,8 @@ async def test_notify_coaches_sends_telegram_to_coach_with_chat_id():
         patch("services.channels.inapp_channel.push_unread_count_to_user"),
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
-        from services.telegram_notifications import notify_coaches_via_telegram
-        await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent")
+        from services.telegram_notifications import notify_coaches_attendance_change
+        await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     mock_app.bot.send_message.assert_called_once()
     kwargs = mock_app.bot.send_message.call_args.kwargs
@@ -95,8 +95,8 @@ async def test_notify_coaches_creates_notification_for_coach_without_telegram():
         patch("services.channels.inapp_channel.push_unread_count_to_user"),
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
-        from services.telegram_notifications import notify_coaches_via_telegram
-        await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent")
+        from services.telegram_notifications import notify_coaches_attendance_change
+        await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     mock_app.bot.send_message.assert_not_called()
     from models.notification import Notification
@@ -118,8 +118,8 @@ async def test_notify_coaches_skips_telegram_when_bot_not_initialized():
         patch("services.channels.inapp_channel.push_unread_count_to_user"),
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
-        from services.telegram_notifications import notify_coaches_via_telegram
-        await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent")
+        from services.telegram_notifications import notify_coaches_attendance_change
+        await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="absent")
 
     from models.notification import Notification
     added = [c.args[0] for c in mock_db.add.call_args_list]
@@ -143,8 +143,8 @@ async def test_notify_coaches_deduplicates_by_user_id():
         patch("services.channels.inapp_channel.push_unread_count_to_user"),
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
-        from services.telegram_notifications import notify_coaches_via_telegram
-        await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="present")
+        from services.telegram_notifications import notify_coaches_attendance_change
+        await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="present")
 
     mock_app.bot.send_message.assert_called_once()
     from models.notification import Notification
@@ -170,8 +170,8 @@ async def test_notify_coaches_deduplicates_shared_telegram_chat_id():
         patch("services.channels.inapp_channel.push_unread_count_to_user"),
         patch("services.channels.webpush_channel.WebPushChannel.send_to_user"),
     ):
-        from services.telegram_notifications import notify_coaches_via_telegram
-        await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="present")
+        from services.telegram_notifications import notify_coaches_attendance_change
+        await notify_coaches_attendance_change(event_id=1, player_id=5, new_status="present")
 
     mock_app.bot.send_message.assert_called_once()
     from models.notification import Notification

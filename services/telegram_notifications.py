@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def notify_coaches_via_telegram(
+async def notify_coaches_attendance_change(
     event_id: int,
     player_id: int,
     new_status: str,
@@ -132,7 +132,7 @@ async def notify_coaches_via_telegram(
 
             except Exception as exc:
                 logger.warning(
-                    "notify_coaches_via_telegram: failed for user %s: %s",
+                    "notify_coaches_attendance_change: failed for user %s: %s",
                     ut.user_id,
                     exc,
                     exc_info=True,

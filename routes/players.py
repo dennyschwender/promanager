@@ -145,10 +145,10 @@ def _sync_memberships(
             db.flush()
             updated = apply_absence_to_future_events(player.id, db)
             if background_tasks is not None:
-                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
                 for event_id, pid, status in updated:
-                    background_tasks.add_task(notify_coaches_via_telegram, event_id, pid, status)
+                    background_tasks.add_task(notify_coaches_attendance_change, event_id, pid, status)
         else:
             db.query(PlayerAbsence).filter(
                 PlayerAbsence.player_id == player.id,
@@ -158,10 +158,10 @@ def _sync_memberships(
             db.flush()
             reverted = revert_absence_from_events(player.id, db)
             if reverted and background_tasks is not None:
-                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
                 for _ev_id, _pid, _status in reverted:
-                    background_tasks.add_task(notify_coaches_via_telegram, _ev_id, _pid, _status)
+                    background_tasks.add_task(notify_coaches_attendance_change, _ev_id, _pid, _status)
 
         # Sync absent_by_default changes for existing teams
         new_absent = bool(extra.get("absent_by_default", False))
@@ -541,10 +541,10 @@ async def player_bulk_update(
                             from services.absence_service import apply_absence_to_future_events  # noqa: PLC0415
 
                             updated = apply_absence_to_future_events(pt.player_id, db)
-                            from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                            from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
                             for _event_id, _pid, _status in updated:
-                                background_tasks.add_task(notify_coaches_via_telegram, _event_id, _pid, _status)
+                                background_tasks.add_task(notify_coaches_attendance_change, _event_id, _pid, _status)
                         else:
                             # Clear injury: delete related absence + revert attendances
                             from models.player_absence import PlayerAbsence  # noqa: PLC0415
@@ -558,10 +558,10 @@ async def player_bulk_update(
                             db.flush()
                             reverted = revert_absence_from_events(pt.player_id, db)
                             if reverted and background_tasks is not None:
-                                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                                from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
                                 for _ev_id, _pid, _status in reverted:
-                                    background_tasks.add_task(notify_coaches_via_telegram, _ev_id, _pid, _status)
+                                    background_tasks.add_task(notify_coaches_attendance_change, _ev_id, _pid, _status)
                     if field == "absent_by_default":
                         old_val = getattr(pt, "absent_by_default", False)
                         new_val = bool(value)

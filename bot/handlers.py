@@ -1270,9 +1270,9 @@ async def _set_status(query, user, db, event_id: int, player_id: int, status_cha
     set_attendance(db, event_id, player_id, status)
 
     if old_status != status:
-        from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+        from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
-        await notify_coaches_via_telegram(event_id, player_id, status)
+        await notify_coaches_attendance_change(event_id, player_id, status)
 
     status_label = t(f"telegram.status_{status}", locale)
     await query.answer(t("telegram.status_updated", locale, status=status_label), show_alert=False)

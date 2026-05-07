@@ -255,10 +255,10 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
 
             # Notify coaches about each attendance change caused by the absence
             if updated:
-                from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+                from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
                 for ev_id, pid, status in updated:
-                    await notify_coaches_via_telegram(ev_id, pid, status)
+                    await notify_coaches_attendance_change(ev_id, pid, status)
 
             context.user_data.pop("awaiting_absence", None)
 
@@ -320,9 +320,9 @@ async def delete_absence(query, user, db, absence_id: int, player_id: int, page:
 
         reverted = revert_absence_from_events(player_id, db)
         if reverted:
-            from services.telegram_notifications import notify_coaches_via_telegram  # noqa: PLC0415
+            from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
 
             for ev_id, pid, status in reverted:
-                await notify_coaches_via_telegram(ev_id, pid, status)
+                await notify_coaches_attendance_change(ev_id, pid, status)
     is_member = not (user.is_admin or user.is_coach)
     await show_absence_list(query, user, db, player_id, page, back_page, is_member)

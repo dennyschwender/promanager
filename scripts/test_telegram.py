@@ -12,7 +12,7 @@ import app.database as db_module
 from models.user import User
 from models.player import Player
 from models.event import Event
-from services.telegram_notifications import notify_coaches_via_telegram
+from services.telegram_notifications import notify_coaches_attendance_change
 
 
 async def send_test_notification(user_id: int, event_id: int, player_id: int, status: str) -> None:
@@ -45,7 +45,7 @@ async def send_test_notification(user_id: int, event_id: int, player_id: int, st
             await _bot.init_application(token)
 
         print(f"Sending notification: {player.full_name} → {status} for {event.title}")
-        await notify_coaches_via_telegram(event_id, player_id, status)
+        await notify_coaches_attendance_change(event_id, player_id, status)
         print("Notification sent!")
 
     finally:
