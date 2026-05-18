@@ -125,7 +125,8 @@
     "deleted_single": "Ereignis gelöscht.",
     "deleted_series": "%{count} Ereignisse der Serie gelöscht.",
     "meeting_time": "Treffpunkt",
-    "all_events": "Alle Ereignisse"
+    "all_events": "Alle Ereignisse",
+    "att_summary": "Teiln."
   },
   "attendance": {
     "title": "Anwesenheit erfassen",

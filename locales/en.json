@@ -125,7 +125,8 @@
     "deleted_single": "Event deleted.",
     "deleted_series": "Deleted %{count} events in this series.",
     "meeting_time": "Meet",
-    "all_events": "All Events"
+    "all_events": "All Events",
+    "att_summary": "Att."
   },
   "attendance": {
     "title": "Mark Attendance",
@@ -661,7 +662,7 @@
     "presence_type": "Presence type",
     "pt_normal": "Normal",
     "pt_normal_desc": "Unknown by default — participants set their own presence/absence",
-    "pt_all": "All attendee",
+    "pt_all": "All attendees",
     "pt_all_desc": "Everyone is marked present by default",
     "pt_selection": "Selection",
     "pt_selection_desc": "Only selected players can register absence",
@@ -699,7 +700,7 @@
     "notified_msg": "Notification queued for %{count} player(s).",
     "maybe": "Maybe",
     "pt_normal": "Normal",
-    "pt_all": "All attendee",
+    "pt_all": "All attendees",
     "pt_selection": "Selection",
     "pt_available": "Available",
     "pt_no_reg": "No registration",

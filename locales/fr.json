@@ -125,7 +125,8 @@
     "deleted_single": "Événement supprimé.",
     "deleted_series": "%{count} événements de la série supprimés.",
     "meeting_time": "RDV",
-    "all_events": "Tous les événements"
+    "all_events": "Tous les événements",
+    "att_summary": "Prés."
   },
   "attendance": {
     "title": "Marquer les présences",

@@ -56,7 +56,7 @@
     <th>{{ t('events.title_col') }}</th>
     <th class="col-hide-mobile col-nowrap">{{ t('events.type') }}</th>
     <th class="col-hide-tablet">{{ t('events.location') }}</th>
-    {% if user and (user.is_admin or user.is_coach) %}<th class="col-nowrap col-hide-mobile">✓/n</th>{% endif %}
+    {% if user and (user.is_admin or user.is_coach) %}<th class="col-nowrap col-hide-mobile" title="{{ t('reports.attendance_rate') }}">{{ t('events.att_summary') }}</th>{% endif %}
     {% if my_player_id %}<th class="col-nowrap">{{ t('dashboard.my_status') }}</th>{% endif %}
     {% if user %}<th class="col-nowrap">{{ t('events.actions') }}</th>{% endif %}
   </tr></thead>

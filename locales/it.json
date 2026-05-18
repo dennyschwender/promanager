@@ -125,7 +125,8 @@
     "deleted_single": "Evento eliminato.",
     "deleted_series": "%{count} eventi della serie eliminati.",
     "meeting_time": "Ritrovo",
-    "all_events": "Tutti gli eventi"
+    "all_events": "Tutti gli eventi",
+    "att_summary": "Pres."
   },
   "attendance": {
     "title": "Registra Presenze",
