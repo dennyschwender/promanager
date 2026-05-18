@@ -173,6 +173,7 @@ button.btn-sm {
 .stat-card {
   background: var(--card-background-color, #fff);
   border: 1px solid var(--muted-border-color, #e0e0e0);
+  border-left: 3px solid var(--tp-primary);
   border-radius: var(--tp-radius);
   padding: 0.6rem 0.75rem;
   text-align: center;
@@ -202,10 +203,10 @@ button.btn-sm {
 .badge-present  { background: #d5f5e3; color: #1a6640; }
 .badge-absent   { background: #fddede; color: #922b21; }
 .badge-maybe    { background: #fdebd0; color: #7d5213; }
-.badge-unknown  { background: #e8e8e8; color: var(--tp-muted); }
+.badge-unknown  { background: #e2e3e5; color: #41464b; }
 .badge-active   { background: #d5eaf9; color: #1a446c; }
 .badge-match    { background: #d5f5e3; color: #1a6640; }
-.badge-training { background: #e8e8e8; color: var(--tp-muted); }
+.badge-training { background: #e2e3e5; color: #41464b; }
 .badge-other    { background: #fdebd0; color: #7d5213; }
 [data-theme="dark"] .badge-present  { background: rgba(39,174,96,.2);   color: #6ee7a0; }
 [data-theme="dark"] .badge-absent   { background: rgba(192,57,43,.2);   color: #f08080; }
