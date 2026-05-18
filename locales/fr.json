@@ -331,7 +331,8 @@
     "absent": "Absent",
     "maybe": "Peut-être",
     "unknown": "Inconnu",
-    "apply": "Appliquer"
+    "apply": "Appliquer",
+    "more_actions": "Plus d'actions"
   },
   "errors": {
     "404_title": "Page introuvable",

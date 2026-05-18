@@ -331,7 +331,8 @@
     "absent": "Assente",
     "maybe": "Forse",
     "unknown": "Sconosciuto",
-    "apply": "Applica"
+    "apply": "Applica",
+    "more_actions": "Altre azioni"
   },
   "errors": {
     "404_title": "Pagina Non Trovata",

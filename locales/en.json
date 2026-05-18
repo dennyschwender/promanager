@@ -331,7 +331,8 @@
     "absent": "Absent",
     "maybe": "Maybe",
     "unknown": "Unknown",
-    "apply": "Apply"
+    "apply": "Apply",
+    "more_actions": "More actions"
   },
   "errors": {
     "404_title": "Page Not Found",

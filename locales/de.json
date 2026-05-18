@@ -331,7 +331,8 @@
     "absent": "Abwesend",
     "maybe": "Vielleicht",
     "unknown": "Unbekannt",
-    "apply": "Anwenden"
+    "apply": "Anwenden",
+    "more_actions": "Weitere Aktionen"
   },
   "errors": {
     "404_title": "Seite nicht gefunden",

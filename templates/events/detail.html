@@ -70,7 +70,7 @@
     {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
       <a href="/events/{{ event.id }}/edit" class="btn btn-outline btn-sm">{{ t('events.edit') }}</a>
       <div class="action-dropdown">
-        <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+        <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true" aria-label="{{ t('common.more_actions') }}" title="{{ t('common.more_actions') }}">⋯</button>
         <div class="action-dropdown-menu">
           <a href="/events/{{ event.id }}/notify">{{ t('events.notify_players') }}</a>
           <form method="post" action="/events/{{ event.id }}/send-reminders" class="form-contents">
