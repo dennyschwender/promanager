@@ -16,23 +16,25 @@
   <div class="alert alert-success">{{ flash }}</div>
 {% endif %}
 
+<article>
 <dl>
   <dt>{{ t('auth.username') }}</dt><dd>{{ user.username }}</dd>
   <dt>{{ t('auth.email') }}</dt><dd>{{ user.email }}</dd>
   <dt>{{ t('auth.role') }}</dt><dd>{{ enums.role.get(user.role, user.role|capitalize) }}</dd>
 </dl>
+</article>
 
 <!-- ── Notification Preferences ─────────────────────────────────────────── -->
 {% if current_player or (user.is_admin or user.is_coach) %}
 {% if current_player.player_type == 'player' %}
-<section style="margin-top:2rem;">
+<article style="margin-top:2rem;">
   <h3>{{ t('absences.page_title') }}</h3>
   <p style="font-size:.9rem;color:var(--tp-muted);margin-bottom:.5rem;">{{ t('absences.self_service_hint') }}</p>
   <a href="/players/{{ current_player.id }}/absences" class="btn btn-outline">{{ t('absences.manage_my_absences') }}</a>
-</section>
+</article>
 {% endif %}
 
-<section style="margin-top:2rem;">
+<article style="margin-top:2rem;">
   <h3>{{ t('auth.notification_preferences') }}</h3>
   <form method="post" action="/notifications/preferences">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
@@ -112,11 +114,11 @@
       <p class="text-muted" style="font-size:.88rem;">{{ t('auth.push_not_configured') }}</p>
     {% endif %}
   </div>
-</section>
+</article>
 {% endif %}
 
 <!-- ── Language Preference ──────────────────────────────────────────────── -->
-<section style="margin-top:2rem;">
+<article style="margin-top:2rem;">
   <h3>{{ t('auth.language_preference') }}</h3>
   <form method="post" action="/set-locale" style="display:flex;align-items:center;gap:.5rem;">
     <input type="hidden" name="next" value="/profile">
@@ -128,11 +130,11 @@
     </select>
     <button type="submit" class="btn btn-sm btn-outline">{{ t('common.save') }}</button>
   </form>
-</section>
+</article>
 
 <!-- ── Calendar Sync ──────────────────────────────────────────────────── -->
-<section class="card mt-4">
-  <h2 class="card-title">{{ t("calendar.section_title") }}</h2>
+<article style="margin-top:2rem;">
+  <h3>{{ t("calendar.section_title") }}</h3>
   <p class="text-muted">{{ t("calendar.instructions") }}</p>
 
   {% if calendar_feed_url %}
@@ -162,16 +164,16 @@
       </button>
     </form>
   {% endif %}
-</section>
+</article>
 
 <!-- ── Security ─────────────────────────────────────────────────────────── -->
-<section style="margin-top:2rem;">
+<article style="margin-top:2rem;">
   <h3>{{ t('common.security') }}</h3>
   <p class="text-muted" style="font-size:.88rem;">{{ t('auth.logout_all_confirm') }}</p>
   <form method="post" action="/auth/logout-all">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
     <button type="submit" class="btn btn-sm btn-outline">{{ t('auth.logout_all_devices') }}</button>
   </form>
-</section>
+</article>
 </div>
 {% endblock %}
