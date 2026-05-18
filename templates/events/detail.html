@@ -848,7 +848,8 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 @media(max-width:480px){
   .lineup-workspace{flex-direction:column;}
   .lineup-pool-col{flex:none;width:100%;}
-  .lineup-groups-col{width:100%;}
+  .lineup-groups-col{width:100%;flex-direction:column;}
+  .lineup-group{flex:1 1 100%;min-width:unset;}
 }
 .drag-handle{color:var(--tp-muted,#aaa);font-size:.9rem;cursor:grab;flex-shrink:0;margin-right:.25rem;user-select:none;}
 .lineup-chip.selected .drag-handle{color:rgba(255,255,255,.6);}
