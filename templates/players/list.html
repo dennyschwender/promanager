@@ -215,10 +215,10 @@
       </th>
       <th data-col="Team">{{ t('players.team') }}</th>
       <th data-col="Email">{{ t('players.email') }}</th>
-      <th data-col="Phone">{{ t('players.phone') }}</th>
-      <th data-col="Date of birth">{{ t('players_list.date_of_birth') }}</th>
-      <th data-col="Active">{{ t('players.active') }}</th>
-      <th data-col="Has User">{{ t('players.has_user') }}</th>
+      <th data-col="Phone" class="col-hide-mobile">{{ t('players.phone') }}</th>
+      <th data-col="Date of birth" class="col-hide-mobile">{{ t('players_list.date_of_birth') }}</th>
+      <th data-col="Active" class="col-hide-mobile">{{ t('players.active') }}</th>
+      <th data-col="Has User" class="col-hide-mobile">{{ t('players.has_user') }}</th>
       <th data-col="Role">{{ t('players_form.role') }}</th>
       <th data-col="Shirt number">{{ t('players_form.shirt_number') }}</th>
       <th data-col="Position">{{ t('players_form.position') }}</th>
@@ -261,19 +261,19 @@
         <span class="cell-view">{{ p.email or '—' }}</span>
         <input type="email" class="cell-input" style="display:none;" value="{{ p.email or '' }}" maxlength="128">
       </td>
-      <td data-col="Phone" data-field="phone" data-value="{{ p.phone or '' }}">
+      <td data-col="Phone" data-field="phone" data-value="{{ p.phone or '' }}" class="col-hide-mobile">
         <span class="cell-view">{{ p.phone or '—' }}</span>
         <input type="tel" class="cell-input" style="display:none;" value="{{ p.phone or '' }}" maxlength="32">
       </td>
-      <td data-col="Date of birth" data-field="date_of_birth" data-value="{{ p.date_of_birth or '' }}">
+      <td data-col="Date of birth" data-field="date_of_birth" data-value="{{ p.date_of_birth or '' }}" class="col-hide-mobile">
         <span class="cell-view">{{ p.date_of_birth or '—' }}</span>
         <input type="date" class="cell-input" style="display:none;" value="{{ p.date_of_birth or '' }}">
       </td>
-      <td data-col="Active" data-field="is_active" data-value="{{ 'true' if p.is_active else 'false' }}">
+      <td data-col="Active" data-field="is_active" data-value="{{ 'true' if p.is_active else 'false' }}" class="col-hide-mobile">
         <span class="cell-view">{% if p.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">{{ t('common.inactive') }}</span>{% endif %}</span>
         <input type="checkbox" class="cell-input" style="display:none;" {% if p.is_active %}checked{% endif %}>
       </td>
-      <td data-col="Has User">
+      <td data-col="Has User" class="col-hide-mobile">
         {% set linked_user = player_id_to_user.get(p.id) %}
         {% if linked_user %}
           <span class="badge badge-active" title="{{ linked_user.username }}">✓ {{ linked_user.username }}</span>
