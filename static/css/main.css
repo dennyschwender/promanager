@@ -760,7 +760,7 @@ footer.site-footer a:hover { text-decoration: underline; }
   font-size: 1.3rem;
   cursor: pointer;
   padding: 0.3rem 0.5rem;
-  color: var(--color);
+  color: inherit;
   width: auto;
   margin: 0;
 }
