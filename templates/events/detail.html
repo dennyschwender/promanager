@@ -824,11 +824,12 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 .lineup-drop-zone.drag-over{background:var(--tp-primary-light,#eaf4ff);}
 .lineup-pos-section{margin-bottom:.4rem;}
 .lineup-pos-label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tp-muted,#999);margin-bottom:.15rem;padding-left:.2rem;}
-.lineup-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .5rem;border-radius:20px;font-size:.82rem;cursor:grab;user-select:none;border:1px solid var(--tp-border,#ccc);background:var(--tp-surface,#f8f8f8);margin:.15rem .1rem;white-space:nowrap;transition:box-shadow .1s,transform .1s;}
-.lineup-chip:hover{box-shadow:0 1px 4px rgba(0,0,0,.15);}
-.lineup-chip.dragging{opacity:.4;transform:scale(.95);}
-.lineup-chip.selected{border-color:var(--tp-primary,#3498db);background:var(--tp-primary-light,#eaf4ff);box-shadow:0 0 0 2px var(--tp-primary,#3498db);}
-.lineup-chip .chip-rm{background:none;border:none;cursor:pointer;color:var(--tp-muted,#aaa);font-size:.8rem;padding:0;line-height:1;margin-left:.1rem;}
+.lineup-chip{display:flex;align-items:center;justify-content:space-between;gap:.3rem;padding:.2rem .4rem;border-radius:4px;font-size:.85rem;cursor:grab;user-select:none;color:inherit;margin:.1rem 0;white-space:nowrap;transition:background .1s;}
+.lineup-chip:hover{background:rgba(0,0,0,.06);}
+.lineup-chip.dragging{opacity:.35;}
+.lineup-chip.selected{background:var(--tp-primary,#3498db);color:#fff;border-radius:4px;}
+.lineup-chip.selected .chip-rm{color:rgba(255,255,255,.7);}
+.lineup-chip .chip-rm{background:none;border:none;cursor:pointer;color:var(--tp-muted,#aaa);font-size:.85rem;padding:0 .15rem;line-height:1;flex-shrink:0;}
 .lineup-chip .chip-rm:hover{color:var(--tp-danger,#c0392b);}
 .lineup-group-del{background:none;border:none;cursor:pointer;color:var(--tp-muted,#bbb);font-size:.85rem;padding:0;line-height:1;flex-shrink:0;}
 .lineup-group-del:hover{color:var(--tp-danger,#c0392b);}
@@ -850,14 +851,14 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
   _pool.push({type:'player',id:{{ entry.player.id }},name:{{ entry.player.full_name | tojson }},pos:{{ (entry.position or '') | tojson }}});
   {% endfor %}
   {% for ext in externals %}{% if ext.status == 'present' %}
-  _pool.push({type:'external',id:{{ ext.id }},name:{{ (ext.first_name ~ ' ' ~ ext.last_name) | tojson }},pos:''});
+  _pool.push({type:'external',id:{{ ext.id }},name:{{ (ext.first_name ~ ' ' ~ ext.last_name) | tojson }},pos:'external'});
   {% endif %}{% endfor %}
 
   var _groups = [];       // [{name, members:[{type,id,name,pos}]}]
   var _selected = null;   // {type,id} of clicked chip, or null
 
   var POS_ORDER = ['goalie','defender','center','forward',''];
-  var POS_LABELS = {goalie:'{{ t("enums.pos_goalie") }}',defender:'{{ t("enums.pos_defender") }}',center:'{{ t("enums.pos_center") }}',forward:'{{ t("enums.pos_forward") }}','':"{{ t('lineup.pos_other') }}"};
+  var POS_LABELS = {goalie:'{{ t("enums.pos_goalie") }}',defender:'{{ t("enums.pos_defender") }}',center:'{{ t("enums.pos_center") }}',forward:'{{ t("enums.pos_forward") }}','':"{{ t('lineup.pos_other') }}",external:'{{ t("lineup.pos_external") }}'};
 
   function memberKey(m){return m.type+':'+m.id;}
   function isAssigned(m){return _groups.some(function(g){return g.members.some(function(x){return memberKey(x)===memberKey(m);});});}
@@ -958,7 +959,8 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     var byPos={};
     unassigned.forEach(function(p){var k=p.pos||'';if(!byPos[k])byPos[k]=[];byPos[k].push(p);});
     var hasSections=false;
-    POS_ORDER.forEach(function(pos){
+    var allKeys=POS_ORDER.concat(['external']);
+    allKeys.forEach(function(pos){
       var members=byPos[pos];
       if(!members||!members.length)return;
       hasSections=true;

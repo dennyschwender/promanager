@@ -937,7 +937,8 @@
     "min_one_group": "Aggiungi almeno un gruppo.",
     "add_member": "+ Aggiungi membro...",
     "group_default_name": "Gruppo",
-    "pos_other": "Altro"
+    "pos_other": "Altro",
+    "pos_external": "Esterni"
   },
   "chat": {
     "title": "Chat",
