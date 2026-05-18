@@ -922,6 +922,9 @@
   },
   "lineup": {
     "title": "Lineup / Groups",
+    "pool_title": "Available",
+    "pool_empty": "All assigned",
+    "drop_hint": "Drag or tap players here",
     "add_group": "+ Add group",
     "remove_group": "Remove group",
     "save": "Save lineup",
@@ -932,7 +935,8 @@
     "error_post": "Error posting to chat.",
     "min_one_group": "Add at least one group first.",
     "add_member": "+ Add member...",
-    "group_default_name": "Group"
+    "group_default_name": "Group",
+    "pos_other": "Other"
   },
   "chat": {
     "title": "Chat",

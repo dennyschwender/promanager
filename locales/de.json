@@ -923,6 +923,9 @@
   },
   "lineup": {
     "title": "Aufstellung / Gruppen",
+    "pool_title": "Verfügbar",
+    "pool_empty": "Alle zugeteilt",
+    "drop_hint": "Ziehen oder antippen",
     "add_group": "+ Gruppe hinzufügen",
     "remove_group": "Gruppe entfernen",
     "save": "Aufstellung speichern",
@@ -933,7 +936,8 @@
     "error_post": "Fehler beim Posten.",
     "min_one_group": "Mindestens eine Gruppe hinzufügen.",
     "add_member": "+ Mitglied hinzufügen...",
-    "group_default_name": "Gruppe"
+    "group_default_name": "Gruppe",
+    "pos_other": "Sonstige"
   },
   "chat": {
     "title": "Chat",

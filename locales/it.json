@@ -923,6 +923,9 @@
   },
   "lineup": {
     "title": "Formazione / Gruppi",
+    "pool_title": "Disponibili",
+    "pool_empty": "Tutti assegnati",
+    "drop_hint": "Trascina o tocca qui",
     "add_group": "+ Aggiungi gruppo",
     "remove_group": "Rimuovi gruppo",
     "save": "Salva formazione",
@@ -933,7 +936,8 @@
     "error_post": "Errore nella pubblicazione.",
     "min_one_group": "Aggiungi almeno un gruppo.",
     "add_member": "+ Aggiungi membro...",
-    "group_default_name": "Gruppo"
+    "group_default_name": "Gruppo",
+    "pos_other": "Altro"
   },
   "chat": {
     "title": "Chat",

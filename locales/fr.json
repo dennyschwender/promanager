@@ -923,6 +923,9 @@
   },
   "lineup": {
     "title": "Composition / Groupes",
+    "pool_title": "Disponibles",
+    "pool_empty": "Tous assignés",
+    "drop_hint": "Glisser ou appuyer ici",
     "add_group": "+ Ajouter un groupe",
     "remove_group": "Supprimer le groupe",
     "save": "Enregistrer la composition",
@@ -933,7 +936,8 @@
     "error_post": "Erreur lors de la publication.",
     "min_one_group": "Ajoutez au moins un groupe.",
     "add_member": "+ Ajouter un membre...",
-    "group_default_name": "Groupe"
+    "group_default_name": "Groupe",
+    "pos_other": "Autres"
   },
   "chat": {
     "title": "Chat",

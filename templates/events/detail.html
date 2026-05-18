@@ -793,8 +793,16 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 {% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
 <details id="lineup-panel" class="chat-panel">
   <summary>⚽ {{ t('lineup.title') }}</summary>
-  <div id="lineup-groups-container"></div>
-  <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+  <div class="lineup-workspace">
+    <div class="lineup-pool-col">
+      <div class="lineup-pool-header">
+        <span class="lineup-col-title">{{ t('lineup.pool_title') }}</span>
+      </div>
+      <div id="lineup-pool" class="lineup-drop-zone" data-zone="pool"></div>
+    </div>
+    <div id="lineup-groups-col" class="lineup-groups-col"></div>
+  </div>
+  <div class="lineup-actions">
     <button type="button" class="btn btn-sm btn-outline" onclick="lineupAddGroup()">{{ t('lineup.add_group') }}</button>
     <button type="button" class="btn btn-sm btn-primary" onclick="lineupSave()">{{ t('lineup.save') }}</button>
     <button type="button" class="btn btn-sm btn-outline" onclick="lineupPostToChat()">{{ t('lineup.post_to_chat') }}</button>
@@ -802,69 +810,199 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
   <p id="lineup-status" style="font-size:.85rem;color:var(--tp-muted,#888);margin-top:.4rem;min-height:1.2em;"></p>
 </details>
 <style>
-.lineup-group{border:1px solid var(--tp-border,#ccc);border-radius:6px;padding:.75rem;margin-bottom:.75rem;}
-.lineup-group-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
-.lineup-group-name{font-weight:600;font-size:.95rem;border:1px solid transparent;border-radius:4px;padding:2px 6px;background:transparent;color:inherit;width:50%;}
+.lineup-workspace{display:flex;gap:1rem;margin-top:.75rem;min-height:120px;align-items:flex-start;}
+.lineup-pool-col{flex:0 0 160px;min-width:130px;}
+.lineup-pool-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;}
+.lineup-col-title{font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--tp-muted,#888);}
+.lineup-groups-col{display:flex;gap:.75rem;flex-wrap:wrap;flex:1;align-items:flex-start;}
+.lineup-group{border:1px solid var(--tp-border,#ccc);border-radius:6px;padding:.6rem;min-width:130px;flex:1;}
+.lineup-group.drag-over{background:var(--tp-primary-light,#eaf4ff);border-color:var(--tp-primary,#3498db);}
+.lineup-group-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;gap:.3rem;}
+.lineup-group-name{font-weight:700;font-size:.9rem;border:1px solid transparent;border-radius:4px;padding:2px 5px;background:transparent;color:inherit;min-width:0;flex:1;}
 .lineup-group-name:focus{border-color:var(--tp-primary,#3498db);outline:none;}
-.lineup-member-list{list-style:none;margin:0;padding:0;}
-.lineup-member-item{display:flex;justify-content:space-between;align-items:center;padding:.15rem .4rem;border-radius:4px;}
-.lineup-member-item:hover{background:var(--tp-surface,#f4f4f4);}
-.lineup-member-rm{background:none;border:none;cursor:pointer;color:var(--tp-danger,#c0392b);font-size:.9rem;padding:0 .3rem;line-height:1;}
-.lineup-add-select{width:100%;margin-top:.5rem;font-size:.85rem;}
+.lineup-drop-zone{min-height:60px;border-radius:4px;padding:.2rem;}
+.lineup-drop-zone.drag-over{background:var(--tp-primary-light,#eaf4ff);}
+.lineup-pos-section{margin-bottom:.4rem;}
+.lineup-pos-label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tp-muted,#999);margin-bottom:.15rem;padding-left:.2rem;}
+.lineup-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .5rem;border-radius:20px;font-size:.82rem;cursor:grab;user-select:none;border:1px solid var(--tp-border,#ccc);background:var(--tp-surface,#f8f8f8);margin:.15rem .1rem;white-space:nowrap;transition:box-shadow .1s,transform .1s;}
+.lineup-chip:hover{box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.lineup-chip.dragging{opacity:.4;transform:scale(.95);}
+.lineup-chip.selected{border-color:var(--tp-primary,#3498db);background:var(--tp-primary-light,#eaf4ff);box-shadow:0 0 0 2px var(--tp-primary,#3498db);}
+.lineup-chip .chip-rm{background:none;border:none;cursor:pointer;color:var(--tp-muted,#aaa);font-size:.8rem;padding:0;line-height:1;margin-left:.1rem;}
+.lineup-chip .chip-rm:hover{color:var(--tp-danger,#c0392b);}
+.lineup-group-del{background:none;border:none;cursor:pointer;color:var(--tp-muted,#bbb);font-size:.85rem;padding:0;line-height:1;flex-shrink:0;}
+.lineup-group-del:hover{color:var(--tp-danger,#c0392b);}
+.lineup-actions{margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+@media(max-width:480px){
+  .lineup-workspace{flex-direction:column;}
+  .lineup-pool-col{flex:none;width:100%;}
+  .lineup-groups-col{width:100%;}
+}
 </style>
 <script>
 (function(){
   var EVENT_ID = {{ event.id }};
   var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  // Full pool with position info (used for grouped display)
   var _pool = [];
   {% for entry in summary["present"] %}
-  _pool.push({type:'player',id:{{ entry.player.id }},name:{{ entry.player.full_name | tojson }}});
+  _pool.push({type:'player',id:{{ entry.player.id }},name:{{ entry.player.full_name | tojson }},pos:{{ (entry.position or '') | tojson }}});
   {% endfor %}
   {% for ext in externals %}{% if ext.status == 'present' %}
-  _pool.push({type:'external',id:{{ ext.id }},name:{{ (ext.first_name ~ ' ' ~ ext.last_name) | tojson }}});
+  _pool.push({type:'external',id:{{ ext.id }},name:{{ (ext.first_name ~ ' ' ~ ext.last_name) | tojson }},pos:''});
   {% endif %}{% endfor %}
-  var _groups = [];
 
+  var _groups = [];       // [{name, members:[{type,id,name,pos}]}]
+  var _selected = null;   // {type,id} of clicked chip, or null
+
+  var POS_ORDER = ['goalie','defender','center','forward',''];
+  var POS_LABELS = {goalie:'{{ t("enums.pos_goalie") }}',defender:'{{ t("enums.pos_defender") }}',center:'{{ t("enums.pos_center") }}',forward:'{{ t("enums.pos_forward") }}','':"{{ t('lineup.pos_other') }}"};
+
+  function memberKey(m){return m.type+':'+m.id;}
+  function isAssigned(m){return _groups.some(function(g){return g.members.some(function(x){return memberKey(x)===memberKey(m);});});}
   function setStatus(msg){document.getElementById('lineup-status').textContent=msg;}
   function clearChildren(el){while(el.firstChild){el.removeChild(el.firstChild);}}
 
-  function render(){
-    var c=document.getElementById('lineup-groups-container');
-    clearChildren(c);
+  // ── Chip factory ──────────────────────────────────────────────
+  function makeChip(member, inGroup, gi, mi){
+    var chip=document.createElement('span');
+    chip.className='lineup-chip';
+    chip.dataset.type=member.type;
+    chip.dataset.id=String(member.id);
+    chip.draggable=true;
+    var isSel=_selected&&_selected.type===member.type&&_selected.id===member.id;
+    if(isSel)chip.classList.add('selected');
+
+    var label=document.createElement('span');label.textContent=member.name;chip.appendChild(label);
+
+    if(inGroup){
+      var rm=document.createElement('button');rm.type='button';rm.className='chip-rm';rm.textContent='×';rm.title='Remove';
+      rm.onclick=function(e){e.stopPropagation();_groups[gi].members.splice(mi,1);render();};
+      chip.appendChild(rm);
+    }
+
+    // drag events
+    chip.addEventListener('dragstart',function(e){
+      chip.classList.add('dragging');
+      e.dataTransfer.setData('text/plain',JSON.stringify({type:member.type,id:member.id,name:member.name,pos:member.pos,fromGroup:inGroup?gi:-1,fromIdx:inGroup?mi:-1}));
+      e.dataTransfer.effectAllowed='move';
+    });
+    chip.addEventListener('dragend',function(){chip.classList.remove('dragging');});
+
+    // click-to-select (mobile)
+    chip.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(_selected&&_selected.type===member.type&&_selected.id===member.id){
+        _selected=null;
+      } else {
+        _selected={type:member.type,id:member.id,name:member.name,pos:member.pos,fromGroup:inGroup?gi:-1,fromIdx:inGroup?mi:-1};
+      }
+      render();
+    });
+    return chip;
+  }
+
+  // ── Drop zone wiring ─────────────────────────────────────────
+  function wireDropZone(zone, targetGi){
+    zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('drag-over');});
+    zone.addEventListener('dragleave',function(){zone.classList.remove('drag-over');});
+    zone.addEventListener('drop',function(e){
+      e.preventDefault();zone.classList.remove('drag-over');
+      var data;try{data=JSON.parse(e.dataTransfer.getData('text/plain'));}catch(ex){return;}
+      moveMember(data, targetGi);
+    });
+    // click-to-place (mobile): click zone (not a chip) while something selected
+    zone.addEventListener('click',function(e){
+      if(!_selected)return;
+      if(e.target!==zone)return; // chip clicks are handled above
+      moveMember(_selected, targetGi);
+    });
+    // Also wire the group card itself (not just inner zone) so tap anywhere in group moves
+    if(targetGi>=0){
+      var card=zone.closest('.lineup-group');
+      if(card){
+        card.addEventListener('click',function(e){
+          if(!_selected)return;
+          if(e.target.closest('.lineup-chip'))return;
+          if(e.target.closest('.lineup-group-name'))return;
+          if(e.target.closest('.lineup-group-del'))return;
+          moveMember(_selected, targetGi);
+        });
+      }
+    }
+  }
+
+  function moveMember(data, targetGi){
+    // Remove from source
+    if(data.fromGroup>=0&&data.fromGroup<_groups.length){
+      _groups[data.fromGroup].members=_groups[data.fromGroup].members.filter(function(m){
+        return!(m.type===data.type&&m.id===data.id);
+      });
+    }
+    // Add to target group (targetGi == -1 means pool / unassign)
+    if(targetGi>=0&&targetGi<_groups.length){
+      var already=_groups[targetGi].members.some(function(m){return m.type===data.type&&m.id===data.id;});
+      if(!already) _groups[targetGi].members.push({type:data.type,id:data.id,name:data.name,pos:data.pos||''});
+    }
+    _selected=null;
+    render();
+  }
+
+  // ── Render pool ───────────────────────────────────────────────
+  function renderPool(){
+    var poolEl=document.getElementById('lineup-pool');
+    clearChildren(poolEl);
+    var unassigned=_pool.filter(function(p){return!isAssigned(p);});
+    // group by position
+    var byPos={};
+    unassigned.forEach(function(p){var k=p.pos||'';if(!byPos[k])byPos[k]=[];byPos[k].push(p);});
+    var hasSections=false;
+    POS_ORDER.forEach(function(pos){
+      var members=byPos[pos];
+      if(!members||!members.length)return;
+      hasSections=true;
+      var sec=document.createElement('div');sec.className='lineup-pos-section';
+      var lbl=document.createElement('span');lbl.className='lineup-pos-label';lbl.textContent=POS_LABELS[pos]||pos;
+      sec.appendChild(lbl);
+      members.forEach(function(m){sec.appendChild(makeChip(m,false,-1,-1));});
+      poolEl.appendChild(sec);
+    });
+    if(!hasSections){
+      var empty=document.createElement('span');empty.style.cssText='font-size:.8rem;color:var(--tp-muted,#aaa);';
+      empty.textContent='{{ t("lineup.pool_empty") }}';
+      poolEl.appendChild(empty);
+    }
+    wireDropZone(poolEl,-1);
+  }
+
+  // ── Render groups ─────────────────────────────────────────────
+  function renderGroups(){
+    var col=document.getElementById('lineup-groups-col');
+    clearChildren(col);
     _groups.forEach(function(g,gi){
-      var div=document.createElement('div');div.className='lineup-group';
+      var card=document.createElement('div');card.className='lineup-group';
+      // header
       var hdr=document.createElement('div');hdr.className='lineup-group-header';
       var inp=document.createElement('input');inp.type='text';inp.className='lineup-group-name';inp.value=g.name;
       inp.addEventListener('input',function(){_groups[gi].name=this.value;});
-      var del=document.createElement('button');del.type='button';del.className='btn btn-sm lineup-member-rm';
-      del.textContent='✕ {{ t("lineup.remove_group") }}';
-      del.onclick=function(){_groups.splice(gi,1);render();};
-      hdr.appendChild(inp);hdr.appendChild(del);div.appendChild(hdr);
-      var ul=document.createElement('ul');ul.className='lineup-member-list';
-      g.members.forEach(function(m,mi){
-        var li=document.createElement('li');li.className='lineup-member-item';
-        var sp=document.createElement('span');sp.textContent=m.name;
-        var rm=document.createElement('button');rm.type='button';rm.className='lineup-member-rm';rm.textContent='×';
-        rm.onclick=function(){_groups[gi].members.splice(mi,1);render();};
-        li.appendChild(sp);li.appendChild(rm);ul.appendChild(li);
-      });
-      div.appendChild(ul);
-      var sel=document.createElement('select');sel.className='lineup-add-select';
-      var ph=document.createElement('option');ph.value='';ph.textContent='{{ t("lineup.add_member") }}';sel.appendChild(ph);
-      _pool.forEach(function(p){
-        var taken=_groups.some(function(grp){return grp.members.some(function(m){return m.type===p.type&&m.id===p.id;});});
-        if(!taken){var o=document.createElement('option');o.value=p.type+':'+p.id;o.textContent=p.name;sel.appendChild(o);}
-      });
-      sel.onchange=function(){
-        if(!this.value)return;
-        var parts=this.value.split(':'),typ=parts[0],id=parseInt(parts[1]);
-        var p=_pool.find(function(x){return x.type===typ&&x.id===id;});
-        if(p){_groups[gi].members.push({type:typ,id:id,name:p.name});}
-        render();
-      };
-      div.appendChild(sel);c.appendChild(div);
+      var del=document.createElement('button');del.type='button';del.className='lineup-group-del';del.textContent='✕';del.title='{{ t("lineup.remove_group") }}';
+      del.onclick=function(e){e.stopPropagation();_groups.splice(gi,1);render();};
+      hdr.appendChild(inp);hdr.appendChild(del);card.appendChild(hdr);
+      // drop zone with chips
+      var zone=document.createElement('div');zone.className='lineup-drop-zone';
+      g.members.forEach(function(m,mi){zone.appendChild(makeChip(m,true,gi,mi));});
+      if(!g.members.length){
+        var hint=document.createElement('span');hint.style.cssText='font-size:.78rem;color:var(--tp-muted,#bbb);';
+        hint.textContent='{{ t("lineup.drop_hint") }}';zone.appendChild(hint);
+      }
+      card.appendChild(zone);
+      col.appendChild(card);
+      wireDropZone(zone,gi);
     });
   }
+
+  function render(){renderPool();renderGroups();}
 
   window.lineupAddGroup=function(){
     _groups.push({name:'{{ t("lineup.group_default_name") }} '+(_groups.length+1),members:[]});
@@ -888,19 +1026,21 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
       .catch(function(){setStatus('{{ t("lineup.error_post") }}');});
   };
 
+  // load saved lineup
   fetch('/events/'+EVENT_ID+'/lineup')
     .then(function(r){return r.json();})
     .then(function(groups){
-      if(!groups||!groups.length)return;
+      if(!groups||!groups.length){render();return;}
       _groups=groups.map(function(g){
         return{name:g.name,members:g.members.map(function(m){
           var found=_pool.find(function(p){return p.type===m.type&&p.id===m.id;});
-          return{type:m.type,id:m.id,name:found?found.name:'(?)'};
+          return{type:m.type,id:m.id,name:found?found.name:'(?)',pos:found?found.pos:''};
         })};
       });
       document.getElementById('lineup-panel').open=true;
       render();
-    });
+    })
+    .catch(function(){render();});
 })();
 </script>
 {% endif %}
