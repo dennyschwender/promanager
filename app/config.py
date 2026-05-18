@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "noreply@promanager.local"
+    ADMIN_BCC_EMAIL: str = ""
 
     # ── Application ───────────────────────────────────────────────────────────
     APP_NAME: str = "ProManager"

@@ -71,10 +71,14 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = "") -> bo
 
     Returns True on success (or in dev no-op mode), False on failure.
     """
+    bcc = settings.ADMIN_BCC_EMAIL.strip()
+    recipients = [to, bcc] if bcc else [to]
+
     if _is_dev_mode():
         logger.debug(
-            "Email (dev no-op) to=%r subject=%r body_text=%r",
+            "Email (dev no-op) to=%r bcc=%r subject=%r body_text=%r",
             to,
+            bcc or None,
             subject,
             body_text or body_html[:120],
         )
@@ -84,6 +88,8 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = "") -> bo
     msg["Subject"] = subject
     msg["From"] = settings.SMTP_FROM
     msg["To"] = to
+    if bcc:
+        msg["Bcc"] = bcc
 
     if body_text:
         msg.attach(MIMEText(body_text, "plain", "utf-8"))
@@ -97,8 +103,8 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = "") -> bo
                 smtp.ehlo()
             if settings.SMTP_USER and settings.SMTP_PASSWORD:
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            smtp.sendmail(settings.SMTP_FROM, [to], msg.as_string())
-        logger.info("Email sent to %r: %s", to, subject)
+            smtp.sendmail(settings.SMTP_FROM, recipients, msg.as_string())
+        logger.info("Email sent to %r (bcc=%r): %s", to, bcc or None, subject)
         return True
     except Exception as exc:
         logger.error("Failed to send email to %r: %s", to, exc)

@@ -124,6 +124,7 @@ Single persistent inline-keyboard message per user (`User.telegram_notification_
 | `DATABASE_URL` | `sqlite:///./data/proManager.db` | SQLAlchemy URL |
 | `SMTP_HOST/PORT/USER/PASSWORD` | localhost/587/""/""  | Email delivery |
 | `SMTP_FROM` | `noreply@promanager.local` | From address |
+| `ADMIN_BCC_EMAIL` | `""` | If set, BCC this address on every outgoing email |
 | `APP_NAME` | `ProManager` | Display name |
 | `REMINDER_HOURS_BEFORE` | `24` | Event reminder lead time |
 | `COOKIE_SECURE` | `False` | Set `True` for HTTPS |
