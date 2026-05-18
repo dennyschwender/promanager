@@ -158,25 +158,6 @@
 {% endblock %}
 {% block scripts %}
 <script>
-document.addEventListener('click', function (e) {
-  var toggle = e.target.closest('.action-dropdown-toggle');
-  if (toggle) {
-    e.stopPropagation();
-    var menu = toggle.nextElementSibling;
-    var isOpen = menu.classList.contains('open');
-    closeAll();
-    if (!isOpen) {
-      var rect = toggle.getBoundingClientRect();
-      var spaceBelow = window.innerHeight - rect.bottom;
-      menu.classList.add('open');
-      if (spaceBelow < 120) menu.classList.add('open-up');
-      var wrapper = toggle.closest('.table-responsive');
-      if (wrapper) wrapper.classList.add('dropdown-open');
-    }
-    return;
-  }
-  closeAll();
-});
 function closeAll() {
   document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) {
     m.classList.remove('open');

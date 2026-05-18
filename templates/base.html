@@ -140,6 +140,36 @@
 </footer>
 
 {% block scripts %}{% endblock %}
+<script>
+document.addEventListener('click', function (e) {
+  var toggle = e.target.closest('.action-dropdown-toggle');
+  if (toggle) {
+    e.stopPropagation();
+    var menu = toggle.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open', 'open-up');
+    });
+    document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) {
+      w.classList.remove('dropdown-open');
+    });
+    if (!isOpen) {
+      menu.classList.add('open');
+      var rect = toggle.getBoundingClientRect();
+      if (window.innerHeight - rect.bottom < 120) menu.classList.add('open-up');
+      var wrapper = toggle.closest('.table-responsive');
+      if (wrapper) wrapper.classList.add('dropdown-open');
+    }
+    return;
+  }
+  document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) {
+    m.classList.remove('open', 'open-up');
+  });
+  document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) {
+    w.classList.remove('dropdown-open');
+  });
+});
+</script>
 {% if user %}
 <script>
 (function () {

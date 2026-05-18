@@ -694,6 +694,22 @@ footer.site-footer a:hover { text-decoration: underline; }
 [data-theme="dark"] .action-dropdown-menu button:hover { background: rgba(255,255,255,.07); }
 .action-dropdown-menu button.danger { color: var(--tp-danger); }
 .action-dropdown-menu form { margin: 0; padding: 0; }
+.dropdown-item-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.83rem;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 0;
+  white-space: nowrap;
+}
+.dropdown-item-btn:hover { background: rgba(0,0,0,.05); }
+[data-theme="dark"] .dropdown-item-btn:hover { background: rgba(255,255,255,.07); }
+.dropdown-item-danger { color: var(--tp-danger, #c0392b) !important; }
 
 /* Hide Team column in edit mode when team filter is active */
 #players-table.edit-mode.team-filtered td[data-col="Team"],

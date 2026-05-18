@@ -23,22 +23,25 @@
       <td class="col-hide-mobile">{{ s.end_date or '—' }}</td>
       <td>{% if s.is_active %}<span class="badge badge-active">{{ t('common.active') }}</span>{% else %}<span class="badge">—</span>{% endif %}</td>
       <td>
-        <div class="action-group">
-          {% if user.is_admin %}
-            <a href="/seasons/{{ s.id }}/edit" class="btn btn-sm btn-outline">{{ t('seasons.edit') }}</a>
-            {% if not s.is_active %}
-              <form method="post" action="/seasons/{{ s.id }}/activate" style="display:contents;">
+        <div class="action-dropdown">
+          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+          <div class="action-dropdown-menu">
+            {% if user.is_admin %}
+              <a href="/seasons/{{ s.id }}/edit">{{ t('seasons.edit') }}</a>
+              {% if not s.is_active %}
+                <form method="post" action="/seasons/{{ s.id }}/activate" style="display:contents;">
+                  <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                  <button type="submit" class="dropdown-item-btn">{{ t('seasons.activate') }}</button>
+                </form>
+              {% endif %}
+              <a href="/reports/season/{{ s.id }}">{{ t('seasons.report') }}</a>
+              <form method="post" action="/seasons/{{ s.id }}/delete" style="display:contents;"
+                    onsubmit="return confirm('{{ t('seasons.delete_confirm', name=s.name) }}')">
                 <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-                <button type="submit" class="btn btn-sm btn-outline">{{ t('seasons.activate') }}</button>
+                <button type="submit" class="dropdown-item-btn dropdown-item-danger">{{ t('common.delete') }}</button>
               </form>
             {% endif %}
-            <a href="/reports/season/{{ s.id }}" class="btn btn-sm btn-outline">{{ t('seasons.report') }}</a>
-            <form method="post" action="/seasons/{{ s.id }}/delete" style="display:contents;"
-                  onsubmit="return confirm('{{ t('seasons.delete_confirm', name=s.name) }}')">
-              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-danger">{{ t('common.delete') }}</button>
-            </form>
-          {% endif %}
+          </div>
         </div>
       </td>
     </tr>

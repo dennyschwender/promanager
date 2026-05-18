@@ -21,24 +21,27 @@
       <td><a href="/teams/{{ team.id }}"><strong>{{ team.name }}</strong></a></td>
       <td class="col-hide-mobile">{{ team.description or "—" }}</td>
       <td>
-        <div class="action-group">
-          <a href="/teams/{{ team.id }}/edit" class="btn btn-sm btn-outline">{{ t('teams.edit') }}</a>
-          <a href="/players?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('teams.players') }}</a>
-          {% if user.is_admin %}
-            <a href="/players/import?team_id={{ team.id }}" class="btn btn-sm btn-outline">{{ t('common.import') }}</a>
-            {% if seasons|length > 1 %}
-            <button type="button" class="btn btn-sm btn-outline"
-                    data-team-id="{{ team.id }}" data-team-name="{{ team.name | e }}"
-                    onclick="openCopyDialog(this)">
-              {{ t('teams_list.copy_roster') }}
-            </button>
+        <div class="action-dropdown">
+          <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
+          <div class="action-dropdown-menu">
+            <a href="/teams/{{ team.id }}/edit">{{ t('teams.edit') }}</a>
+            <a href="/players?team_id={{ team.id }}">{{ t('teams.players') }}</a>
+            {% if user.is_admin %}
+              <a href="/players/import?team_id={{ team.id }}">{{ t('common.import') }}</a>
+              {% if seasons|length > 1 %}
+              <button type="button" class="dropdown-item-btn"
+                      data-team-id="{{ team.id }}" data-team-name="{{ team.name | e }}"
+                      onclick="openCopyDialog(this)">
+                {{ t('teams_list.copy_roster') }}
+              </button>
+              {% endif %}
+              <form method="post" action="/teams/{{ team.id }}/delete" style="display:contents;"
+                    onsubmit="return confirm('{{ t('teams_list.delete_confirm', name=team.name) }}')">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                <button type="submit" class="dropdown-item-btn dropdown-item-danger">{{ t('common.delete') }}</button>
+              </form>
             {% endif %}
-            <form method="post" action="/teams/{{ team.id }}/delete" style="display:contents;"
-                  onsubmit="return confirm('{{ t('teams_list.delete_confirm', name=team.name) }}')">
-              <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="btn btn-sm btn-danger">{{ t('common.delete') }}</button>
-            </form>
-          {% endif %}
+          </div>
         </div>
       </td>
     </tr>
