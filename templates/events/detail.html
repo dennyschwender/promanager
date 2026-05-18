@@ -797,6 +797,7 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     <div class="lineup-pool-col">
       <div class="lineup-pool-header">
         <span class="lineup-col-title">{{ t('lineup.pool_title') }}</span>
+        <span id="lineup-pool-count" class="lineup-count-badge"></span>
       </div>
       <div id="lineup-pool" class="lineup-drop-zone" data-zone="pool"></div>
     </div>
@@ -807,7 +808,7 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     <button type="button" class="btn btn-sm btn-primary" onclick="lineupSave()">{{ t('lineup.save') }}</button>
     <button type="button" class="btn btn-sm btn-outline" onclick="lineupPostToChat()">{{ t('lineup.post_to_chat') }}</button>
   </div>
-  <p id="lineup-status" style="font-size:.85rem;color:var(--tp-muted,#888);margin-top:.4rem;min-height:1.2em;"></p>
+  <p id="lineup-status"></p>
 </details>
 <style>
 .lineup-workspace{display:flex;gap:1rem;margin-top:.75rem;min-height:120px;align-items:flex-start;}
@@ -839,6 +840,12 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
   .lineup-pool-col{flex:none;width:100%;}
   .lineup-groups-col{width:100%;}
 }
+.drag-handle{color:var(--tp-muted,#aaa);font-size:.9rem;cursor:grab;flex-shrink:0;margin-right:.25rem;user-select:none;}
+.lineup-chip.selected .drag-handle{color:rgba(255,255,255,.6);}
+.lineup-count-badge{font-size:.8rem;color:var(--tp-muted,#aaa);margin-left:.35rem;font-weight:400;flex-shrink:0;}
+.lineup-save-dirty{box-shadow:0 0 0 2px var(--tp-warning,#f39c12);}
+.lineup-status-success{color:var(--tp-success,#27ae60);font-weight:600;font-size:.85rem;margin-top:.4rem;min-height:1.2em;}
+.lineup-status-error{color:var(--tp-danger,#c0392b);font-weight:600;font-size:.85rem;margin-top:.4rem;min-height:1.2em;}
 </style>
 <script>
 (function(){
@@ -856,13 +863,21 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 
   var _groups = [];       // [{name, members:[{type,id,name,pos}]}]
   var _selected = null;   // {type,id} of clicked chip, or null
+  var _dirty = false;
+  var _statusTimer;
 
   var POS_ORDER = ['goalie','defender','center','forward',''];
   var POS_LABELS = {goalie:'{{ t("enums.pos_goalie") }}',defender:'{{ t("enums.pos_defender") }}',center:'{{ t("enums.pos_center") }}',forward:'{{ t("enums.pos_forward") }}','':"{{ t('lineup.pos_other') }}",external:'{{ t("lineup.pos_external") }}'};
 
   function memberKey(m){return m.type+':'+m.id;}
   function isAssigned(m){return _groups.some(function(g){return g.members.some(function(x){return memberKey(x)===memberKey(m);});});}
-  function setStatus(msg){document.getElementById('lineup-status').textContent=msg;}
+  function setStatus(msg,type){
+    var el=document.getElementById('lineup-status');
+    el.textContent=msg;
+    el.className=type==='error'?'lineup-status-error':'lineup-status-success';
+    clearTimeout(_statusTimer);
+    _statusTimer=setTimeout(function(){el.textContent='';el.className='';},3000);
+  }
   function clearChildren(el){while(el.firstChild){el.removeChild(el.firstChild);}}
 
   // ── Chip factory ──────────────────────────────────────────────
@@ -875,11 +890,12 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     var isSel=_selected&&_selected.type===member.type&&_selected.id===member.id;
     if(isSel)chip.classList.add('selected');
 
+    var handle=document.createElement('span');handle.className='drag-handle';handle.textContent='⋮';chip.appendChild(handle);
     var label=document.createElement('span');label.textContent=member.name;chip.appendChild(label);
 
     if(inGroup){
       var rm=document.createElement('button');rm.type='button';rm.className='chip-rm';rm.textContent='×';rm.title='Remove';
-      rm.onclick=function(e){e.stopPropagation();_groups[gi].members.splice(mi,1);render();};
+      rm.onclick=function(e){e.stopPropagation();_dirty=true;_groups[gi].members.splice(mi,1);render();};
       chip.appendChild(rm);
     }
 
@@ -947,6 +963,7 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
       if(!already) _groups[targetGi].members.push({type:data.type,id:data.id,name:data.name,pos:data.pos||''});
     }
     _selected=null;
+    _dirty=true;
     render();
   }
 
@@ -955,6 +972,8 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     var poolEl=document.getElementById('lineup-pool');
     clearChildren(poolEl);
     var unassigned=_pool.filter(function(p){return!isAssigned(p);});
+    var badge=document.getElementById('lineup-pool-count');
+    if(badge)badge.textContent=unassigned.length?'('+unassigned.length+')':'';
     // group by position
     var byPos={};
     unassigned.forEach(function(p){var k=p.pos||'';if(!byPos[k])byPos[k]=[];byPos[k].push(p);});
@@ -986,11 +1005,12 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
       var card=document.createElement('div');card.className='lineup-group';
       // header
       var hdr=document.createElement('div');hdr.className='lineup-group-header';
-      var inp=document.createElement('input');inp.type='text';inp.className='lineup-group-name';inp.name='lineup-group-name-'+gi;inp.value=g.name;
-      inp.addEventListener('input',function(){_groups[gi].name=this.value;});
+      var inp=document.createElement('input');inp.type='text';inp.className='lineup-group-name';inp.name='lineup-group-name-'+gi;inp.value=g.name;inp.placeholder='{{ t("lineup.group_default_name") }}\u2026';
+      inp.addEventListener('input',function(){_dirty=true;_groups[gi].name=this.value;});
+      var cnt=document.createElement('span');cnt.className='lineup-count-badge';cnt.textContent='('+g.members.length+')';
       var del=document.createElement('button');del.type='button';del.className='lineup-group-del';del.textContent='✕';del.title='{{ t("lineup.remove_group") }}';
-      del.onclick=function(e){e.stopPropagation();_groups.splice(gi,1);render();};
-      hdr.appendChild(inp);hdr.appendChild(del);card.appendChild(hdr);
+      del.onclick=function(e){e.stopPropagation();_dirty=true;_groups.splice(gi,1);render();};
+      hdr.appendChild(inp);hdr.appendChild(cnt);hdr.appendChild(del);card.appendChild(hdr);
       // drop zone with chips
       var zone=document.createElement('div');zone.className='lineup-drop-zone';
       g.members.forEach(function(m,mi){zone.appendChild(makeChip(m,true,gi,mi));});
@@ -1004,28 +1024,43 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
     });
   }
 
-  function render(){renderPool();renderGroups();}
+  function render(){
+    renderPool();renderGroups();
+    var saveBtn=document.querySelector('.lineup-actions .btn-primary');
+    if(saveBtn)saveBtn.classList.toggle('lineup-save-dirty',_dirty);
+  }
 
   window.lineupAddGroup=function(){
     _groups.push({name:'{{ t("lineup.group_default_name") }} '+(_groups.length+1),members:[]});
+    _dirty=true;
     render();
     document.getElementById('lineup-panel').open=true;
+    var cards=document.querySelectorAll('.lineup-group');
+    if(cards.length){
+      var last=cards[cards.length-1];
+      last.scrollIntoView({behavior:'smooth',block:'nearest'});
+      var inp=last.querySelector('.lineup-group-name');
+      if(inp){inp.focus();inp.select();}
+    }
   };
 
   window.lineupSave=function(){
-    if(_groups.length===0){setStatus('{{ t("lineup.min_one_group") }}');return;}
+    if(_groups.length===0){setStatus('{{ t("lineup.min_one_group") }}','error');return;}
     var payload=_groups.map(function(g){return{name:g.name,members:g.members.map(function(m){return{type:m.type,id:m.id};})};});
     fetch('/events/'+EVENT_ID+'/lineup',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({groups:payload})})
       .then(function(r){return r.json();})
-      .then(function(d){setStatus(d.ok?'{{ t("lineup.saved") }}':'{{ t("lineup.error_save") }}');})
-      .catch(function(){setStatus('{{ t("lineup.error_save") }}');});
+      .then(function(d){
+        if(d.ok){_dirty=false;render();}
+        setStatus(d.ok?'{{ t("lineup.saved") }}':'{{ t("lineup.error_save") }}',d.ok?'success':'error');
+      })
+      .catch(function(){setStatus('{{ t("lineup.error_save") }}','error');});
   };
 
   window.lineupPostToChat=function(){
     fetch('/events/'+EVENT_ID+'/lineup/post-to-chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:'{}' })
       .then(function(r){return r.json();})
-      .then(function(d){setStatus(d.ok?'{{ t("lineup.posted") }}':'{{ t("lineup.error_post") }}');})
-      .catch(function(){setStatus('{{ t("lineup.error_post") }}');});
+      .then(function(d){setStatus(d.ok?'{{ t("lineup.posted") }}':'{{ t("lineup.error_post") }}',d.ok?'success':'error');})
+      .catch(function(){setStatus('{{ t("lineup.error_post") }}','error');});
   };
 
   // load saved lineup
