@@ -19,12 +19,12 @@
 
 {# ── Season switcher ── #}
 {% macro season_qs() %}{% if hide_future %}hide_future=1{% endif %}{% if selected_team_id %}{% if hide_future %}&{% endif %}team_id={{ selected_team_id }}{% endif %}{% if selected_event_type %}{% if hide_future or selected_team_id %}&{% endif %}event_type={{ selected_event_type }}{% endif %}{% endmacro %}
-<div class="filter-row" style="margin-bottom:.5rem;">
-  <span style="font-size:.85rem;color:var(--muted-color);align-self:flex-end;">{{ t('reports.seasons_label') }}</span>
+<div style="margin-bottom:.5rem;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;">
+  <span style="font-size:.85rem;color:var(--muted-color);margin-right:.5rem;">{{ t('reports.seasons_label') }}</span>
   {% for s in all_seasons %}
     {% set qs = season_qs() %}
     <a href="/reports/season/{{ s.id }}{% if qs %}?{{ qs }}{% endif %}"
-       class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}">{{ s.name }}</a>
+       class="btn btn-sm {% if s.id == season.id %}btn-primary{% else %}btn-outline{% endif %}" style="white-space:nowrap;">{{ s.name }}</a>
   {% endfor %}
 </div>
 
