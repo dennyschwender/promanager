@@ -938,7 +938,11 @@
     "add_member": "+ Ajouter un membre...",
     "group_default_name": "Groupe",
     "pos_other": "Autres",
-    "pos_external": "Externes"
+    "pos_external": "Externes",
+    "save_and_post_to_chat": "Enregistrer & publier dans le chat",
+    "preview_title": "Vérifier la composition avant de publier",
+    "preview_cancel": "Annuler",
+    "preview_confirm": "Publier dans les annonces"
   },
   "chat": {
     "title": "Chat",

@@ -806,10 +806,20 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
   <div class="lineup-actions">
     <button type="button" class="btn btn-sm btn-outline" onclick="lineupAddGroup()">{{ t('lineup.add_group') }}</button>
     <button type="button" class="btn btn-sm btn-primary" onclick="lineupSave()">{{ t('lineup.save') }}</button>
-    <button type="button" class="btn btn-sm btn-outline" onclick="lineupPostToChat()">{{ t('lineup.post_to_chat') }}</button>
+    <button type="button" class="btn btn-sm btn-outline" onclick="lineupSaveAndPreviewChat()">{{ t('lineup.save_and_post_to_chat') }}</button>
   </div>
   <p id="lineup-status"></p>
 </details>
+<div id="lineup-preview-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:var(--tp-surface,#1e1e1e);border:1px solid var(--tp-border,#444);border-radius:8px;padding:1.25rem;width:min(520px,92vw);max-height:80vh;display:flex;flex-direction:column;gap:.75rem;">
+    <strong style="font-size:.95rem;">{{ t('lineup.preview_title') }}</strong>
+    <textarea id="lineup-preview-text" rows="12" style="resize:vertical;font-family:monospace;font-size:.85rem;padding:.5rem;border:1px solid var(--tp-border,#444);border-radius:4px;background:transparent;color:inherit;width:100%;box-sizing:border-box;"></textarea>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('lineup-preview-modal').style.display='none'">{{ t('lineup.preview_cancel') }}</button>
+      <button type="button" class="btn btn-sm btn-primary" onclick="lineupConfirmPost()">{{ t('lineup.preview_confirm') }}</button>
+    </div>
+  </div>
+</div>
 <style>
 .lineup-workspace{display:flex;gap:1rem;margin-top:.75rem;min-height:120px;align-items:flex-start;}
 .lineup-pool-col{flex:0 0 160px;min-width:130px;}
@@ -819,7 +829,7 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 .lineup-group{border:1px solid var(--tp-border,#ccc);border-radius:6px;padding:.6rem;min-width:130px;flex:1;}
 .lineup-group.drag-over{background:var(--tp-primary-light,#eaf4ff);border-color:var(--tp-primary,#3498db);}
 .lineup-group-header{display:flex;align-items:center;margin-bottom:.4rem;gap:.3rem;}
-.lineup-group-name{font-weight:700;font-size:.9rem;border:1px solid var(--tp-border,#ccc);border-radius:4px;padding:3px 6px;background:var(--tp-bg,#fff);color:inherit;min-width:0;flex:1;}
+.lineup-group-name{font-weight:700;font-size:.9rem;border:1px solid var(--tp-border,#ccc);border-radius:4px;padding:3px 6px;background:transparent;color:inherit;min-width:0;flex:1;}
 .lineup-group-name:focus{border-color:var(--tp-primary,#3498db);outline:none;}
 .lineup-drop-zone{min-height:60px;border-radius:4px;padding:.2rem;}
 .lineup-drop-zone.drag-over{background:var(--tp-primary-light,#eaf4ff);}
@@ -1056,8 +1066,37 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
       .catch(function(){setStatus('{{ t("lineup.error_save") }}','error');});
   };
 
-  window.lineupPostToChat=function(){
-    fetch('/events/'+EVENT_ID+'/lineup/post-to-chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:'{}' })
+  function buildPreviewText(){
+    var lines=[];
+    _groups.forEach(function(g){
+      lines.push('=='+g.name+'==');
+      g.members.forEach(function(m){lines.push('  '+m.name);});
+      lines.push('');
+    });
+    return lines.join('\n').trim();
+  }
+
+  window.lineupSaveAndPreviewChat=function(){
+    if(_groups.length===0){setStatus('{{ t("lineup.min_one_group") }}','error');return;}
+    // save first, then open preview
+    var payload=_groups.map(function(g){return{name:g.name,members:g.members.map(function(m){return{type:m.type,id:m.id};})};});
+    fetch('/events/'+EVENT_ID+'/lineup',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({groups:payload})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok){_dirty=false;render();}
+        setStatus(d.ok?'{{ t("lineup.saved") }}':'{{ t("lineup.error_save") }}',d.ok?'success':'error');
+        if(!d.ok)return;
+        document.getElementById('lineup-preview-text').value=buildPreviewText();
+        var modal=document.getElementById('lineup-preview-modal');
+        modal.style.display='flex';
+      })
+      .catch(function(){setStatus('{{ t("lineup.error_save") }}','error');});
+  };
+
+  window.lineupConfirmPost=function(){
+    var text=document.getElementById('lineup-preview-text').value.trim();
+    document.getElementById('lineup-preview-modal').style.display='none';
+    fetch('/events/'+EVENT_ID+'/lineup/post-to-chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({body:text})})
       .then(function(r){return r.json();})
       .then(function(d){setStatus(d.ok?'{{ t("lineup.posted") }}':'{{ t("lineup.error_post") }}',d.ok?'success':'error');})
       .catch(function(){setStatus('{{ t("lineup.error_post") }}','error');});

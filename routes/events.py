@@ -812,9 +812,14 @@ async def save_event_lineup(
     return JSONResponse({"ok": True})
 
 
+class _PostToChatBody(_BaseModel):
+    body: str | None = None
+
+
 @router.post("/{event_id}/lineup/post-to-chat")
 async def post_lineup_to_chat(
     event_id: int,
+    payload: _PostToChatBody = _PostToChatBody(),
     user: User = Depends(require_coach_or_admin),
     _csrf: None = Depends(require_csrf_header),
     db: Session = Depends(get_db),
@@ -826,23 +831,27 @@ async def post_lineup_to_chat(
         raise HTTPException(status_code=404)
     if user.is_coach and event.team_id is not None:
         check_team_access(user, event.team_id, db, season_id=event.season_id)
-    lineup = db.query(EventLineup).filter(EventLineup.event_id == event_id).first()
-    if not lineup or not lineup.groups:
-        raise HTTPException(status_code=400, detail="No lineup saved")
-    lines: list[str] = []
-    for group in lineup.groups:
-        lines.append(f"=={group['name']}==")
-        for member in group.get("members", []):
-            if member["type"] == "player":
-                p = db.get(Player, member["id"])
-                if p:
-                    lines.append(f"  {p.first_name} {p.last_name}")
-            else:
-                ext = db.get(EventExternal, member["id"])
-                if ext:
-                    lines.append(f"  {ext.first_name} {ext.last_name}")
-        lines.append("")
-    body_text = "\n".join(lines).strip()
+
+    if payload.body:
+        body_text = payload.body
+    else:
+        lineup = db.query(EventLineup).filter(EventLineup.event_id == event_id).first()
+        if not lineup or not lineup.groups:
+            raise HTTPException(status_code=400, detail="No lineup saved")
+        lines: list[str] = []
+        for group in lineup.groups:
+            lines.append(f"=={group['name']}==")
+            for member in group.get("members", []):
+                if member["type"] == "player":
+                    p = db.get(Player, member["id"])
+                    if p:
+                        lines.append(f"  {p.first_name} {p.last_name}")
+                else:
+                    ext = db.get(EventExternal, member["id"])
+                    if ext:
+                        lines.append(f"  {ext.first_name} {ext.last_name}")
+            lines.append("")
+        body_text = "\n".join(lines).strip()
     msg = EventMessage(event_id=event_id, user_id=user.id, lane="announcement", body=body_text)
     db.add(msg)
     db.commit()

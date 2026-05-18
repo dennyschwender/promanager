@@ -938,7 +938,11 @@
     "add_member": "+ Aggiungi membro...",
     "group_default_name": "Gruppo",
     "pos_other": "Altro",
-    "pos_external": "Esterni"
+    "pos_external": "Esterni",
+    "save_and_post_to_chat": "Salva e pubblica in chat",
+    "preview_title": "Rivedi il lineup prima di pubblicare",
+    "preview_cancel": "Annulla",
+    "preview_confirm": "Pubblica negli annunci"
   },
   "chat": {
     "title": "Chat",

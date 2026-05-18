@@ -938,7 +938,11 @@
     "add_member": "+ Mitglied hinzufügen...",
     "group_default_name": "Gruppe",
     "pos_other": "Sonstige",
-    "pos_external": "Externe"
+    "pos_external": "Externe",
+    "save_and_post_to_chat": "Speichern & in Chat posten",
+    "preview_title": "Aufstellung vor dem Posten prüfen",
+    "preview_cancel": "Abbrechen",
+    "preview_confirm": "In Ankündigungen posten"
   },
   "chat": {
     "title": "Chat",

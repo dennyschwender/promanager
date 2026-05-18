@@ -937,7 +937,11 @@
     "add_member": "+ Add member...",
     "group_default_name": "Group",
     "pos_other": "Other",
-    "pos_external": "Externals"
+    "pos_external": "Externals",
+    "save_and_post_to_chat": "Save & Post to chat",
+    "preview_title": "Review lineup before posting",
+    "preview_cancel": "Cancel",
+    "preview_confirm": "Post to announcements"
   },
   "chat": {
     "title": "Chat",
