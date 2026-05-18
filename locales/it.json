@@ -921,6 +921,20 @@
     "select_player": "Seleziona un giocatore:",
     "use_menu_prompt": "Usa i pulsanti sottostanti per navigare."
   },
+  "lineup": {
+    "title": "Formazione / Gruppi",
+    "add_group": "+ Aggiungi gruppo",
+    "remove_group": "Rimuovi gruppo",
+    "save": "Salva formazione",
+    "post_to_chat": "Pubblica in chat",
+    "saved": "Salvato.",
+    "posted": "Pubblicato negli annunci.",
+    "error_save": "Errore nel salvataggio.",
+    "error_post": "Errore nella pubblicazione.",
+    "min_one_group": "Aggiungi almeno un gruppo.",
+    "add_member": "+ Aggiungi membro...",
+    "group_default_name": "Gruppo"
+  },
   "chat": {
     "title": "Chat",
     "announcements": "Comunicazioni",

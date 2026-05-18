@@ -6,12 +6,13 @@ import uuid
 from datetime import date, datetime
 from types import SimpleNamespace
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel as _BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.csrf import require_csrf
+from app.csrf import require_csrf, require_csrf_header
 from app.database import get_db
 from app.templates import render
 from models.attendance import Attendance
@@ -759,6 +760,98 @@ async def event_detail(
             "flash": request.query_params.get("flash"),
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Event lineup (group assignment)
+# ---------------------------------------------------------------------------
+
+
+class _LineupSaveBody(_BaseModel):
+    groups: list[dict]
+
+
+@router.get("/{event_id}/lineup")
+async def get_event_lineup(
+    event_id: int,
+    user: User = Depends(require_coach_or_admin),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    from models.event_lineup import EventLineup  # noqa: PLC0415
+
+    event = db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=404)
+    if user.is_coach and event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
+    lineup = db.query(EventLineup).filter(EventLineup.event_id == event_id).first()
+    return JSONResponse(lineup.groups if lineup else [])
+
+
+@router.post("/{event_id}/lineup")
+async def save_event_lineup(
+    event_id: int,
+    body: _LineupSaveBody,
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    from models.event_lineup import EventLineup  # noqa: PLC0415
+
+    event = db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=404)
+    if user.is_coach and event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
+    lineup = db.query(EventLineup).filter(EventLineup.event_id == event_id).first()
+    if lineup is None:
+        lineup = EventLineup(event_id=event_id)
+        db.add(lineup)
+    lineup.groups = body.groups
+    db.commit()
+    return JSONResponse({"ok": True})
+
+
+@router.post("/{event_id}/lineup/post-to-chat")
+async def post_lineup_to_chat(
+    event_id: int,
+    user: User = Depends(require_coach_or_admin),
+    _csrf: None = Depends(require_csrf_header),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    from models.event_lineup import EventLineup  # noqa: PLC0415
+
+    event = db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=404)
+    if user.is_coach and event.team_id is not None:
+        check_team_access(user, event.team_id, db, season_id=event.season_id)
+    lineup = db.query(EventLineup).filter(EventLineup.event_id == event_id).first()
+    if not lineup or not lineup.groups:
+        raise HTTPException(status_code=400, detail="No lineup saved")
+    lines: list[str] = []
+    for group in lineup.groups:
+        lines.append(f"=={group['name']}==")
+        for member in group.get("members", []):
+            if member["type"] == "player":
+                p = db.get(Player, member["id"])
+                if p:
+                    lines.append(f"  {p.first_name} {p.last_name}")
+            else:
+                ext = db.get(EventExternal, member["id"])
+                if ext:
+                    lines.append(f"  {ext.first_name} {ext.last_name}")
+        lines.append("")
+    body_text = "\n".join(lines).strip()
+    msg = EventMessage(event_id=event_id, user_id=user.id, lane="announcement", body=body_text)
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    from services.chat_service import push_chat_message_sse  # noqa: PLC0415
+
+    msg_dict = message_to_dict(msg, author_display_name(user))
+    push_chat_message_sse(event_id, msg_dict, db)
+    return JSONResponse({"ok": True, "message": msg_dict})
 
 
 # ---------------------------------------------------------------------------

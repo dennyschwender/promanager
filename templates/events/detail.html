@@ -789,6 +789,122 @@ document.getElementById('delete-dialog-form').querySelectorAll('input[name=scope
 </script>
 {% endif %}
 
+{# ── Lineup / Groups panel ─────────────────────────────────────── #}
+{% if user.is_admin or (user.is_coach and event.team_id in coach_team_ids) %}
+<details id="lineup-panel" class="chat-panel">
+  <summary>⚽ {{ t('lineup.title') }}</summary>
+  <div id="lineup-groups-container"></div>
+  <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+    <button type="button" class="btn btn-sm btn-outline" onclick="lineupAddGroup()">{{ t('lineup.add_group') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" onclick="lineupSave()">{{ t('lineup.save') }}</button>
+    <button type="button" class="btn btn-sm btn-outline" onclick="lineupPostToChat()">{{ t('lineup.post_to_chat') }}</button>
+  </div>
+  <p id="lineup-status" style="font-size:.85rem;color:var(--tp-muted,#888);margin-top:.4rem;min-height:1.2em;"></p>
+</details>
+<style>
+.lineup-group{border:1px solid var(--tp-border,#ccc);border-radius:6px;padding:.75rem;margin-bottom:.75rem;}
+.lineup-group-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
+.lineup-group-name{font-weight:600;font-size:.95rem;border:1px solid transparent;border-radius:4px;padding:2px 6px;background:transparent;color:inherit;width:50%;}
+.lineup-group-name:focus{border-color:var(--tp-primary,#3498db);outline:none;}
+.lineup-member-list{list-style:none;margin:0;padding:0;}
+.lineup-member-item{display:flex;justify-content:space-between;align-items:center;padding:.15rem .4rem;border-radius:4px;}
+.lineup-member-item:hover{background:var(--tp-surface,#f4f4f4);}
+.lineup-member-rm{background:none;border:none;cursor:pointer;color:var(--tp-danger,#c0392b);font-size:.9rem;padding:0 .3rem;line-height:1;}
+.lineup-add-select{width:100%;margin-top:.5rem;font-size:.85rem;}
+</style>
+<script>
+(function(){
+  var EVENT_ID = {{ event.id }};
+  var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var _pool = [];
+  {% for entry in summary["present"] %}
+  _pool.push({type:'player',id:{{ entry.player.id }},name:{{ entry.player.full_name | tojson }}});
+  {% endfor %}
+  {% for ext in externals %}{% if ext.status == 'present' %}
+  _pool.push({type:'external',id:{{ ext.id }},name:{{ (ext.first_name ~ ' ' ~ ext.last_name) | tojson }}});
+  {% endif %}{% endfor %}
+  var _groups = [];
+
+  function setStatus(msg){document.getElementById('lineup-status').textContent=msg;}
+  function clearChildren(el){while(el.firstChild){el.removeChild(el.firstChild);}}
+
+  function render(){
+    var c=document.getElementById('lineup-groups-container');
+    clearChildren(c);
+    _groups.forEach(function(g,gi){
+      var div=document.createElement('div');div.className='lineup-group';
+      var hdr=document.createElement('div');hdr.className='lineup-group-header';
+      var inp=document.createElement('input');inp.type='text';inp.className='lineup-group-name';inp.value=g.name;
+      inp.addEventListener('input',function(){_groups[gi].name=this.value;});
+      var del=document.createElement('button');del.type='button';del.className='btn btn-sm lineup-member-rm';
+      del.textContent='✕ {{ t("lineup.remove_group") }}';
+      del.onclick=function(){_groups.splice(gi,1);render();};
+      hdr.appendChild(inp);hdr.appendChild(del);div.appendChild(hdr);
+      var ul=document.createElement('ul');ul.className='lineup-member-list';
+      g.members.forEach(function(m,mi){
+        var li=document.createElement('li');li.className='lineup-member-item';
+        var sp=document.createElement('span');sp.textContent=m.name;
+        var rm=document.createElement('button');rm.type='button';rm.className='lineup-member-rm';rm.textContent='×';
+        rm.onclick=function(){_groups[gi].members.splice(mi,1);render();};
+        li.appendChild(sp);li.appendChild(rm);ul.appendChild(li);
+      });
+      div.appendChild(ul);
+      var sel=document.createElement('select');sel.className='lineup-add-select';
+      var ph=document.createElement('option');ph.value='';ph.textContent='{{ t("lineup.add_member") }}';sel.appendChild(ph);
+      _pool.forEach(function(p){
+        var taken=_groups.some(function(grp){return grp.members.some(function(m){return m.type===p.type&&m.id===p.id;});});
+        if(!taken){var o=document.createElement('option');o.value=p.type+':'+p.id;o.textContent=p.name;sel.appendChild(o);}
+      });
+      sel.onchange=function(){
+        if(!this.value)return;
+        var parts=this.value.split(':'),typ=parts[0],id=parseInt(parts[1]);
+        var p=_pool.find(function(x){return x.type===typ&&x.id===id;});
+        if(p){_groups[gi].members.push({type:typ,id:id,name:p.name});}
+        render();
+      };
+      div.appendChild(sel);c.appendChild(div);
+    });
+  }
+
+  window.lineupAddGroup=function(){
+    _groups.push({name:'{{ t("lineup.group_default_name") }} '+(_groups.length+1),members:[]});
+    render();
+    document.getElementById('lineup-panel').open=true;
+  };
+
+  window.lineupSave=function(){
+    if(_groups.length===0){setStatus('{{ t("lineup.min_one_group") }}');return;}
+    var payload=_groups.map(function(g){return{name:g.name,members:g.members.map(function(m){return{type:m.type,id:m.id};})};});
+    fetch('/events/'+EVENT_ID+'/lineup',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({groups:payload})})
+      .then(function(r){return r.json();})
+      .then(function(d){setStatus(d.ok?'{{ t("lineup.saved") }}':'{{ t("lineup.error_save") }}');})
+      .catch(function(){setStatus('{{ t("lineup.error_save") }}');});
+  };
+
+  window.lineupPostToChat=function(){
+    fetch('/events/'+EVENT_ID+'/lineup/post-to-chat',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:'{}' })
+      .then(function(r){return r.json();})
+      .then(function(d){setStatus(d.ok?'{{ t("lineup.posted") }}':'{{ t("lineup.error_post") }}');})
+      .catch(function(){setStatus('{{ t("lineup.error_post") }}');});
+  };
+
+  fetch('/events/'+EVENT_ID+'/lineup')
+    .then(function(r){return r.json();})
+    .then(function(groups){
+      if(!groups||!groups.length)return;
+      _groups=groups.map(function(g){
+        return{name:g.name,members:g.members.map(function(m){
+          var found=_pool.find(function(p){return p.type===m.type&&p.id===m.id;});
+          return{type:m.type,id:m.id,name:found?found.name:'(?)'};
+        })};
+      });
+      document.getElementById('lineup-panel').open=true;
+      render();
+    });
+})();
+</script>
+{% endif %}
+
 {# ── Chat panel ────────────────────────────────────────────────── #}
 <details id="chat-panel" class="chat-panel">
   <summary>{{ t('chat.title') }}</summary>

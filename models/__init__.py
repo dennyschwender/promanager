@@ -4,6 +4,7 @@ from .attendance import Attendance
 from .audit_log import AuditLog
 from .event import Event
 from .event_external import EventExternal
+from .event_lineup import EventLineup
 from .event_message import EventMessage
 from .notification import Notification
 from .notification_preference import NotificationPreference
@@ -32,6 +33,7 @@ __all__ = [
     "Event",
     "Attendance",
     "EventExternal",
+    "EventLineup",
     "EventMessage",
     "TeamRecurringSchedule",
     "Notification",

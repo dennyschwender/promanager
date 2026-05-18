@@ -921,6 +921,20 @@
     "select_player": "Spieler auswählen:",
     "use_menu_prompt": "Verwenden Sie die Schaltflächen unten zur Navigation."
   },
+  "lineup": {
+    "title": "Aufstellung / Gruppen",
+    "add_group": "+ Gruppe hinzufügen",
+    "remove_group": "Gruppe entfernen",
+    "save": "Aufstellung speichern",
+    "post_to_chat": "Im Chat posten",
+    "saved": "Gespeichert.",
+    "posted": "In Ankündigungen gepostet.",
+    "error_save": "Fehler beim Speichern.",
+    "error_post": "Fehler beim Posten.",
+    "min_one_group": "Mindestens eine Gruppe hinzufügen.",
+    "add_member": "+ Mitglied hinzufügen...",
+    "group_default_name": "Gruppe"
+  },
   "chat": {
     "title": "Chat",
     "announcements": "Ankündigungen",

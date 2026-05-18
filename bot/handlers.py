@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 from datetime import datetime
 
 from telegram import (
@@ -1002,6 +1003,15 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 # Free-text message handler — captures note input
 # ---------------------------------------------------------------------------
 
+_PHONE_RE = re.compile(r"^[\d\s\+\-\(\)\.]{7,}$")
+
+
+def _looks_like_phone(text: str) -> bool:
+    stripped = text.strip()
+    if not _PHONE_RE.match(stripped):
+        return False
+    return sum(c.isdigit() for c in stripped) >= 7
+
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None:
@@ -1013,7 +1023,63 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     with SessionLocal() as db:
         user = get_user_by_chat_id(db, chat_id)
     if not user:
-        return  # silently ignore — not authenticated
+        raw_text = (update.message.text or "").strip()
+        if _looks_like_phone(raw_text):
+            logger.info("Unauthenticated chat_id=%s typed phone-like text, attempting auth", chat_id)
+            telegram_phone = normalize_phone(raw_text)
+            with SessionLocal() as db:
+                matched_user = find_user_by_phone(db, telegram_phone)
+                if matched_user is None:
+                    logger.info(
+                        "Phone-text auth: no user found for chat_id=%s normalized=%s",
+                        chat_id,
+                        telegram_phone,
+                    )
+                    await update.message.reply_text(  # type: ignore[union-attr]
+                        t("telegram.auth_not_found", "en"),
+                        reply_markup=ReplyKeyboardRemove(),
+                    )
+                    await update.message.reply_text(  # type: ignore[union-attr]
+                        "​",
+                        reply_markup=_start_over_keyboard("en"),
+                    )
+                    return
+                locale = _locale(matched_user)
+                result = link_telegram(db, matched_user, chat_id)
+            if result in (AuthResult.SUCCESS, AuthResult.ALREADY_THIS):
+                logger.info(
+                    "Phone-text auth succeeded: chat_id=%s user_id=%s",
+                    chat_id,
+                    matched_user.id,
+                )
+                await update.message.reply_text(  # type: ignore[union-attr]
+                    t("telegram.auth_success", locale, username=matched_user.username),
+                    reply_markup=ReplyKeyboardRemove(),
+                )
+                with SessionLocal() as db:
+                    await _send_homepage(update.message, matched_user, db)
+            else:
+                msg = t(
+                    "telegram.auth_conflict_chat" if result == AuthResult.CONFLICT_CHAT else "telegram.auth_conflict_user",
+                    locale,
+                )
+                logger.warning(
+                    "Phone-text auth conflict: chat_id=%s user_id=%s result=%s",
+                    chat_id,
+                    matched_user.id,
+                    result,
+                )
+                await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())  # type: ignore[union-attr]
+                await update.message.reply_text(  # type: ignore[union-attr]
+                    "​",
+                    reply_markup=_start_over_keyboard(locale),
+                )
+        else:
+            logger.debug(
+                "Unauthenticated non-phone message from chat_id=%s, ignoring",
+                chat_id,
+            )
+        return
 
     # Handle absence multi-step input
     from bot.absence_handlers import handle_absence_text  # noqa: PLC0415

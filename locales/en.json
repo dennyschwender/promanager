@@ -920,6 +920,20 @@
     "absence_confirm_no": "❌ No, keep",
     "select_player": "Select a player:"
   },
+  "lineup": {
+    "title": "Lineup / Groups",
+    "add_group": "+ Add group",
+    "remove_group": "Remove group",
+    "save": "Save lineup",
+    "post_to_chat": "Post to chat",
+    "saved": "Saved.",
+    "posted": "Posted to announcements.",
+    "error_save": "Error saving lineup.",
+    "error_post": "Error posting to chat.",
+    "min_one_group": "Add at least one group first.",
+    "add_member": "+ Add member...",
+    "group_default_name": "Group"
+  },
   "chat": {
     "title": "Chat",
     "announcements": "Announcements",
