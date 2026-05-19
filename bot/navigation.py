@@ -15,7 +15,8 @@ async def navigate(query, user, db, view_key: str, text: str, keyboard: InlineKe
     try:
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
     except Exception:
-        await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+        msg = await query.message.reply_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+        user.telegram_notification_message_id = msg.message_id
     user.telegram_current_view = view_key
     db.commit()
 
