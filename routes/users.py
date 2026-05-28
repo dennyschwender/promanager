@@ -572,6 +572,7 @@ async def reset_password(
     user_id: int,
     request: Request,
     db: Session = Depends(get_db),
+    next: str = Form(""),
 ):
     target = db.get(User, user_id)
     if target is None:
@@ -594,7 +595,8 @@ async def reset_password(
     log_action(
         "user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    return RedirectResponse("/auth/users?reset=1", status_code=302)
+    redirect_to = next if next.startswith("/players/") else "/auth/users?reset=1"
+    return RedirectResponse(redirect_to, status_code=302)
 
 
 @router.post("/{user_id}/send-welcome", dependencies=[Depends(require_admin), Depends(require_csrf)])
@@ -602,6 +604,7 @@ async def send_welcome(
     user_id: int,
     request: Request,
     db: Session = Depends(get_db),
+    next: str = Form(""),
 ):
     target = db.get(User, user_id)
     if target is None:
@@ -624,7 +627,8 @@ async def send_welcome(
     log_action(
         "user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    return RedirectResponse("/auth/users?welcome=1", status_code=302)
+    redirect_to = next if next.startswith("/players/") else "/auth/users?welcome=1"
+    return RedirectResponse(redirect_to, status_code=302)
 
 
 @router.post("/{user_id}/delete", dependencies=[Depends(require_admin), Depends(require_csrf)])

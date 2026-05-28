@@ -81,14 +81,14 @@
         <button type="button" class="btn btn-sm btn-outline action-dropdown-toggle" aria-haspopup="true">⋯</button>
         <div class="action-dropdown-menu">
           <a href="/auth/users/{{ linked_user.id }}/edit" class="btn-link">{{ t('users.edit_user') }}</a>
-          <form method="post" action="/auth/users/{{ linked_user.id }}/reset-password"
-                onsubmit="return confirm('{{ t('users.reset_password_confirm', username=linked_user.username) }}')">
+          <form method="post" action="/auth/users/{{ linked_user.id }}/reset-password">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <input type="hidden" name="next" value="/players/{{ player.id }}">
             <button type="submit">{{ t('users.reset_password') }}</button>
           </form>
-          <form method="post" action="/auth/users/{{ linked_user.id }}/send-welcome"
-                onsubmit="return confirm('{{ t('users.send_welcome_confirm', username=linked_user.username) }}')">
+          <form method="post" action="/auth/users/{{ linked_user.id }}/send-welcome">
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <input type="hidden" name="next" value="/players/{{ player.id }}">
             <button type="submit">{{ t('users.send_welcome') }}</button>
           </form>
           <form method="post" action="/auth/users/{{ linked_user.id }}/toggle-active">
