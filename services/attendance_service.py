@@ -59,6 +59,9 @@ def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     """Return dict keyed by status, each value a list of Player objects."""
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
+    event = db.get(Event, event_id)
+    event_date = event.event_date if event else None
+
     attendances = (
         db.query(Attendance).options(joinedload(Attendance.player)).filter(Attendance.event_id == event_id).all()
     )
@@ -70,7 +73,7 @@ def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in summary else "unknown"
-        if att.player and att.player.is_active and att.player.archived_at is None:
+        if att.player and event_date is not None and _player_active_for_event(att.player, event_date):
             summary[bucket].append(att.player)
     return summary
 
@@ -83,6 +86,9 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     """
     from sqlalchemy.orm import joinedload  # noqa: PLC0415
 
+    event = db.get(Event, event_id)
+    event_date = event.event_date if event else None
+
     attendances = (
         db.query(Attendance).options(joinedload(Attendance.player)).filter(Attendance.event_id == event_id).all()
     )
@@ -94,7 +100,7 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in detail else "unknown"
-        if att.player and att.player.is_active and att.player.archived_at is None:
+        if att.player and event_date is not None and _player_active_for_event(att.player, event_date):
             detail[bucket].append({"player": att.player, "note": att.note or ""})
     return detail
 
@@ -134,9 +140,14 @@ def get_season_attendance_stats(
     )
 
     # Group by player
+    event_date_map = {e.id: e.event_date for e in events}
+
     player_map: dict[int, dict] = {}
     for att in attendances:
-        if att.player is None or not att.player.is_active or att.player.archived_at is not None:
+        if att.player is None:
+            continue
+        ev_date = event_date_map.get(att.event_id)
+        if ev_date is None or not _player_active_for_event(att.player, ev_date):
             continue
         if att.player_id not in player_map:
             player_map[att.player_id] = {
@@ -185,11 +196,24 @@ def get_event_attendance_stats(
     if not events:
         return []
 
+    from sqlalchemy.orm import joinedload as _jl  # noqa: PLC0415
+
     event_ids = [e.id for e in events]
-    attendances = db.query(Attendance).filter(Attendance.event_id.in_(event_ids)).all()
+    event_date_map = {e.id: e.event_date for e in events}
+    attendances = (
+        db.query(Attendance)
+        .options(_jl(Attendance.player))
+        .filter(Attendance.event_id.in_(event_ids))
+        .all()
+    )
 
     counts: dict[int, dict] = {e.id: {"present": 0, "absent": 0, "maybe": 0, "unknown": 0} for e in events}
     for att in attendances:
+        if att.player is None:
+            continue
+        ev_date = event_date_map.get(att.event_id)
+        if ev_date is None or not _player_active_for_event(att.player, ev_date):
+            continue
         bucket = att.status if att.status in counts[att.event_id] else "unknown"
         counts[att.event_id][bucket] += 1
 
@@ -259,9 +283,14 @@ def get_matrix_attendance_stats(
     )
 
     # Build player → {event_id: status}
+    event_date_map = {e.id: e.event_date for e in events}
+
     player_map: dict[int, dict] = {}
     for att in attendances:
-        if att.player is None or not att.player.is_active or att.player.archived_at is not None:
+        if att.player is None:
+            continue
+        ev_date = event_date_map.get(att.event_id)
+        if ev_date is None or not _player_active_for_event(att.player, ev_date):
             continue
         if att.player_id not in player_map:
             player_map[att.player_id] = {"player": att.player, "statuses": {}}
@@ -350,6 +379,20 @@ def get_player_season_matrix(db: Session, player_id: int, season_id: int) -> dic
 # ---------------------------------------------------------------------------
 # Bootstrap
 # ---------------------------------------------------------------------------
+
+
+def _player_active_for_event(player: "Player", event_date: "date") -> bool:
+    """Return True if player should appear in reports/views for a given event date.
+
+    Active players always appear. Archived players appear for events up to and
+    including their archive date (so their historical attendance is preserved).
+    Inactive-but-not-archived players are hidden (no deactivation date known).
+    """
+    if player.is_active:
+        return True
+    if player.archived_at is not None and event_date <= player.archived_at.date():
+        return True
+    return False
 
 
 def _default_status(event: Event) -> str:
