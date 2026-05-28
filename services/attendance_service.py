@@ -70,7 +70,7 @@ def get_event_attendance_summary(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in summary else "unknown"
-        if att.player:
+        if att.player and att.player.is_active and att.player.archived_at is None:
             summary[bucket].append(att.player)
     return summary
 
@@ -94,7 +94,7 @@ def get_event_attendance_detail(db: Session, event_id: int) -> dict:
     }
     for att in attendances:
         bucket = att.status if att.status in detail else "unknown"
-        if att.player:
+        if att.player and att.player.is_active and att.player.archived_at is None:
             detail[bucket].append({"player": att.player, "note": att.note or ""})
     return detail
 
