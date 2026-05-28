@@ -595,7 +595,7 @@ async def reset_password(
     log_action(
         "user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    redirect_to = next if next.startswith("/players/") else "/auth/users?reset=1"
+    redirect_to = (next + "?reset=1") if next.startswith("/players/") else "/auth/users?reset=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 
@@ -627,7 +627,7 @@ async def send_welcome(
     log_action(
         "user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    redirect_to = next if next.startswith("/players/") else "/auth/users?welcome=1"
+    redirect_to = (next + "?welcome=1") if next.startswith("/players/") else "/auth/users?welcome=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 

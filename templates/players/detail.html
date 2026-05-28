@@ -8,6 +8,12 @@
 </nav>
 {% endblock %}
 {% block content %}
+{% if request.query_params.get('reset') %}
+<div class="alert alert-success">{{ t('users.reset_password_sent') }}</div>
+{% endif %}
+{% if request.query_params.get('welcome') %}
+<div class="alert alert-success">{{ t('users.send_welcome_sent') }}</div>
+{% endif %}
 <div class="page-header">
   <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
     <h2 style="margin:0;">{{ player.full_name }}</h2>
