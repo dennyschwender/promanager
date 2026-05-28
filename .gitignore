@@ -37,3 +37,33 @@ CLAUDE.original.md
 # Deployment
 backups/
 docker-compose.override.yml
+
+# IDE
+.idea
+.idea/
+.vscode
+.vscode/
+
+# Dotfiles leaked into project root
+.bash_profile
+.bashrc
+.gitconfig
+.gitmodules
+.mcp.json
+.profile
+.ripgreprc
+.zprofile
+.zshrc
+
+# Git internals (device files)
+HEAD
+config
+hooks
+hooks/
+objects
+objects/
+refs
+refs/
+
+# Pytest artifacts
+pytest-of-denny/
