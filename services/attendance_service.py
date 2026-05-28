@@ -136,6 +136,8 @@ def get_season_attendance_stats(
     # Group by player
     player_map: dict[int, dict] = {}
     for att in attendances:
+        if att.player is None or not att.player.is_active or att.player.archived_at is not None:
+            continue
         if att.player_id not in player_map:
             player_map[att.player_id] = {
                 "player": att.player,
