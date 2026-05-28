@@ -230,7 +230,7 @@ async def magic_link_login(
         log_action("auth.magic_link_failed", extra={"reason": "missing_token"}, request=request)
         return RedirectResponse("/auth/login", status_code=302)
     try:
-        user_id, redirect_path = verify_magic_link(token)
+        user_id, redirect_path, token_email = verify_magic_link(token)
     except (BadSignature, SignatureExpired, KeyError):
         log_action("auth.magic_link_failed", extra={"reason": "invalid_or_expired"}, request=request)
         return RedirectResponse("/auth/login?error=link_expired", status_code=302)
@@ -239,6 +239,9 @@ async def magic_link_login(
     if user is None:
         log_action("auth.magic_link_failed", extra={"reason": "user_not_found"}, request=request)
         return RedirectResponse("/auth/login", status_code=302)
+    if token_email and user.email != token_email:
+        log_action("auth.magic_link_failed", extra={"reason": "email_mismatch"}, request=request)
+        return RedirectResponse("/auth/login?error=link_expired", status_code=302)
     if not user.is_active:
         log_action(
             "auth.magic_link_failed",

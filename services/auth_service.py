@@ -139,25 +139,27 @@ _MAGIC_LINK_SALT = "magic-link"
 _MAGIC_LINK_MAX_AGE = 60 * 60 * 48  # 48 hours
 
 
-def create_magic_link(user_id: int, redirect_path: str) -> str | None:
+def create_magic_link(user_id: int, redirect_path: str, email: str) -> str | None:
     """Return a signed magic login URL or None if APP_URL is localhost (dev mode).
 
-    The URL contains a URLSafeTimedSerializer token encoding user_id and
-    redirect_path. Valid for 48 hours.
+    The URL contains a URLSafeTimedSerializer token encoding user_id, email,
+    and redirect_path. Valid for 48 hours. The email claim is verified on
+    login to prevent cross-user link misuse.
     """
     if settings.APP_URL == "http://localhost:7000":
         return None
     s = URLSafeTimedSerializer(settings.SECRET_KEY, salt=_MAGIC_LINK_SALT)
-    token = s.dumps({"u": user_id, "p": redirect_path})
+    token = s.dumps({"u": user_id, "p": redirect_path, "e": email})
     return f"{settings.APP_URL}/auth/magic?token={token}"
 
 
-def verify_magic_link(token: str) -> tuple[int, str]:
+def verify_magic_link(token: str) -> tuple[int, str, str | None]:
     """Unsign and decode a magic link token.
 
-    Returns (user_id, redirect_path).
+    Returns (user_id, redirect_path, email_or_none).
+    email is None for legacy tokens that predate the email claim.
     Raises BadSignature, SignatureExpired, or KeyError on failure.
     """
     s = URLSafeTimedSerializer(settings.SECRET_KEY, salt=_MAGIC_LINK_SALT)
     data = s.loads(token, max_age=_MAGIC_LINK_MAX_AGE)
-    return int(data["u"]), str(data["p"])
+    return int(data["u"]), str(data["p"]), str(data["e"]) if "e" in data else None

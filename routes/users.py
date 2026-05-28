@@ -122,7 +122,7 @@ async def register_post(
         extra={"role": role},
         request=request,
     )
-    magic = create_magic_link(new_user.id, "/dashboard")
+    magic = create_magic_link(new_user.id, "/dashboard", new_user.email)
     send_welcome_email(
         to=new_user.email,
         username=new_user.username,
@@ -292,7 +292,7 @@ async def bulk_create_post(
         db.flush()  # get new_user.id
         player.user_id = new_user.id
 
-        magic = create_magic_link(new_user.id, "/dashboard")
+        magic = create_magic_link(new_user.id, "/dashboard", new_user.email)
         sent = send_welcome_email(
             to=player.email,
             username=username,
@@ -582,7 +582,7 @@ async def reset_password(
     target.must_change_password = True
     db.commit()
 
-    magic = create_magic_link(target.id, "/dashboard")
+    magic = create_magic_link(target.id, "/dashboard", target.email)
     send_reset_email(
         to=target.email,
         username=target.username,
@@ -612,7 +612,7 @@ async def send_welcome(
     target.must_change_password = True
     db.commit()
 
-    magic = create_magic_link(target.id, "/dashboard")
+    magic = create_magic_link(target.id, "/dashboard", target.email)
     send_welcome_email(
         to=target.email,
         username=target.username,

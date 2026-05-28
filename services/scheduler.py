@@ -85,7 +85,7 @@ def send_due_reminders() -> int:
                 # Respect player's email notification preference (default True if not set)
                 if not get_preference(player.id, "email", db):
                     continue
-                magic = create_magic_link(player.user.id, f"/events/{event.id}") if player.user_id else None
+                magic = create_magic_link(player.user.id, f"/events/{event.id}", player.user.email) if player.user_id else None
                 ok = send_event_reminder(
                     player_email=player.email,
                     player_name=player.full_name,
