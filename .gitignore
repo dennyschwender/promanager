@@ -33,3 +33,7 @@ build/
 # Node
 node_modules/
 CLAUDE.original.md
+
+# Deployment
+backups/
+docker-compose.override.yml
