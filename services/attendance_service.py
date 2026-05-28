@@ -259,7 +259,7 @@ def get_matrix_attendance_stats(
     # Build player → {event_id: status}
     player_map: dict[int, dict] = {}
     for att in attendances:
-        if att.player is None:
+        if att.player is None or not att.player.is_active or att.player.archived_at is not None:
             continue
         if att.player_id not in player_map:
             player_map[att.player_id] = {"player": att.player, "statuses": {}}
