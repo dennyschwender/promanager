@@ -355,23 +355,6 @@
     });
   }
 
-  document.addEventListener('click', function (e) {
-    var toggle = e.target.closest('.action-dropdown-toggle');
-    if (toggle) {
-      e.stopPropagation();
-      var menu = toggle.nextElementSibling;
-      var isOpen = menu.classList.contains('open');
-      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
-      if (!isOpen) {
-        var rect = toggle.getBoundingClientRect();
-        menu.classList.add('open');
-        if (window.innerHeight - rect.bottom < 140) menu.classList.add('open-up');
-      }
-      return;
-    }
-    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open', 'open-up'); });
-  });
-
   // ── Position grouping toggle ──────────────────────────────────────
   var POS_ORDER = ['goalie', 'defender', 'center', 'forward', ''];
   var POS_LABELS = {

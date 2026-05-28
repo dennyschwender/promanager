@@ -590,38 +590,6 @@
     .catch(function (err) { showBanner('error', (err && err.message) || window.I18N.network_error, null); });
   }
 
-  // ── Action dropdowns ───────────────────────────────────────────────────────
-  function closeAllDropdowns() {
-    document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) {
-      m.classList.remove('open');
-      m.classList.remove('open-up');
-    });
-    document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) {
-      w.classList.remove('dropdown-open');
-    });
-  }
-  function initActionDropdowns() {
-    document.addEventListener('click', function (e) {
-      var toggle = e.target.closest('.action-dropdown-toggle');
-      if (toggle) {
-        e.stopPropagation();
-        var menu = toggle.nextElementSibling;
-        var isOpen = menu.classList.contains('open');
-        closeAllDropdowns();
-        if (!isOpen) {
-          var rect = toggle.getBoundingClientRect();
-          var spaceBelow = window.innerHeight - rect.bottom;
-          menu.classList.add('open');
-          if (spaceBelow < 120) menu.classList.add('open-up');
-          var wrapper = toggle.closest('.table-responsive');
-          if (wrapper) wrapper.classList.add('dropdown-open');
-        }
-        return;
-      }
-      closeAllDropdowns();
-    });
-  }
-
   // ── Column reordering ─────────────────────────────────────────────────────
   function loadColOrder() {
     try {
@@ -1020,7 +988,6 @@
     initAdvFilter();
     initEditMode();
     initBulkToolbar();
-    initActionDropdowns();
   });
 
 })();

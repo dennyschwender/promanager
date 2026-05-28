@@ -249,30 +249,6 @@
     });
   };
   applyFilters();
-
-  // Action dropdown
-  document.addEventListener('click', function (e) {
-    var toggle = e.target.closest('.action-dropdown-toggle');
-    if (toggle) {
-      e.stopPropagation();
-      var menu = toggle.nextElementSibling;
-      var isOpen = menu.classList.contains('open');
-      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
-      document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
-      if (!isOpen) {
-        var rect = toggle.getBoundingClientRect();
-        menu.classList.add('open');
-        if (window.innerHeight - rect.bottom < 120) menu.classList.add('open-up');
-        var wrapper = toggle.closest('.table-responsive');
-        if (wrapper) wrapper.classList.add('dropdown-open');
-      }
-      return;
-    }
-    if (!e.target.closest('#columns-btn') && !e.target.closest('#columns-popover')) {
-      document.querySelectorAll('.action-dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); m.classList.remove('open-up'); });
-      document.querySelectorAll('.table-responsive.dropdown-open').forEach(function (w) { w.classList.remove('dropdown-open'); });
-    }
-  });
 })();
 </script>
 {% endblock %}
