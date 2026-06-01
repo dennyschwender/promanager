@@ -24,6 +24,7 @@
 
 {# ── Filters ── #}
 <form method="get" action="/reports/matrix/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
+  <input type="hidden" name="_applied" value="1">
   {% if teams %}
   <label>{{ t('reports.filter_team') }}
     <select name="team_id" multiple>

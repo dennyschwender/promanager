@@ -201,6 +201,7 @@ async def report_matrix(
     event_type: list[str] = Query(default=[]),
     date_from: str | None = Query(default=None),
     date_to: str | None = Query(default=None),
+    _applied: str | None = Query(default=None),
     user: User = Depends(require_login),
     db: Session = Depends(get_db),
 ):
@@ -211,6 +212,9 @@ async def report_matrix(
         return RedirectResponse("/seasons", status_code=302)
 
     team_id_ints = [int(t) for t in team_id if t]
+    # First load (no _applied sentinel) → default to training only
+    if _applied is None and not event_type:
+        event_type = ["training"]
     event_type_vals = [e for e in event_type if e in _EVENT_TYPES]
 
     def _parse_date(s: str | None) -> _date | None:
