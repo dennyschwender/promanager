@@ -237,33 +237,18 @@ def get_event_attendance_stats(
 def get_matrix_attendance_stats(
     db: Session,
     season_id: int,
-    team_id: int | None = None,
-    event_type: str | None = None,
+    team_ids: list[int] | None = None,
+    event_types: list[str] | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
     allowed_team_ids: set[int] | None = None,
 ) -> dict:
-    """Matrix report: players × events.
-
-    Returns:
-        {
-            "events": [Event, ...],           # sorted by date asc
-            "rows": [
-                {
-                    "player": Player,
-                    "statuses": {event_id: status_str, ...},  # missing = no record
-                    "present_count": int,
-                    "total": int,
-                },
-                ...
-            ],
-        }
-    """
+    """Matrix report: players × events."""
     q = db.query(Event).filter(Event.season_id == season_id)
-    if team_id is not None:
-        q = q.filter(Event.team_id == team_id)
-    if event_type:
-        q = q.filter(Event.event_type == event_type)
+    if team_ids:
+        q = q.filter(Event.team_id.in_(team_ids))
+    if event_types:
+        q = q.filter(Event.event_type.in_(event_types))
     if date_from:
         q = q.filter(Event.event_date >= date_from)
     if date_to:

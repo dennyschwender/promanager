@@ -26,20 +26,18 @@
 <form method="get" action="/reports/matrix/{{ season.id }}" class="filter-row" style="margin-bottom:1rem;">
   {% if teams %}
   <label>{{ t('reports.filter_team') }}
-    <select name="team_id" onchange="this.form.submit()">
-      <option value="">{{ t('reports.all_teams') }}</option>
+    <select name="team_id" multiple>
       {% for team in teams %}
-        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+        <option value="{{ team.id }}" {% if team.id in selected_team_ids %}selected{% endif %}>{{ team.name }}</option>
       {% endfor %}
     </select>
   </label>
   {% endif %}
   <label>{{ t('reports.filter_event_type') }}
-    <select name="event_type" onchange="this.form.submit()">
-      <option value="">{{ t('reports.all_types') }}</option>
-      <option value="training" {% if selected_event_type == 'training' %}selected{% endif %}>{{ t('enums.event_type_training') }}</option>
-      <option value="match" {% if selected_event_type == 'match' %}selected{% endif %}>{{ t('enums.event_type_match') }}</option>
-      <option value="other" {% if selected_event_type == 'other' %}selected{% endif %}>{{ t('enums.event_type_other') }}</option>
+    <select name="event_type" multiple>
+      <option value="training" {% if 'training' in selected_event_types %}selected{% endif %}>{{ t('enums.event_type_training') }}</option>
+      <option value="match" {% if 'match' in selected_event_types %}selected{% endif %}>{{ t('enums.event_type_match') }}</option>
+      <option value="other" {% if 'other' in selected_event_types %}selected{% endif %}>{{ t('enums.event_type_other') }}</option>
     </select>
   </label>
   <label>{{ t('reports.date_from') }}

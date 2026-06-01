@@ -57,9 +57,9 @@ async def reports_index(
             if managed:
                 first_team_id = next(iter(sorted(managed)))
                 return RedirectResponse(
-                    f"/reports/season/{season.id}?team_id={first_team_id}&hide_future=1", status_code=302
+                    f"/reports/matrix/{season.id}?team_id={first_team_id}", status_code=302
                 )
-        return RedirectResponse(f"/reports/season/{season.id}?hide_future=1", status_code=302)
+        return RedirectResponse(f"/reports/matrix/{season.id}", status_code=302)
     return RedirectResponse("/seasons", status_code=302)
 
 
@@ -197,8 +197,8 @@ async def report_event(
 async def report_matrix(
     season_id: int,
     request: Request,
-    team_id: str | None = Query(default=None),
-    event_type: str | None = Query(default=None),
+    team_id: list[str] = Query(default=[]),
+    event_type: list[str] = Query(default=[]),
     date_from: str | None = Query(default=None),
     date_to: str | None = Query(default=None),
     user: User = Depends(require_login),
@@ -210,8 +210,8 @@ async def report_matrix(
     if season is None:
         return RedirectResponse("/seasons", status_code=302)
 
-    team_id_int = int(team_id) if team_id else None
-    event_type_val = event_type if event_type in _EVENT_TYPES else None
+    team_id_ints = [int(t) for t in team_id if t]
+    event_type_vals = [e for e in event_type if e in _EVENT_TYPES]
 
     def _parse_date(s: str | None) -> _date | None:
         if not s:
@@ -235,14 +235,13 @@ async def report_matrix(
         from routes._auth_helpers import get_coach_teams  # noqa: PLC0415
 
         allowed_team_ids = get_coach_teams(user, db, season_id=season_id)
-        if team_id_int and team_id_int not in allowed_team_ids:
-            team_id_int = None
+        team_id_ints = [t for t in team_id_ints if t in allowed_team_ids]
 
     matrix = get_matrix_attendance_stats(
         db,
         season_id,
-        team_id=team_id_int,
-        event_type=event_type_val,
+        team_ids=team_id_ints or None,
+        event_types=event_type_vals or None,
         date_from=date_from_val,
         date_to=date_to_val,
         allowed_team_ids=allowed_team_ids,
@@ -257,8 +256,8 @@ async def report_matrix(
             "all_seasons": all_seasons,
             "teams": teams,
             "matrix": matrix,
-            "selected_team_id": team_id_int,
-            "selected_event_type": event_type_val or "",
+            "selected_team_ids": set(team_id_ints),
+            "selected_event_types": set(event_type_vals),
             "date_from": date_from or "",
             "date_to": date_to or "",
         },
