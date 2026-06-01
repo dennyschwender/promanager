@@ -46,13 +46,13 @@ def _restore_app_config(monkeypatch):
 def test_create_magic_link_returns_none_for_localhost(monkeypatch):
     """When APP_URL is the default localhost value, return None."""
     svc = _reload_settings(monkeypatch, "http://localhost:7000")
-    assert svc.create_magic_link(1, "/dashboard") is None
+    assert svc.create_magic_link(1, "/dashboard", "a@b.com") is None
 
 
 def test_create_magic_link_returns_url(monkeypatch):
     """When APP_URL is a real URL, return a full /auth/magic URL."""
     svc = _reload_settings(monkeypatch, "https://example.com")
-    url = svc.create_magic_link(42, "/events/7")
+    url = svc.create_magic_link(42, "/events/7", "user@example.com")
     assert url is not None
     assert url.startswith("https://example.com/auth/magic?token=")
 
@@ -60,12 +60,13 @@ def test_create_magic_link_returns_url(monkeypatch):
 def test_verify_magic_link_round_trip(monkeypatch):
     """create then verify returns original user_id and path."""
     svc = _reload_settings(monkeypatch, "https://example.com")
-    url = svc.create_magic_link(5, "/events/3")
+    url = svc.create_magic_link(5, "/events/3", "test@example.com")
     assert url is not None
     token = url.split("token=", 1)[1]
-    user_id, path = svc.verify_magic_link(token)
+    user_id, path, email = svc.verify_magic_link(token)
     assert user_id == 5
     assert path == "/events/3"
+    assert email == "test@example.com"
 
 
 def test_verify_magic_link_invalid_raises():
