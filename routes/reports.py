@@ -221,6 +221,9 @@ async def report_matrix(
         except ValueError:
             return None
 
+    if date_to is None:
+        date_to = _date.today().isoformat()
+
     date_from_val = _parse_date(date_from)
     date_to_val = _parse_date(date_to)
 
