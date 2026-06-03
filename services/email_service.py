@@ -76,11 +76,10 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = "") -> bo
 
     if _is_dev_mode():
         logger.debug(
-            "Email (dev no-op) to=%r bcc=%r subject=%r body_text=%r",
+            "Email (dev no-op) to=%r bcc=%r subject=%r",
             to,
             bcc or None,
             subject,
-            body_text or body_html[:120],
         )
         return True
 

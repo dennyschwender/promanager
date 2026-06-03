@@ -114,3 +114,21 @@ def rt(request: Request, key: str, **kwargs) -> str:
     """Translate a key using the current request locale."""
     locale = getattr(request.state, "locale", DEFAULT_LOCALE)
     return _i18n_t(key, locale, **kwargs)
+
+
+def safe_redirect(url: str, fallback: str = "/dashboard") -> str:
+    """Return url only if it is a safe relative path, otherwise return fallback.
+
+    Blocks open-redirect vectors: absolute URLs, protocol-relative (//),
+    and backslash variants that some browsers treat as //.
+    """
+    if (
+        url
+        and url.startswith("/")
+        and not url.startswith("//")
+        and not url.startswith("/\\")
+        and "://" not in url
+        and "\\" not in url
+    ):
+        return url
+    return fallback

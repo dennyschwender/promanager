@@ -18,7 +18,7 @@ from models.player_team import PlayerTeam
 from models.season import Season
 from models.team import Team
 from models.user import User
-from routes._auth_helpers import NotAuthorized, require_admin, rt
+from routes._auth_helpers import NotAuthorized, require_admin, rt, safe_redirect
 from services.audit_service import log_action
 from services.auth_service import create_magic_link, create_session_cookie, hash_password
 from services.email_service import send_reset_email, send_welcome_email
@@ -595,7 +595,8 @@ async def reset_password(
     log_action(
         "user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    redirect_to = (next + "?reset=1") if next.startswith("/players/") else "/auth/users?reset=1"
+    safe_next = safe_redirect(next, fallback="")
+    redirect_to = (safe_next + "?reset=1") if safe_next.startswith("/players/") else "/auth/users?reset=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 
@@ -627,7 +628,8 @@ async def send_welcome(
     log_action(
         "user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    redirect_to = (next + "?welcome=1") if next.startswith("/players/") else "/auth/users?welcome=1"
+    safe_next = safe_redirect(next, fallback="")
+    redirect_to = (safe_next + "?welcome=1") if safe_next.startswith("/players/") else "/auth/users?welcome=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 
