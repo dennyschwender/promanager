@@ -56,9 +56,7 @@ async def reports_index(
             managed = get_coach_teams(_user, db)
             if managed:
                 first_team_id = next(iter(sorted(managed)))
-                return RedirectResponse(
-                    f"/reports/matrix/{season.id}?team_id={first_team_id}", status_code=302
-                )
+                return RedirectResponse(f"/reports/matrix/{season.id}?team_id={first_team_id}", status_code=302)
         return RedirectResponse(f"/reports/matrix/{season.id}", status_code=302)
     return RedirectResponse("/seasons", status_code=302)
 

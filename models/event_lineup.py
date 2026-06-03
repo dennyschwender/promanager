@@ -1,4 +1,5 @@
 """models/event_lineup.py — Per-event group lineup (coach tool)."""
+
 from __future__ import annotations
 
 import json

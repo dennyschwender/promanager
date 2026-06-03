@@ -239,6 +239,7 @@ async def update_preferences(
     else:
         # Unlinked admin/coach: save user-keyed preferences
         from services.notification_service import create_default_user_preferences  # noqa: PLC0415
+
         create_default_user_preferences(user.id, db)
         for channel in CHANNELS:
             enabled = form.get(channel) == "on"
@@ -259,9 +260,7 @@ async def update_preferences(
 # ── Web Push subscribe / unsubscribe ──────────────────────────────────────────
 
 _PRIVATE_IP_RE = re.compile(
-    r"^(localhost|.*\.local)"
-    r"|^(10|127|169\.254|192\.168)\."
-    r"|^172\.(1[6-9]|2[0-9]|3[0-1])\."
+    r"^(localhost|.*\.local)" r"|^(10|127|169\.254|192\.168)\." r"|^172\.(1[6-9]|2[0-9]|3[0-1])\."
 )
 
 

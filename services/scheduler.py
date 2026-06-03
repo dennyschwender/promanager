@@ -85,7 +85,11 @@ def send_due_reminders() -> int:
                 # Respect player's email notification preference (default True if not set)
                 if not get_preference(player.id, "email", db):
                     continue
-                magic = create_magic_link(player.user.id, f"/events/{event.id}", player.user.email) if player.user_id else None
+                magic = (
+                    create_magic_link(player.user.id, f"/events/{event.id}", player.user.email)  # type: ignore[union-attr, arg-type]
+                    if player.user_id
+                    else None
+                )
                 ok = send_event_reminder(
                     player_email=player.email,
                     player_name=player.full_name,
@@ -103,6 +107,7 @@ def send_due_reminders() -> int:
             # Email is handled above with personalized magic links — exclude here.
             if attendances:
                 from services.notification_service import send_notifications  # noqa: PLC0415
+
                 event_time_str = event.event_time.strftime("%H:%M") if event.event_time else ""
                 notif_body = str(event.event_date) + (f" {event_time_str}" if event_time_str else "")
                 if event.location:

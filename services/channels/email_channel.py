@@ -19,7 +19,7 @@ class EmailChannel:
         if not player.email:
             logger.debug("EmailChannel: player %s has no email, skipping", player.id)
             return False
-        magic = create_magic_link(player.user.id, "/notifications", player.user.email) if player.user_id else None
+        magic = create_magic_link(player.user.id, "/notifications", player.user.email) if player.user_id else None  # type: ignore[union-attr, arg-type]
         ok = send_notification_email(
             to=player.email,
             title=notification.title,

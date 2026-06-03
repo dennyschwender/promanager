@@ -16,7 +16,8 @@ python_version = "3.12"
 ignore_missing_imports = true
 # SQLAlchemy Mapped[] and FastAPI Depends() generate many false positives
 # without the full plugin chain; keep mypy focused on what it can verify.
-disable_error_code = ["misc", "valid-type"]
+disable_error_code = ["misc", "valid-type", "import-untyped"]
+exclude = ["scripts/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

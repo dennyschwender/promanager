@@ -17,6 +17,7 @@ def _utcnow() -> datetime:
 
 if TYPE_CHECKING:
     from models.notification import Notification
+    from models.notification_preference import NotificationPreference
     from models.player import Player
     from models.telegram_notification import TelegramNotification
     from models.user_team import UserTeam
@@ -78,7 +79,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )  # noqa: F821
     notifications: Mapped[list["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
-    notification_preferences: Mapped[list["NotificationPreference"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
+    notification_preferences: Mapped[list["NotificationPreference"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )  # noqa: F821
     web_push_subscriptions: Mapped[list["WebPushSubscription"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )  # noqa: F821
