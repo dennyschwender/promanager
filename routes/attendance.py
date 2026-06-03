@@ -207,7 +207,7 @@ async def update_attendance(
     if status not in valid_statuses:
         if wants_json:
             return JSONResponse({"ok": False, "error": "invalid_status"}, status_code=400)
-        return RedirectResponse(f"/events/{event_id}", status_code=302)
+        return RedirectResponse("/events/" + str(int(event_id)), status_code=302)
 
     # Authorization check
     if user.is_admin:
@@ -217,13 +217,13 @@ async def update_attendance(
         if event is None:
             if wants_json:
                 return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
-            return RedirectResponse(f"/events/{event_id}", status_code=302)
+            return RedirectResponse("/events/" + str(int(event_id)), status_code=302)
         from routes._auth_helpers import check_team_access  # noqa: PLC0415
 
         if event.team_id is None:
             if wants_json:
                 return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
-            return RedirectResponse(f"/events/{event_id}", status_code=302)
+            return RedirectResponse("/events/" + str(int(event_id)), status_code=302)
         check_team_access(user, event.team_id, db, season_id=event.season_id)
     else:
         player = db.get(Player, player_id)

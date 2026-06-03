@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import secrets
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -595,8 +596,8 @@ async def reset_password(
     log_action(
         "user.reset_password", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    safe_next = safe_redirect(next, fallback="")
-    redirect_to = (safe_next + "?reset=1") if safe_next.startswith("/players/") else "/auth/users?reset=1"
+    m = re.match(r"^/players/(\d+)", safe_redirect(next, fallback=""))
+    redirect_to = f"/players/{int(m.group(1))}?reset=1" if m else "/auth/users?reset=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 
@@ -628,8 +629,8 @@ async def send_welcome(
     log_action(
         "user.send_welcome", target_type="user", target_id=target.id, target_label=target.username, request=request
     )
-    safe_next = safe_redirect(next, fallback="")
-    redirect_to = (safe_next + "?welcome=1") if safe_next.startswith("/players/") else "/auth/users?welcome=1"
+    m = re.match(r"^/players/(\d+)", safe_redirect(next, fallback=""))
+    redirect_to = f"/players/{int(m.group(1))}?welcome=1" if m else "/auth/users?welcome=1"
     return RedirectResponse(redirect_to, status_code=302)
 
 
