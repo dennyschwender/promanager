@@ -275,6 +275,30 @@ def test_cannot_delete_other_player_absence(member_client: TestClient, member_us
     assert response.status_code == 403
 
 
+def test_create_absence_without_reason_fails(member_client: TestClient, member_user, db):
+    """Creating an absence without a reason should return 400."""
+    from datetime import timedelta
+
+    player = Player(first_name="Member", last_name="Player", is_active=True, user_id=member_user.id)
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=5)
+
+    response = member_client.post(
+        f"/api/players/{player.id}/absences",
+        json={
+            "absence_type": "period",
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
+        },
+    )
+    assert response.status_code == 400
+    assert "reason" in response.json()["detail"].lower()
+
+
 def test_unauthenticated_cannot_access_absences(client: TestClient, db):
     """Unauthenticated users should be redirected."""
     player = Player(first_name="Any", last_name="Player", is_active=True)
