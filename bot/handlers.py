@@ -1060,7 +1060,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     await _send_homepage(update.message, matched_user, db)
             else:
                 msg = t(
-                    "telegram.auth_conflict_chat" if result == AuthResult.CONFLICT_CHAT else "telegram.auth_conflict_user",
+                    "telegram.auth_conflict_chat"
+                    if result == AuthResult.CONFLICT_CHAT
+                    else "telegram.auth_conflict_user",
                     locale,
                 )
                 logger.warning(
@@ -1192,19 +1194,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                         push_chat_message_sse,
                     )
 
-                    msg = _EventMessage(
+                    chat_msg = _EventMessage(
                         event_id=pending_chat["event_id"],
                         user_id=user.id,
                         lane="discussion",
                         body=body_text,
                     )
-                    db.add(msg)
+                    db.add(chat_msg)
                     db.commit()
-                    db.refresh(msg)
+                    db.refresh(chat_msg)
                     author_name = author_display_name(user)
-                    msg_dict = message_to_dict(msg, author_name)
+                    msg_dict = message_to_dict(chat_msg, author_name)
                     push_chat_message_sse(pending_chat["event_id"], msg_dict, db)
                     from services.chat_service import notify_members_of_chat  # noqa: PLC0415
+
                     await notify_members_of_chat(pending_chat["event_id"], author_name, body_text, user.id)
         import asyncio as _asyncio  # noqa: PLC0415
 

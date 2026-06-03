@@ -200,12 +200,7 @@ def get_event_attendance_stats(
 
     event_ids = [e.id for e in events]
     event_date_map = {e.id: e.event_date for e in events}
-    attendances = (
-        db.query(Attendance)
-        .options(_jl(Attendance.player))
-        .filter(Attendance.event_id.in_(event_ids))
-        .all()
-    )
+    attendances = db.query(Attendance).options(_jl(Attendance.player)).filter(Attendance.event_id.in_(event_ids)).all()
 
     counts: dict[int, dict] = {e.id: {"present": 0, "absent": 0, "maybe": 0, "unknown": 0} for e in events}
     for att in attendances:

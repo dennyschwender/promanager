@@ -281,9 +281,7 @@ def create_app() -> FastAPI:
             # Unlinked admin/coach: load user-keyed preferences
             prefs = db.query(NotificationPreference).filter(NotificationPreference.user_id == user.id).all()
             player_prefs = {p.channel: p.enabled for p in prefs}
-            push_device_count = (
-                db.query(WebPushSubscription).filter(WebPushSubscription.user_id == user.id).count()
-            )
+            push_device_count = db.query(WebPushSubscription).filter(WebPushSubscription.user_id == user.id).count()
         calendar_feed_url = (
             f"{settings.APP_URL}/calendar/{user.calendar_token}/feed.ics" if user.calendar_token else None
         )
@@ -409,7 +407,6 @@ def create_app() -> FastAPI:
     # ── PWA: dynamic manifest (uses APP_NAME from settings) ───────────────
     @app.get("/manifest.json", include_in_schema=False)
     async def web_manifest():
-
         return JSONResponse(
             {
                 "name": settings.APP_NAME,
