@@ -1,6 +1,6 @@
 # services/calendar_service.py
-import secrets
 from datetime import datetime, timedelta, timezone
+import secrets
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
