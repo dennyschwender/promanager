@@ -20,7 +20,11 @@ from models.notification import Notification
 from models.notification_preference import CHANNELS, NotificationPreference
 from models.player import Player
 from models.web_push_subscription import WebPushSubscription
-from routes._auth_helpers import require_login
+import ipaddress
+import re
+from urllib.parse import urlparse
+
+from routes._auth_helpers import require_login, safe_redirect
 from services.channels.inapp_channel import (
     register_connection,
     register_user_connection,
@@ -185,7 +189,8 @@ async def mark_read(
         raise HTTPException(status_code=404)
     notif.is_read = True
     db.commit()
-    redirect_url = str(request.headers.get("referer", "/notifications"))
+    referer = str(request.headers.get("referer", ""))
+    redirect_url = safe_redirect(referer, fallback="/notifications")
     return RedirectResponse(redirect_url, status_code=302)
 
 
@@ -254,6 +259,34 @@ async def update_preferences(
 
 # ── Web Push subscribe / unsubscribe ──────────────────────────────────────────
 
+_PRIVATE_IP_RE = re.compile(
+    r"^(localhost|.*\.local)"
+    r"|^(10|127|169\.254|192\.168)\."
+    r"|^172\.(1[6-9]|2[0-9]|3[0-1])\."
+)
+
+
+def _validate_webpush_endpoint(endpoint: str) -> None:
+    """Raise HTTPException(400) if endpoint is not a safe HTTPS push-service URL."""
+    try:
+        parsed = urlparse(endpoint)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid push endpoint")
+    if parsed.scheme != "https":
+        raise HTTPException(status_code=400, detail="Push endpoint must use HTTPS")
+    host = parsed.hostname or ""
+    if not host:
+        raise HTTPException(status_code=400, detail="Invalid push endpoint")
+    # Block private/loopback IP addresses and hostnames
+    try:
+        addr = ipaddress.ip_address(host)
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
+            raise HTTPException(status_code=400, detail="Push endpoint must be a public URL")
+    except ValueError:
+        pass  # host is a domain name, not an IP — check against known private patterns
+    if _PRIVATE_IP_RE.match(host):
+        raise HTTPException(status_code=400, detail="Push endpoint must be a public URL")
+
 
 def _save_subscription(
     db: Session, *, player_id: int | None, user_id: int | None, endpoint: str, p256dh: str, auth: str
@@ -285,6 +318,7 @@ async def webpush_subscribe(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
+    _validate_webpush_endpoint(endpoint)
     player_ids = _player_ids_for_user(user, db)
     if player_ids:
         for player_id in player_ids:
@@ -323,6 +357,7 @@ async def webpush_resubscribe(
     db: Session = Depends(get_db),
 ):
     """CSRF-exempt endpoint for service worker pushsubscriptionchange renewal."""
+    _validate_webpush_endpoint(endpoint)
     player_ids = _player_ids_for_user(user, db)
     if player_ids:
         for player_id in player_ids:

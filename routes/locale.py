@@ -8,15 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.i18n import SUPPORTED_LOCALES
+from routes._auth_helpers import safe_redirect
 
 router = APIRouter(tags=["locale"])
 
 
 def _safe_next(next_url: str) -> str:
-    """Return next_url only if it is a safe relative path."""
-    if next_url and next_url.startswith("/") and not next_url.startswith("//") and "://" not in next_url:
-        return next_url
-    return "/dashboard"
+    return safe_redirect(next_url, fallback="/dashboard")
 
 
 @router.post("/set-locale")
