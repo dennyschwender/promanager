@@ -6,10 +6,10 @@ import os
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
-from fastapi import Depends, FastAPI
-from fastapi.testclient import TestClient
+from fastapi import Depends, FastAPI  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
-from app.csrf import generate_csrf_token, require_csrf_header
+from app.csrf import generate_csrf_token, require_csrf_header  # noqa: E402
 
 app_test = FastAPI()
 

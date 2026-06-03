@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
+import re
 from typing import AsyncGenerator
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
@@ -20,10 +23,6 @@ from models.notification import Notification
 from models.notification_preference import CHANNELS, NotificationPreference
 from models.player import Player
 from models.web_push_subscription import WebPushSubscription
-import ipaddress
-import re
-from urllib.parse import urlparse
-
 from routes._auth_helpers import require_login, safe_redirect
 from services.channels.inapp_channel import (
     register_connection,
