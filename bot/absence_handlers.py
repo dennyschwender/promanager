@@ -243,7 +243,11 @@ async def handle_absence_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             return True
 
         elif step == "reason":
-            reason = None if text.lower() == "/skip" or not text else text
+            if not text:
+                new_prompt = await update.message.reply_text(t("telegram.absence_reason_error", locale))  # type: ignore[union-attr]
+                pending["prompt_message_id"] = new_prompt.message_id
+                return True
+            reason = text
             player_id = pending["player_id"]
             back_page = pending["back_page"]
             start_date = date.fromisoformat(pending["start_date"])

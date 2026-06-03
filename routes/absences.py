@@ -149,6 +149,11 @@ async def create_player_absence(
         if rrule_until < date.today():  # type: ignore[operator]
             raise HTTPException(status_code=400, detail="rrule_until must be in the future")
 
+    # Validate reason is provided
+    reason = (body.get("reason") or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="Reason is required")
+
     # Create absence
     absence = PlayerAbsence(
         player_id=player_id,
@@ -158,7 +163,7 @@ async def create_player_absence(
         rrule=rrule,
         rrule_until=rrule_until,
         season_id=body.get("season_id") if absence_type == "recurring" else None,
-        reason=body.get("reason"),
+        reason=reason,
     )
     db.add(absence)
     db.commit()
