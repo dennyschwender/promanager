@@ -1,6 +1,6 @@
 # Event End Date Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add optional `event_end_date` field to Event so multi-day events display as `01–03 May 2026`.
 
@@ -30,7 +30,7 @@
 - Modify: `models/event.py` (after line 26, after `event_date`)
 - Create: `alembic/versions/s7t8u9v0w1x2_add_event_end_date.py`
 
-- [ ] **Add field to model**
+- [x] **Add field to model**
 
 In `models/event.py`, add after the `event_date` line:
 
@@ -38,7 +38,7 @@ In `models/event.py`, add after the `event_date` line:
 event_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 ```
 
-- [ ] **Create Alembic migration**
+- [x] **Create Alembic migration**
 
 Create `alembic/versions/s7t8u9v0w1x2_add_event_end_date.py`:
 
@@ -61,7 +61,7 @@ def downgrade() -> None:
     op.drop_column("events", "event_end_date")
 ```
 
-- [ ] **Run migration**
+- [x] **Run migration**
 
 ```bash
 source .venv/bin/activate
@@ -70,7 +70,7 @@ alembic upgrade head
 
 Expected: `Running upgrade r6s7t8u9v0w1 -> s7t8u9v0w1x2, Add event_end_date column to events table`
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add models/event.py alembic/versions/s7t8u9v0w1x2_add_event_end_date.py
@@ -84,7 +84,7 @@ git commit -m "feat: add event_end_date column to events"
 **Files:**
 - Modify: `routes/events.py`
 
-- [ ] **Write failing test**
+- [x] **Write failing test**
 
 In `tests/test_events.py`, add:
 
@@ -113,7 +113,7 @@ def test_event_end_date_before_start_rejected(admin_client):
     assert resp.status_code == 200  # re-renders form with error
 ```
 
-- [ ] **Run test to verify it fails**
+- [x] **Run test to verify it fails**
 
 ```bash
 pytest tests/test_events.py::test_event_end_date_before_start_rejected -v
@@ -121,7 +121,7 @@ pytest tests/test_events.py::test_event_end_date_before_start_rejected -v
 
 Expected: FAIL (422 or redirect, not 200 form re-render)
 
-- [ ] **Add `event_end_date` Form param to create handler**
+- [x] **Add `event_end_date` Form param to create handler**
 
 In `routes/events.py`, find the `create_event` handler (around line 279). Add `event_end_date` to the Form params and pass through:
 
@@ -155,7 +155,7 @@ except ValueError:
 event_end_date=e_end_date,
 ```
 
-- [ ] **Add validation in create handler**
+- [x] **Add validation in create handler**
 
 In the `create_event` POST handler, after `e_date = _parse_date(event_date)`, add:
 
@@ -176,7 +176,7 @@ if e_end_date is not None and e_end_date < e_date:
     })
 ```
 
-- [ ] **Pass `event_end_date` when creating Event objects**
+- [x] **Pass `event_end_date` when creating Event objects**
 
 In the `common` dict (or wherever `Event(...)` is constructed in the create handler), add:
 
@@ -184,7 +184,7 @@ In the `common` dict (or wherever `Event(...)` is constructed in the create hand
 event_end_date=e_end_date,
 ```
 
-- [ ] **Repeat for edit handler** (`edit_event` POST, around line 731)
+- [x] **Repeat for edit handler** (`edit_event` POST, around line 731)
 
 Same pattern: add `event_end_date: str = Form("")`, parse, validate, assign to event object:
 
@@ -192,7 +192,7 @@ Same pattern: add `event_end_date: str = Form("")`, parse, validate, assign to e
 event.event_end_date = e_end_date
 ```
 
-- [ ] **Run test**
+- [x] **Run test**
 
 ```bash
 pytest tests/test_events.py::test_event_end_date_before_start_rejected -v
@@ -200,7 +200,7 @@ pytest tests/test_events.py::test_event_end_date_before_start_rejected -v
 
 Expected: PASS
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add routes/events.py
@@ -214,7 +214,7 @@ git commit -m "feat: parse and validate event_end_date in create/edit handlers"
 **Files:**
 - Modify: `templates/events/form.html`
 
-- [ ] **Add end date input after event_date in the date/time fieldset**
+- [x] **Add end date input after event_date in the date/time fieldset**
 
 Find the date fieldset in `templates/events/form.html` (around line 60). After the closing `</div>` of the `form-grid-2` block (which contains `event_date` and `event_time`), add:
 
@@ -226,7 +226,7 @@ Find the date fieldset in `templates/events/form.html` (around line 60). After t
 </label>
 ```
 
-- [ ] **Add client-side min constraint via JS**
+- [x] **Add client-side min constraint via JS**
 
 After the above label, add a small inline script so `end_date.min` updates when `event_date` changes:
 
@@ -243,7 +243,7 @@ After the above label, add a small inline script so `end_date.min` updates when 
 </script>
 ```
 
-- [ ] **Add i18n key**
+- [x] **Add i18n key**
 
 Add to `locales/en.yml` (and it, fr, de equivalents):
 
@@ -252,7 +252,7 @@ events_form:
   end_date: "End Date (optional)"
 ```
 
-- [ ] **Verify form renders without error**
+- [x] **Verify form renders without error**
 
 ```bash
 source .venv/bin/activate
@@ -261,7 +261,7 @@ pytest tests/test_events.py -v
 
 Expected: all pass
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add templates/events/form.html locales/
@@ -275,7 +275,7 @@ git commit -m "feat: add event_end_date field to event form"
 **Files:**
 - Modify: `routes/events.py`
 
-- [ ] **Write failing test**
+- [x] **Write failing test**
 
 In `tests/test_events.py`, add:
 
@@ -301,13 +301,13 @@ def test_multi_day_event_stays_upcoming_until_end(admin_client, db_session):
 
 > Note: this test checks the page renders but can't easily distinguish upcoming vs past section from HTML alone. The key assertion is that it doesn't crash and the event appears.
 
-- [ ] **Run test to verify it fails or passes trivially**
+- [x] **Run test to verify it fails or passes trivially**
 
 ```bash
 pytest tests/test_events.py::test_multi_day_event_stays_upcoming_until_end -v
 ```
 
-- [ ] **Update upcoming/past split in `events_list` route**
+- [x] **Update upcoming/past split in `events_list` route**
 
 In `routes/events.py`, find lines (around 164-165):
 
@@ -330,7 +330,7 @@ all_past = sorted(
 )
 ```
 
-- [ ] **Run tests**
+- [x] **Run tests**
 
 ```bash
 pytest tests/test_events.py -v
@@ -338,7 +338,7 @@ pytest tests/test_events.py -v
 
 Expected: all pass
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add routes/events.py
@@ -353,7 +353,7 @@ git commit -m "feat: use event_end_date for upcoming/past split"
 - Modify: `templates/events/list.html`
 - Modify: `templates/events/detail.html`
 
-- [ ] **Add date range macro to list template**
+- [x] **Add date range macro to list template**
 
 At the top of `{% block content %}` in `templates/events/list.html`, add a Jinja2 macro:
 
@@ -373,7 +373,7 @@ At the top of `{% block content %}` in `templates/events/list.html`, add a Jinja
 {% endmacro %}
 ```
 
-- [ ] **Use macro in list table row**
+- [x] **Use macro in list table row**
 
 Find the date cell in the `events_table` macro (around line 67):
 
@@ -387,7 +387,7 @@ Replace with:
 <td class="nowrap">{{ date_range(e) }}</td>
 ```
 
-- [ ] **Update detail template**
+- [x] **Update detail template**
 
 In `templates/events/detail.html`, find (around line 27):
 
@@ -413,7 +413,7 @@ Replace with:
 </dd>
 ```
 
-- [ ] **Run all tests**
+- [x] **Run all tests**
 
 ```bash
 pytest tests/test_events.py -v
@@ -421,7 +421,7 @@ pytest tests/test_events.py -v
 
 Expected: all pass
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add templates/events/list.html templates/events/detail.html
@@ -432,7 +432,7 @@ git commit -m "feat: display date range for multi-day events"
 
 ### Task 6: Run migration on Docker + deploy
 
-- [ ] **Run full test suite**
+- [x] **Run full test suite**
 
 ```bash
 source .venv/bin/activate
@@ -442,14 +442,14 @@ ruff check .
 
 Expected: all pass, no lint errors
 
-- [ ] **Push and deploy**
+- [x] **Push and deploy**
 
 ```bash
 git push
 cd ~/dockerimages && ./updateDocker.sh proManager
 ```
 
-- [ ] **Verify migration ran in container**
+- [x] **Verify migration ran in container**
 
 ```bash
 docker exec promanager-web-1 python3 -c "

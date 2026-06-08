@@ -1,6 +1,6 @@
 # Attendance Copy-to-Text Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a clipboard copy button to the event detail page that exports attendance as plain text (matching the Telegram format), and fix the Telegram coach/admin view to show position counts and integrate externals into their status sections.
 
@@ -33,7 +33,7 @@
 - Create: `services/event_text_service.py`
 - Create: `tests/test_event_text_service.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `tests/test_event_text_service.py`:
 
@@ -227,7 +227,7 @@ def test_format_attendance_text_external_in_status(db):
     assert "Externals" not in result  # no separate block
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 pytest tests/test_event_text_service.py -v
@@ -235,7 +235,7 @@ pytest tests/test_event_text_service.py -v
 
 Expected: `ImportError` or `ModuleNotFoundError` — `event_text_service` does not exist yet.
 
-- [ ] **Step 3: Implement `services/event_text_service.py`**
+- [x] **Step 3: Implement `services/event_text_service.py`**
 
 Create `services/event_text_service.py`:
 
@@ -454,7 +454,7 @@ def format_attendance_text(
     return "\n".join(lines)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 pytest tests/test_event_text_service.py -v
@@ -462,7 +462,7 @@ pytest tests/test_event_text_service.py -v
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/event_text_service.py tests/test_event_text_service.py
@@ -480,7 +480,7 @@ This task has two changes:
 1. Rename `_bot_position` → `_position` (lines 557–568)
 2. Replace the inline body-building block (lines 570–626) with a call to `format_attendance_body`
 
-- [ ] **Step 1: Rename `_bot_position` to `_position` in the player-loading section**
+- [x] **Step 1: Rename `_bot_position` to `_position` in the player-loading section**
 
 In `bot/handlers.py`, find these two lines (around 557–568):
 
@@ -516,7 +516,7 @@ Replace with:
                 p._position = None  # type: ignore[attr-defined]
 ```
 
-- [ ] **Step 2: Replace the inline body block with a service call**
+- [x] **Step 2: Replace the inline body block with a service call**
 
 Find the block starting at `# Group by status → position → name` (around line 570) through the line `text += "\n" + "\n".join(pos_lines)` (around line 626):
 
@@ -589,7 +589,7 @@ Replace with:
         )
 ```
 
-- [ ] **Step 3: Run the full test suite**
+- [x] **Step 3: Run the full test suite**
 
 ```bash
 pytest -v
@@ -597,7 +597,7 @@ pytest -v
 
 Expected: all existing tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add bot/handlers.py
@@ -612,7 +612,7 @@ git commit -m "fix(telegram): use shared formatter — adds position counts and 
 - Modify: `routes/events.py`
 - Modify: `tests/test_events.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add to `tests/test_events.py`:
 
@@ -711,7 +711,7 @@ def test_attendance_text_requires_login(client):
     assert resp.status_code == 302
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 pytest tests/test_events.py::test_attendance_text_returns_plain_text tests/test_events.py::test_attendance_text_flat tests/test_events.py::test_attendance_text_404 tests/test_events.py::test_attendance_text_requires_login -v
@@ -719,7 +719,7 @@ pytest tests/test_events.py::test_attendance_text_returns_plain_text tests/test_
 
 Expected: 404 response for the endpoint (route does not exist yet).
 
-- [ ] **Step 3: Add the endpoint to `routes/events.py`**
+- [x] **Step 3: Add the endpoint to `routes/events.py`**
 
 Add this import at the top of `routes/events.py` (with the other service imports):
 
@@ -752,7 +752,7 @@ async def event_attendance_text(
     return Response(content=text, media_type="text/plain; charset=utf-8")
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 pytest tests/test_events.py::test_attendance_text_returns_plain_text tests/test_events.py::test_attendance_text_flat tests/test_events.py::test_attendance_text_404 tests/test_events.py::test_attendance_text_requires_login -v
@@ -760,7 +760,7 @@ pytest tests/test_events.py::test_attendance_text_returns_plain_text tests/test_
 
 Expected: all four pass.
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 ```bash
 pytest -v
@@ -768,7 +768,7 @@ pytest -v
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add routes/events.py tests/test_events.py
@@ -786,7 +786,7 @@ git commit -m "feat: add GET /events/{id}/attendance-text endpoint"
 - Modify: `locales/de.json`
 - Modify: `templates/events/detail.html`
 
-- [ ] **Step 1: Add i18n keys to all four locale files**
+- [x] **Step 1: Add i18n keys to all four locale files**
 
 In `locales/en.json`, find the `"events_detail"` section. Add `"copy_attendance"` (keep alphabetical or append before the closing brace):
 
@@ -816,7 +816,7 @@ In `locales/de.json`, add:
 
 To find where to insert, look for `"group_by_pos"` in each locale's `events_detail` section — add the new key in the same object.
 
-- [ ] **Step 2: Add the copy button to `templates/events/detail.html`**
+- [x] **Step 2: Add the copy button to `templates/events/detail.html`**
 
 Find this block (around line 114–117):
 
@@ -839,7 +839,7 @@ Replace with:
 </div>
 ```
 
-- [ ] **Step 3: Add copy button JS to `templates/events/detail.html`**
+- [x] **Step 3: Add copy button JS to `templates/events/detail.html`**
 
 Find the closing `</script>` of the existing attendance script block (the one that contains `applyGrouping`). It ends around line 426 or after the `TOGGLE_BTN.addEventListener` block.
 
@@ -877,7 +877,7 @@ Just before the `</script>` tag of that block, insert:
 
 Note: `EVENT_ID` is already defined at the top of the script block (`var EVENT_ID = {{ event.id }};`).
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 ```bash
 pytest -v && ruff check .
@@ -885,7 +885,7 @@ pytest -v && ruff check .
 
 Expected: all tests pass, no ruff errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add locales/en.json locales/it.json locales/fr.json locales/de.json templates/events/detail.html

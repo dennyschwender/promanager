@@ -1,6 +1,6 @@
 # UI/UX Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Fix all 19 UI/UX issues found during full-site audit, ordered by severity (Critical → Major → Medium → Minor).
 
@@ -40,7 +40,7 @@ Root cause: PicoCSS sets `button { color: var(--color) }` which resolves to `#ff
 - Modify: `static/css/main.css:763`
 - Modify: `templates/players/list.html` (tab-btn inline styles)
 
-- [ ] **Step 1: Fix `#nav-toggle` color in main.css**
+- [x] **Step 1: Fix `#nav-toggle` color in main.css**
 
 In `static/css/main.css`, change line 763:
 ```css
@@ -65,7 +65,7 @@ The full `#nav-toggle` block (lines 756–766) becomes:
 }
 ```
 
-- [ ] **Step 2: Fix tab-btn color in players/list.html**
+- [x] **Step 2: Fix tab-btn color in players/list.html**
 
 In `templates/players/list.html`, find the tab button inline styles (around lines 26–36). Each button has `style="border:none;background:none;..."`. Add `color:inherit` to each button's inline style.
 
@@ -78,20 +78,20 @@ to:
 style="border:none;background:none;color:inherit;padding:.3rem .75rem;cursor:pointer;..."
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "player" 2>&1 | tail -20
 ```
 Expected: all player tests pass.
 
-- [ ] **Step 4: Verify in Chrome — light mode, both pages**
+- [x] **Step 4: Verify in Chrome — light mode, both pages**
 
 Open http://localhost:7000/players in light mode. Check:
 - Tab buttons (All / Active / Inactive / No User) are visible (dark text)
 - Hamburger ☰ button is visible on mobile viewport (≤768px)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add static/css/main.css templates/players/list.html
@@ -109,7 +109,7 @@ At ≤480px, `.lineup-groups-col` has `display:flex;flex-wrap:wrap` with groups 
 **Files:**
 - Modify: `templates/events/detail.html` (inline `<style>` in lineup panel section, around lines 792–860)
 
-- [ ] **Step 1: Read the lineup style block**
+- [x] **Step 1: Read the lineup style block**
 
 ```bash
 source .venv/bin/activate && python -c "
@@ -121,7 +121,7 @@ for i, l in enumerate(lines, 1):
 "
 ```
 
-- [ ] **Step 2: Update the media query for lineup**
+- [x] **Step 2: Update the media query for lineup**
 
 In `templates/events/detail.html`, find the `@media(max-width:480px)` block that contains lineup styles. Change it so groups stack vertically:
 
@@ -136,20 +136,20 @@ In `templates/events/detail.html`, find the `@media(max-width:480px)` block that
 
 The only additions vs current are `flex-direction:column` on `.lineup-groups-col` and `flex:1 1 100%;min-width:unset` on `.lineup-group`.
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "event" 2>&1 | tail -20
 ```
 Expected: all event tests pass.
 
-- [ ] **Step 4: Verify in Chrome at 375px width**
+- [x] **Step 4: Verify in Chrome at 375px width**
 
 Open any event detail page with a lineup. Resize browser to 375px wide. Check:
 - Lineup groups stack vertically (one per row, full width)
 - No horizontal scroll on the lineup panel
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/events/detail.html
@@ -165,11 +165,11 @@ Too many columns visible on small screens in `templates/players/list.html`. Phon
 **Files:**
 - Modify: `templates/players/list.html` (table thead `<th>` and tbody `<td>`)
 
-- [ ] **Step 1: Read the players table**
+- [x] **Step 1: Read the players table**
 
 Read `templates/players/list.html` and identify lines with `Phone`, `date_of_birth`, `is_active`, `has_user` column headers and their corresponding `<td>` cells.
 
-- [ ] **Step 2: Add `col-hide-mobile` class to secondary columns**
+- [x] **Step 2: Add `col-hide-mobile` class to secondary columns**
 
 For each secondary column, add `class="col-hide-mobile"` to both the `<th>` header and every `<td>` cell in that column.
 
@@ -191,20 +191,20 @@ And the corresponding `<td>`:
 
 Repeat for all four secondary columns.
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "player" 2>&1 | tail -20
 ```
 Expected: all player tests pass.
 
-- [ ] **Step 4: Verify in Chrome at 375px**
+- [x] **Step 4: Verify in Chrome at 375px**
 
 Open http://localhost:7000/players at 375px width. Check:
 - Only essential columns visible (Name, Team/Position, Actions)
 - No horizontal scroll on the members table
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/players/list.html
@@ -222,7 +222,7 @@ git commit -m "fix: hide secondary player columns on mobile"
 **Files:**
 - Modify: `templates/base.html` (inline `<style>` block, lines 22–28)
 
-- [ ] **Step 1: Update notif-bell to allow overflow**
+- [x] **Step 1: Update notif-bell to allow overflow**
 
 In `templates/base.html`, change the `.notif-bell` inline style from:
 ```css
@@ -244,20 +244,20 @@ to:
     position: absolute; top: -8px; right: -10px;
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -10
 ```
 Expected: all tests pass.
 
-- [ ] **Step 3: Verify in Chrome — both themes, both sizes**
+- [x] **Step 3: Verify in Chrome — both themes, both sizes**
 
 Navigate to any page with unread notifications. Check:
 - Badge number fully visible at desktop and mobile
 - Badge not clipped by nav bar edges in light and dark themes
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/base.html
@@ -273,7 +273,7 @@ Stat cards currently blend with the page background in light mode. Adding a left
 **Files:**
 - Modify: `static/css/main.css:173–180` (`.stat-card` block)
 
-- [ ] **Step 1: Add left accent border to stat-card**
+- [x] **Step 1: Add left accent border to stat-card**
 
 In `static/css/main.css`, change `.stat-card` from:
 ```css
@@ -299,20 +299,20 @@ to:
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Verify in Chrome — light mode dashboard**
+- [x] **Step 3: Verify in Chrome — light mode dashboard**
 
 Open http://localhost:7000/dashboard in light mode. Check:
 - Stat cards have a distinct blue left border
 - Cards visually separated from page background
 - Looks correct in dark mode too (border uses `--tp-primary` which adapts)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add static/css/main.css
@@ -328,7 +328,7 @@ git commit -m "fix: stat card visual contrast — add primary accent border"
 **Files:**
 - Modify: `static/css/main.css:205–208`
 
-- [ ] **Step 1: Update badge colors**
+- [x] **Step 1: Update badge colors**
 
 In `static/css/main.css`, change lines 205 and 208:
 ```css
@@ -343,19 +343,19 @@ In `static/css/main.css`, change lines 205 and 208:
 
 `#41464b` on `#e2e3e5` = contrast ratio ~5.9:1 (WCAG AA pass).
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Verify in Chrome — light mode event list**
+- [x] **Step 3: Verify in Chrome — light mode event list**
 
 Open http://localhost:7000/events in light mode. Check:
 - "Training" badges are clearly readable
 - "Unknown" attendance badges are clearly readable
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add static/css/main.css
@@ -372,7 +372,7 @@ Delete button is currently inline alongside non-destructive actions. It should b
 - Modify: `templates/seasons/list.html:26–42`
 - Modify: `templates/teams/list.html:24–43`
 
-- [ ] **Step 1: Update seasons/list.html**
+- [x] **Step 1: Update seasons/list.html**
 
 In `templates/seasons/list.html`, replace the `<div class="action-group">` block (lines 26–42) with an action-dropdown pattern:
 
@@ -401,7 +401,7 @@ In `templates/seasons/list.html`, replace the `<div class="action-group">` block
 </td>
 ```
 
-- [ ] **Step 2: Update teams/list.html**
+- [x] **Step 2: Update teams/list.html**
 
 In `templates/teams/list.html`, replace the `<div class="action-group">` block (lines 24–43) with:
 
@@ -432,7 +432,7 @@ In `templates/teams/list.html`, replace the `<div class="action-group">` block (
 </td>
 ```
 
-- [ ] **Step 3: Add dropdown-item-btn and dropdown-item-danger styles to main.css**
+- [x] **Step 3: Add dropdown-item-btn and dropdown-item-danger styles to main.css**
 
 Check if `.dropdown-item-btn` is already defined in `static/css/main.css`. If not, add after the existing `.action-dropdown-menu a` rules:
 
@@ -475,21 +475,21 @@ document.addEventListener('click', function (e) {
 });
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "season or team" 2>&1 | tail -20
 ```
 Expected: all season and team tests pass.
 
-- [ ] **Step 5: Verify in Chrome**
+- [x] **Step 5: Verify in Chrome**
 
 Open http://localhost:7000/seasons and http://localhost:7000/teams. Check:
 - Delete button no longer directly visible
 - Clicking ⋯ opens dropdown containing all actions including Delete (in red)
 - Delete still shows confirm dialog before submitting
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add templates/seasons/list.html templates/teams/list.html static/css/main.css
@@ -505,7 +505,7 @@ git commit -m "fix: move delete action into dropdown on seasons and teams pages"
 **Files:**
 - Modify: `templates/events/detail.html` (inline `<style>`, `.lineup-chip` rule)
 
-- [ ] **Step 1: Find and fix `.lineup-chip` style**
+- [x] **Step 1: Find and fix `.lineup-chip` style**
 
 In `templates/events/detail.html`, find the `.lineup-chip` CSS rule. Change:
 ```css
@@ -518,19 +518,19 @@ to:
 
 If the rule already uses `gap` for the remove button spacing, keep it. If not present, add `gap:.4rem` to ensure the name and any action button still have spacing.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "event" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Verify in Chrome**
+- [x] **Step 3: Verify in Chrome**
 
 Open an event detail page with lineup configured. Check:
 - Player names in chips are left-aligned
 - Remove button (×) still accessible at right side if it exists
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/events/detail.html
@@ -548,11 +548,11 @@ Footer only has Dashboard, All Events, Members, Seasons — missing Teams and Re
 **Files:**
 - Modify: `templates/base.html` (footer section, around lines 127–140)
 
-- [ ] **Step 1: Read the footer section**
+- [x] **Step 1: Read the footer section**
 
 Read `templates/base.html` lines 125–145 to see current footer links.
 
-- [ ] **Step 2: Add Teams and Reports links**
+- [x] **Step 2: Add Teams and Reports links**
 
 In the footer, add Teams and Reports links conditional on user role (same conditions as nav). After the existing Members/Seasons links, add:
 
@@ -565,19 +565,19 @@ In the footer, add Teams and Reports links conditional on user role (same condit
 {% endif %}
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Verify in Chrome**
+- [x] **Step 4: Verify in Chrome**
 
 Open any page as admin. Scroll to footer. Check:
 - Teams and Reports links present
 - Links work correctly
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/base.html
@@ -597,7 +597,7 @@ The `✓/n` column header in the events table is cryptic. Replace with a proper 
 - Modify: `locales/fr.json`
 - Modify: `locales/it.json`
 
-- [ ] **Step 1: Add translation key to locales**
+- [x] **Step 1: Add translation key to locales**
 
 In `locales/en.json`, find the `"events"` section and add:
 ```json
@@ -619,7 +619,7 @@ In `locales/it.json`, add to `"events"` section:
 "att_summary": "Pres."
 ```
 
-- [ ] **Step 2: Update the template**
+- [x] **Step 2: Update the template**
 
 In `templates/events/list.html`, change line 59:
 ```html
@@ -630,19 +630,19 @@ to:
 <th class="col-nowrap col-hide-mobile" title="{{ t('reports.attendance_rate') }}">{{ t('events.att_summary') }}</th>
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "event" 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Verify in Chrome**
+- [x] **Step 4: Verify in Chrome**
 
 Open http://localhost:7000/events. Check:
 - Column header shows "Att." (not ✓/n)
 - Hovering shows tooltip "Attendance Rate"
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/events/list.html locales/en.json locales/de.json locales/fr.json locales/it.json
@@ -658,7 +658,7 @@ git commit -m "fix: replace cryptic ✓/n column header with translated Att. lab
 **Files:**
 - Modify: `locales/en.json`
 
-- [ ] **Step 1: Fix the typo**
+- [x] **Step 1: Fix the typo**
 
 In `locales/en.json`, change both occurrences of `"All attendee"` to `"All attendees"`:
 - Line 664: `"pt_all": "All attendee"` → `"pt_all": "All attendees"`
@@ -666,17 +666,17 @@ In `locales/en.json`, change both occurrences of `"All attendee"` to `"All atten
 
 Note: line 601 says `"pt_all": "All"` which is in a different section and is correct — do not change it.
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Verify in Chrome**
+- [x] **Step 3: Verify in Chrome**
 
 Open event form (create or edit). Check presence type dropdown shows "All attendees" (not "All attendee").
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add locales/en.json
@@ -692,11 +692,11 @@ The `⋯` three-dots button has no accessible label or tooltip.
 **Files:**
 - Modify: `templates/events/detail.html` (around lines 72–74, the `⋯` button)
 
-- [ ] **Step 1: Find the ⋯ button**
+- [x] **Step 1: Find the ⋯ button**
 
 Read `templates/events/detail.html` around lines 70–80 to find the exact button markup.
 
-- [ ] **Step 2: Add aria-label and title**
+- [x] **Step 2: Add aria-label and title**
 
 Change the `⋯` button from:
 ```html
@@ -714,17 +714,17 @@ In `locales/de.json` → `"common"` section: `"more_actions": "Weitere Aktionen"
 In `locales/fr.json` → `"common"` section: `"more_actions": "Plus d'actions"`
 In `locales/it.json` → `"common"` section: `"more_actions": "Altre azioni"`
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "event" 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Verify in Chrome**
+- [x] **Step 4: Verify in Chrome**
 
 Open any event detail page. Hover over ⋯ button. Check tooltip appears with "More actions".
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/events/detail.html locales/en.json locales/de.json locales/fr.json locales/it.json
@@ -740,7 +740,7 @@ Season switcher buttons in reports use full-width layout on mobile, causing over
 **Files:**
 - Modify: `templates/reports/season.html:22–29`
 
-- [ ] **Step 1: Wrap season switcher in a scrollable container**
+- [x] **Step 1: Wrap season switcher in a scrollable container**
 
 In `templates/reports/season.html`, change the season switcher row (lines 22–29) from:
 ```html
@@ -763,19 +763,19 @@ to:
 </div>
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "report" 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Verify in Chrome at 375px**
+- [x] **Step 3: Verify in Chrome at 375px**
 
 Open http://localhost:7000/reports/season/1 at 375px width. Check:
 - Season buttons scrollable horizontally without causing page overflow
 - Active season button still highlighted
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add templates/reports/season.html
@@ -791,11 +791,11 @@ Profile page sections (`Notifications`, `Language`, `Password`, `Sessions`) lack
 **Files:**
 - Modify: `templates/auth/profile.html`
 
-- [ ] **Step 1: Read profile.html**
+- [x] **Step 1: Read profile.html**
 
 Read `templates/auth/profile.html` to find section structure.
 
-- [ ] **Step 2: Wrap each section in an article element**
+- [x] **Step 2: Wrap each section in an article element**
 
 For each `<section>` or `<div>` grouping a profile block, wrap it in `<article>` (PicoCSS styles `<article>` with background + border + padding automatically):
 
@@ -816,19 +816,19 @@ with:
 
 Apply to all major profile sections.
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 source .venv/bin/activate && pytest tests/ -v -k "profile or auth" 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Verify in Chrome — both themes**
+- [x] **Step 4: Verify in Chrome — both themes**
 
 Open http://localhost:7000/profile. Check:
 - Each section has a visually distinct card background/border
 - Looks clean in both light and dark modes
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add templates/auth/profile.html

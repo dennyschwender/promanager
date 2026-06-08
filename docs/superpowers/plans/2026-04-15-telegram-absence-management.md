@@ -1,6 +1,6 @@
 # Telegram Absence Management Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add period absence management (create / list / delete) to the Telegram bot, accessible from a new "⚙️ Other" menu on the events list, for players (own absences) and coaches/admins (any player on their team).
 
@@ -46,7 +46,7 @@
 - Modify: `locales/fr.json`
 - Modify: `locales/de.json`
 
-- [ ] **Step 1: Add keys to `locales/en.json`**
+- [x] **Step 1: Add keys to `locales/en.json`**
 
 Find the last key in the `"telegram"` section (`"chat_reply_posted": "..."`) and add the following lines before the closing `}` of the `"telegram"` object:
 
@@ -71,7 +71,7 @@ Find the last key in the `"telegram"` section (`"chat_reply_posted": "..."`) and
     "select_player": "Select a player:"
 ```
 
-- [ ] **Step 2: Add keys to `locales/it.json`**
+- [x] **Step 2: Add keys to `locales/it.json`**
 
 Find `"chat_reply_posted"` in the `"telegram"` section and add before the closing `}`:
 
@@ -96,7 +96,7 @@ Find `"chat_reply_posted"` in the `"telegram"` section and add before the closin
     "select_player": "Seleziona un giocatore:"
 ```
 
-- [ ] **Step 3: Add keys to `locales/fr.json`**
+- [x] **Step 3: Add keys to `locales/fr.json`**
 
 Find `"chat_reply_posted"` in the `"telegram"` section and add before the closing `}`:
 
@@ -121,7 +121,7 @@ Find `"chat_reply_posted"` in the `"telegram"` section and add before the closin
     "select_player": "Sélectionnez un joueur :"
 ```
 
-- [ ] **Step 4: Add keys to `locales/de.json`**
+- [x] **Step 4: Add keys to `locales/de.json`**
 
 Find `"chat_reply_posted"` in the `"telegram"` section and add before the closing `}`:
 
@@ -146,7 +146,7 @@ Find `"chat_reply_posted"` in the `"telegram"` section and add before the closin
     "select_player": "Spieler auswählen:"
 ```
 
-- [ ] **Step 5: Verify JSON is valid**
+- [x] **Step 5: Verify JSON is valid**
 
 ```bash
 python -c "import json; [json.load(open(f'locales/{l}.json')) for l in ['en','it','fr','de']]; print('OK')"
@@ -154,7 +154,7 @@ python -c "import json; [json.load(open(f'locales/{l}.json')) for l in ['en','it
 
 Expected: `OK`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add locales/en.json locales/it.json locales/fr.json locales/de.json
@@ -169,7 +169,7 @@ git commit -m "feat(i18n): add telegram absence management locale keys"
 - Create: `bot/absence_keyboards.py`
 - Create: `tests/test_absence_keyboards.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `tests/test_absence_keyboards.py`:
 
@@ -296,7 +296,7 @@ def test_delete_confirm_keyboard():
     assert "absl:7:0:2" in data       # cancel → back to list
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 pytest tests/test_absence_keyboards.py -v
@@ -304,7 +304,7 @@ pytest tests/test_absence_keyboards.py -v
 
 Expected: `ImportError` — `bot.absence_keyboards` does not exist yet.
 
-- [ ] **Step 3: Create `bot/absence_keyboards.py`**
+- [x] **Step 3: Create `bot/absence_keyboards.py`**
 
 ```python
 """bot/absence_keyboards.py — Inline keyboard builders for absence management."""
@@ -440,7 +440,7 @@ def absence_delete_confirm_keyboard(
     ]])
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 pytest tests/test_absence_keyboards.py -v
@@ -448,7 +448,7 @@ pytest tests/test_absence_keyboards.py -v
 
 Expected: all 9 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add bot/absence_keyboards.py tests/test_absence_keyboards.py
@@ -464,7 +464,7 @@ git commit -m "feat(bot): add absence keyboard builders"
 
 No unit tests for handler functions (they depend on live Telegram objects and are verified end-to-end). The DB interactions use the same `SessionLocal` pattern as `handlers.py`.
 
-- [ ] **Step 1: Create `bot/absence_handlers.py`**
+- [x] **Step 1: Create `bot/absence_handlers.py`**
 
 ```python
 """bot/absence_handlers.py — Telegram absence management handler functions.
@@ -786,7 +786,7 @@ async def delete_absence(query, user, db, absence_id: int, player_id: int, page:
     await show_absence_list(query, user, db, player_id, page, back_page, is_member)
 ```
 
-- [ ] **Step 2: Run the full test suite to confirm nothing is broken**
+- [x] **Step 2: Run the full test suite to confirm nothing is broken**
 
 ```bash
 pytest -v
@@ -794,7 +794,7 @@ pytest -v
 
 Expected: all existing tests pass (new file has no tests of its own, but shouldn't break anything).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add bot/absence_handlers.py
@@ -818,7 +818,7 @@ Four changes in `bot/handlers.py`:
 One change in `bot/keyboards.py`:
 5. Add "⚙️ Other" button row to `events_keyboard`
 
-- [ ] **Step 1: Add `awaiting_absence` to the cleanup block in `handle_callback`**
+- [x] **Step 1: Add `awaiting_absence` to the cleanup block in `handle_callback`**
 
 In `bot/handlers.py`, find this line (around line 243):
 
@@ -834,7 +834,7 @@ Replace with:
 
 Note: unlike `extsta:`, the absence flow has no mid-step callback that needs `awaiting_absence` preserved — any button tap should cancel the flow, so no skip flag is needed.
 
-- [ ] **Step 2: Add `awaiting_absence` cleanup to `handle_cancel`**
+- [x] **Step 2: Add `awaiting_absence` cleanup to `handle_cancel`**
 
 Find `handle_cancel` (around line 646). It currently pops several keys. Add `"awaiting_absence"` to the list:
 
@@ -857,7 +857,7 @@ async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text("OK.")
 ```
 
-- [ ] **Step 3: Add the absence callback dispatch blocks to `handle_callback`**
+- [x] **Step 3: Add the absence callback dispatch blocks to `handle_callback`**
 
 In `handle_callback`, find the last `elif` block (the `chatreply:` handler, ending around line 442). Add the following blocks immediately after it, before the closing of the function:
 
@@ -914,7 +914,7 @@ In `handle_callback`, find the last `elif` block (the `chatreply:` handler, endi
             await delete_absence(query, user, db, int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
 ```
 
-- [ ] **Step 4: Add `handle_absence_text` call to `handle_text`**
+- [x] **Step 4: Add `handle_absence_text` call to `handle_text`**
 
 In `handle_text` (around line 668), find the very first line of the function body:
 
@@ -939,7 +939,7 @@ Insert the absence check before it:
     pending_ext = context.user_data.get("awaiting_external")
 ```
 
-- [ ] **Step 5: Add "⚙️ Other" button to `events_keyboard` in `bot/keyboards.py`**
+- [x] **Step 5: Add "⚙️ Other" button to `events_keyboard` in `bot/keyboards.py`**
 
 Find the `events_keyboard` function. Its current last line before `return` is:
 
@@ -958,7 +958,7 @@ Replace with:
     return InlineKeyboardMarkup(rows)
 ```
 
-- [ ] **Step 6: Run the full test suite**
+- [x] **Step 6: Run the full test suite**
 
 ```bash
 pytest -v && ruff check .
@@ -966,7 +966,7 @@ pytest -v && ruff check .
 
 Expected: all tests pass, no ruff errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add bot/handlers.py bot/keyboards.py

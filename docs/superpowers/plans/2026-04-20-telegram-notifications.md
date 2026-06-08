@@ -1,6 +1,6 @@
 # Telegram Notifications Expansion — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Expand Telegram notifications to fire on new event (opt-in), event update (opt-in), attendance reminder, and attendance status change (coaches only).
 
@@ -33,7 +33,7 @@
 - Create: `services/channels/telegram_channel.py`
 - Create: `tests/test_telegram_channel.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/test_telegram_channel.py
@@ -141,14 +141,14 @@ def test_emoji_mapping(monkeypatch, tag, emoji):
     assert emoji in mock_post.call_args.kwargs["json"]["text"]
 ```
 
-- [ ] **Step 2: Run tests — verify they fail**
+- [x] **Step 2: Run tests — verify they fail**
 
 ```bash
 pytest tests/test_telegram_channel.py -v
 ```
 Expected: `ModuleNotFoundError: No module named 'services.channels.telegram_channel'`
 
-- [ ] **Step 3: Implement TelegramChannel**
+- [x] **Step 3: Implement TelegramChannel**
 
 ```python
 # services/channels/telegram_channel.py
@@ -212,14 +212,14 @@ class TelegramChannel:
             return False
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 pytest tests/test_telegram_channel.py -v
 ```
 Expected: all 13 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/channels/telegram_channel.py tests/test_telegram_channel.py
@@ -234,7 +234,7 @@ git commit -m "feat: add TelegramChannel for notification dispatch"
 - Modify: `models/notification_preference.py`
 - Modify: `services/notification_service.py`
 
-- [ ] **Step 1: Update CHANNELS in `models/notification_preference.py`**
+- [x] **Step 1: Update CHANNELS in `models/notification_preference.py`**
 
 Change line:
 ```python
@@ -245,7 +245,7 @@ To:
 CHANNELS = ("email", "inapp", "webpush", "telegram")
 ```
 
-- [ ] **Step 2: Add TelegramChannel to `services/notification_service.py`**
+- [x] **Step 2: Add TelegramChannel to `services/notification_service.py`**
 
 After the existing imports at the top of the file (around line 14–20), add:
 ```python
@@ -263,14 +263,14 @@ Inside `_dispatch()`, after the `webpush` block (around line 156), add:
                 _telegram_channel.send(player, notif)
 ```
 
-- [ ] **Step 3: Run existing tests to confirm nothing broke**
+- [x] **Step 3: Run existing tests to confirm nothing broke**
 
 ```bash
 pytest tests/ -v -x -q
 ```
 Expected: all existing tests PASS (TelegramChannel.send is a no-op when TELEGRAM_BOT_TOKEN not set)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add models/notification_preference.py services/notification_service.py
@@ -284,7 +284,7 @@ git commit -m "feat: wire TelegramChannel into notification_service dispatch"
 **Files:**
 - Create: `alembic/versions/q5r6s7t8u9v0_add_telegram_notification_pref.py`
 
-- [ ] **Step 1: Create migration file**
+- [x] **Step 1: Create migration file**
 
 ```python
 # alembic/versions/q5r6s7t8u9v0_add_telegram_notification_pref.py
@@ -320,14 +320,14 @@ def downgrade() -> None:
     op.execute("DELETE FROM notification_preferences WHERE channel = 'telegram'")
 ```
 
-- [ ] **Step 2: Run migration**
+- [x] **Step 2: Run migration**
 
 ```bash
 .venv/bin/alembic upgrade head
 ```
 Expected: `Running upgrade p4q5r6s7t8u9 -> q5r6s7t8u9v0`
 
-- [ ] **Step 3: Verify rows inserted**
+- [x] **Step 3: Verify rows inserted**
 
 ```bash
 python3 -c "
@@ -341,7 +341,7 @@ db.close()
 ```
 Expected: count > 0 (one per player)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add alembic/versions/q5r6s7t8u9v0_add_telegram_notification_pref.py
@@ -355,7 +355,7 @@ git commit -m "feat: migrate telegram notification preferences for all players"
 **Files:**
 - Modify: `routes/events.py` (event_new_post function, notify block ~line 380)
 
-- [ ] **Step 1: Update notify block in `event_new_post`**
+- [x] **Step 1: Update notify block in `event_new_post`**
 
 Find the notify block in `event_new_post` that reads:
 ```python
@@ -385,7 +385,7 @@ Change to:
 
 (Two changes: default channels list adds `"telegram"`, tag changes from `"announcement"` to `"event_new"`.)
 
-- [ ] **Step 2: Add telegram checkbox to event form template**
+- [x] **Step 2: Add telegram checkbox to event form template**
 
 In `templates/events/event_form.html`, find the `notify_channels` checkbox group (where email, inapp, webpush checkboxes are rendered). Add a Telegram checkbox alongside them:
 
@@ -398,14 +398,14 @@ In `templates/events/event_form.html`, find the `notify_channels` checkbox group
 
 Place it after the existing webpush checkbox, matching the existing checkbox style in the template.
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 pytest tests/ -v -x -q
 ```
 Expected: all tests PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add routes/events.py templates/events/event_form.html
@@ -420,7 +420,7 @@ git commit -m "feat: include telegram in event create notification channels"
 - Modify: `routes/events.py` (event_edit_post function)
 - Modify: `templates/events/event_form.html`
 
-- [ ] **Step 1: Add `BackgroundTasks` and `notify_on_update` param to `event_edit_post`**
+- [x] **Step 1: Add `BackgroundTasks` and `notify_on_update` param to `event_edit_post`**
 
 Current signature (around line 809):
 ```python
@@ -454,7 +454,7 @@ async def event_edit_post(
 
 Make sure `BackgroundTasks` is imported at the top of `routes/events.py` (it's likely already imported since `event_new_post` uses it — verify with `grep "BackgroundTasks" routes/events.py`).
 
-- [ ] **Step 2: Add notify block before the return in `event_edit_post`**
+- [x] **Step 2: Add notify block before the return in `event_edit_post`**
 
 Just before `return RedirectResponse(f"/events/{event_id}", status_code=302)` at the end of `event_edit_post`, add:
 
@@ -483,7 +483,7 @@ Just before `return RedirectResponse(f"/events/{event_id}", status_code=302)` at
 
 Note: `send_notifications` is likely already imported at the top of `routes/events.py` (used by `event_new_post`). Remove the inline import if so.
 
-- [ ] **Step 3: Add notify_on_update checkbox to event form template**
+- [x] **Step 3: Add notify_on_update checkbox to event form template**
 
 In `templates/events/event_form.html`, find the edit form section (the part shown when editing an existing event, not creating). Add the checkbox in the notify section. If there's no notify section on the edit form, add one above the submit button:
 
@@ -504,14 +504,14 @@ In `templates/events/event_form.html`, find the edit form section (the part show
 
 Match the exact CSS classes and structure already used for the `notify_on_create` section in the same template.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 pytest tests/ -v -x -q
 ```
 Expected: all tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add routes/events.py templates/events/event_form.html
@@ -525,7 +525,7 @@ git commit -m "feat: notify team via Telegram on event update (opt-in)"
 **Files:**
 - Modify: `routes/events.py` (send_reminders handler, lines 915–950)
 
-- [ ] **Step 1: Extend `send_reminders` to also send Telegram**
+- [x] **Step 1: Extend `send_reminders` to also send Telegram**
 
 Current handler iterates attendances with `status == "unknown"` and sends email. Add a second loop after the email loop to send Telegram to players with `status IN ("present", "maybe", "unknown")`.
 
@@ -591,14 +591,14 @@ Replace the `send_reminders` handler body with:
     return RedirectResponse(f"/events/{event_id}?reminders_sent={sent}", status_code=302)
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 ```bash
 pytest tests/ -v -x -q
 ```
 Expected: all tests PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add routes/events.py
@@ -614,7 +614,7 @@ git commit -m "feat: send Telegram reminders alongside email in send-reminders"
 - Modify: `routes/attendance.py`
 - Create: `tests/test_telegram_notifications.py`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```python
 # tests/test_telegram_notifications.py
@@ -677,14 +677,14 @@ async def test_notify_coaches_skips_when_bot_not_initialized():
         await notify_coaches_via_telegram(event_id=1, player_id=5, new_status="absent", db=MagicMock())
 ```
 
-- [ ] **Step 2: Run test — verify it fails**
+- [x] **Step 2: Run test — verify it fails**
 
 ```bash
 pytest tests/test_telegram_notifications.py -v
 ```
 Expected: `ModuleNotFoundError: No module named 'services.telegram_notifications'`
 
-- [ ] **Step 3: Implement `services/telegram_notifications.py`**
+- [x] **Step 3: Implement `services/telegram_notifications.py`**
 
 ```python
 # services/telegram_notifications.py
@@ -746,7 +746,7 @@ async def notify_coaches_via_telegram(
                 )
 ```
 
-- [ ] **Step 4: Wire into `routes/attendance.py`**
+- [x] **Step 4: Wire into `routes/attendance.py`**
 
 In `update_attendance()`, the handler already captures `old_status` and has a block that runs `if old_status != status:`. After the existing `log_action(...)` call in that block, add:
 
@@ -887,14 +887,14 @@ async def test_notify_coaches_skips_when_bot_not_initialized():
         # no error raised
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 ```bash
 pytest tests/ -v -x -q
 ```
 Expected: all tests PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add services/telegram_notifications.py routes/attendance.py tests/test_telegram_notifications.py
