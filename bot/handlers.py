@@ -275,7 +275,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         _skip_ext_cleanup = data.startswith("extsta:")
         _skip_extn_cleanup = data.startswith("extn:")
         for _key in (
-            ("awaiting_note", "awaiting_chat_reply", "awaiting_absence")
+            ("awaiting_note", "awaiting_chat_reply", "awaiting_absence", "pending_absent_reason")
             + (() if _skip_ext_cleanup else ("awaiting_external",))
             + (() if _skip_extn_cleanup else ("awaiting_ext_note",))
         ):
@@ -581,9 +581,23 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
 
         elif data.startswith("sta:"):
-            # _set_status calls query.answer() itself with the status toast
             parts = data.split(":")
-            await _set_status(query, user, db, int(parts[1]), int(parts[2]), parts[3])
+            status_char = parts[3]
+            if status_char == "a":
+                # Prompt for reason when marking absent
+                prompt_msg = await query.message.reply_text(  # type: ignore[union-attr]
+                    t("telegram.absent_reason_prompt", _locale(user))
+                )
+                _user_data(context)["pending_absent_reason"] = {
+                    "event_id": int(parts[1]),
+                    "player_id": int(parts[2]),
+                    "back_page": int(parts[4]) if len(parts) > 4 else 0,
+                    "prompt_message_id": prompt_msg.message_id,
+                    "chat_id": query.message.chat_id,  # type: ignore[union-attr]
+                }
+                await query.answer()
+                return
+            await _set_status(query, user, db, int(parts[1]), int(parts[2]), status_char)
 
         elif data.startswith("chatreply:"):
             await query.answer()
@@ -1087,6 +1101,60 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     from bot.absence_handlers import handle_absence_text  # noqa: PLC0415
 
     if await handle_absence_text(update, context):
+        return
+
+    # Handle pending absent reason (status already set, just need note)
+    pending_absent = _user_data(context).get("pending_absent_reason")
+    if pending_absent:
+        reason_text = (update.message.text or "").strip()
+        event_id_ab = pending_absent["event_id"]
+        player_id_ab = pending_absent["player_id"]
+
+        # Clean up prompt message
+        prompt_msg_id = pending_absent.get("prompt_message_id")
+        abs_chat_id = pending_absent.get("chat_id")
+        if prompt_msg_id and abs_chat_id:
+            try:
+                await context.bot.delete_message(chat_id=abs_chat_id, message_id=prompt_msg_id)
+            except Exception:
+                pass
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+
+        _user_data(context).pop("pending_absent_reason", None)
+
+        if not reason_text:
+            locale = _locale(get_user_by_chat_id(SessionLocal(), str(update.effective_chat.id)))
+            new_prompt = await update.message.reply_text(t("telegram.absent_reason_required", locale))
+            _user_data(context)["pending_absent_reason"] = {
+                "event_id": event_id_ab,
+                "player_id": player_id_ab,
+                "prompt_message_id": new_prompt.message_id,
+                "chat_id": new_prompt.chat_id,
+            }
+            return
+
+        with SessionLocal() as db:
+            user_ab = get_user_by_chat_id(db, str(update.effective_chat.id))
+            if user_ab is None:
+                return
+            from services.attendance_service import set_attendance  # noqa: PLC0415
+
+            set_attendance(db, event_id_ab, player_id_ab, "absent", reason_text)
+            from services.telegram_notifications import notify_coaches_attendance_change  # noqa: PLC0415
+
+            await notify_coaches_attendance_change(event_id_ab, player_id_ab, "absent")
+
+        import asyncio as _asyncio  # noqa: PLC0415
+
+        confirm = await update.message.reply_text(t("telegram.absent_reason_saved", _locale(user_ab)))
+        await _asyncio.sleep(2)
+        try:
+            await confirm.delete()
+        except Exception:
+            pass
         return
 
     # Handle external name input

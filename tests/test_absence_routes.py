@@ -57,6 +57,7 @@ def test_player_cannot_view_other_absences(member_client: TestClient, db):
         absence_type="period",
         start_date=date(2026, 4, 10),
         end_date=date(2026, 4, 20),
+        reason="Vacation",
     )
     db.add(absence)
     db.commit()
@@ -265,6 +266,7 @@ def test_cannot_delete_other_player_absence(member_client: TestClient, member_us
         absence_type="period",
         start_date=date(2026, 4, 10),
         end_date=date(2026, 4, 20),
+        reason="Vacation",
     )
     db.add(absence)
     db.commit()

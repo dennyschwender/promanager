@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -208,6 +210,13 @@ async def update_attendance(
         if wants_json:
             return JSONResponse({"ok": False, "error": "invalid_status"}, status_code=400)
         return RedirectResponse("/events/" + str(int(event_id)), status_code=302)
+
+    # Require a note when marking as absent
+    if status == "absent" and not (note or "").strip():
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "absent_reason_required"}, status_code=400)
+        flash_msg = quote("Reason required when marking absent")
+        return RedirectResponse(f"/events/{event_id}?flash={flash_msg}", status_code=302)
 
     # Authorization check
     if user.is_admin:

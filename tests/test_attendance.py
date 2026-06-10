@@ -84,7 +84,7 @@ def test_set_attendance_absent(admin_client, db):
 
     resp = admin_client.post(
         f"/attendance/{event.id}/{player.id}",
-        data={"status": "absent", "note": ""},
+        data={"status": "absent", "note": "Sick leave"},
         follow_redirects=False,
     )
     assert resp.status_code == 302
@@ -92,6 +92,7 @@ def test_set_attendance_absent(admin_client, db):
     att = db.query(Attendance).filter(Attendance.event_id == event.id, Attendance.player_id == player.id).first()
     assert att is not None
     assert att.status == "absent"
+    assert att.note == "Sick leave"
 
 
 def test_set_attendance_with_note(admin_client, db):
@@ -288,7 +289,7 @@ def test_update_attendance_form_redirect_unchanged(admin_client, db):
 
     resp = admin_client.post(
         f"/attendance/{event.id}/{player.id}",
-        data={"status": "absent", "note": ""},
+        data={"status": "absent", "note": "Sick leave"},
         follow_redirects=False,
     )
     assert resp.status_code == 302

@@ -1,0 +1,171 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - list [ref=e3]:
+      - listitem [ref=e4]:
+        - link "⬡ TIUH ProManager" [ref=e5] [cursor=pointer]:
+          - /url: /dashboard
+    - list [ref=e6]:
+      - listitem [ref=e7]:
+        - link "Dashboard" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+      - listitem [ref=e9]:
+        - link "All Events" [ref=e10] [cursor=pointer]:
+          - /url: /events
+      - listitem [ref=e11]:
+        - link "Members" [ref=e12] [cursor=pointer]:
+          - /url: /players
+      - listitem [ref=e13]:
+        - link "Teams" [ref=e14] [cursor=pointer]:
+          - /url: /teams
+      - listitem [ref=e15]:
+        - link "Seasons" [ref=e16] [cursor=pointer]:
+          - /url: /seasons
+      - listitem [ref=e17]:
+        - link "Reports" [ref=e18] [cursor=pointer]:
+          - /url: /reports
+    - list [ref=e19]:
+      - listitem [ref=e20]:
+        - link "Notifications" [ref=e21] [cursor=pointer]:
+          - /url: /notifications
+          - text: 🔔
+          - generic [ref=e22]: "2"
+      - listitem [ref=e23]:
+        - list [ref=e24]:
+          - link "Denny Schwender" [ref=e25] [cursor=pointer]
+          - option "EN" [selected]
+          - option "IT"
+          - option "FR"
+          - option "DE"
+      - listitem [ref=e26]
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - heading "Dashboard" [level=2] [ref=e29]
+      - generic [ref=e30]: 2026/27
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]: "13"
+        - generic [ref=e34]:
+          - text: Upcoming Events
+          - text: (next 30 days)
+      - generic [ref=e35]:
+        - generic [ref=e36]: "15"
+        - generic [ref=e37]:
+          - text: Pending Responses
+          - text: (upcoming events)
+    - heading "Next 5 Events" [level=3] [ref=e38]
+    - table [ref=e40]:
+      - rowgroup [ref=e41]:
+        - row "Date Meet Time Title Type Location" [ref=e42]:
+          - columnheader "Date" [ref=e43]
+          - columnheader "Meet" [ref=e44]
+          - columnheader "Time" [ref=e45]
+          - columnheader "Title" [ref=e46]
+          - columnheader "Type" [ref=e47]
+          - columnheader "Location" [ref=e48]
+          - columnheader [ref=e49]
+      - rowgroup [ref=e50]:
+        - row "2026-06-11 19:45 20:45 NLB - Allenamento Giovedi Training Arti e Mestieri, Bellinzona View" [ref=e51]:
+          - cell "2026-06-11" [ref=e52]
+          - cell "19:45" [ref=e53]
+          - cell "20:45" [ref=e54]
+          - cell "NLB - Allenamento Giovedi" [ref=e55]:
+            - link "NLB - Allenamento Giovedi" [ref=e56] [cursor=pointer]:
+              - /url: /events/8
+          - cell "Training" [ref=e57]:
+            - generic [ref=e58]: Training
+          - cell "Arti e Mestieri, Bellinzona" [ref=e59]
+          - cell "View" [ref=e60]:
+            - link "View" [ref=e61] [cursor=pointer]:
+              - /url: /events/8
+        - row "2026-06-14 14:00 14:00 NLB - Kick-off/Test Fisici Training Arti e Mestieri, Bellinzona View" [ref=e62]:
+          - cell "2026-06-14" [ref=e63]
+          - cell "14:00" [ref=e64]
+          - cell "14:00" [ref=e65]
+          - cell "NLB - Kick-off/Test Fisici" [ref=e66]:
+            - link "NLB - Kick-off/Test Fisici" [ref=e67] [cursor=pointer]:
+              - /url: /events/29
+          - cell "Training" [ref=e68]:
+            - generic [ref=e69]: Training
+          - cell "Arti e Mestieri, Bellinzona" [ref=e70]
+          - cell "View" [ref=e71]:
+            - link "View" [ref=e72] [cursor=pointer]:
+              - /url: /events/29
+        - row "2026-06-15 20:00 21:00 NLB - Allenamento Lunedi Training Arti e Mestieri, Bellinzona View" [ref=e73]:
+          - cell "2026-06-15" [ref=e74]
+          - cell "20:00" [ref=e75]
+          - cell "21:00" [ref=e76]
+          - cell "NLB - Allenamento Lunedi" [ref=e77]:
+            - link "NLB - Allenamento Lunedi" [ref=e78] [cursor=pointer]:
+              - /url: /events/19
+          - cell "Training" [ref=e79]:
+            - generic [ref=e80]: Training
+          - cell "Arti e Mestieri, Bellinzona" [ref=e81]
+          - cell "View" [ref=e82]:
+            - link "View" [ref=e83] [cursor=pointer]:
+              - /url: /events/19
+        - row "2026-06-18 19:45 20:45 NLB - Allenamento Giovedi Training Arti e Mestieri, Bellinzona View" [ref=e84]:
+          - cell "2026-06-18" [ref=e85]
+          - cell "19:45" [ref=e86]
+          - cell "20:45" [ref=e87]
+          - cell "NLB - Allenamento Giovedi" [ref=e88]:
+            - link "NLB - Allenamento Giovedi" [ref=e89] [cursor=pointer]:
+              - /url: /events/9
+          - cell "Training" [ref=e90]:
+            - generic [ref=e91]: Training
+          - cell "Arti e Mestieri, Bellinzona" [ref=e92]
+          - cell "View" [ref=e93]:
+            - link "View" [ref=e94] [cursor=pointer]:
+              - /url: /events/9
+        - row "2026-06-20 15:00 15:00 NLB - Cup @ Reinacher Sportverein Match — View" [ref=e95]:
+          - cell "2026-06-20" [ref=e96]
+          - cell "15:00" [ref=e97]
+          - cell "15:00" [ref=e98]
+          - cell "NLB - Cup @ Reinacher Sportverein" [ref=e99]:
+            - link "NLB - Cup @ Reinacher Sportverein" [ref=e100] [cursor=pointer]:
+              - /url: /events/30
+          - cell "Match" [ref=e101]:
+            - generic [ref=e102]: Match
+          - cell "—" [ref=e103]
+          - cell "View" [ref=e104]:
+            - link "View" [ref=e105] [cursor=pointer]:
+              - /url: /events/30
+    - separator [ref=e106]
+    - heading "Quick Actions" [level=3] [ref=e107]
+    - generic [ref=e108]:
+      - link "+ New Season" [ref=e109] [cursor=pointer]:
+        - /url: /seasons/new
+      - link "+ New Team" [ref=e110] [cursor=pointer]:
+        - /url: /teams/new
+      - link "+ New Player" [ref=e111] [cursor=pointer]:
+        - /url: /players/new
+      - link "+ New Event" [ref=e112] [cursor=pointer]:
+        - /url: /events/new
+      - link "+ Register User" [ref=e113] [cursor=pointer]:
+        - /url: /auth/register
+    - heading "Season Reports" [level=4] [ref=e114]
+    - link "2026/27 Active" [ref=e116] [cursor=pointer]:
+      - /url: /reports/season/1
+      - text: 2026/27
+      - generic [ref=e117]: Active
+  - contentinfo [ref=e118]:
+    - generic [ref=e119]:
+      - generic [ref=e120]: ⬡ TIUH ProManager
+      - generic [ref=e121]:
+        - link "Dashboard" [ref=e122] [cursor=pointer]:
+          - /url: /dashboard
+        - text: ·
+        - link "All Events" [ref=e123] [cursor=pointer]:
+          - /url: /events
+        - text: ·
+        - link "Members" [ref=e124] [cursor=pointer]:
+          - /url: /players
+        - text: ·
+        - link "Teams" [ref=e125] [cursor=pointer]:
+          - /url: /teams
+        - text: ·
+        - link "Seasons" [ref=e126] [cursor=pointer]:
+          - /url: /seasons
+        - text: ·
+        - link "Reports" [ref=e127] [cursor=pointer]:
+          - /url: /reports
+      - generic [ref=e128]: © 2026

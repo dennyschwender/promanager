@@ -52,7 +52,7 @@ class PlayerAbsence(Base):
     )
 
     # Reason (e.g., "Injury recovery", "Family vacation")
-    reason: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    reason: Mapped[str] = mapped_column(String(512), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

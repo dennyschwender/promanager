@@ -74,9 +74,8 @@ def apply_absence_to_future_events(player_id: int, db: Session) -> list[tuple[in
             continue
 
         if att.status in ("unknown", "present"):
-            reason = matching_absence.reason or "On leave"
             att.status = "absent"
-            att.note = f"[Absence] {reason}"
+            att.note = f"[Absence] {matching_absence.reason}"
             att.updated_at = datetime.now(timezone.utc)
             updated.append((att.event_id, att.player_id, att.status))
 
@@ -122,13 +121,14 @@ def sync_attendance_to_absences_for_event(event_id: int, db: Session) -> int:
                     matching_absence = absence
                     break
 
-            # Determine if we should update
+            if not matching_absence:
+                continue
+
             should_update = att.status == "unknown" or (att.status == "present" and event.presence_type == "all")
 
             if should_update:
-                reason = matching_absence.reason if matching_absence else "On leave"
                 att.status = "absent"
-                att.note = f"[Absence] {reason}"
+                att.note = f"[Absence] {matching_absence.reason}"
                 att.updated_at = datetime.now(timezone.utc)
                 count += 1
         else:

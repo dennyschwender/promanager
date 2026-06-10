@@ -53,6 +53,7 @@ def test_is_date_in_absence_period_no_match(db: Session):
         absence_type="period",
         start_date=date(2026, 4, 10),
         end_date=date(2026, 4, 20),
+        reason="Vacation",
     )
     db.add(absence)
     db.commit()
@@ -117,6 +118,7 @@ def test_is_date_in_absence_recurring_expired(db: Session):
         rrule="FREQ=WEEKLY;BYDAY=FR",
         rrule_until=date(2026, 4, 30),
         season_id=season.id,
+        reason="Vacation",
     )
     db.add(absence)
     db.commit()

@@ -1,0 +1,5 @@
+[    1283ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://promanager.mennylenderr.ch/auth/login:0
+[ 5029220ms] [ERROR] Failed to load resource: net::ERR_QUIC_PROTOCOL_ERROR.QUIC_TOO_MANY_RTOS @ https://promanager.mennylenderr.ch/notifications/stream:0
+[ 7516921ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_CLOSED @ https://promanager.mennylenderr.ch/notifications/stream:0
+[15790458ms] [ERROR] Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR @ https://promanager.mennylenderr.ch/notifications/stream:0
+[15793637ms] [ERROR] Failed to load resource: the server responded with a status of 502 () @ https://promanager.mennylenderr.ch/notifications/stream:0

@@ -1,0 +1,174 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - list [ref=e3]:
+      - listitem [ref=e4]:
+        - link "⬡ TIUH ProManager" [ref=e5] [cursor=pointer]:
+          - /url: /dashboard
+    - list [ref=e6]:
+      - listitem [ref=e7]:
+        - link "Dashboard" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+      - listitem [ref=e9]:
+        - link "All Events" [ref=e10] [cursor=pointer]:
+          - /url: /events
+      - listitem [ref=e11]:
+        - link "Members" [ref=e12] [cursor=pointer]:
+          - /url: /players
+      - listitem [ref=e13]:
+        - link "Teams" [ref=e14] [cursor=pointer]:
+          - /url: /teams
+      - listitem [ref=e15]:
+        - link "Seasons" [ref=e16] [cursor=pointer]:
+          - /url: /seasons
+      - listitem [ref=e17]:
+        - link "Reports" [ref=e18] [cursor=pointer]:
+          - /url: /reports
+    - list [ref=e19]:
+      - listitem [ref=e20]:
+        - link "Notifications" [ref=e21] [cursor=pointer]:
+          - /url: /notifications
+          - text: 🔔
+          - generic [ref=e22]: "2"
+      - listitem [ref=e23]:
+        - list [ref=e24]:
+          - link "Denny Schwender" [ref=e25] [cursor=pointer]
+          - option "EN" [selected]
+          - option "IT"
+          - option "FR"
+          - option "DE"
+      - listitem [ref=e26]
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - heading "Dashboard" [level=2] [ref=e29]
+      - generic [ref=e30]: 2026/27
+    - generic [ref=e31]:
+      - generic [ref=e32] [cursor=pointer]:
+        - text: Team Attendance
+        - generic [ref=e33]: 57%
+        - generic [ref=e34]: ▼ 27% last 30 days
+      - generic [ref=e35] [cursor=pointer]:
+        - text: Pending
+        - generic [ref=e36]: "15"
+        - generic [ref=e37]: 15 unknowns across 26 events
+      - generic [ref=e38] [cursor=pointer]:
+        - text: Injured / Absent
+        - generic [ref=e39]: "1"
+        - generic [ref=e40]: 1 injured · 0 absences
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - text: Upcoming Events
+        - generic [ref=e43]:
+          - text: Tomorrow
+          - link "NLB - Allenamento Giovedi" [ref=e44] [cursor=pointer]:
+            - /url: /events/8
+          - text: (0/31 unknown)
+        - generic [ref=e45]:
+          - text: Sun 14
+          - link "NLB - Kick-off/Test Fisici" [ref=e46] [cursor=pointer]:
+            - /url: /events/29
+          - text: (0/31 unknown)
+        - generic [ref=e47]:
+          - text: Mon 15
+          - link "NLB - Allenamento Lunedi" [ref=e48] [cursor=pointer]:
+            - /url: /events/19
+          - text: (0/31 unknown)
+        - generic [ref=e49]:
+          - text: Thu 18
+          - link "NLB - Allenamento Giovedi" [ref=e50] [cursor=pointer]:
+            - /url: /events/9
+          - text: (0/31 unknown)
+        - generic [ref=e51]:
+          - text: Sat 20
+          - link "NLB - Cup @ Reinacher Sportverein" [ref=e52] [cursor=pointer]:
+            - /url: /events/30
+          - text: (15/30 unknown)
+      - generic [ref=e53]:
+        - text: Watch List
+        - generic [ref=e54]:
+          - link "Aramis Boetschi" [ref=e55] [cursor=pointer]:
+            - /url: /players/6
+          - text: Missed 5 events
+        - generic [ref=e56]:
+          - link "Mattia Gazzaniga" [ref=e57] [cursor=pointer]:
+            - /url: /players/24
+          - text: Missed 5 events
+        - generic [ref=e58]:
+          - link "Mauro Ochsner" [ref=e59] [cursor=pointer]:
+            - /url: /players/26
+          - text: Missed 5 events
+        - generic [ref=e60]:
+          - link "Diego Delmenico" [ref=e61] [cursor=pointer]:
+            - /url: /players/12
+          - text: Injured until 2026-05-29
+    - generic [ref=e62]:
+      - text: Recent Chat Activity
+      - generic [ref=e63]:
+        - strong [ref=e64]: Denny Schwender
+        - text: "\"==ROSSO== Andrin Bechtiger Aramis Boetschi Denis Bazzuri Indi Andreetta …\""
+        - generic [ref=e65]:
+          - text: —
+          - link "NLB - Allenamento Lunedi" [ref=e66] [cursor=pointer]:
+            - /url: /events/18
+      - generic [ref=e67]:
+        - strong [ref=e68]: Denny Schwender
+        - text: "\"==Rosso== Alex David Mattia Gadoni Giacomo Gervasoni Massimo Bazzuri A…\""
+        - generic [ref=e69]:
+          - text: —
+          - link "NLB - Allenamento Mercoledì" [ref=e70] [cursor=pointer]:
+            - /url: /events/7
+      - generic [ref=e71]:
+        - strong [ref=e72]: Denny Schwender
+        - text: "\"==BLU== Andrin Bechtiger Denis Bazzuri Mattia Gazzaniga Alessandro Tomat…\""
+        - generic [ref=e73]:
+          - text: —
+          - link "NLB - Allenamento Lunedi" [ref=e74] [cursor=pointer]:
+            - /url: /events/17
+      - generic [ref=e75]:
+        - strong [ref=e76]: Denny Schwender
+        - text: "\"==BLU== Andrin Bechtiger Denis Bazzuri Alessandro Tomatis Elia Airaghi …\""
+        - generic [ref=e77]:
+          - text: —
+          - link "NLB - Allenamento Lunedi" [ref=e78] [cursor=pointer]:
+            - /url: /events/16
+      - generic [ref=e79]:
+        - strong [ref=e80]: Denny Schwender
+        - text: "\"==BLU== Denis Bazzuri Giacomo Gervasoni Massimo Bazzuri Luca Torriani …\""
+        - generic [ref=e81]:
+          - text: —
+          - link "NLB - Allenamento Giovedi" [ref=e82] [cursor=pointer]:
+            - /url: /events/5
+    - separator [ref=e83]
+    - heading "Quick Actions" [level=3] [ref=e84]
+    - generic [ref=e85]:
+      - link "+ New Season" [ref=e86] [cursor=pointer]:
+        - /url: /seasons/new
+      - link "+ New Team" [ref=e87] [cursor=pointer]:
+        - /url: /teams/new
+      - link "+ New Player" [ref=e88] [cursor=pointer]:
+        - /url: /players/new
+      - link "+ New Event" [ref=e89] [cursor=pointer]:
+        - /url: /events/new
+      - link "+ Register User" [ref=e90] [cursor=pointer]:
+        - /url: /auth/register
+  - contentinfo [ref=e91]:
+    - generic [ref=e92]:
+      - generic [ref=e93]: ⬡ TIUH ProManager
+      - generic [ref=e94]:
+        - link "Dashboard" [ref=e95] [cursor=pointer]:
+          - /url: /dashboard
+        - text: ·
+        - link "All Events" [ref=e96] [cursor=pointer]:
+          - /url: /events
+        - text: ·
+        - link "Members" [ref=e97] [cursor=pointer]:
+          - /url: /players
+        - text: ·
+        - link "Teams" [ref=e98] [cursor=pointer]:
+          - /url: /teams
+        - text: ·
+        - link "Seasons" [ref=e99] [cursor=pointer]:
+          - /url: /seasons
+        - text: ·
+        - link "Reports" [ref=e100] [cursor=pointer]:
+          - /url: /reports
+      - generic [ref=e101]: © 2026

@@ -277,6 +277,12 @@
     popSave.disabled = true;
     popError.classList.add('pop-error-hidden');
     var note = popNote.value;
+    if (activeStatus === 'absent' && !note.trim()) {
+      popError.textContent = {{ t('attendance.absent_reason_required') | tojson }};
+      popError.classList.remove('pop-error-hidden');
+      popSave.disabled = false;
+      return;
+    }
     var body = new FormData();
     body.append('status', activeStatus);
     body.append('note', note);

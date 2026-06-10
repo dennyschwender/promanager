@@ -1,0 +1,3 @@
+{"type":"server-started","port":55903,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:55903","screen_dir":"/home/denny/Development/promanager/.superpowers/brainstorm/34718-1781104789/content","state_dir":"/home/denny/Development/promanager/.superpowers/brainstorm/34718-1781104789/state"}
+{"type":"screen-added","file":"/home/denny/Development/promanager/.superpowers/brainstorm/34718-1781104789/content/dashboard-direction.html"}
+{"type":"server-stopped","reason":"idle timeout"}

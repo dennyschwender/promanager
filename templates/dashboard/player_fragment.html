@@ -154,6 +154,12 @@
     if (!newStatus) return;
     var status = newStatus.dataset.status;
     var note = popNote.value;
+    if (status === 'absent' && !note.trim()) {
+      popError.textContent = '{{ t("attendance.absent_reason_required") | e }}';
+      popError.classList.remove('pop-error-hidden');
+      popSave.disabled = false;
+      return;
+    }
     var eventId = activeBtn.dataset.eventId;
     var playerId = activeBtn.dataset.playerId;
     popSave.disabled = true;

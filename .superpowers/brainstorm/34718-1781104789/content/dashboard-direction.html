@@ -1,0 +1,77 @@
+<h2>What should the Dashboard become?</h2>
+<p class="subtitle">The current dashboard shows the same "next 5 events" table as All Events, plus quick action links. Here are 3 alternative directions — each focuses on data that exists but has <strong>no other page</strong> in the app.</p>
+
+<div class="section">
+  <h3>Option A: Team Pulse (Recommended)</h3>
+  <p>A single-pane overview for coaches and players showing the team's health:</p>
+  <div class="pros-cons" style="margin-top: 0.5rem;">
+    <div class="pros">
+      <h4>Widgets</h4>
+      <ul>
+        <li><strong>Attendance rate this season</strong> — team-wide % with trend arrow</li>
+        <li><strong>Upcoming events</strong> — compact list (no table), just countdown + title</li>
+        <li><strong>Pending responses</strong> — who hasn't replied yet, grouped by event</li>
+        <li><strong>Injured / absent</strong> — all players currently marked absent or injured, in one place</li>
+        <li><strong>Recent chat activity</strong> — last 5 messages across all events</li>
+        <li><strong>Consecutive absences alert</strong> — players who missed 3+ events in a row</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Trade-offs</h4>
+      <ul>
+        <li>Requires writing new aggregation queries</li>
+        <li>Most useful info for coaches; players may care less about team-wide stats</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Option B: My Season</h3>
+  <p>A personal dashboard for the logged-in player (or coach viewing themselves):</p>
+  <div class="pros-cons" style="margin-top: 0.5rem;">
+    <div class="pros">
+      <h4>Widgets</h4>
+      <ul>
+        <li><strong>My attendance rate</strong> — personal % with breakdown by event type (trainings vs matches)</li>
+        <li><strong>Unread notifications</strong> — latest 3 with previews</li>
+        <li><strong>Next event</strong> — single card with my current status + quick-update button</li>
+        <li><strong>My absences</strong> — upcoming period absences or recurring rules active now</li>
+        <li><strong>My notes</strong> — recent attendance notes I've added</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Trade-offs</h4>
+      <ul>
+        <li>Overlaps with My Report page (which already shows personal stats)</li>
+        <li>Coaches care more about the team than themselves</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Option C: Season Command Center</h3>
+  <p>A rich admin/coach view with actionable widgets:</p>
+  <div class="pros-cons" style="margin-top: 0.5rem;">
+    <div class="pros">
+      <h4>Widgets</h4>
+      <ul>
+        <li><strong>Season progress bar</strong> — "Day 47 of 90" with event count</li>
+        <li><strong>Attendance leaderboard</strong> — top 5 / bottom 5 players by rate</li>
+        <li><strong>Upcoming events</strong> — as compact cards with attendance summary badges</li>
+        <li><strong>Player availability grid</strong> — a small matrix of next 5 events x 10 players, color-coded</li>
+        <li><strong>Lowest-attendance events</strong> — events with the most unknowns</li>
+        <li><strong>Watch list</strong> — players on injury/absence streak</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Trade-offs</h4>
+      <ul>
+        <li>Most complex to build</li>
+        <li>Grid might overwhelm on mobile</li>
+        <li>Best for coaches; less useful for players</li>
+      </ul>
+    </div>
+  </div>
+</div>
