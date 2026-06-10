@@ -33,7 +33,7 @@
         <div class="event-row">
           <span class="event-date-label">{{ e.date_label }}</span>
           <a href="/events/{{ e.id }}" class="event-title">{{ e.title }}</a>
-          <span class="event-unknowns">({{ e.unknown_count }}/{{ e.total_count }} {{ t('dashboard.unknown') }})</span>
+          <span class="event-att-counts">{{ e.present_count }}<span class="att-present">✓</span> {{ e.absent_count }}<span class="att-absent">✗</span></span>
         </div>
       {% endfor %}
     {% else %}

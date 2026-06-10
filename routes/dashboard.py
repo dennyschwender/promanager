@@ -185,8 +185,8 @@ async def dashboard(
 
             for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]:
                 statuses = att_by_event.get(e.id, [])
-                total_e = len(statuses)
-                unknown_e = sum(1 for s in statuses if s == "unknown")
+                present_count = sum(1 for s in statuses if s == "present")
+                absent_count = sum(1 for s in statuses if s == "absent")
                 days_diff = (e.event_date - today).days
                 if days_diff == 0:
                     label = "Today"
@@ -199,8 +199,8 @@ async def dashboard(
                         "id": e.id,
                         "title": e.title,
                         "date_label": label,
-                        "unknown_count": unknown_e,
-                        "total_count": total_e,
+                        "present_count": present_count,
+                        "absent_count": absent_count,
                     }
                 )
 
