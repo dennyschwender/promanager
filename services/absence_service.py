@@ -223,17 +223,36 @@ def revert_default_absence_from_events(player_id: int, team_id: int, season_id: 
 
 
 def cleanup_expired_injury_absences(db: Session) -> int:
-    """Delete expired Injury absences and revert future attendance.
+    """Delete expired Injury absences and revert attendance + player status.
 
     Finds PlayerAbsence records with reason containing "Injury" whose
     end_date is before today, deletes them, and reverts the associated
-    future attendance records back to "unknown".
+    future attendance records back to "unknown". Also resets the
+    corresponding PlayerTeam membership_status to "active" and clears
+    injured_until.
 
     Returns the number of absences cleaned up.
     """
     from models.player_absence import PlayerAbsence
+    from models.player_team import PlayerTeam
 
     today = date.today()
+
+    # Clean up expired PlayerTeam injury status
+    expired_memberships = (
+        db.query(PlayerTeam)
+        .filter(
+            PlayerTeam.membership_status == "injured",
+            PlayerTeam.injured_until < today,
+        )
+        .all()
+    )
+    for pt in expired_memberships:
+        pt.membership_status = "active"
+        pt.injured_until = None
+    db.flush()
+
+    # Clean up expired absence records
     expired = (
         db.query(PlayerAbsence)
         .filter(
@@ -243,7 +262,7 @@ def cleanup_expired_injury_absences(db: Session) -> int:
         .all()
     )
 
-    if not expired:
+    if not expired and not expired_memberships:
         return 0
 
     player_ids = set()
@@ -251,13 +270,16 @@ def cleanup_expired_injury_absences(db: Session) -> int:
         player_ids.add(absence.player_id)
         db.delete(absence)
 
+    for pt in expired_memberships:
+        player_ids.add(pt.player_id)
+
     db.flush()
 
     for pid in player_ids:
         revert_absence_from_events(pid, db)
 
     db.commit()
-    return len(expired)
+    return len(expired) + len(expired_memberships)
 
 
 def revert_absence_from_events(player_id: int, db: Session) -> list[tuple[int, int, str]]:
