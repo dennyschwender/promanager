@@ -85,7 +85,25 @@ Started in `app/main.py` lifespan: `reminder_loop()` and `backup_loop()` from `s
 | `TELEGRAM_WEBHOOK_URL` | `""` | Required for webhook mode |
 | `TELEGRAM_WEBHOOK_SECRET` | `""` | Validates incoming webhooks |
 
-## Config & tooling
+## Deploy
+
+```bash
+ssh pi5
+cd ~/dockerimages
+./updateDocker proManager
+```
+
+Pushes to GitHub master, then SSH into the Pi5 and run the update script.
+
+## Deploy
+
+```bash
+ssh pi5
+cd ~/dockerimages
+./updateDocker proManager
+```
+
+Pushes to GitHub master, then SSH into the Pi5 and run the update script.
 
 - `ruff` line length 120; `models/*.py` suppresses `F821` (SQLAlchemy forward refs); `alembic/*` suppresses `E501`, `W291`, `I001`.
 - `mypy` ignores `misc`, `valid-type`, `import-untyped` errors; excludes `scripts/`.
