@@ -65,5 +65,8 @@ objects/
 refs
 refs/
 
-# Pytest artifacts
-pytest-of-denny/
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Superpowers brainstorming artifacts
+.superpowers/
