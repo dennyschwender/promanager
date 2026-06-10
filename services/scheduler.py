@@ -205,6 +205,46 @@ def backup_database() -> str | None:
     return dest_path
 
 
+def cleanup_expired_injury_absences() -> int:
+    """Delete expired Injury absences and revert future attendance.
+
+    Runs in a thread executor; must not share DB sessions across threads.
+    Returns the number of absences cleaned up.
+    """
+    from app.database import SessionLocal
+    from services.absence_service import cleanup_expired_injury_absences as _do_cleanup
+
+    db = SessionLocal()
+    try:
+        return _do_cleanup(db)
+    except Exception:
+        logger.exception("Injury cleanup failed")
+        db.rollback()
+        return 0
+    finally:
+        db.close()
+
+
+async def cleanup_loop(interval_seconds: int = 3600) -> None:
+    """Run cleanup_expired_injury_absences every `interval_seconds` (default 1h).
+
+    Designed to be started as an asyncio background task from the lifespan.
+    """
+    logger.info("Injury cleanup scheduler started (interval=%ds)", interval_seconds)
+    await asyncio.sleep(300)
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            count = await asyncio.get_event_loop().run_in_executor(None, cleanup_expired_injury_absences)
+            if count:
+                logger.info("Injury cleanup: removed %d expired absence(s)", count)
+        except asyncio.CancelledError:
+            logger.info("Injury cleanup scheduler stopped.")
+            break
+        except Exception:
+            logger.exception("Unexpected error in injury cleanup loop — continuing")
+
+
 async def backup_loop(interval_seconds: int = 86400) -> None:
     """Run backup_database once a day.
 

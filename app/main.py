@@ -157,16 +157,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         )
 
     # ── Background scheduler ──────────────────────────────────────────────
-    from services.scheduler import backup_loop, reminder_loop  # noqa: PLC0415
+    from services.scheduler import backup_loop, cleanup_loop, reminder_loop  # noqa: PLC0415
 
     _reminder_task = asyncio.create_task(reminder_loop())
+    _cleanup_task = asyncio.create_task(cleanup_loop())
     _backup_task = asyncio.create_task(backup_loop())
 
     yield
 
     logger.info("Shutting down.")
     shutdown_event.set()
-    for _task in (_reminder_task, _backup_task):
+    for _task in (_reminder_task, _cleanup_task, _backup_task):
         _task.cancel()
         try:
             await _task
