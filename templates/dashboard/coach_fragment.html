@@ -1,0 +1,81 @@
+<div class="page-header">
+  <h2>{{ t('dashboard.title') }}</h2>
+  {% if active_season %}<span class="badge badge-active">{{ active_season.name }}</span>{% endif %}
+</div>
+
+{% if not active_season %}
+  <div class="alert alert-warning">{{ t('dashboard.no_active_season') }} <a href="/seasons">{{ t('dashboard.manage_seasons') }} →</a></div>
+{% endif %}
+
+<div class="stat-grid">
+  <div class="stat-card" onclick="window.location='/reports/season/{{ active_season.id if active_season else 0 }}'" style="cursor:pointer">
+    <small class="stat-label">{{ t('dashboard.team_attendance') }}</small>
+    <div class="stat-value">{{ team_attendance_rate }}%</div>
+    {% if attendance_trend is not none %}<div class="stat-sub">{{ '▲' if attendance_trend >= 0 else '▼' }} {{ attendance_trend|abs }}% {{ t('dashboard.last_30_days') }}</div>{% endif %}
+  </div>
+  <div class="stat-card" onclick="window.location='/events'" style="cursor:pointer">
+    <small class="stat-label">{{ t('dashboard.pending') }}</small>
+    <div class="stat-value">{{ unknown_count }}</div>
+    <div class="stat-sub">{{ t('dashboard.unknowns_across_events', count=unknown_count, events=upcoming_count) }}</div>
+  </div>
+  <div class="stat-card" onclick="window.location='/players'" style="cursor:pointer">
+    <small class="stat-label">{{ t('dashboard.injured_absent') }}</small>
+    <div class="stat-value">{{ injured_absent_count }}</div>
+    <div class="stat-sub">{{ injured_count }} {{ t('dashboard.injured') }} · {{ absence_count }} {{ t('dashboard.absences') }}</div>
+  </div>
+</div>
+
+<div class="stat-grid" style="margin-top:1rem">
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.upcoming_events') }}</small>
+    {% if upcoming_events_compact %}
+      {% for e in upcoming_events_compact %}
+        <div class="event-row">
+          <span class="event-date-label">{{ e.date_label }}</span>
+          <a href="/events/{{ e.id }}" class="event-title">{{ e.title }}</a>
+          <span class="event-unknowns">({{ e.unknown_count }}/{{ e.total_count }} {{ t('dashboard.unknown') }})</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="stat-sub">{{ t('dashboard.no_upcoming') }}</div>
+    {% endif %}
+  </div>
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.watch_list') }}</small>
+    {% if watch_list %}
+      {% for entry in watch_list %}
+        <div class="watch-entry watch-entry-{{ entry.severity }}">
+          <a href="/players/{{ entry.player_id }}">{{ entry.player_name }}</a>
+          <span class="watch-reason">{{ entry.reason }}</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="stat-sub">{{ t('dashboard.no_watch_items') }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="stat-card" style="margin-top:1rem">
+  <small class="stat-label">{{ t('dashboard.recent_chat') }}</small>
+  {% if recent_messages %}
+    {% for m in recent_messages %}
+      <div class="chat-preview">
+        <strong>{{ m.author_name }}</strong> "{{ m.body_truncated }}" <span class="chat-event">— <a href="/events/{{ m.event_id }}">{{ m.event_title }}</a></span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="stat-sub">{{ t('dashboard.no_recent_chat') }}</div>
+  {% endif %}
+</div>
+
+{% if user.is_admin %}
+<hr>
+<h3>{{ t('dashboard.quick_actions') }}</h3>
+<div class="quick-actions">
+  <a href="/seasons/new" class="btn btn-outline">{{ t('common.new_season') }}</a>
+  <a href="/teams/new" class="btn btn-outline">{{ t('common.new_team') }}</a>
+  <a href="/players/new" class="btn btn-outline">{{ t('common.new_player') }}</a>
+  <a href="/events/new" class="btn btn-outline">{{ t('common.new_event') }}</a>
+  <a href="/auth/register" class="btn btn-outline">+ {{ t('nav.register_user') }}</a>
+</div>
+{% endif %}
