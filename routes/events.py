@@ -233,13 +233,22 @@ async def events_list(
     visible_event_ids = [e.id for e in upcoming + past]
     present_rows = (
         db.query(Attendance.event_id, func.count(Attendance.id))
-        .filter(Attendance.event_id.in_(visible_event_ids), Attendance.status == "present")
+        .join(Player, Attendance.player_id == Player.id)
+        .filter(
+            Attendance.event_id.in_(visible_event_ids),
+            Attendance.status == "present",
+            Player.archived_at.is_(None),
+        )
         .group_by(Attendance.event_id)
         .all()
     )
     total_rows = (
         db.query(Attendance.event_id, func.count(Attendance.id))
-        .filter(Attendance.event_id.in_(visible_event_ids))
+        .join(Player, Attendance.player_id == Player.id)
+        .filter(
+            Attendance.event_id.in_(visible_event_ids),
+            Player.archived_at.is_(None),
+        )
         .group_by(Attendance.event_id)
         .all()
     )

@@ -73,7 +73,11 @@ def _rate_for(db: Session, event_ids: list[int]) -> float:
         return 0.0
     result = (
         db.query(func.count(Attendance.id).filter(Attendance.status == "present"), func.count(Attendance.id))
-        .filter(Attendance.event_id.in_(event_ids))
+        .join(Player, Attendance.player_id == Player.id)
+        .filter(
+            Attendance.event_id.in_(event_ids),
+            Player.archived_at.is_(None),
+        )
         .first()
     )
     if not result or not result[1]:
@@ -123,7 +127,15 @@ async def dashboard(
         # Team attendance rate (past events)
         team_attendance_rate = 0
         if past_event_ids:
-            att_rows = db.query(Attendance.status).filter(Attendance.event_id.in_(past_event_ids)).all()
+            att_rows = (
+                db.query(Attendance.status)
+                .join(Player, Attendance.player_id == Player.id)
+                .filter(
+                    Attendance.event_id.in_(past_event_ids),
+                    Player.archived_at.is_(None),
+                )
+                .all()
+            )
             total_att = len(att_rows)
             present_att = sum(1 for r in att_rows if r.status == "present")
             team_attendance_rate = round(present_att / total_att * 100) if total_att else 0
@@ -177,7 +189,13 @@ async def dashboard(
         top_event_ids = [e.id for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]]
         if top_event_ids:
             compact_att_rows = (
-                db.query(Attendance.event_id, Attendance.status).filter(Attendance.event_id.in_(top_event_ids)).all()
+                db.query(Attendance.event_id, Attendance.status)
+                .join(Player, Attendance.player_id == Player.id)
+                .filter(
+                    Attendance.event_id.in_(top_event_ids),
+                    Player.archived_at.is_(None),
+                )
+                .all()
             )
             att_by_event: dict[int, list[str]] = {}
             for a in compact_att_rows:
