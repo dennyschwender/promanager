@@ -168,7 +168,7 @@
     "send_reminders": "Erinnerungen senden",
     "status_maybe": "Vielleicht",
     "note_placeholder": "Notiz hinzufügen…",
-    "note_optional": "Notiz (optional)",
+    "note_optional": "Notiz oder Abwesenheitsgrund",
     "absent_reason_required": "Grund erforderlich",
     "update_header": "Aktualisieren",
     "at_time": "um",

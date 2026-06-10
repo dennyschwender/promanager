@@ -168,7 +168,7 @@
     "send_reminders": "Envoyer des rappels",
     "status_maybe": "Peut-être",
     "note_placeholder": "Ajouter une note…",
-    "note_optional": "Note (optionnel)",
+    "note_optional": "Note ou motif d'absence",
     "absent_reason_required": "Le motif est requis",
     "update_header": "Mettre à jour",
     "at_time": "à",

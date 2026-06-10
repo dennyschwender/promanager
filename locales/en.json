@@ -168,7 +168,7 @@
     "send_reminders": "Send Reminders",
     "status_maybe": "Maybe",
     "note_placeholder": "Add a note…",
-    "note_optional": "Note (optional)",
+    "note_optional": "Note or Absence reason",
     "absent_reason_required": "Reason is required",
     "update_header": "Update",
     "at_time": "at",
