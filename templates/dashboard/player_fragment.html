@@ -1,0 +1,179 @@
+<div class="page-header">
+  <h2>{{ t('dashboard.title') }}</h2>
+  {% if active_season %}<span class="badge badge-active">{{ active_season.name }}</span>{% endif %}
+</div>
+
+{% if not my_player_id %}
+  <div class="alert alert-warning">{{ t('dashboard.no_linked_player') }}</div>
+{% endif %}
+
+{% if not active_season %}
+  <div class="alert alert-warning">{{ t('dashboard.no_active_season') }} <a href="/seasons">{{ t('dashboard.manage_seasons') }} →</a></div>
+{% endif %}
+
+{% if my_player_id %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.my_attendance') }}</small>
+    <div class="stat-value">{{ attendance_rate }}%</div>
+    {% if event_type_breakdown %}<div class="stat-sub">{{ event_type_breakdown }}</div>{% endif %}
+    <a href="/reports/my" class="btn btn-sm btn-outline" style="margin-top:0.5rem">{{ t('dashboard.view_full_report') }}</a>
+  </div>
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.next_event') }}</small>
+    {% if next_event %}
+      <div class="stat-title"><a href="/events/{{ next_event.id }}">{{ next_event.title }}</a></div>
+      <div class="stat-sub">{{ next_event.event_date.strftime('%a %d %b') }}{% if next_event.event_time %} · {{ next_event.event_time.strftime('%H:%M') }}{% endif %}{% if next_event.location %} · {{ next_event.location }}{% endif %}</div>
+      <button type="button" class="btn btn-sm dash-att-btn att-active-{{ my_next_status }}"
+              data-event-id="{{ next_event.id }}"
+              data-player-id="{{ my_player_id }}"
+              data-status="{{ my_next_status }}"
+              data-note="{{ my_next_note | e }}">{{ status_labels.get(my_next_status, my_next_status) }}</button>
+    {% else %}
+      <div class="stat-sub">{{ t('dashboard.no_upcoming') }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="stat-grid" style="margin-top:1rem">
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.unread_notifications') }}</small>
+    <div class="stat-value">{{ unread_count }}</div>
+    {% if recent_notifications %}
+      {% for n in recent_notifications %}
+        <div class="notif-preview">
+          <a href="{% if n.event_id %}/events/{{ n.event_id }}{% else %}/notifications{% endif %}">{{ n.title }}</a>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="stat-sub">{{ t('dashboard.no_unread') }}</div>
+    {% endif %}
+    <a href="/notifications" class="btn btn-sm btn-outline" style="margin-top:0.5rem">{{ t('nav.notifications') }}</a>
+  </div>
+  <div class="stat-card">
+    <small class="stat-label">{{ t('dashboard.my_absences') }}</small>
+    {% if active_absences %}
+      {% for a in active_absences %}
+        <div class="notif-preview">{{ a.reason or t('dashboard.absence') }} · {% if a.absence_type == 'period' %}{{ a.start_date }} – {{ a.end_date }}{% else %}{{ t('dashboard.recurring') }}{% endif %}</div>
+      {% endfor %}
+    {% else %}
+      <div class="stat-sub">{{ t('dashboard.no_active_absences') }}</div>
+    {% endif %}
+    <a href="/players/{{ my_player_id }}/absences" class="btn btn-sm btn-outline" style="margin-top:0.5rem">{{ t('absences.manage_my_absences') }}</a>
+  </div>
+</div>
+
+{% if my_player_id %}
+<meta name="csrf-token" content="{{ request.state.csrf_token }}">
+<style>
+.att-active-present { background: var(--tp-success, #27ae60); color: #fff; border-color: var(--tp-success, #27ae60); }
+.att-active-absent  { background: var(--tp-danger,  #c0392b); color: #fff; border-color: var(--tp-danger,  #c0392b); }
+.att-active-maybe   { background: var(--tp-warning, #f39c12); color: #fff; border-color: var(--tp-warning, #f39c12); }
+.att-active-unknown { background: var(--tp-secondary, #95a5a6); color: #fff; border-color: var(--tp-secondary, #95a5a6); }
+</style>
+
+<div id="dash-att-popover" class="att-popover att-popover-hidden">
+  <div class="pop-status-row">
+    {% for s, lbl in [('present', t('attendance.status_present')), ('absent', t('attendance.status_absent')), ('maybe', t('attendance.status_maybe')), ('unknown', t('attendance.status_unknown'))] %}
+    <button type="button" class="btn btn-sm btn-outline pop-status-btn" data-status="{{ s }}">{{ lbl }}</button>
+    {% endfor %}
+  </div>
+  <textarea id="dash-pop-note" class="pop-note" rows="2" placeholder="{{ t('attendance.note_placeholder') }}"></textarea>
+  <div id="dash-pop-error" class="pop-error pop-error-hidden"></div>
+  <div class="pop-actions">
+    <button type="button" class="btn btn-sm btn-outline" id="dash-pop-cancel">{{ t('common.cancel') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" id="dash-pop-save">{{ t('common.save') }}</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var STATUS_LABELS = {
+    'present': '{{ t("attendance.status_present") | e }}',
+    'absent':  '{{ t("attendance.status_absent") | e }}',
+    'maybe':   '{{ t("attendance.status_maybe") | e }}',
+    'unknown': '{{ t("attendance.status_unknown") | e }}'
+  };
+  var popover = document.getElementById('dash-att-popover');
+  var popNote = document.getElementById('dash-pop-note');
+  var popError = document.getElementById('dash-pop-error');
+  var popSave = document.getElementById('dash-pop-save');
+  var activeBtn = null;
+
+  function highlightStatus(status) {
+    popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+      b.classList.toggle('btn-primary', b.dataset.status === status);
+      b.classList.toggle('btn-outline', b.dataset.status !== status);
+    });
+  }
+
+  function openPopover(btn) {
+    var rect = btn.getBoundingClientRect();
+    popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    popover.style.left = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 260) + 'px';
+    popNote.value = btn.dataset.note || '';
+    popError.classList.add('pop-error-hidden');
+    highlightStatus(btn.dataset.status);
+    activeBtn = btn;
+    popSave.disabled = false;
+    popover.classList.remove('att-popover-hidden');
+  }
+
+  function closePopover() {
+    popover.classList.add('att-popover-hidden');
+    activeBtn = null;
+  }
+
+  document.querySelectorAll('.dash-att-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (activeBtn === btn && !popover.classList.contains('att-popover-hidden')) {
+        closePopover();
+      } else {
+        openPopover(btn);
+      }
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!popover.classList.contains('att-popover-hidden') && !popover.contains(e.target)) {
+      closePopover();
+    }
+  });
+
+  document.getElementById('dash-pop-cancel').addEventListener('click', closePopover);
+
+  popover.querySelectorAll('.pop-status-btn').forEach(function (b) {
+    b.addEventListener('click', function () { highlightStatus(b.dataset.status); });
+  });
+
+  popSave.addEventListener('click', function () {
+    if (!activeBtn) return;
+    var newStatus = popover.querySelector('.btn-primary.pop-status-btn');
+    if (!newStatus) return;
+    var status = newStatus.dataset.status;
+    var note = popNote.value;
+    var eventId = activeBtn.dataset.eventId;
+    var playerId = activeBtn.dataset.playerId;
+    popSave.disabled = true;
+    fetch('/attendance/' + eventId + '/' + playerId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': CSRF },
+      body: 'csrf_token=' + encodeURIComponent(CSRF) + '&status=' + encodeURIComponent(status) + '&note=' + encodeURIComponent(note)
+    }).then(function (r) { return r.json(); }).then(function () {
+      activeBtn.dataset.status = status;
+      activeBtn.dataset.note = note;
+      activeBtn.className = activeBtn.className.replace(/att-active-\w+/g, '').trim();
+      activeBtn.classList.add('att-active-' + status);
+      activeBtn.textContent = STATUS_LABELS[status] || status;
+      closePopover();
+    }).catch(function () {
+      popError.textContent = 'Error saving';
+      popError.classList.remove('pop-error-hidden');
+      popSave.disabled = false;
+    });
+  });
+})();
+</script>
+{% endif %}
