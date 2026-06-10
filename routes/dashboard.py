@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -22,15 +23,27 @@ from routes._auth_helpers import get_coach_teams, require_login
 
 router = APIRouter()
 
+_UPCOMING_EVENTS_LIMIT = 5
+_WATCH_LOOKBACK = 5
+_RED_ABSENT_THRESHOLD = 3
+_MSG_TRUNCATE = 80
+_TREND_DAYS = 30
+_TREND_COMPARE_DAYS = 60
+_NOTIF_PREVIEW_LIMIT = 3
+_CHAT_PREVIEW_LIMIT = 5
 
-def _compute_attendance_rate(db: Session, player_id: int, active_season_id: int | None) -> tuple[int, str | None]:
+
+# ── Helpers ──────────────────────────────────────────────────────────────
+
+
+def _attendance_rate(db: Session, player_id: int, season_id: int | None) -> tuple[int, str | None]:
     query = (
         db.query(Attendance.status, Event.event_type)
         .join(Event, Attendance.event_id == Event.id)
         .filter(Attendance.player_id == player_id)
     )
-    if active_season_id:
-        query = query.filter(Event.season_id == active_season_id)
+    if season_id:
+        query = query.filter(Event.season_id == season_id)
 
     rows = query.all()
     if not rows:
@@ -54,6 +67,23 @@ def _compute_attendance_rate(db: Session, player_id: int, active_season_id: int 
     return rate, breakdown_str
 
 
+def _rate_for(db: Session, event_ids: list[int]) -> float:
+    """Return present/total rate for a set of event IDs. 0 if none."""
+    if not event_ids:
+        return 0.0
+    result = (
+        db.query(func.count(Attendance.id).filter(Attendance.status == "present"), func.count(Attendance.id))
+        .filter(Attendance.event_id.in_(event_ids))
+        .first()
+    )
+    if not result or not result[1]:
+        return 0.0
+    return result[0] / result[1] * 100
+
+
+# ── Route ────────────────────────────────────────────────────────────────
+
+
 @router.get("")
 @router.get("/")
 async def dashboard(
@@ -62,14 +92,11 @@ async def dashboard(
     db: Session = Depends(get_db),
 ):
     today = date.today()
-    active_season = db.query(Season).filter(Season.is_active == True).first()  # noqa: E712
+    active_season = db.query(Season).filter(Season.is_active.is_(True)).first()
 
-    # ── Coach / Admin dashboard ─────────────────────────────────────────
+    # ── Coach / Admin ──────────────────────────────────────────────────
     if user.is_admin or user.is_coach:
-        if user.is_admin:
-            team_ids: set[int] | None = None
-        else:
-            team_ids = get_coach_teams(user, db)
+        team_ids: set[int] | None = None if user.is_admin else get_coach_teams(user, db)
 
         events_q = db.query(Event)
         if active_season:
@@ -79,43 +106,41 @@ async def dashboard(
 
         all_events = events_q.order_by(Event.event_date.asc()).all()
         upcoming_events = [e for e in all_events if e.event_date >= today]
+        upcoming_event_ids = [e.id for e in upcoming_events]
+        past_event_ids = [e.id for e in all_events if e.event_date < today]
 
         upcoming_count = len(upcoming_events)
 
-        if upcoming_events:
-            event_ids = [e.id for e in upcoming_events]
+        # Pending count
+        unknown_count = 0
+        if upcoming_event_ids:
             unknown_count = (
-                db.query(Attendance).filter(Attendance.event_id.in_(event_ids), Attendance.status == "unknown").count()
+                db.query(Attendance)
+                .filter(Attendance.event_id.in_(upcoming_event_ids), Attendance.status == "unknown")
+                .count()
             )
-        else:
-            unknown_count = 0
 
-        past_event_ids = [e.id for e in all_events if e.event_date < today]
+        # Team attendance rate (past events)
+        team_attendance_rate = 0
         if past_event_ids:
             att_rows = db.query(Attendance.status).filter(Attendance.event_id.in_(past_event_ids)).all()
             total_att = len(att_rows)
             present_att = sum(1 for r in att_rows if r.status == "present")
             team_attendance_rate = round(present_att / total_att * 100) if total_att else 0
-        else:
-            team_attendance_rate = 0
 
-        thirty_ago = today - timedelta(days=30)
-        sixty_ago = today - timedelta(days=60)
+        # Trend: compare recent window vs older window
+        thirty_ago = today - timedelta(days=_TREND_DAYS)
+        sixty_ago = today - timedelta(days=_TREND_COMPARE_DAYS)
         recent_ids = [e.id for e in all_events if thirty_ago <= e.event_date < today]
         older_ids = [e.id for e in all_events if sixty_ago <= e.event_date < thirty_ago]
 
-        def _rate_for(event_id_list: list[int]) -> float:
-            if not event_id_list:
-                return 0.0
-            rows = db.query(Attendance.status).filter(Attendance.event_id.in_(event_id_list)).all()
-            if not rows:
-                return 0.0
-            return sum(1 for r in rows if r.status == "present") / len(rows) * 100
+        recent_rate = _rate_for(db, recent_ids)
+        older_rate = _rate_for(db, older_ids)
+        attendance_trend = (
+            round(recent_rate - older_rate) if (recent_ids and older_ids and (recent_ids != older_ids)) else None
+        )
 
-        recent_rate = _rate_for(recent_ids)
-        older_rate = _rate_for(older_ids)
-        attendance_trend = round(recent_rate - older_rate) if (recent_ids and older_ids) else None
-
+        # Player roster
         player_q = db.query(Player)
         if team_ids is not None:
             player_q = player_q.join(PlayerTeam, PlayerTeam.player_id == Player.id).filter(
@@ -124,6 +149,7 @@ async def dashboard(
         active_players = player_q.filter(Player.archived_at.is_(None)).all()
         player_ids_all = [p.id for p in active_players]
 
+        # Injured/absence counts
         injured_count = 0
         absence_count = 0
         if player_ids_all:
@@ -144,102 +170,144 @@ async def dashboard(
                 )
                 .count()
             )
-
         injured_absent_count = injured_count + absence_count
 
+        # Compact upcoming events (batch attendance query)
         upcoming_events_compact = []
-        for e in upcoming_events[:5]:
-            atts = db.query(Attendance).filter(Attendance.event_id == e.id).all()
-            total_e = len(atts)
-            unknown_e = sum(1 for a in atts if a.status == "unknown")
-            days_diff = (e.event_date - today).days
-            if days_diff == 0:
-                label = "Today"
-            elif days_diff == 1:
-                label = "Tomorrow"
-            else:
-                label = e.event_date.strftime("%a %d")
-            upcoming_events_compact.append(
-                {
-                    "id": e.id,
-                    "title": e.title,
-                    "date_label": label,
-                    "unknown_count": unknown_e,
-                    "total_count": total_e,
-                }
+        top_event_ids = [e.id for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]]
+        if top_event_ids:
+            att_rows = (
+                db.query(Attendance.event_id, Attendance.status).filter(Attendance.event_id.in_(top_event_ids)).all()
             )
+            att_by_event: dict[int, list[str]] = {}
+            for a in att_rows:
+                att_by_event.setdefault(a.event_id, []).append(a.status)
 
+            for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]:
+                statuses = att_by_event.get(e.id, [])
+                total_e = len(statuses)
+                unknown_e = sum(1 for s in statuses if s == "unknown")
+                days_diff = (e.event_date - today).days
+                if days_diff == 0:
+                    label = "Today"
+                elif days_diff == 1:
+                    label = "Tomorrow"
+                else:
+                    label = e.event_date.strftime("%a %d")
+                upcoming_events_compact.append(
+                    {
+                        "id": e.id,
+                        "title": e.title,
+                        "date_label": label,
+                        "unknown_count": unknown_e,
+                        "total_count": total_e,
+                    }
+                )
+
+        # Watch list (batch queries)
+        watch_lookup: set[int] = set()
         watch_list = []
-        for p in active_players:
-            p_att_rows = (
-                db.query(Attendance)
-                .filter(Attendance.player_id == p.id)
-                .order_by(Attendance.event_id.desc())
-                .limit(5)
+
+        # Batch: consecutive absences — query last N attendance records per player
+        if player_ids_all:
+            subq = (
+                db.query(
+                    Attendance.player_id,
+                    Attendance.status,
+                    Event.event_date,
+                    func.row_number()
+                    .over(partition_by=Attendance.player_id, order_by=Event.event_date.desc())
+                    .label("rn"),
+                )
+                .join(Event, Attendance.event_id == Event.id)
+                .filter(Attendance.player_id.in_(player_ids_all))
+                .subquery()
+            )
+            recent_atts = (
+                db.query(subq)
+                .filter(subq.c.rn <= _WATCH_LOOKBACK)
+                .order_by(subq.c.player_id, subq.c.event_date.desc())
                 .all()
             )
-            consecutive_absent = 0
-            for a in sorted(p_att_rows, key=lambda x: x.event.event_date, reverse=True):
-                if a.status == "absent":
-                    consecutive_absent += 1
-                elif a.status == "present":
-                    break
 
-            if consecutive_absent >= 3:
-                watch_list.append(
-                    {
-                        "player_id": p.id,
-                        "player_name": p.full_name,
-                        "severity": "red",
-                        "reason": f"Missed {consecutive_absent} events",
-                    }
-                )
-            elif consecutive_absent >= 1:
-                watch_list.append(
-                    {
-                        "player_id": p.id,
-                        "player_name": p.full_name,
-                        "severity": "yellow",
-                        "reason": f"Missed {consecutive_absent} event(s)",
-                    }
-                )
+            player_absent_count: dict[int, int] = {}
+            for row in recent_atts:
+                if row.player_id not in player_absent_count:
+                    player_absent_count[row.player_id] = 0
+                if row.status == "absent":
+                    player_absent_count[row.player_id] += 1
+                elif row.status == "present":
+                    player_absent_count[row.player_id] = -999  # mark as seen
 
-            pt = (
-                db.query(PlayerTeam)
+            for p in active_players:
+                count = player_absent_count.get(p.id, 0)
+                if count < 0:
+                    continue  # has recent present, not a concern
+                if count >= _RED_ABSENT_THRESHOLD:
+                    watch_lookup.add(p.id)
+                    watch_list.append(
+                        {
+                            "player_id": p.id,
+                            "player_name": p.full_name,
+                            "severity": "red",
+                            "reason": f"Missed {count} events",
+                        }
+                    )
+                elif count >= 1:
+                    watch_lookup.add(p.id)
+                    watch_list.append(
+                        {
+                            "player_id": p.id,
+                            "player_name": p.full_name,
+                            "severity": "yellow",
+                            "reason": f"Missed {count} event(s)",
+                        }
+                    )
+
+            # Batch: injured players
+            injured_pts = (
+                db.query(PlayerTeam.player_id, PlayerTeam.injured_until)
                 .filter(
-                    PlayerTeam.player_id == p.id,
+                    PlayerTeam.player_id.in_(player_ids_all),
                     PlayerTeam.membership_status == "injured",
+                    PlayerTeam.injured_until.isnot(None),
                 )
-                .first()
+                .all()
             )
-            if pt and pt.injured_until:
-                watch_list.append(
-                    {
-                        "player_id": p.id,
-                        "player_name": p.full_name,
-                        "severity": "green",
-                        "reason": f"Injured until {pt.injured_until}",
-                    }
-                )
+            for row in injured_pts:
+                if row.player_id not in watch_lookup:
+                    p = next((x for x in active_players if x.id == row.player_id), None)
+                    if p:
+                        watch_list.append(
+                            {
+                                "player_id": p.id,
+                                "player_name": p.full_name,
+                                "severity": "green",
+                                "reason": f"Injured until {row.injured_until}",
+                            }
+                        )
 
-        msg_q = db.query(EventMessage).order_by(EventMessage.created_at.desc()).limit(5)
+        # Recent chat (joined query)
+        msg_q = (
+            db.query(EventMessage, Event.title, User.first_name, User.last_name, User.username)
+            .join(Event, EventMessage.event_id == Event.id)
+            .outerjoin(User, EventMessage.user_id == User.id)
+            .order_by(EventMessage.created_at.desc())
+            .limit(_CHAT_PREVIEW_LIMIT)
+        )
         if team_ids is not None:
-            msg_q = msg_q.join(Event, EventMessage.event_id == Event.id).filter(Event.team_id.in_(team_ids))
+            msg_q = msg_q.filter(Event.team_id.in_(team_ids))
         recent_messages = []
-        for msg in msg_q.all():
-            event = db.get(Event, msg.event_id)
-            author = db.get(User, msg.user_id)
-            author_name = (
-                f"{author.first_name} {author.last_name}"
-                if author and author.first_name
-                else (author.username if author else "Unknown")
-            )
+        for msg, event_title, fn, ln, un in msg_q.all():
+            author_name = f"{fn} {ln}" if fn else (un or "Unknown")
             recent_messages.append(
                 {
                     "author_name": author_name,
-                    "body_truncated": msg.body[:80] + "\u2026" if len(msg.body) > 80 else msg.body,
+                    "body_truncated": msg.body[:_MSG_TRUNCATE] + "\u2026"
+                    if len(msg.body) > _MSG_TRUNCATE
+                    else msg.body,
                     "event_id": msg.event_id,
-                    "event_title": event.title if event else "",
+                    "event_title": event_title or "",
                 }
             )
 
@@ -262,7 +330,7 @@ async def dashboard(
             },
         )
 
-    # ── Player / member dashboard ────────────────────────────────────────
+    # ── Player / member ─────────────────────────────────────────────────
     player = db.query(Player).filter(Player.user_id == user.id, Player.archived_at.is_(None)).first()
     my_player_id = player.id if player else None
 
@@ -273,20 +341,18 @@ async def dashboard(
     }
 
     if my_player_id:
-        rate, breakdown = _compute_attendance_rate(db, my_player_id, active_season.id if active_season else None)
+        rate, breakdown = _attendance_rate(db, my_player_id, active_season.id if active_season else None)
         context["attendance_rate"] = rate
         context["event_type_breakdown"] = breakdown
 
-        teams_q = db.query(PlayerTeam.team_id).filter(PlayerTeam.player_id == my_player_id)
-        player_team_ids = {row[0] for row in teams_q.all()}
+        player_team_ids = {
+            row[0] for row in db.query(PlayerTeam.team_id).filter(PlayerTeam.player_id == my_player_id).all()
+        }
         next_event = None
         if player_team_ids:
             next_event = (
                 db.query(Event)
-                .filter(
-                    Event.event_date >= today,
-                    Event.team_id.in_(player_team_ids),
-                )
+                .filter(Event.event_date >= today, Event.team_id.in_(player_team_ids))
                 .order_by(Event.event_date.asc())
                 .first()
             )
@@ -299,24 +365,19 @@ async def dashboard(
             )
             context["my_next_status"] = att.status if att else "unknown"
             context["my_next_note"] = att.note if att and att.note else ""
-
-        status_labels = {
-            "present": "present",
-            "absent": "absent",
-            "maybe": "maybe",
-            "unknown": "unknown",
-        }
-        context["status_labels"] = status_labels
+        else:
+            context["my_next_status"] = "unknown"
+            context["my_next_note"] = ""
 
         notif_q = (
             db.query(Notification)
             .filter(
                 (Notification.player_id == my_player_id) | (Notification.user_id == user.id),
-                Notification.is_read == False,  # noqa: E712
+                Notification.is_read.is_(False),
             )
             .order_by(Notification.created_at.desc())
         )
-        context["recent_notifications"] = notif_q.limit(3).all()
+        context["recent_notifications"] = notif_q.limit(_NOTIF_PREVIEW_LIMIT).all()
         context["unread_count"] = notif_q.count()
 
         context["active_absences"] = (
