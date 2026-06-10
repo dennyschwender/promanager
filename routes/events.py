@@ -254,6 +254,27 @@ async def events_list(
     )
     present_map = {eid: cnt for eid, cnt in present_rows}
     total_map = {eid: cnt for eid, cnt in total_rows}
+
+    ext_present_rows = (
+        db.query(EventExternal.event_id, func.count(EventExternal.id))
+        .filter(
+            EventExternal.event_id.in_(visible_event_ids),
+            EventExternal.status == "present",
+        )
+        .group_by(EventExternal.event_id)
+        .all()
+    )
+    ext_total_rows = (
+        db.query(EventExternal.event_id, func.count(EventExternal.id))
+        .filter(EventExternal.event_id.in_(visible_event_ids))
+        .group_by(EventExternal.event_id)
+        .all()
+    )
+    for eid, cnt in ext_present_rows:
+        present_map[eid] = present_map.get(eid, 0) + cnt
+    for eid, cnt in ext_total_rows:
+        total_map[eid] = total_map.get(eid, 0) + cnt
+
     attendance_summary = {eid: (present_map.get(eid, 0), total_map.get(eid, 0)) for eid in visible_event_ids}
 
     return render(

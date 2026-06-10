@@ -12,6 +12,7 @@ from app.database import get_db
 from app.templates import render
 from models.attendance import Attendance
 from models.event import Event
+from models.event_external import EventExternal
 from models.event_message import EventMessage
 from models.notification import Notification
 from models.player import Player
@@ -200,6 +201,14 @@ async def dashboard(
             att_by_event: dict[int, list[str]] = {}
             for a in compact_att_rows:
                 att_by_event.setdefault(a.event_id, []).append(a.status)
+
+            ext_rows = (
+                db.query(EventExternal.event_id, EventExternal.status)
+                .filter(EventExternal.event_id.in_(top_event_ids))
+                .all()
+            )
+            for eid, status in ext_rows:
+                att_by_event.setdefault(eid, []).append(status)
 
             for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]:
                 statuses = att_by_event.get(e.id, [])
