@@ -176,11 +176,11 @@ async def dashboard(
         upcoming_events_compact = []
         top_event_ids = [e.id for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]]
         if top_event_ids:
-            att_rows = (
+            compact_att_rows = (
                 db.query(Attendance.event_id, Attendance.status).filter(Attendance.event_id.in_(top_event_ids)).all()
             )
             att_by_event: dict[int, list[str]] = {}
-            for a in att_rows:
+            for a in compact_att_rows:
                 att_by_event.setdefault(a.event_id, []).append(a.status)
 
             for e in upcoming_events[:_UPCOMING_EVENTS_LIMIT]:
@@ -276,12 +276,12 @@ async def dashboard(
             )
             for row in injured_pts:
                 if row.player_id not in watch_lookup:
-                    p = next((x for x in active_players if x.id == row.player_id), None)
-                    if p:
+                    matched_player = next((x for x in active_players if x.id == row.player_id), None)
+                    if matched_player:
                         watch_list.append(
                             {
-                                "player_id": p.id,
-                                "player_name": p.full_name,
+                                "player_id": matched_player.id,
+                                "player_name": matched_player.full_name,
                                 "severity": "green",
                                 "reason": f"Injured until {row.injured_until}",
                             }
