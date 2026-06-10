@@ -61,7 +61,7 @@
     {% endif %}
     <a href="/players/{{ my_player_id }}/absences" class="btn btn-sm btn-outline" style="margin-top:0.5rem">{{ t('absences.manage_my_absences') }}</a>
   </div>
-</div>
+{% endif %}
 
 {% if my_player_id %}
 <meta name="csrf-token" content="{{ request.state.csrf_token }}">

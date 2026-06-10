@@ -293,10 +293,10 @@ async def dashboard(
             .join(Event, EventMessage.event_id == Event.id)
             .outerjoin(User, EventMessage.user_id == User.id)
             .order_by(EventMessage.created_at.desc())
-            .limit(_CHAT_PREVIEW_LIMIT)
         )
         if team_ids is not None:
             msg_q = msg_q.filter(Event.team_id.in_(team_ids))
+        msg_q = msg_q.limit(_CHAT_PREVIEW_LIMIT)
         recent_messages = []
         for msg, event_title, fn, ln, un in msg_q.all():
             author_name = f"{fn} {ln}" if fn else (un or "Unknown")
@@ -313,7 +313,7 @@ async def dashboard(
 
         return render(
             request,
-            "dashboard/coach_fragment.html",
+            "dashboard/index.html",
             {
                 "user": user,
                 "active_season": active_season,
@@ -338,6 +338,12 @@ async def dashboard(
         "user": user,
         "active_season": active_season,
         "my_player_id": my_player_id,
+        "status_labels": {
+            "present": "Present",
+            "absent": "Absent",
+            "maybe": "Maybe",
+            "unknown": "Unknown",
+        },
     }
 
     if my_player_id:
@@ -390,4 +396,4 @@ async def dashboard(
             .all()
         )
 
-    return render(request, "dashboard/player_fragment.html", context)
+    return render(request, "dashboard/index.html", context)
