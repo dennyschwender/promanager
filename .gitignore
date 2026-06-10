@@ -67,6 +67,3 @@ refs/
 
 # Playwright MCP artifacts
 .playwright-mcp/
-
-# Superpowers brainstorming artifacts
-.superpowers/
