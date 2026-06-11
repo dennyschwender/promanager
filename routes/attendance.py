@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from urllib.parse import quote
-
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -199,6 +197,8 @@ async def update_attendance(
     _csrf: None = Depends(require_csrf),
     db: Session = Depends(get_db),
 ):
+    from urllib.parse import quote  # noqa: PLC0415
+
     from fastapi.responses import JSONResponse  # noqa: PLC0415
 
     # Detect AJAX caller — must happen first so all error paths can branch
