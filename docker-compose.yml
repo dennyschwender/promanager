@@ -1,8 +1,6 @@
 services:
   web:
     build: .
-    ports:
-      - "7000:7000"
     volumes:
       - ./data:/app/data
     env_file:
