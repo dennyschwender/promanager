@@ -174,34 +174,39 @@ document.addEventListener('click', function (e) {
 {% if user %}
 <script>
 (function () {
-  const evtSource = new EventSource("/notifications/stream");
-  window._pmSSE = evtSource;
-  evtSource.onmessage = function (e) {
-    try {
-      const data = JSON.parse(e.data);
-      const badge = document.querySelector(".notif-badge");
-      const bell = document.querySelector(".notif-bell");
-      if (data.unread_count > 0) {
-        if (!badge) {
-          const span = document.createElement("span");
-          span.className = "notif-badge";
-          bell.appendChild(span);
+  let lastUnread = {{ request.state.unread_count }};
+  function pollUnread() {
+    fetch("/notifications/unread-count")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var count = data.unread_count;
+        var badge = document.querySelector(".notif-badge");
+        var bell = document.querySelector(".notif-bell");
+        if (count > 0 && count !== lastUnread) {
+          if (!badge) {
+            var span = document.createElement("span");
+            span.className = "notif-badge";
+            bell.appendChild(span);
+            badge = span;
+          }
+          badge.textContent = count;
+          showToast({{ t('notifications.new_notification')|tojson }});
+        } else if (count === 0 && badge) {
+          badge.remove();
         }
-        document.querySelector(".notif-badge").textContent = data.unread_count;
-        showToast({{ t('notifications.new_notification')|tojson }});
-      } else if (badge) {
-        badge.remove();
-      }
-    } catch (_) {}
-  };
+        lastUnread = count;
+      })
+      .catch(function () {});
+  }
+  setInterval(pollUnread, 20000);
 
   function showToast(msg) {
-    const toast = document.createElement("div");
+    var toast = document.createElement("div");
     toast.className = "notif-toast";
     toast.textContent = msg;
-    toast.onclick = () => window.location.href = "/notifications";
+    toast.onclick = function () { window.location.href = "/notifications"; };
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 5000);
+    setTimeout(function () { toast.remove(); }, 5000);
   }
 })();
 </script>

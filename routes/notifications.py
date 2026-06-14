@@ -69,6 +69,27 @@ async def vapid_public_key():
     return JSONResponse({"publicKey": settings.VAPID_PUBLIC_KEY})
 
 
+@router.get("/unread-count")
+async def unread_count(
+    request: Request,
+    user=Depends(require_login),
+    db: Session = Depends(get_db),
+):
+    player_ids = _player_ids_for_user(user, db)
+    count = (
+        db.query(Notification)
+        .filter(
+            or_(
+                Notification.player_id.in_(player_ids) if player_ids else False,
+                Notification.user_id == user.id,
+            ),
+            Notification.is_read.is_(False),
+        )
+        .count()
+    )
+    return JSONResponse({"unread_count": count})
+
+
 # ── SSE stream ────────────────────────────────────────────────────────────────
 
 
