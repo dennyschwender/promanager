@@ -40,11 +40,13 @@ def _make_bot_app():
     return app
 
 
-def _make_event(team_id=10, title="Training"):
+def _make_event(team_id=10, title="Training", event_date="2026-06-15"):
     e = MagicMock()
     e.id = 1
     e.title = title
     e.team_id = team_id
+    e.event_date = MagicMock()
+    e.event_date.strftime.return_value = event_date
     return e
 
 

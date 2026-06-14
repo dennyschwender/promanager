@@ -21,6 +21,7 @@ async def notify_coaches_attendance_change(
     import app.database as _db_mod  # noqa: PLC0415
     import bot as _bot  # noqa: PLC0415
     from bot.navigation import inject_notification  # noqa: PLC0415
+    from models.attendance import Attendance  # noqa: PLC0415
     from models.event import Event  # noqa: PLC0415
     from models.notification import Notification  # noqa: PLC0415
     from models.notification_preference import ChannelType, NotificationPreference  # noqa: PLC0415
@@ -44,10 +45,21 @@ async def notify_coaches_attendance_change(
         if player is None:
             return
 
+        att = (
+            db.query(Attendance)
+            .filter(
+                Attendance.event_id == event_id,
+                Attendance.player_id == player_id,
+            )
+            .first()
+        )
+        date_str = event.event_date.strftime("%Y-%m-%d") if event.event_date else ""
+        reason_line = f"\nReason: {att.note}" if att and att.note else ""
+
         icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(new_status, "?")
         notif_title = f"{icon} {player.full_name} → {new_status}"
-        notif_body = event.title
-        tg_alert = f"🔔 {player.full_name} {icon} — {event.title}"
+        notif_body = f"{event.title} — {date_str}{reason_line}"
+        tg_alert = f"🔔 {player.full_name} {icon} — {event.title} ({date_str}){reason_line}"
 
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
         seen_user_ids: set[int] = set()
@@ -181,9 +193,11 @@ async def notify_coaches_about_external_change(
             return
 
         icon = {"present": "✓", "absent": "✗", "unknown": "?"}.get(new_status, "?")
+        date_str = event.event_date.strftime("%Y-%m-%d") if event.event_date else ""
+        reason_line = f"\nReason: {ext.note}" if ext.note else ""
         notif_title = f"{icon} {ext.full_name} (ext) → {new_status}"
-        notif_body = event.title
-        tg_alert = f"🔔 {ext.full_name} (ext) {icon} — {event.title}"
+        notif_body = f"{event.title} — {date_str}{reason_line}"
+        tg_alert = f"🔔 {ext.full_name} (ext) {icon} — {event.title} ({date_str}){reason_line}"
 
         coaches = db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all()
         seen_user_ids: set[int] = set()
