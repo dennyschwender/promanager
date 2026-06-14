@@ -51,7 +51,7 @@ def get_preference(player_id: int, channel: str, db: Session) -> bool:
         )
         .first()
     )
-    return pref.enabled if pref is not None else True
+    return pref.enabled if pref is not None else False
 
 
 def get_user_preference(user_id: int, channel: str, db: Session) -> bool:
@@ -67,7 +67,7 @@ def get_user_preference(user_id: int, channel: str, db: Session) -> bool:
         )
         .first()
     )
-    return pref.enabled if pref is not None else True
+    return pref.enabled if pref is not None else False
 
 
 def create_default_user_preferences(user_id: int, db: Session) -> None:

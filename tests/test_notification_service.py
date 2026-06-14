@@ -99,9 +99,9 @@ def test_get_preference_returns_true_when_enabled(db, player):
     assert get_preference(player.id, ChannelType.EMAIL, db) is True
 
 
-def test_get_preference_returns_true_when_missing(db, player):
-    # No preferences created — defaults to True
-    assert get_preference(player.id, ChannelType.EMAIL, db) is True
+def test_get_preference_returns_false_when_missing(db, player):
+    # No preferences created — defaults to False
+    assert get_preference(player.id, ChannelType.EMAIL, db) is False
 
 
 def test_get_preference_returns_false_when_disabled(db, player):

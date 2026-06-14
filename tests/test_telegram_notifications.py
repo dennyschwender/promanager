@@ -62,6 +62,9 @@ async def test_notify_coaches_sends_telegram_to_coach_with_chat_id():
     coach = _make_coach(user_id=10, chat_id="chat123")
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach])
     mock_app = _make_bot_app()
+    # Opt-in: ensure telegram preference exists and is enabled
+    pref_mock = MagicMock(enabled=True)
+    mock_db.query.return_value.filter.return_value.first.return_value = pref_mock
 
     import app.database as _db_mod
     import bot as _bot
@@ -142,6 +145,8 @@ async def test_notify_coaches_deduplicates_by_user_id():
     coach2 = _make_coach(user_id=10, chat_id="chat123")  # duplicate user_id
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach1, coach2])
     mock_app = _make_bot_app()
+    pref_mock = MagicMock(enabled=True)
+    mock_db.query.return_value.filter.return_value.first.return_value = pref_mock
 
     import app.database as _db_mod
     import bot as _bot
@@ -172,6 +177,8 @@ async def test_notify_coaches_deduplicates_shared_telegram_chat_id():
     coach2 = _make_coach(user_id=11, chat_id=chat_id)
     mock_db = _make_mock_db(_make_event(), _make_player(), [coach1, coach2])
     mock_app = _make_bot_app()
+    pref_mock = MagicMock(enabled=True)
+    mock_db.query.return_value.filter.return_value.first.return_value = pref_mock
 
     import app.database as _db_mod
     import bot as _bot
