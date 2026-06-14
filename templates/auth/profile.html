@@ -38,7 +38,7 @@
   <h3>{{ t('auth.notification_preferences') }}</h3>
   <form method="post" action="/notifications/preferences">
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-    {% for channel, label in [("email", t('auth.channel_email')), ("inapp", t('auth.channel_inbox')), ("webpush", t('auth.channel_push'))] %}
+    {% for channel, label in [("email", t('auth.channel_email')), ("inapp", t('auth.channel_inbox')), ("webpush", t('auth.channel_push')), ("telegram", t('auth.channel_telegram'))] %}
       {% set pref_enabled = player_prefs.get(channel, true) %}
       <label style="display:flex;align-items:center;gap:.5rem;">
         <input type="checkbox" name="{{ channel }}" value="on" {% if pref_enabled %}checked{% endif %}>
