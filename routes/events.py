@@ -41,6 +41,7 @@ from services.attendance_service import (
 from services.audit_service import log_action
 from services.chat_service import author_display_name, message_to_dict
 from services.email_service import send_event_reminder
+from services.auth_service import create_magic_link
 from services.event_text_service import format_attendance_text
 from services.notification_service import send_notifications
 from services.notification_templates import TEMPLATES
@@ -1254,6 +1255,9 @@ async def send_reminders(
     for att in attendances:
         player = att.player
         if player and player.email:
+            magic = (
+                create_magic_link(player.user.id, f"/events/{event_id}", player.user.email) if player.user_id else None  # type: ignore[union-attr, arg-type]
+            )
             ok = send_event_reminder(
                 player_email=player.email,
                 player_name=player.full_name,
@@ -1261,6 +1265,7 @@ async def send_reminders(
                 event_date=event.event_date,
                 event_time=event.event_time,
                 event_location=event.location or "",
+                magic_link=magic,
             )
             if ok:
                 sent += 1
