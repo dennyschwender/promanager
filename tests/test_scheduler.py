@@ -18,7 +18,7 @@ def _make_player(db, email="player@test.com"):
     return p
 
 
-def _make_event(db, days_ahead=1, has_time=True, reminder_sent=False):
+def _make_event(db, days_ahead=1, has_time=True, reminder_sent=False, reminder_attempts=0):
     event_date = date.today() + timedelta(days=days_ahead)
     event = Event(
         title="Scheduled Event",
@@ -26,6 +26,7 @@ def _make_event(db, days_ahead=1, has_time=True, reminder_sent=False):
         event_date=event_date,
         event_time=time(18, 0) if has_time else None,
         reminder_sent=reminder_sent,
+        reminder_attempts=reminder_attempts,
     )
     db.add(event)
     db.commit()
@@ -50,7 +51,8 @@ def test_send_due_reminders_sends_to_unknown_players(db):
     assert count == 1
     mock_send.assert_called_once()
     db.refresh(event)
-    assert event.reminder_sent is True
+    assert event.reminder_attempts == 1
+    assert event.reminder_sent is False
 
 
 def test_send_due_reminders_skips_already_sent(db):
@@ -58,7 +60,7 @@ def test_send_due_reminders_skips_already_sent(db):
     from services.scheduler import send_due_reminders
 
     player = _make_player(db, email="skip@test.com")
-    event = _make_event(db, days_ahead=0, has_time=False, reminder_sent=True)
+    event = _make_event(db, days_ahead=0, has_time=False, reminder_sent=True, reminder_attempts=3)
     att = Attendance(event_id=event.id, player_id=player.id, status="unknown")
     db.add(att)
     db.commit()

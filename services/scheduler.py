@@ -41,7 +41,7 @@ def send_due_reminders() -> int:
         events = (
             db.query(Event)
             .filter(
-                Event.reminder_sent.is_(False),
+                (Event.reminder_sent.is_(False)) | ((Event.reminder_sent.is_(True)) & (Event.reminder_attempts < 3)),
                 Event.event_date >= today,
                 Event.event_date <= cutoff_date,
             )
@@ -61,6 +61,7 @@ def send_due_reminders() -> int:
                 if event_dt < now:
                     # Event is already in the past — mark sent to avoid repeated checks
                     event.reminder_sent = True
+                    event.reminder_attempts = 3
                     db.add(event)
                     continue
                 if event_dt > cutoff:
@@ -123,7 +124,9 @@ def send_due_reminders() -> int:
                     background_tasks=None,
                 )
 
-            event.reminder_sent = True
+            event.reminder_attempts = (event.reminder_attempts or 0) + 1
+            if event.reminder_attempts >= 3:
+                event.reminder_sent = True
             db.add(event)
             total_sent += sent
             logger.info("Reminder: sent %d emails for event %r (id=%d)", sent, event.title, event.id)

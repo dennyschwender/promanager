@@ -1274,7 +1274,6 @@ async def send_reminders(
     import os  # noqa: PLC0415
 
     if os.environ.get("TELEGRAM_BOT_TOKEN"):
-        from models.notification import Notification  # noqa: PLC0415
         from services.channels.telegram_channel import TelegramChannel  # noqa: PLC0415
 
         tg = TelegramChannel()
@@ -1295,14 +1294,13 @@ async def send_reminders(
         for att in tg_attendances:
             player = att.player
             if player:
-                fake_notif = Notification(
-                    player_id=player.id,
-                    event_id=event_id,
+                tg.send_raw(
+                    player,
                     title=event.title,
                     body=f"{notif_body} · Your status: {att.status}",
                     tag="reminder",
+                    event_id=event_id,
                 )
-                tg.send(player, fake_notif)
 
     event.reminder_sent = True
     db.add(event)
