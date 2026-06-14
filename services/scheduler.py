@@ -27,6 +27,7 @@ def send_due_reminders() -> int:
     from models.attendance import Attendance
     from models.event import Event
     from services.auth_service import create_magic_link
+    from models.notification_preference import ChannelType
     from services.notification_service import get_preference
 
     db = SessionLocal()
@@ -84,7 +85,7 @@ def send_due_reminders() -> int:
                 if not player or not player.email:
                     continue
                 # Respect player's email notification preference (default True if not set)
-                if not get_preference(player.id, "email", db):
+                if not get_preference(player.id, ChannelType.EMAIL, db):
                     continue
                 magic = (
                     create_magic_link(player.user.id, f"/events/{event.id}", player.user.email)  # type: ignore[union-attr, arg-type]
@@ -272,3 +273,63 @@ async def backup_loop(interval_seconds: int = 86400) -> None:
         except asyncio.CancelledError:
             logger.info("Backup scheduler stopped.")
             break
+
+
+def cleanup_old_notifications() -> int:
+    """Delete Notification and TelegramNotification records older than 90 days.
+
+    Runs in a thread executor; must not share DB sessions across threads.
+    Returns the total number of records deleted.
+    """
+    from app.database import SessionLocal
+    from models.notification import Notification
+    from models.telegram_notification import TelegramNotification
+
+    db = SessionLocal()
+    total = 0
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+
+        n_count = db.query(Notification).filter(Notification.created_at < cutoff).delete()
+        total += n_count
+
+        tn_count = db.query(TelegramNotification).filter(TelegramNotification.created_at < cutoff).delete()
+        total += tn_count
+
+        db.commit()
+        if total:
+            logger.info(
+                "Notification cleanup: deleted %d old record(s) (%d notifications, %d telegram)",
+                total,
+                n_count,
+                tn_count,
+            )
+    except Exception:
+        logger.exception("Notification cleanup failed")
+        db.rollback()
+        return 0
+    finally:
+        db.close()
+
+    return total
+
+
+async def notification_cleanup_loop(interval_seconds: int = 86400) -> None:
+    """Run cleanup_old_notifications every `interval_seconds` (default 24h).
+
+    Designed to be started as an asyncio background task from the lifespan.
+    First cleanup runs 1 hour after startup.
+    """
+    logger.info("Notification cleanup scheduler started (interval=%ds)", interval_seconds)
+    await asyncio.sleep(3600)
+    while True:
+        try:
+            await asyncio.sleep(interval_seconds)
+            count = await asyncio.get_event_loop().run_in_executor(None, cleanup_old_notifications)
+            if count:
+                logger.info("Notification cleanup: removed %d old record(s)", count)
+        except asyncio.CancelledError:
+            logger.info("Notification cleanup scheduler stopped.")
+            break
+        except Exception:
+            logger.exception("Unexpected error in notification cleanup loop — continuing")
