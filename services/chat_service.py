@@ -162,7 +162,8 @@ async def notify_members_of_chat(
     import app.database as _db_mod  # noqa: PLC0415
     from models.attendance import Attendance  # noqa: PLC0415
     from models.notification import Notification  # noqa: PLC0415
-    from services.channels.inapp_channel import push_unread_count  # noqa: PLC0415
+    from models.user_team import UserTeam  # noqa: PLC0415
+    from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
 
     _webpush = WebPushChannel()
@@ -172,12 +173,14 @@ async def notify_members_of_chat(
         if event is None:
             return
 
-        preview = body_text[:50] + ("…" if len(body_text) > 50 else "")
-        notif_title = f"💬 {author_name}: {preview}"
+        preview = body_text[:50] + ("\u2026" if len(body_text) > 50 else "")
+        notif_title = f"\U0001f4ac {author_name}: {preview}"
         notif_body = event.title
 
         seen_player_ids: set[int] = set()
+        seen_user_ids: set[int] = set()
 
+        # Existing: non-absent attendees
         att_rows = (
             db.query(Attendance)
             .filter(
@@ -211,6 +214,46 @@ async def notify_members_of_chat(
             )
             push_unread_count(player.id, unread)
             _webpush.send(player, notif, db)
+            if player.user_id:
+                seen_user_ids.add(player.user_id)
+
+        # New: coaches/admins via UserTeam (skip if already notified via attendance)
+        if event.team_id is not None:
+            for ut in db.query(UserTeam).filter(UserTeam.team_id == event.team_id).all():
+                if ut.user_id == exclude_user_id or ut.user_id in seen_user_ids:
+                    continue
+                if not ut.user:
+                    continue
+                seen_user_ids.add(ut.user_id)
+                coach_player = ut.user.players[0] if ut.user.players else None
+
+                notif = Notification(
+                    player_id=coach_player.id if coach_player else None,
+                    user_id=ut.user_id if not coach_player else None,
+                    event_id=event_id,
+                    title=notif_title,
+                    body=notif_body,
+                    tag="chat",
+                )
+                db.add(notif)
+                db.flush()
+
+                if coach_player:
+                    unread = (
+                        db.query(Notification)
+                        .filter(Notification.player_id == coach_player.id, Notification.is_read.is_(False))
+                        .count()
+                    )
+                    push_unread_count(coach_player.id, unread)
+                    _webpush.send(coach_player, notif, db)
+                else:
+                    unread = (
+                        db.query(Notification)
+                        .filter(Notification.user_id == ut.user_id, Notification.is_read.is_(False))
+                        .count()
+                    )
+                    push_unread_count_to_user(ut.user_id, unread)
+                    _webpush.send_to_user(ut.user_id, notif, db)
 
         db.commit()
     except Exception:
