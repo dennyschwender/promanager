@@ -142,6 +142,12 @@ async def send_telegram_notifications(
 
         for u in users_to_notify:
             await inject_chat_notification(u, event_id, event.title, tg_app.bot, db)
+            preview = body[:50] + ("\u2026" if len(body) > 50 else "")
+            tg_alert = f"\U0001f4ac {author_name}: {preview}"
+            try:
+                await tg_app.bot.send_message(chat_id=u.telegram_chat_id, text=tg_alert)
+            except Exception as exc:
+                logger.warning("send_telegram_notifications: send_message failed for user %s: %s", u.id, exc)
 
     finally:
         db.close()
