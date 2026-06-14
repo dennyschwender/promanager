@@ -23,3 +23,9 @@ exclude = ["scripts/"]
 testpaths = ["tests"]
 addopts = "-v"
 pythonpath = ["."]
+filterwarnings = [
+    "ignore:.*iscoroutinefunction:DeprecationWarning",
+    "ignore:.*get_event_loop_policy.*:DeprecationWarning",
+    "ignore:.*set_event_loop_policy.*:DeprecationWarning",
+    "ignore:.*per-request cookies.*:DeprecationWarning",
+]

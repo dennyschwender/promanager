@@ -29,27 +29,28 @@ def make_client():
 
 def test_valid_header_passes():
     c = make_client()
+    c.cookies.set("session_user_id", SESSION_COOKIE)
     resp = c.post(
         "/json-endpoint",
         json={},
         headers={"X-CSRF-Token": VALID_TOKEN},
-        cookies={"session_user_id": SESSION_COOKIE},
     )
     assert resp.status_code == 200
 
 
 def test_missing_header_returns_403():
     c = make_client()
-    resp = c.post("/json-endpoint", json={}, cookies={"session_user_id": SESSION_COOKIE})
+    c.cookies.set("session_user_id", SESSION_COOKIE)
+    resp = c.post("/json-endpoint", json={})
     assert resp.status_code == 403
 
 
 def test_wrong_token_returns_403():
     c = make_client()
+    c.cookies.set("session_user_id", SESSION_COOKIE)
     resp = c.post(
         "/json-endpoint",
         json={},
         headers={"X-CSRF-Token": "badtoken"},
-        cookies={"session_user_id": SESSION_COOKIE},
     )
     assert resp.status_code == 403
