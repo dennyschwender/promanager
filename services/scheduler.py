@@ -26,8 +26,8 @@ def send_due_reminders() -> int:
     from app.database import SessionLocal
     from models.attendance import Attendance
     from models.event import Event
-    from services.auth_service import create_magic_link
     from models.notification_preference import ChannelType
+    from services.auth_service import create_magic_link
     from services.notification_service import get_preference
 
     db = SessionLocal()

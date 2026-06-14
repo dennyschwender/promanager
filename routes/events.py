@@ -39,9 +39,9 @@ from services.attendance_service import (
     sync_attendance_defaults,
 )
 from services.audit_service import log_action
+from services.auth_service import create_magic_link
 from services.chat_service import author_display_name, message_to_dict
 from services.email_service import send_event_reminder
-from services.auth_service import create_magic_link
 from services.event_text_service import format_attendance_text
 from services.notification_service import send_notifications
 from services.notification_templates import TEMPLATES

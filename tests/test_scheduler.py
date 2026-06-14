@@ -36,8 +36,8 @@ def _make_event(db, days_ahead=1, has_time=True, reminder_sent=False, reminder_a
 
 def test_send_due_reminders_sends_to_unknown_players(db):
     """Reminder job sends email to players with unknown attendance within the window."""
-    from services.scheduler import send_due_reminders
     from services.notification_service import create_default_preferences
+    from services.scheduler import send_due_reminders
 
     player = _make_player(db)
     create_default_preferences(player.id, db)
