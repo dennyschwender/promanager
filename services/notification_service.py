@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from models.attendance import Attendance
 from models.notification import Notification
-from models.notification_preference import CHANNELS, NotificationPreference
+from models.notification_preference import CHANNELS, ChannelType, NotificationPreference
 from models.player import Player
 from services.channels.email_channel import EmailChannel
 from services.channels.inapp_channel import InAppChannel
@@ -180,16 +180,16 @@ def _dispatch(
                 .count()
             )
 
-            if "inapp" in admin_channels and get_preference(player.id, "inapp", db):
+            if "inapp" in admin_channels and get_preference(player.id, ChannelType.INAPP, db):
                 _inapp_channel.send(player, notif, unread_count=unread)
 
-            if "email" in admin_channels and get_preference(player.id, "email", db):
+            if "email" in admin_channels and get_preference(player.id, ChannelType.EMAIL, db):
                 _email_channel.send(player, notif)
 
-            if "webpush" in admin_channels and get_preference(player.id, "webpush", db):
+            if "webpush" in admin_channels and get_preference(player.id, ChannelType.WEBPUSH, db):
                 _webpush_channel.send(player, notif, db=db)
 
-            if "telegram" in admin_channels and get_preference(player.id, "telegram", db):
+            if "telegram" in admin_channels and get_preference(player.id, ChannelType.TELEGRAM, db):
                 _telegram_channel.send(player, notif)
 
             queued += 1

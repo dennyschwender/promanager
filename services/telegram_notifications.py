@@ -23,7 +23,7 @@ async def notify_coaches_attendance_change(
     from bot.navigation import inject_notification  # noqa: PLC0415
     from models.event import Event  # noqa: PLC0415
     from models.notification import Notification  # noqa: PLC0415
-    from models.notification_preference import NotificationPreference  # noqa: PLC0415
+    from models.notification_preference import ChannelType, NotificationPreference  # noqa: PLC0415
     from models.player import Player  # noqa: PLC0415
     from models.telegram_notification import TelegramNotification  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
@@ -72,7 +72,7 @@ async def notify_coaches_attendance_change(
                     db.query(NotificationPreference)
                     .filter(
                         NotificationPreference.player_id == coach_player.id,
-                        NotificationPreference.channel == "telegram",
+                        NotificationPreference.channel == ChannelType.TELEGRAM,
                     )
                     .first()
                 )
@@ -80,7 +80,7 @@ async def notify_coaches_attendance_change(
                     telegram_enabled = False
             elif has_telegram and coach_player is None:
                 # Unlinked admin: check user-keyed preference
-                if not get_user_preference(ut.user_id, "telegram", db):
+                if not get_user_preference(ut.user_id, ChannelType.TELEGRAM, db):
                     telegram_enabled = False
 
             if has_telegram and telegram_enabled:
@@ -162,7 +162,7 @@ async def notify_coaches_about_external_change(
     from models.event import Event  # noqa: PLC0415
     from models.event_external import EventExternal  # noqa: PLC0415
     from models.notification import Notification  # noqa: PLC0415
-    from models.notification_preference import NotificationPreference  # noqa: PLC0415
+    from models.notification_preference import ChannelType, NotificationPreference  # noqa: PLC0415
     from models.user_team import UserTeam  # noqa: PLC0415
     from services.channels.inapp_channel import push_unread_count, push_unread_count_to_user  # noqa: PLC0415
     from services.channels.webpush_channel import WebPushChannel  # noqa: PLC0415
@@ -207,7 +207,7 @@ async def notify_coaches_about_external_change(
                     db.query(NotificationPreference)
                     .filter(
                         NotificationPreference.player_id == coach_player.id,
-                        NotificationPreference.channel == "telegram",
+                        NotificationPreference.channel == ChannelType.TELEGRAM,
                     )
                     .first()
                 )
@@ -251,7 +251,7 @@ async def notify_coaches_about_external_change(
                     from services.channels.email_channel import EmailChannel  # noqa: PLC0415
                     from services.notification_service import get_preference  # noqa: PLC0415
 
-                    if get_preference(coach_player.id, "email", db):
+                    if get_preference(coach_player.id, ChannelType.EMAIL, db):
                         EmailChannel().send(coach_player, web_notif)
                 else:
                     push_unread_count_to_user(ut.user_id, unread)

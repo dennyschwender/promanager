@@ -9,7 +9,7 @@ import pytest
 from models.attendance import Attendance
 from models.event import Event
 from models.notification import Notification
-from models.notification_preference import CHANNELS, NotificationPreference
+from models.notification_preference import CHANNELS, ChannelType, NotificationPreference
 from models.player import Player
 from models.season import Season
 from models.team import Team
@@ -96,12 +96,12 @@ def test_create_default_preferences_idempotent(db, player):
 
 def test_get_preference_returns_true_when_enabled(db, player):
     create_default_preferences(player.id, db)
-    assert get_preference(player.id, "email", db) is True
+    assert get_preference(player.id, ChannelType.EMAIL, db) is True
 
 
 def test_get_preference_returns_true_when_missing(db, player):
     # No preferences created — defaults to True
-    assert get_preference(player.id, "email", db) is True
+    assert get_preference(player.id, ChannelType.EMAIL, db) is True
 
 
 def test_get_preference_returns_false_when_disabled(db, player):
@@ -110,13 +110,13 @@ def test_get_preference_returns_false_when_disabled(db, player):
         db.query(NotificationPreference)
         .filter(
             NotificationPreference.player_id == player.id,
-            NotificationPreference.channel == "email",
+            NotificationPreference.channel == ChannelType.EMAIL,
         )
         .one()
     )
     pref.enabled = False
     db.commit()
-    assert get_preference(player.id, "email", db) is False
+    assert get_preference(player.id, ChannelType.EMAIL, db) is False
 
 
 # ── send_notifications ────────────────────────────────────────────────────────
@@ -150,7 +150,7 @@ def test_send_skips_disabled_channel(db, player, event):
         db.query(NotificationPreference)
         .filter(
             NotificationPreference.player_id == player.id,
-            NotificationPreference.channel == "inapp",
+            NotificationPreference.channel == ChannelType.INAPP,
         )
         .one()
     )

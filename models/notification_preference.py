@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
@@ -9,7 +10,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-CHANNELS = ("email", "inapp", "webpush", "telegram")
+
+class ChannelType(StrEnum):
+    EMAIL = "email"
+    INAPP = "inapp"
+    WEBPUSH = "webpush"
+    TELEGRAM = "telegram"
+
+
+CHANNELS = tuple(c.value for c in ChannelType)
 
 
 if TYPE_CHECKING:
