@@ -1,9 +1,9 @@
 # services/calendar_service.py
 import secrets
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from models.event import Event
 from models.player_team import PlayerTeam

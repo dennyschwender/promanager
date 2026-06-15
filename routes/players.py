@@ -942,6 +942,10 @@ async def player_new_post(
     db.add(player)
     db.flush()
 
+    from services.notification_service import create_default_preferences
+
+    create_default_preferences(player.id, db)
+
     for s in seasons:
         _sync_memberships(
             db,
