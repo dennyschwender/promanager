@@ -11,7 +11,7 @@ aiohttp==3.14.0
 aiosignal==1.4.0
     # via aiohttp
 alembic==1.18.4
-    # via -r requirements/base.in
+    # via -r base.in
 annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
@@ -25,7 +25,7 @@ anyio==4.13.0
 attrs==26.1.0
     # via aiohttp
 bcrypt==5.0.0
-    # via -r requirements/base.in
+    # via -r base.in
 certifi==2026.2.25
     # via
     #   httpcore
@@ -49,7 +49,7 @@ deprecated==1.3.1
 et-xmlfile==2.0.0
     # via openpyxl
 fastapi==0.135.1
-    # via -r requirements/base.in
+    # via -r base.in
 frozenlist==1.8.0
     # via
     #   aiohttp
@@ -74,7 +74,7 @@ httptools==0.7.1
 httpx==0.28.1
     # via python-telegram-bot
 httpx2==2.3.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 idna==3.17
     # via
     #   anyio
@@ -85,9 +85,9 @@ idna==3.17
 iniconfig==2.0.0
     # via pytest
 itsdangerous==2.2.0
-    # via -r requirements/base.in
+    # via -r base.in
 jinja2==3.1.6
-    # via -r requirements/base.in
+    # via -r base.in
 limits==5.8.0
     # via slowapi
 mako==1.3.12
@@ -101,11 +101,11 @@ multidict==6.7.1
     #   aiohttp
     #   yarl
 mypy==1.10.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 mypy-extensions==1.0.0
     # via mypy
 openpyxl==3.1.5
-    # via -r requirements/base.in
+    # via -r base.in
 packaging==26.0
     # via
     #   limits
@@ -127,32 +127,32 @@ pydantic==2.12.5
 pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.1
-    # via -r requirements/base.in
+    # via -r base.in
 pygments==2.20.0
     # via pytest
 pytest==9.0.3
     # via
-    #   -r requirements/dev.in
+    #   -r dev.in
     #   pytest-asyncio
     #   pytest-cov
 pytest-asyncio==1.4.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 pytest-cov==5.0.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 python-dateutil==2.9.0.post0
-    # via -r requirements/base.in
+    # via -r base.in
 python-dotenv==1.2.2
     # via
     #   pydantic-settings
     #   uvicorn
 python-i18n[yaml]==0.3.9
-    # via -r requirements/base.in
-python-multipart==0.0.27
-    # via -r requirements/base.in
+    # via -r base.in
+python-multipart==0.0.31
+    # via -r base.in
 python-telegram-bot==22.7
-    # via -r requirements/base.in
+    # via -r base.in
 pywebpush==2.3.0
-    # via -r requirements/base.in
+    # via -r base.in
 pyyaml==6.0.3
     # via
     #   python-i18n
@@ -160,18 +160,18 @@ pyyaml==6.0.3
 requests==2.33.1
     # via pywebpush
 ruff==0.4.4
-    # via -r requirements/dev.in
+    # via -r dev.in
 six==1.17.0
     # via python-dateutil
 slowapi==0.1.10
-    # via -r requirements/base.in
+    # via -r base.in
 sqlalchemy==2.0.48
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   alembic
 starlette==1.0.1
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   fastapi
 truststore==0.10.4
     # via
@@ -195,7 +195,7 @@ typing-inspection==0.4.2
 urllib3==2.7.0
     # via requests
 uvicorn[standard]==0.29.0
-    # via -r requirements/base.in
+    # via -r base.in
 uvloop==0.22.1
     # via uvicorn
 watchfiles==1.1.1
