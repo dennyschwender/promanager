@@ -220,6 +220,7 @@ def create_app() -> FastAPI:
         ("routes.seasons", "/seasons", "seasons"),
         ("routes.teams", "/teams", "teams"),
         ("routes.players", "/players", "players"),
+        ("routes.calendar_view", "", "events"),
         ("routes.events", "/events", "events"),
         ("routes.attendance", "/attendance", "attendance"),
         ("routes.reports", "/reports", "reports"),

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Calendar — {{ app_name }}{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="/static/css/calendar.css?v={{ static_v }}">
+{% endblock %}
+{% block breadcrumb %}
+<nav class="breadcrumb"><a href="/dashboard">{{ t('common.home') }}</a><span class="breadcrumb-sep"></span><span>{{ t('nav.events') }}</span></nav>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ t('calendar.' + month_name) }} {{ year }}</h2>
+  <div class="page-header-actions">
+    <a href="/events" class="btn">{{ t('events.list_view') }}</a>
+    {% if user and (user.is_admin or user.is_coach) %}
+    <a href="/events/new" class="btn btn-primary">{{ t('events.new') }}</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" action="{{ request.url.path }}" class="filter-row" id="calendar-filters">
+  <input type="hidden" name="year" value="{{ year }}">
+  <input type="hidden" name="month" value="{{ month }}">
+  <label>{{ t('events.season') }}
+    <select name="season_id" onchange="this.form.submit()">
+      <option value="">{{ t('events.all_seasons') }}</option>
+      {% for s in seasons %}
+        <option value="{{ s.id }}" {% if selected_season_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>{{ t('events.team') }}
+    <select name="team_id" onchange="this.form.submit()">
+      <option value="">{{ t('events.all_teams') }}</option>
+      {% for team in teams %}
+        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+<div class="calendar-nav">
+  <a href="/events/calendar?year={{ prev_year }}&month={{ prev_month }}&season_id={{ selected_season_id or '' }}&team_id={{ selected_team_id or '' }}" class="calendar-nav-btn" data-year="{{ prev_year }}" data-month="{{ prev_month }}">&lsaquo; {{ t('calendar.prev_month') }}</a>
+  <span class="calendar-nav-title">{{ t('calendar.' + month_name) }} {{ year }}</span>
+  <a href="/events/calendar?year={{ next_year }}&month={{ next_month }}&season_id={{ selected_season_id or '' }}&team_id={{ selected_team_id or '' }}" class="calendar-nav-btn" data-year="{{ next_year }}" data-month="{{ next_month }}">{{ t('calendar.next_month') }} &rsaquo;</a>
+</div>
+
+<div class="calendar-grid" id="calendar-grid">
+  <div class="calendar-header-row">
+    {% for wd in weekdays %}
+    <div class="calendar-header-day">{{ t('calendar.' + wd) }}</div>
+    {% endfor %}
+  </div>
+  {% for week in weeks %}
+  <div class="calendar-week">
+    {% for day in week %}
+    <div class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other{% endif %} {% if day.is_today %}calendar-day-today{% endif %}" data-date="{{ day.date.isoformat() }}">
+      <div class="calendar-day-number">{{ day.date.day }}</div>
+      <div class="calendar-day-events">
+        {% for ev in day.events %}
+        {% set _time = ev.meeting_time or ev.event_time %}
+        <a href="/events/{{ ev.id }}" class="calendar-event-item event-type-{{ ev.event_type }}" title="{{ ev.title }}">
+          {% if _time %}{{ _time.strftime('%H:%M') }} {% endif %}{{ ev.title }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<div id="calendar-day-detail" class="calendar-day-detail hidden"></div>
+{% endblock %}
+{% block scripts_extra %}
+<script src="/static/js/calendar.js?v={{ static_v }}"></script>
+{% endblock %}
