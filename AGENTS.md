@@ -1,112 +1,84 @@
-# AGENTS.md — ProManager
+# ProManager — AGENTS.md
 
-FastAPI self-hosted player presence/absence tracker for sports teams.
+Compact reference for agents working in this repo. Supersedes information in CLAUDE.md where they differ. Trust executable sources over prose.
 
-## Commands
+## Commands (from pyproject.toml, CI, entrypoint)
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements-dev.txt   # installs locked deps from requirements/dev.txt
-cp .env.example .env                  # set SECRET_KEY at minimum
-alembic upgrade head                  # run migrations before first start
+pip install -r requirements-dev.txt  # or: pip install -r requirements/dev.txt
+cp .env.example .env                 # set SECRET_KEY
+alembic upgrade head                 # entrypoint.sh does this too
 uvicorn app.main:app --reload --host 0.0.0.0 --port 7000
 
-pytest -v                             # all tests (in-memory SQLite, tables truncated per test)
-pytest tests/test_auth.py::test_name  # single test
-pytest --cov                          # with coverage
+pytest -v
+pytest tests/test_auth.py::test_login_success  # single test
+pytest --cov
 
-ruff check . && ruff format . && mypy .   # lint → format → typecheck (CI runs in this order)
+ruff check . && ruff format . && mypy .        # CI order: ruff → mypy → pytest
 ```
 
 ## Architecture
 
-### Request lifecycle
+- **Entrypoint**: `app/main.py` — `create_app()` factory, top-level `app = create_app()` for uvicorn. Routes registered dynamically via `_routers` list (add new route modules there).
+- **Settings**: `app/config.py` — pydantic-settings, loaded from `.env`. Singleton `settings`.
+- **Database**: SQLite with `NullPool` in production (avoids QueuePool exhaustion). Tests use in-memory SQLite with `StaticPool`.
+- **Alembic**: `render_as_batch=True` in `alembic/env.py` (required for SQLite ALTER TABLE).
+- **Template rendering**: `app/templates.py` — `render()` auto-injects `t(key)` (i18n), `current_locale`, `current_theme`, `enums` lookup dicts. Default locale is `"it"`.
+- **Auth**: Signed session cookie (`session_user_id`, itsdangerous TimestampSigner, 7-day expiry). `AuthMiddleware` runs first on every request. `logout_all_at` field invalidates all sessions.
+- **CSRF**: Stateless HMAC-SHA256. Applied via `require_csrf` (form) / `require_csrf_header` (JSON) dependencies.
+- **Background tasks**: `reminder_loop()` + `backup_loop()` in `services/scheduler.py` — created in `create_app()` lifespan.
+- **Telegram bot**: `bot/__init__.py` has `init_application()` / `shutdown_application()`. Module-level `bot.telegram_app`.
 
-1. **`AuthMiddleware`** (`app/main.py:38`) — resolves signed `session_user_id` cookie → `request.state.user`, generates CSRF token, fetches unread notification count, throttled `last_seen_at` update (max 5 min).
-2. **`LocaleMiddleware`** (`app/middleware/locale.py`) — resolves locale: user DB preference → cookie → `"en"` default → `request.state.locale`.
-3. Route handlers use `Depends()` guards (`require_login`, `require_admin` from `routes/_auth_helpers.py`) and `get_db` for DB sessions.
+## Models (all 22)
 
-### Auth & CSRF
+All imported in `models/__init__.py` so `Base.metadata` is fully populated. SQLAlchemy 2.x `Mapped[]` / `mapped_column()` style.
 
-- Session: `itsdangerous.TimestampSigner` cookie, 7-day expiry, `logout_all_at` invalidation (`app/session.py`).
-- Roles: `"admin"` (full CRUD, user management), `"coach"` (own teams), `"member"` (view + own attendance only).
-- CSRF: stateless HMAC-SHA256 (`app/csrf.py`). Form endpoints use `require_csrf` (reads form body), JSON endpoints use `require_csrf_header` (reads `X-CSRF-Token` header). Tests override both with no-op.
-- `NotAuthenticated` → redirect to `/auth/login`; `NotAuthorized` → 403 page.
+## Testing quirks
 
-### Database
+- `DATABASE_URL=sqlite:///:memory:` must be set **before** any app imports (`conftest.py:14`)
+- Tables truncated between every test (function scope fixture)
+- `client` fixture overrides CSRF to no-op; `csrf_client` keeps enforcement
+- TestClient uses `raise_server_exceptions=False, follow_redirects=False`
+- `admin_user` / `member_user` fixtures use `create_user(db, username, email, password, role=...)`
+- `admin_client` / `member_client` pre-authenticate by setting session cookie
+- Override pattern: `app.dependency_overrides[get_db] = override_get_db`
 
-- SQLAlchemy 2.x `Mapped[]` / `mapped_column()`. All models in `models/`, imported by `models/__init__.py` to populate `Base.metadata`.
-- `get_db()` in `app/database.py` yields `SessionLocal` session. SQLite uses `NullPool` + `check_same_thread=False`.
-- Alembic with `render_as_batch=True` (required for SQLite ALTER TABLE). `alembic/env.py` reads `DATABASE_URL` from settings.
+## Toolchain config (don't guess these)
 
-### Routes
+- **ruff**: line-length 120, `models/*.py` suppresses F821 (SQLAlchemy forward refs), `alembic/*` suppresses E501/W291/I001
+- **mypy**: `ignore_missing_imports=true`, `disable_error_code=["misc", "valid-type", "import-untyped"]`, excludes `scripts/`
+- **CI** (`.github/workflows/ci.yml`): ruff 0.4.4 pinned, mypy uses `requirements/dev.txt`, pytest with `--cov=. --cov-report=term-missing`
+- **Python 3.14 compat**: SQLAlchemy pinned `>=2.0.48` in requirements
 
-Registered dynamically in `app/main.py:215` via `importlib.import_module`. Each `routes/*.py` exports `router = APIRouter()`. Add entry to `_routers` list to register.
+## Route registration (gotcha)
 
-### Templating & i18n
+New route modules must be:
+1. Created in `routes/` with `router = APIRouter()`
+2. Added to the `_routers` list in `app/main.py` as `(module_path, prefix, tag)`
+3. Import statement in `app/main.py` is NOT needed (dynamic via `importlib.import_module`)
 
-- `app/templates.py` provides `render()` injecting `t(key)` (translation), `current_locale`, `current_theme`, `enums` dict into every template.
-- Translation JSON files in `locales/` (en, it, fr, de). `DEBUG=true` raises `KeyError` on missing keys.
-- Default locale is `"it"` (not `"en"`).
+## Key conventions
 
-### Services layer
-
-Business logic in `services/`. Key: `auth_service` (bcrypt, session cookies), `attendance_service` (auto-create `unknown` records on event add), `email_service` (SMTP), `notification_service` (multi-channel via `services/channels/`), `calendar_service` (RFC 5545 iCal at `/{token}/feed.ics`).
-
-### Telegram bot
-
-Single persistent inline-keyboard message per user (`User.telegram_notification_message_id`). Navigation = `edit_message_text` on that message. `User.telegram_current_view` tracks active view for notification injection.
-
-- `bot/views/` — renderers returning `ViewResult = (str, InlineKeyboardMarkup)`
-- `bot/navigation.py` — `navigate()` edits message + updates view; `inject_notification()` / `inject_chat_notification()` prepend 🔔/💬 row
-- Callback scheme documented in `bot/handlers.py` and `bot/absence_handlers.py`
-
-### Background tasks
-
-Started in `app/main.py` lifespan: `reminder_loop()` and `backup_loop()` from `services/scheduler.py`.
-
-## Testing
-
-- In-memory SQLite with `StaticPool`; all tables truncated between tests via `conftest.py:db` fixture.
-- `conftest.py` provides: `client` (CSRF disabled), `csrf_client` (CSRF enabled), `admin_client`, `member_client`, `admin_user`, `member_user`.
-- Dependency overrides: `app.dependency_overrides[get_db] = override_get_db`.
-- `DATABASE_URL` must be set to `sqlite:///:memory:` **before** any app imports — done at top of `conftest.py:14`.
-
-## Key env vars
-
-| Variable | Default | Note |
-|---|---|---|
-| `SECRET_KEY` | `change-me-in-production` | Session signing + CSRF |
-| `DATABASE_URL` | `sqlite:///./data/proManager.db` | PostgreSQL also supported |
-| `APP_URL` | `http://localhost:7000` | Magic links omitted when default |
-| `COOKIE_SECURE` | `False` | Set `True` for HTTPS |
-| `DEBUG` | `False` | Raises `KeyError` on missing i18n keys |
-| `TELEGRAM_BOT_TOKEN` | `""` | Leave empty to disable bot |
-| `TELEGRAM_WEBHOOK_URL` | `""` | Required for webhook mode |
-| `TELEGRAM_WEBHOOK_SECRET` | `""` | Validates incoming webhooks |
-
-## Deploy
-
-```bash
-ssh pi5
-cd ~/dockerimages
-./updateDocker proManager
-```
-
-Pushes to GitHub master, then SSH into the Pi5 and run the update script.
-
-## Deploy
-
-```bash
-ssh pi5
-cd ~/dockerimages
-./updateDocker proManager
-```
-
-Pushes to GitHub master, then SSH into the Pi5 and run the update script.
-
-- `ruff` line length 120; `models/*.py` suppresses `F821` (SQLAlchemy forward refs); `alembic/*` suppresses `E501`, `W291`, `I001`.
-- `mypy` ignores `misc`, `valid-type`, `import-untyped` errors; excludes `scripts/`.
-- Locked deps via `pip-compile`: edit `requirements/base.in` / `requirements/dev.in`, then run `pip-compile` to regenerate `requirements/base.txt` / `requirements/dev.txt`.
+- `render()` is the only way to return HTML responses — always use it
+- Attendance auto-created with status `unknown` when event added
+- Port 7000 default everywhere
+- Three roles: `"admin"` (full CRUD), `"coach"` (own teams), `"member"` (own attendance)
+- Notification preferences now opt-in (default disabled) since 8767c54
+- Locked deps via `pip-compile`: edit `requirements/base.in` / `requirements/dev.in`, regenerate `requirements/base.txt` / `requirements/dev.txt`
 - Docker: single container, `entrypoint.sh` runs `alembic upgrade head` then `uvicorn`. Healthcheck at `/healthz`.
-- Port **7000** default for dev and Docker.
+
+## Deploy
+
+```bash
+ssh pi5
+cd ~/dockerimages
+./updateDocker proManager
+```
+
+Pushes to GitHub master, then SSH into the Pi5 and run the update script.
+
+## Existing instruction files
+
+- `CLAUDE.md` — detailed, includes full Telegram callback table. Keep in sync with codebase.
+- `.claudeignore` / `.claudignore` — skip `node_modules/`, `.venv/`, `.git/`, build outputs, media files
