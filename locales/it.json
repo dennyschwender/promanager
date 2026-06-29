@@ -1066,6 +1066,9 @@
     "september": "Settembre",
     "october": "Ottobre",
     "november": "Novembre",
-    "december": "Dicembre"
+    "december": "Dicembre",
+    "events_on": "Eventi il",
+    "no_events": "Nessun evento in questa data.",
+    "view_all": "Vedi tutti"
   }
 }

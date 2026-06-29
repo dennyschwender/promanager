@@ -1066,6 +1066,9 @@
     "september": "September",
     "october": "October",
     "november": "November",
-    "december": "December"
+    "december": "December",
+    "events_on": "Events on",
+    "no_events": "No events on this date.",
+    "view_all": "View all"
   }
 }

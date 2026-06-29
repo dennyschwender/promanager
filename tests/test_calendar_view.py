@@ -88,9 +88,22 @@ def test_calendar_day_api_returns_events(admin_client, db, make_event):
 def test_calendar_day_api_no_events(client):
     response = client.get("/api/events/calendar-day?date_str=2026-06-15")
     assert response.status_code == 200
-    assert "No events on this date." in response.text
+    assert "Nessun evento in questa data." in response.text
 
 
 def test_calendar_day_api_invalid_date(client):
     response = client.get("/api/events/calendar-day?date_str=not-a-date")
     assert response.status_code == 400
+
+
+def test_calendar_day_api_returns_events_en_locale(client):
+    """Override locale to English for explicit string check."""
+    from starlette.testclient import TestClient as _TC
+
+    from app.main import app as _app
+
+    c = _TC(_app, raise_server_exceptions=False, follow_redirects=False)
+    c.cookies.set("locale", "en")
+    response = c.get("/api/events/calendar-day?date_str=2026-06-15")
+    assert response.status_code == 200
+    assert "No events on this date." in response.text

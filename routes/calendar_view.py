@@ -165,10 +165,15 @@ async def calendar_day_detail(
 ):
     from fastapi.responses import HTMLResponse
 
+    from app.i18n import DEFAULT_LOCALE
+    from app.i18n import t as _t
+
     try:
         day = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         return HTMLResponse("<p>Invalid date</p>", status_code=400)
+
+    locale = getattr(request.state, "locale", DEFAULT_LOCALE)
 
     q = db.query(Event).filter(Event.event_date == day)
     season_id_val = int(season_id) if season_id and season_id.strip() else None
@@ -181,9 +186,11 @@ async def calendar_day_detail(
     q = q.order_by(Event.event_time.asc())
     events = q.all()
 
-    lines = [f'<div class="day-detail-header">Events on {day.strftime("%B %d, %Y")}</div>']
+    month_name = _t(f"calendar.{MONTH_NAMES[day.month]}", locale)
+    date_header = f"{month_name} {day.day}, {day.year}"
+    lines = [f'<div class="day-detail-header">{_t("calendar.events_on", locale)} {date_header}</div>']
     if not events:
-        lines.append('<p class="day-detail-empty">No events on this date.</p>')
+        lines.append(f'<p class="day-detail-empty">{_t("calendar.no_events", locale)}</p>')
     else:
         lines.append('<ul class="day-detail-list">')
         for ev in events:
@@ -195,6 +202,8 @@ async def calendar_day_detail(
                 f"</li>"
             )
         lines.append("</ul>")
-    lines.append(f'<a href="/events?date_from={day}&date_to={day}" class="day-detail-all">View all</a>')
+    lines.append(
+        f'<a href="/events?date_from={day}&date_to={day}" class="day-detail-all">{_t("calendar.view_all", locale)}</a>'
+    )
 
     return HTMLResponse("".join(lines))
