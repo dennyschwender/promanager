@@ -39,6 +39,23 @@ MONTH_NAMES = [
 ]
 
 
+def _fmt_date(d: date) -> str:
+    return d.strftime("%Y.%m.%d")
+
+
+def _event_date_str(ev: Event) -> str:
+    s = _fmt_date(ev.event_date)
+    end = ev.event_end_date
+    if end and end != ev.event_date:
+        if end.year == ev.event_date.year and end.month == ev.event_date.month:
+            s = f"{s}-{end.day:02d}"
+        elif end.year == ev.event_date.year:
+            s = f"{s}-{end.month:02d}.{end.day:02d}"
+        else:
+            s = f"{s}-{_fmt_date(end)}"
+    return s
+
+
 def _filter_events_query(q, user: User | None, db: Session):
     """Apply role-based event visibility — same logic as events_list."""
     if user is None:
@@ -275,12 +292,9 @@ async def events_export(
             ev_time = ev.event_time.strftime("%H:%M") if ev.event_time else ""
             mt = ev.meeting_time.strftime("%H:%M") if ev.meeting_time else ""
             etype = _t(f"enums.event_type.{ev.event_type}", locale) if ev.event_type else ev.event_type
-            date_str = ev.event_date.isoformat()
-            if ev.event_end_date and ev.event_end_date != ev.event_date:
-                date_str = f"{date_str} -> {ev.event_end_date.isoformat()}"
             w.writerow(
                 [
-                    date_str,
+                    _event_date_str(ev),
                     ev_time,
                     mt,
                     ev.title,
@@ -340,11 +354,8 @@ async def events_export_text(
         display_time = ev.meeting_time or ev.event_time
         time_str = display_time.strftime("%H:%M") if display_time else "--:--"
         team_name = team_names.get(ev.team_id, "") if show_team else ""
-        date_str = ev.event_date.isoformat()
-        if ev.event_end_date and ev.event_end_date != ev.event_date:
-            date_str = f"{date_str} -> {ev.event_end_date.isoformat()}"
         row = [
-            date_str,
+            _event_date_str(ev),
             time_str,
             ev.title,
             ev.event_type or "",
