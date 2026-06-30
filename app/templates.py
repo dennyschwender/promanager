@@ -9,6 +9,7 @@ Use render() to get t() and current_locale automatically injected.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -22,15 +23,24 @@ from app.i18n import DEFAULT_LOCALE
 from app.i18n import t as _t
 
 
-def _git_rev() -> str:
+def _static_v() -> str:
+    deploy = os.environ.get("DEPLOY_TIMESTAMP")
+    if deploy:
+        return deploy
     try:
         return (
             subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
         )
     except Exception:
         try:
-            mtime = int(os.path.getmtime("static/css/main.css"))
-            return str(mtime)
+            paths = ["static/css/main.css", "static/css/calendar.css", "static/js/calendar.js"]
+            digest = hashlib.md5()
+            for p in paths:
+                try:
+                    digest.update(str(os.path.getmtime(p)).encode())
+                except Exception:
+                    pass
+            return digest.hexdigest()[:10]
         except Exception:
             return "0"
 
@@ -39,7 +49,7 @@ from app.config import settings as _settings  # noqa: E402,PLC0415
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["now"] = lambda: datetime.now(timezone.utc)
-templates.env.globals["static_v"] = _git_rev()
+templates.env.globals["static_v"] = _static_v()
 templates.env.globals["app_name"] = _settings.APP_NAME
 templates.env.filters["urlencode"] = quote_plus
 
