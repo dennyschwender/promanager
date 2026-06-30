@@ -85,7 +85,6 @@ a.calendar-event-item {
   padding: 0.1rem 0.25rem;
   border-radius: 0.2rem;
   text-decoration: none;
-  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -172,7 +171,6 @@ a.calendar-event-item {
 
 .day-detail-item a {
   text-decoration: none;
-  color: inherit;
 }
 
 .day-detail-item a:hover {
