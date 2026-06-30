@@ -53,6 +53,29 @@
   border-right: none;
 }
 
+.create-event-link {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 1.2rem;
+  height: 1.2rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  border-radius: 50%;
+  background: var(--tp-primary);
+  color: #fff;
+  z-index: 2;
+}
+
+.calendar-day-cell:hover .create-event-link {
+  display: flex;
+}
+
 .calendar-day-other {
   background: var(--background-color, var(--tp-surface));
 }
@@ -177,6 +200,7 @@ a.calendar-event-item.event-type-other {
   padding: 0.3rem 0.4rem;
   border-left: 3px solid transparent;
   margin-bottom: 0.2rem;
+  list-style: none !important;
 }
 
 .day-detail-item a {

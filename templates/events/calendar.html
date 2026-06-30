@@ -77,7 +77,7 @@
   {% for week in weeks %}
   <div class="calendar-week">
     {% for day in week %}
-    <div class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other{% endif %} {% if day.is_today %}calendar-day-today{% endif %}" data-date="{{ day.date.isoformat() }}" data-count="{{ day.events|length }}">
+    <div class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other{% endif %} {% if day.is_today %}calendar-day-today{% endif %}" data-date="{{ day.date.isoformat() }}" data-count="{{ day.events|length }}" title="{{ t('calendar.dblclick_create') }}">
       <div class="calendar-day-number">{{ day.date.day }}</div>
       <div class="calendar-day-events">
         {% for ev in day.events %}
@@ -87,6 +87,9 @@
         </a>
         {% endfor %}
       </div>
+      {% if user and (user.is_admin or user.is_coach) %}
+      <a href="/events/new?date={{ day.date.isoformat() }}" class="create-event-link" title="{{ t('events.new_on_date') }}">+</a>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

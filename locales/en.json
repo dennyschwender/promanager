@@ -149,7 +149,8 @@
     "meeting_time": "Meet",
     "all_events": "All Events",
     "list_view": "List View",
-    "att_summary": "Att."
+    "att_summary": "Att.",
+    "new_on_date": "New event on this date"
   },
   "attendance": {
     "title": "Mark Attendance",
@@ -625,8 +626,6 @@
     "presence": "Presence",
     "pt_normal": "Normal",
     "pt_all": "All",
-    "pt_selection": "Selection",
-    "pt_available": "Available",
     "pt_no_reg": "No Registration",
     "add_schedule": "+ Add Schedule",
     "confirm_save": "Confirm & Save",
@@ -689,8 +688,6 @@
     "pt_normal_desc": "Unknown by default — participants set their own presence/absence",
     "pt_all": "All attendees",
     "pt_all_desc": "Everyone is marked present by default",
-    "pt_selection": "Selection",
-    "pt_selection_desc": "Only selected players can register absence",
     "pt_available": "Available",
     "pt_available_desc": "Participants give availability first, coach selects squad",
     "pt_no_reg": "No registration",
@@ -726,7 +723,6 @@
     "maybe": "Maybe",
     "pt_normal": "Normal",
     "pt_all": "All attendees",
-    "pt_selection": "Selection",
     "pt_available": "Available",
     "pt_no_reg": "No registration",
     "no_registration_note": "Attendance tracking is disabled for this event.",
@@ -1075,6 +1071,8 @@
     "export_csv": "Export CSV",
     "export_btn": "Export",
     "copy_to_clipboard": "Copy to clipboard",
-    "agenda": "Agenda"
+    "agenda": "Agenda",
+    "dblclick_create": "Double-click to create event",
+    "new_on_date": "New event on this date"
   }
 }

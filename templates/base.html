@@ -21,7 +21,7 @@
   <style>
   .notif-bell { position: relative; text-decoration: none; font-size: 1.1rem; overflow: visible; }
   .notif-badge {
-    position: absolute; top: -8px; right: -10px;
+    position: absolute; right: -10px;
     background: var(--tp-danger, #c0392b); color: #fff;
     font-size: .65rem; font-weight: 700; line-height: 1;
     padding: 2px 4px; border-radius: 10px; white-space: nowrap;
@@ -69,24 +69,24 @@
       </a>
     </li>
     <li>
-      <details role="list" style="list-style:none;">
+      <details role="list" class="user-dropdown">
         <summary aria-haspopup="listbox" role="link">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or ''))|trim or user.username }}</summary>
-        <ul role="listbox" style="right:0;left:auto;">
+        <ul role="listbox" aria-label="User menu" class="dropdown-menu-right">
           {% if user.is_admin %}
-            <li><a href="/admin/audit">{{ t('admin.audit_log_title') }}</a></li>
-            <li><hr style="margin:.25rem 0;"></li>
+            <li role="none"><a href="/admin/audit" role="option">{{ t('admin.audit_log_title') }}</a></li>
+            <li role="separator" class="dropdown-divider"></li>
           {% endif %}
-          <li><a href="/profile">{{ t('nav.profile') }}</a></li>
-          <li>
-            <a href="#" data-theme-toggle onclick="toggleTheme(); return false;">
+          <li role="none"><a href="/profile" role="option">{{ t('nav.profile') }}</a></li>
+          <li role="none">
+            <a href="#" data-theme-toggle onclick="toggleTheme(); return false;" role="option">
               {% if current_theme == 'dark' %}☀️ {{ t('nav.light_mode') }}{% else %}🌙 {{ t('nav.dark_mode') }}{% endif %}
             </a>
           </li>
-          <li>
-            <form method="post" action="/set-locale" style="display:flex;align-items:center;gap:.3rem;margin:0;padding:.25rem 1rem;">
+          <li role="none">
+            <form method="post" action="/set-locale" class="locale-form">
               <input type="hidden" name="next" value="{{ request.url.path }}">
-              <span style="font-size:.9rem;">🌐</span>
-              <select name="locale" onchange="this.form.submit()" class="sel-inline">
+              <span class="locale-icon">🌐</span>
+              <select name="locale" onchange="this.form.submit()" class="sel-inline" aria-label="{{ t('nav.language') }}" title="{{ t('nav.language') }}">
                 <option value="en" {% if current_locale == 'en' %}selected{% endif %}>EN</option>
                 <option value="it" {% if current_locale == 'it' %}selected{% endif %}>IT</option>
                 <option value="fr" {% if current_locale == 'fr' %}selected{% endif %}>FR</option>
@@ -94,8 +94,8 @@
               </select>
             </form>
           </li>
-          <li><hr style="margin:.25rem 0;"></li>
-          <li><a href="/auth/logout">{{ t('nav.sign_out') }}</a></li>
+          <li role="separator" class="dropdown-divider"></li>
+          <li role="none"><a href="/auth/logout" role="option">{{ t('nav.sign_out') }}</a></li>
         </ul>
       </details>
     </li>
@@ -118,12 +118,12 @@
 </div>
 {% endif %}
 
-<main class="container-fluid" style="padding-top:1.5rem;max-width:1600px;margin-inline:auto;">
+<main class="container-fluid page-main">
   {% block breadcrumb %}{% endblock %}
   {% block content %}{% endblock %}
 </main>
 
-<footer class="container-fluid site-footer" style="max-width:1600px;margin-inline:auto;">
+<footer class="container-fluid site-footer page-footer">
   <div class="footer-inner">
     <span>⬡ {{ app_name }}</span>
     {% if user %}

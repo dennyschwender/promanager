@@ -62,7 +62,7 @@
     <div class="form-grid-2">
       <label>{{ t('events_form.date') }} *
         <input type="date" name="event_date" required
-               value="{{ event.event_date.isoformat() if event else "" }}">
+               value="{{ event.event_date.isoformat() if event else preset_date }}">
       </label>
       <label>{{ t('events_form.start_time') }}
         <input type="text" name="event_time" class="time-24h"
@@ -70,16 +70,18 @@
                value="{{ event.event_time.strftime("%H:%M") if event and event.event_time else "" }}">
       </label>
     </div>
-    <label>{{ t('events_form.end_time') }}
-      <input type="text" name="event_end_time" class="time-24h"
-             placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
-             value="{{ event.event_end_time.strftime("%H:%M") if event and event.event_end_time else "" }}">
-    </label>
-    <label>{{ t('events_form.end_date') }}
-      <input type="date" name="event_end_date"
-             value="{{ event.event_end_date.isoformat() if event and event.event_end_date else '' }}"
-             min="{{ event.event_date.isoformat() if event and event.event_date else '' }}">
-    </label>
+    <div class="form-grid-2">
+      <label>{{ t('events_form.end_date') }}
+        <input type="date" name="event_end_date"
+               value="{{ event.event_end_date.isoformat() if event and event.event_end_date else '' }}"
+               min="{{ event.event_date.isoformat() if event and event.event_date else '' }}">
+      </label>
+      <label>{{ t('events_form.end_time') }}
+        <input type="text" name="event_end_time" class="time-24h"
+               placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+               value="{{ event.event_end_time.strftime("%H:%M") if event and event.event_end_time else "" }}">
+      </label>
+    </div>
     <script>
     (function(){
       var start = document.querySelector('[name="event_date"]');
@@ -91,6 +93,78 @@
     })();
     </script>
   </fieldset>
+
+  <fieldset>
+    <legend>{{ t('events_form.locations') }}</legend>
+    <div class="form-grid-2">
+      <label>{{ t('events_form.meeting_time') }}
+        <input type="text" name="meeting_time" class="time-24h"
+               placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
+               value="{{ event.meeting_time.strftime("%H:%M") if event and event.meeting_time else "" }}">
+      </label>
+      <label>{{ t('events_form.meeting_location') }}
+        <div class="location-search-wrap">
+          <div class="location-input-row">
+            <input type="text" name="meeting_location" id="id_meeting_location"
+                   placeholder="{{ t('events_form.search_placeholder') }}"
+                   autocomplete="off"
+                   data-location-search
+                   value="{{ event.meeting_location if event and event.meeting_location else "" }}">
+            <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_meeting_location" title="View on map">📍</a>
+          </div>
+        </div>
+      </label>
+    </div>
+    <label>{{ t('events_form.event_location') }}
+      <div class="location-search-wrap">
+        <div class="location-input-row">
+          <input type="text" name="location" id="id_location"
+                 placeholder="{{ t('events_form.search_placeholder') }}"
+                 autocomplete="off"
+                 data-location-search
+                 value="{{ event.location if event and event.location else "" }}">
+          <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_location" title="View on map">📍</a>
+        </div>
+      </div>
+    </label>
+  </fieldset>
+
+  <label>{{ t('common.description') }}
+    <textarea name="description">{{ event.description if event and event.description else "" }}</textarea>
+  </label>
+
+  <fieldset>
+    <legend>{{ t('events_form.presence_type') }}</legend>
+    <div class="presence-type-group">
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="normal"
+               {{ "checked" if (event and event.presence_type == "normal") or (not event and "normal" == "normal") else "" }}>
+        <span class="presence-label"><strong>{{ t('events_form.pt_normal') }}</strong><br><small class="text-muted">{{ t('events_form.pt_normal_desc') }}</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="all"
+               {{ "checked" if (event and event.presence_type == "all") or (not event and "all" == "normal") else "" }}>
+        <span class="presence-label"><strong>{{ t('events_form.pt_all') }}</strong><br><small class="text-muted">{{ t('events_form.pt_all_desc') }}</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="available"
+               {{ "checked" if (event and event.presence_type == "available") or (not event and "available" == "normal") else "" }}>
+        <span class="presence-label"><strong>{{ t('events_form.pt_available') }}</strong><br><small class="text-muted">{{ t('events_form.pt_available_desc') }}</small></span>
+      </label>
+      <label class="presence-option">
+        <input type="radio" name="presence_type" value="no_registration"
+               {{ "checked" if (event and event.presence_type == "no_registration") or (not event and "no_registration" == "normal") else "" }}>
+        <span class="presence-label"><strong>{{ t('events_form.pt_no_reg') }}</strong><br><small class="text-muted">{{ t('events_form.pt_no_reg_desc') }}</small></span>
+      </label>
+    </div>
+  </fieldset>
+
+  <label class="checkbox-label">
+    <input type="checkbox" name="hide_attendance" value="1"
+           {{ "checked" if event and event.hide_attendance else "" }}>
+    {{ t('events_form.hide_attendance') }}
+    <small class="text-muted">{{ t('events_form.hide_attendance_desc') }}</small>
+  </label>
 
   {% if is_new %}
   <fieldset id="recurrence-fieldset">
@@ -124,83 +198,6 @@
     &#8635; {{ t('events_form.recurring_series_note') }}
   </div>
   {% endif %}
-
-  <fieldset>
-    <legend>{{ t('events_form.locations') }}</legend>
-    <label>{{ t('events_form.event_location') }}
-      <div class="location-search-wrap">
-        <div class="location-input-row">
-          <input type="text" name="location" id="id_location"
-                 placeholder="{{ t('events_form.search_placeholder') }}"
-                 autocomplete="off"
-                 data-location-search
-                 value="{{ event.location if event and event.location else "" }}">
-          <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_location" title="View on map">📍</a>
-        </div>
-      </div>
-    </label>
-    <div class="form-grid-2">
-      <label>{{ t('events_form.meeting_time') }}
-        <input type="text" name="meeting_time" class="time-24h"
-               placeholder="HH:MM" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric"
-               value="{{ event.meeting_time.strftime("%H:%M") if event and event.meeting_time else "" }}">
-      </label>
-      <label>{{ t('events_form.meeting_location') }}
-        <div class="location-search-wrap">
-          <div class="location-input-row">
-            <input type="text" name="meeting_location" id="id_meeting_location"
-                   placeholder="{{ t('events_form.search_placeholder') }}"
-                   autocomplete="off"
-                   data-location-search
-                   value="{{ event.meeting_location if event and event.meeting_location else "" }}">
-            <a href="#" target="_blank" rel="noopener" class="location-map-link" id="map_meeting_location" title="View on map">📍</a>
-          </div>
-        </div>
-      </label>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <legend>{{ t('events_form.presence_type') }}</legend>
-    <div class="presence-type-group">
-      <label class="presence-option">
-        <input type="radio" name="presence_type" value="normal"
-               {{ "checked" if (event and event.presence_type == "normal") or (not event and "normal" == "normal") else "" }}>
-        <span class="presence-label"><strong>{{ t('events_form.pt_normal') }}</strong><br><small class="text-muted">{{ t('events_form.pt_normal_desc') }}</small></span>
-      </label>
-      <label class="presence-option">
-        <input type="radio" name="presence_type" value="all"
-               {{ "checked" if (event and event.presence_type == "all") or (not event and "all" == "normal") else "" }}>
-        <span class="presence-label"><strong>{{ t('events_form.pt_all') }}</strong><br><small class="text-muted">{{ t('events_form.pt_all_desc') }}</small></span>
-      </label>
-      <label class="presence-option">
-        <input type="radio" name="presence_type" value="selection"
-               {{ "checked" if (event and event.presence_type == "selection") or (not event and "selection" == "normal") else "" }}>
-        <span class="presence-label"><strong>{{ t('events_form.pt_selection') }}</strong><br><small class="text-muted">{{ t('events_form.pt_selection_desc') }}</small></span>
-      </label>
-      <label class="presence-option">
-        <input type="radio" name="presence_type" value="available"
-               {{ "checked" if (event and event.presence_type == "available") or (not event and "available" == "normal") else "" }}>
-        <span class="presence-label"><strong>{{ t('events_form.pt_available') }}</strong><br><small class="text-muted">{{ t('events_form.pt_available_desc') }}</small></span>
-      </label>
-      <label class="presence-option">
-        <input type="radio" name="presence_type" value="no_registration"
-               {{ "checked" if (event and event.presence_type == "no_registration") or (not event and "no_registration" == "normal") else "" }}>
-        <span class="presence-label"><strong>{{ t('events_form.pt_no_reg') }}</strong><br><small class="text-muted">{{ t('events_form.pt_no_reg_desc') }}</small></span>
-      </label>
-    </div>
-  </fieldset>
-
-  <label>{{ t('common.description') }}
-    <textarea name="description">{{ event.description if event and event.description else "" }}</textarea>
-  </label>
-
-  <label class="checkbox-label">
-    <input type="checkbox" name="hide_attendance" value="1"
-           {{ "checked" if event and event.hide_attendance else "" }}>
-    {{ t('events_form.hide_attendance') }}
-    <small class="text-muted">{{ t('events_form.hide_attendance_desc') }}</small>
-  </label>
 
   {% if is_new %}
   <fieldset id="notify-fieldset">

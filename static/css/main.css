@@ -631,6 +631,17 @@ footer.site-footer .footer-inner {
 footer.site-footer a { color: var(--tp-muted); }
 footer.site-footer a:hover { text-decoration: underline; }
 
+.page-main {
+  padding-top: 1.5rem;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.page-footer {
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
 /* ── Player detail sections ──────────────────────────────── */
 .card {
   background: var(--card-background-color, #fff);
@@ -871,6 +882,32 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { display: none; }
 
 .btn-danger-text {
   color: var(--tp-danger, #dc3545);
+}
+
+/* ── User dropdown menu ──────────────────────────────────── */
+.user-dropdown {
+  list-style: none;
+}
+
+.user-dropdown summary {
+  cursor: pointer;
+}
+
+.dropdown-menu-right {
+  right: 0;
+  left: auto;
+}
+
+.locale-form {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  margin: 0;
+  padding: .25rem 1rem;
+}
+
+.locale-icon {
+  font-size: .9rem;
 }
 
 /* ── Attendance columns ─────────────────────────────────────────── */

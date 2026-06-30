@@ -5,9 +5,10 @@ from __future__ import annotations
 import calendar
 import csv
 import io
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -120,7 +121,10 @@ async def calendar_view(
     else:
         next_month, next_year = month + 1, year
 
-    q = db.query(Event).filter(Event.event_date >= grid_start, Event.event_date <= grid_end)
+    q = db.query(Event).filter(
+        Event.event_date <= grid_end,
+        or_(Event.event_end_date.is_(None), Event.event_end_date >= grid_start),
+    )
     season_id_val = int(season_id) if season_id and season_id.strip() else None
     team_id_val = int(team_id) if team_id and team_id.strip() else None
     if season_id_val is not None:
@@ -133,7 +137,12 @@ async def calendar_view(
 
     events_by_date: dict[date, list[Event]] = {}
     for ev in events:
-        events_by_date.setdefault(ev.event_date, []).append(ev)
+        start = ev.event_date
+        end = ev.event_end_date or start
+        d = start
+        while d <= end:
+            events_by_date.setdefault(d, []).append(ev)
+            d += timedelta(days=1)
 
     weeks = []
     for week in month_dates:
@@ -300,7 +309,7 @@ async def events_export(
                     ev.title,
                     etype,
                     ev.location or "",
-                    team_names.get(ev.team_id, ""),
+                    team_names.get(ev.team_id or 0, ""),
                     season_names.get(ev.season_id, ""),
                 ]
             )
@@ -353,7 +362,7 @@ async def events_export_text(
     for ev in events:
         display_time = ev.meeting_time or ev.event_time
         time_str = display_time.strftime("%H:%M") if display_time else "--:--"
-        team_name = team_names.get(ev.team_id, "") if show_team else ""
+        team_name = team_names.get(ev.team_id or 0, "") if show_team else ""
         row = [
             _event_date_str(ev),
             time_str,

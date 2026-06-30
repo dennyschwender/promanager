@@ -312,6 +312,7 @@ async def events_list(
 @router.get("/new")
 async def event_new_get(
     request: Request,
+    date: str = "",
     user: User = Depends(require_coach_or_admin),
     db: Session = Depends(get_db),
 ):
@@ -331,6 +332,7 @@ async def event_new_get(
             "seasons": seasons,
             "teams": teams,
             "error": None,
+            "preset_date": date,
         },
     )
 

@@ -13,6 +13,7 @@
     document.querySelectorAll('.calendar-day-cell').forEach(function (cell) {
       cell.addEventListener('click', function (e) {
         if (e.target.closest('.calendar-event-item')) return;
+        if (e.target.closest('.create-event-link')) return;
         var date = cell.getAttribute('data-date');
         if (!date) return;
 
@@ -42,6 +43,14 @@
             target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         }
+      });
+
+      // Double-click to create event on this date
+      cell.addEventListener('dblclick', function (e) {
+        if (e.target.closest('.calendar-event-item')) return;
+        var date = cell.getAttribute('data-date');
+        if (!date) return;
+        window.location.href = '/events/new?date=' + date;
       });
     });
   }

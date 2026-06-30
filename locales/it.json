@@ -149,7 +149,8 @@
     "meeting_time": "Ritrovo",
     "all_events": "Tutti gli eventi",
     "list_view": "Vista Elenco",
-    "att_summary": "Pres."
+    "att_summary": "Pres.",
+    "new_on_date": "Nuovo evento in questa data"
   },
   "attendance": {
     "title": "Registra Presenze",
@@ -625,8 +626,6 @@
     "presence": "Presenza",
     "pt_normal": "Normale",
     "pt_all": "Tutti",
-    "pt_selection": "Selezione",
-    "pt_available": "Disponibile",
     "pt_no_reg": "Nessuna registrazione",
     "add_schedule": "+ Aggiungi programma",
     "confirm_save": "Conferma e salva",
@@ -689,8 +688,6 @@
     "pt_normal_desc": "Sconosciuto di default — i partecipanti impostano la propria presenza/assenza",
     "pt_all": "Tutti presenti",
     "pt_all_desc": "Tutti sono contrassegnati come presenti di default",
-    "pt_selection": "Selezione",
-    "pt_selection_desc": "Solo i giocatori selezionati possono registrare l'assenza",
     "pt_available": "Disponibile",
     "pt_available_desc": "I partecipanti danno prima la disponibilità, l'allenatore seleziona la squadra",
     "pt_no_reg": "Nessuna registrazione",
@@ -726,7 +723,6 @@
     "maybe": "Forse",
     "pt_normal": "Normale",
     "pt_all": "Tutti presenti",
-    "pt_selection": "Selezione",
     "pt_available": "Disponibile",
     "pt_no_reg": "Nessuna registrazione",
     "no_registration_note": "Il tracciamento delle presenze è disabilitato per questo evento.",
@@ -1075,6 +1071,7 @@
     "export_csv": "Esporta CSV",
     "export_btn": "Esporta",
     "copy_to_clipboard": "Copia negli appunti",
-    "agenda": "Agenda"
+    "agenda": "Agenda",
+    "dblclick_create": "Doppio clic per creare evento"
   }
 }
