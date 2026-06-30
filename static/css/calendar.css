@@ -274,11 +274,11 @@ a.calendar-event-item.event-type-other {
     grid-template-columns: repeat(7, 1fr);
   }
 
-  .calendar-event-item {
+  a.calendar-event-item {
     display: none;
   }
 
-  .calendar-day-cell:not(.calendar-day-other) .calendar-day-events:not(:empty)::after {
+  .calendar-day-cell:not(.calendar-day-other)::after {
     content: attr(data-count);
     position: absolute;
     bottom: 1px;
