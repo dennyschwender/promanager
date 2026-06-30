@@ -140,11 +140,13 @@ def test_events_export_filename(admin_client, db, make_event):
 
 
 def test_events_export_text_returns_events(admin_client, db, make_event):
-    ev = make_event(title="Clipboard Event", event_date="2026-06-15", event_time="20:00")
+    ev = make_event(title="Clipboard Event", event_date="2026-06-15", event_time="20:00", location="Test Gym")
     response = admin_client.get("/api/events/export-text?date_from=2026-06-01&date_to=2026-06-30")
     assert response.status_code == 200
     assert ev.title in response.text
     assert "20:00" in response.text
+    assert "Test Gym" in response.text
+    assert "Location" in response.text  # header
 
 
 def test_events_export_text_no_events(client):
