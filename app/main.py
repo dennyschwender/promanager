@@ -211,6 +211,19 @@ def create_app() -> FastAPI:
     app.add_middleware(LocaleMiddleware)  # added first → executes second (inner)
     app.add_middleware(AuthMiddleware)  # added second → executes first (outer)
 
+    # ── Security headers middleware ───────────────────────────────────
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        response = await call_next(request)
+        ct = response.headers.get("content-type", "")
+        if "text/html" in ct or "application/json" in ct:
+            response.headers["X-Content-Type-Options"] = "nosniff"
+        if "application/json" in ct:
+            response.headers["Cache-Control"] = "private, max-age=0, no-store, no-cache, must-revalidate"
+        if "text/html" in ct:
+            response.headers["Cache-Control"] = "private, max-age=0, no-store, no-cache, must-revalidate"
+        return response
+
     # ── Routers ───────────────────────────────────────────────────────────
     # Phase 2 will create these modules; we guard with try/except so the app
     # starts cleanly during Phase 1.

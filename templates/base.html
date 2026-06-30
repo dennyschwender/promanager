@@ -69,8 +69,8 @@
       </a>
     </li>
     <li>
-      <details role="list" class="user-dropdown">
-        <summary aria-haspopup="listbox" role="link">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or ''))|trim or user.username }}</summary>
+      <details class="user-dropdown">
+        <summary aria-haspopup="listbox" role="button">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or ''))|trim or user.username }}</summary>
         <ul role="listbox" aria-label="User menu" class="dropdown-menu-right">
           {% if user.is_admin %}
             <li role="none"><a href="/admin/audit" role="option">{{ t('admin.audit_log_title') }}</a></li>
