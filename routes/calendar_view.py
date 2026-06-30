@@ -334,7 +334,7 @@ async def events_export_text(
     lines = [header]
     for ev in events:
         display_time = ev.meeting_time or ev.event_time
-        time_str = display_time.strftime("%H:%M") if display_time else ""
+        time_str = display_time.strftime("%H:%M") if display_time else "--:--"
         team_name = team_names.get(ev.team_id, "") if show_team else ""
         row = [
             ev.event_date.isoformat(),
