@@ -1074,6 +1074,7 @@
     "to": "Bis",
     "export_csv": "CSV exportieren",
     "export_btn": "Exportieren",
-    "copy_to_clipboard": "In Zwischenablage kopieren"
+    "copy_to_clipboard": "In Zwischenablage kopieren",
+    "agenda": "Agenda"
   }
 }
