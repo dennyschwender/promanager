@@ -322,24 +322,26 @@ async def events_export_text(
     events = q.all()
 
     team_names = {t.id: t.name for t in db.query(Team).all()}
-    header = "\t".join(["Date", "Time", "Title", "Type", "Location", "Team"])
+    show_team = team_id_val is None
+    columns = ["Date", "Time", "Title", "Type", "Location"]
+    if show_team:
+        columns.append("Team")
+    header = "\t".join(columns)
     lines = [header]
     for ev in events:
         display_time = ev.meeting_time or ev.event_time
         time_str = display_time.strftime("%H:%M") if display_time else ""
-        team_name = team_names.get(ev.team_id, "")
-        lines.append(
-            "\t".join(
-                [
-                    ev.event_date.isoformat(),
-                    time_str,
-                    ev.title,
-                    ev.event_type or "",
-                    ev.location or "",
-                    team_name,
-                ]
-            )
-        )
+        team_name = team_names.get(ev.team_id, "") if show_team else ""
+        row = [
+            ev.event_date.isoformat(),
+            time_str,
+            ev.title,
+            ev.event_type or "",
+            ev.location or "",
+        ]
+        if show_team:
+            row.append(team_name)
+        lines.append("\t".join(row))
 
     from fastapi.responses import PlainTextResponse
 
