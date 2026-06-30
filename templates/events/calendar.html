@@ -77,7 +77,7 @@
   {% for week in weeks %}
   <div class="calendar-week">
     {% for day in week %}
-    <div class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other{% endif %} {% if day.is_today %}calendar-day-today{% endif %}" data-date="{{ day.date.isoformat() }}">
+    <div class="calendar-day-cell {% if not day.is_current_month %}calendar-day-other{% endif %} {% if day.is_today %}calendar-day-today{% endif %}" data-date="{{ day.date.isoformat() }}" data-count="{{ day.events|length }}">
       <div class="calendar-day-number">{{ day.date.day }}</div>
       <div class="calendar-day-events">
         {% for ev in day.events %}

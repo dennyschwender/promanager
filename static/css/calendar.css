@@ -261,8 +261,12 @@ a.calendar-event-item.event-type-other {
 /* Responsive */
 @media (max-width: 600px) {
   .calendar-day-cell {
-    min-height: auto;
-    padding: 0.4rem;
+    min-height: 3.2rem;
+    padding: 0.2rem;
+  }
+
+  .calendar-day-number {
+    font-size: 0.7rem;
   }
 
   .calendar-header-row,
@@ -271,11 +275,28 @@ a.calendar-event-item.event-type-other {
   }
 
   .calendar-event-item {
-    font-size: 0.65rem;
+    display: none;
+  }
+
+  .calendar-day-cell:not(.calendar-day-other) .calendar-day-events:not(:empty)::after {
+    content: attr(data-count);
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-size: 0.55rem;
+    line-height: 1;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.75rem;
+    min-width: 1rem;
+    text-align: center;
   }
 
   .calendar-header-day {
-    font-size: 0.65rem;
-    padding: 0.25rem 0.15rem;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.1rem;
+  }
+
+  .calendar-day-detail {
+    font-size: 0.85rem;
   }
 }
