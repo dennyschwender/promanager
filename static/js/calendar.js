@@ -127,8 +127,8 @@
     clipBtn.addEventListener('click', function () {
       var orig = clipBtn.textContent;
       var params = new URLSearchParams();
-      params.set('date_from', clipFrom.value);
-      params.set('date_to', clipTo.value);
+      params.set('date_from', exportDateFrom.value);
+      params.set('date_to', exportDateTo.value);
       if (filtersForm) {
         var formData = new FormData(filtersForm);
         formData.forEach(function (value, key) {
