@@ -29,7 +29,8 @@ def _git_rev() -> str:
         )
     except Exception:
         try:
-            return str(int(os.path.getmtime("static/css/main.css")))
+            mtime = int(os.path.getmtime("static/css/main.css"))
+            return str(mtime)
         except Exception:
             return "0"
 
