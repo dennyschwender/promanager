@@ -275,9 +275,12 @@ async def events_export(
             ev_time = ev.event_time.strftime("%H:%M") if ev.event_time else ""
             mt = ev.meeting_time.strftime("%H:%M") if ev.meeting_time else ""
             etype = _t(f"enums.event_type.{ev.event_type}", locale) if ev.event_type else ev.event_type
+            date_str = ev.event_date.isoformat()
+            if ev.event_end_date and ev.event_end_date != ev.event_date:
+                date_str = f"{date_str} -> {ev.event_end_date.isoformat()}"
             w.writerow(
                 [
-                    ev.event_date.isoformat(),
+                    date_str,
                     ev_time,
                     mt,
                     ev.title,
@@ -337,8 +340,11 @@ async def events_export_text(
         display_time = ev.meeting_time or ev.event_time
         time_str = display_time.strftime("%H:%M") if display_time else "--:--"
         team_name = team_names.get(ev.team_id, "") if show_team else ""
+        date_str = ev.event_date.isoformat()
+        if ev.event_end_date and ev.event_end_date != ev.event_date:
+            date_str = f"{date_str} -> {ev.event_end_date.isoformat()}"
         row = [
-            ev.event_date.isoformat(),
+            date_str,
             time_str,
             ev.title,
             ev.event_type or "",
