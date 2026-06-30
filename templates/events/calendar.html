@@ -40,34 +40,25 @@
 </form>
 
 <div class="export-panel hidden" id="export-panel">
-  <summary>{{ t('calendar.export_btn') }}</summary>
-  <div class="export-panel">
-    <div class="export-panel-section">
-      <h4>{{ t('calendar.export_csv') }}</h4>
-      <form method="get" action="/events/export" class="export-form" target="_blank">
-        <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
-        <input type="hidden" name="team_id" value="{{ selected_team_id or '' }}">
-        <label>{{ t('calendar.from') }}
-          <input type="date" name="date_from" value="{{ today.isoformat() }}" required>
-        </label>
-        <label>{{ t('calendar.to') }}
-          <input type="date" name="date_to" required>
-        </label>
-        <button type="submit" class="btn btn-primary">{{ t('calendar.export_csv') }}</button>
-      </form>
+  <div class="export-panel-section">
+    <div class="export-form">
+      <label>{{ t('calendar.from') }}
+        <input type="date" id="export-date-from" value="{{ today.isoformat() }}">
+      </label>
+      <label>{{ t('calendar.to') }}
+        <input type="date" id="export-date-to" value="{{ today.isoformat() }}">
+      </label>
     </div>
-    <div class="export-panel-section">
-      <h4>{{ t('calendar.copy_to_clipboard') }}</h4>
-      <div class="export-form">
-        <label>{{ t('calendar.from') }}
-          <input type="date" id="clip-date-from" value="{{ today.isoformat() }}">
-        </label>
-        <label>{{ t('calendar.to') }}
-          <input type="date" id="clip-date-to" value="{{ today.isoformat() }}">
-        </label>
-        <button type="button" class="btn btn-primary" id="clip-copy-btn" data-copied="{{ t('calendar.copied') }}">{{ t('calendar.copy_to_clipboard') }}</button>
-      </div>
-    </div>
+  </div>
+  <div class="export-actions">
+    <form method="get" action="/events/export" target="_blank" id="csv-export-form">
+      <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
+      <input type="hidden" name="team_id" value="{{ selected_team_id or '' }}">
+      <input type="hidden" name="date_from" id="csv-date-from">
+      <input type="hidden" name="date_to" id="csv-date-to">
+      <button type="submit" class="btn btn-primary">{{ t('calendar.export_csv') }}</button>
+    </form>
+    <button type="button" class="btn btn-primary" id="clip-copy-btn" data-copied="{{ t('calendar.copied') }}">{{ t('calendar.copy_to_clipboard') }}</button>
   </div>
 </div>
 

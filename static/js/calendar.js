@@ -109,9 +109,21 @@
 
   // ── Clipboard copy ──
   var clipBtn = document.getElementById('clip-copy-btn');
-  var clipFrom = document.getElementById('clip-date-from');
-  var clipTo = document.getElementById('clip-date-to');
-  if (clipBtn && clipFrom && clipTo) {
+  var exportDateFrom = document.getElementById('export-date-from');
+  var exportDateTo = document.getElementById('export-date-to');
+  var csvDateFrom = document.getElementById('csv-date-from');
+  var csvDateTo = document.getElementById('csv-date-to');
+  var csvForm = document.getElementById('csv-export-form');
+
+  // Sync shared dates to CSV form on submit
+  if (csvForm && exportDateFrom && exportDateTo && csvDateFrom && csvDateTo) {
+    csvForm.addEventListener('submit', function () {
+      csvDateFrom.value = exportDateFrom.value;
+      csvDateTo.value = exportDateTo.value;
+    });
+  }
+
+  if (clipBtn && exportDateFrom && exportDateTo) {
     clipBtn.addEventListener('click', function () {
       var orig = clipBtn.textContent;
       var params = new URLSearchParams();
