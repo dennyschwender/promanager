@@ -38,19 +38,37 @@
   </label>
 </form>
 
-<div class="calendar-export-bar">
-  <form method="get" action="/events/export" class="export-form" target="_blank">
-    <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
-    <input type="hidden" name="team_id" value="{{ selected_team_id or '' }}">
-    <label>{{ t('calendar.from') }}
-      <input type="date" name="date_from" value="{{ today.isoformat() }}" required>
-    </label>
-    <label>{{ t('calendar.to') }}
-      <input type="date" name="date_to" required>
-    </label>
-    <button type="submit" class="btn btn-primary">{{ t('calendar.export_csv') }}</button>
-  </form>
-</div>
+<details class="calendar-export-bar">
+  <summary>{{ t('calendar.export_btn') }}</summary>
+  <div class="export-panel">
+    <div class="export-panel-section">
+      <h4>{{ t('calendar.export_csv') }}</h4>
+      <form method="get" action="/events/export" class="export-form" target="_blank">
+        <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
+        <input type="hidden" name="team_id" value="{{ selected_team_id or '' }}">
+        <label>{{ t('calendar.from') }}
+          <input type="date" name="date_from" value="{{ today.isoformat() }}" required>
+        </label>
+        <label>{{ t('calendar.to') }}
+          <input type="date" name="date_to" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{ t('calendar.export_csv') }}</button>
+      </form>
+    </div>
+    <div class="export-panel-section">
+      <h4>{{ t('calendar.copy_to_clipboard') }}</h4>
+      <div class="export-form">
+        <label>{{ t('calendar.from') }}
+          <input type="date" id="clip-date-from" value="{{ today.isoformat() }}">
+        </label>
+        <label>{{ t('calendar.to') }}
+          <input type="date" id="clip-date-to" value="{{ today.isoformat() }}">
+        </label>
+        <button type="button" class="btn btn-primary" id="clip-copy-btn" data-copied="{{ t('calendar.copied') }}">{{ t('calendar.copy_to_clipboard') }}</button>
+      </div>
+    </div>
+  </div>
+</details>
 
 <div class="calendar-nav">
   <a href="/events/calendar?year={{ prev_year }}&month={{ prev_month }}&season_id={{ selected_season_id or '' }}&team_id={{ selected_team_id or '' }}" class="calendar-nav-btn" data-year="{{ prev_year }}" data-month="{{ prev_month }}">&lsaquo; {{ t('calendar.prev_month') }}</a>

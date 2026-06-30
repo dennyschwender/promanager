@@ -1072,6 +1072,8 @@
     "view_all": "View all",
     "from": "From",
     "to": "To",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "export_btn": "Export",
+    "copy_to_clipboard": "Copy to clipboard"
   }
 }

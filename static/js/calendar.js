@@ -97,4 +97,39 @@
   });
 
   attachDayClickHandlers();
+
+  // ── Clipboard copy ──
+  var clipBtn = document.getElementById('clip-copy-btn');
+  var clipFrom = document.getElementById('clip-date-from');
+  var clipTo = document.getElementById('clip-date-to');
+  if (clipBtn && clipFrom && clipTo) {
+    clipBtn.addEventListener('click', function () {
+      var orig = clipBtn.textContent;
+      var params = new URLSearchParams();
+      params.set('date_from', clipFrom.value);
+      params.set('date_to', clipTo.value);
+      if (filtersForm) {
+        var formData = new FormData(filtersForm);
+        formData.forEach(function (value, key) {
+          if (value) params.set(key, value);
+        });
+      }
+      fetch('/api/events/export-text?' + params.toString())
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+          return navigator.clipboard.writeText(text).then(function () {
+            clipBtn.textContent = '\u2713 ' + clipBtn.getAttribute('data-copied');
+            clipBtn.disabled = true;
+            setTimeout(function () {
+              clipBtn.textContent = orig;
+              clipBtn.disabled = false;
+            }, 2000);
+          });
+        })
+        .catch(function () {
+          clipBtn.textContent = 'Error';
+          setTimeout(function () { clipBtn.textContent = orig; }, 2000);
+        });
+    });
+  }
 })();

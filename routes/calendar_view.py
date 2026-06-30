@@ -290,3 +290,46 @@ async def events_export(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/api/events/export-text", include_in_schema=False)
+async def events_export_text(
+    request: Request,
+    date_from: str = "",
+    date_to: str = "",
+    team_id: str | None = None,
+    season_id: str | None = None,
+    user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        d_from = datetime.strptime(date_from, "%Y-%m-%d").date() if date_from else date.today()
+        d_to = datetime.strptime(date_to, "%Y-%m-%d").date() if date_to else d_from
+    except ValueError:
+        from fastapi.responses import HTMLResponse as _HR
+
+        return _HR("<p>Invalid date format. Use YYYY-MM-DD.</p>", status_code=400)
+
+    q = db.query(Event).filter(Event.event_date >= d_from, Event.event_date <= d_to)
+    season_id_val = int(season_id) if season_id and season_id.strip() else None
+    team_id_val = int(team_id) if team_id and team_id.strip() else None
+    if season_id_val is not None:
+        q = q.filter(Event.season_id == season_id_val)
+    if team_id_val is not None:
+        q = q.filter(Event.team_id == team_id_val)
+    q = _filter_events_query(q, user, db)
+    q = q.order_by(Event.event_date.asc(), Event.event_time.asc())
+    events = q.all()
+
+    team_names = {t.id: t.name for t in db.query(Team).all()}
+    lines = []
+    for ev in events:
+        display_time = ev.meeting_time or ev.event_time
+        time_str = display_time.strftime("%H:%M") if display_time else ""
+        team_name = team_names.get(ev.team_id, "")
+        parts = [ev.event_date.isoformat(), time_str, ev.title, team_name]
+        lines.append("  ".join(p for p in parts if p))
+
+    from fastapi.responses import PlainTextResponse
+
+    return PlainTextResponse("\n".join(lines))

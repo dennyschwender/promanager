@@ -1072,6 +1072,8 @@
     "view_all": "Vedi tutti",
     "from": "Da",
     "to": "A",
-    "export_csv": "Esporta CSV"
+    "export_csv": "Esporta CSV",
+    "export_btn": "Esporta",
+    "copy_to_clipboard": "Copia negli appunti"
   }
 }
