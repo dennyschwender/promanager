@@ -82,3 +82,9 @@ Pushes to GitHub master, then SSH into the Pi5 and run the update script.
 
 - `CLAUDE.md` — detailed, includes full Telegram callback table. Keep in sync with codebase.
 - `.claudeignore` / `.claudignore` — skip `node_modules/`, `.venv/`, `.git/`, build outputs, media files
+
+## Learnings
+
+- **Calendar i18n conflict**: `locales/*.json` already had a `"calendar"` section for calendar sync (profile page). Adding a second `"calendar"` key creates a JSON duplicate — Python json.load keeps the last one, overwriting the first. Always merge new keys into the existing section at the end of the file (~line 1064).
+- **Template blocks**: `base.html` uses `{% block scripts %}` not `{% block scripts_extra %}` — check existing blocks before creating new ones.
+- **Route order**: `/events/calendar` must be registered BEFORE `routes.events` in `_routers` list in `app/main.py` — otherwise the events router's `/{event_id}` matches "calendar" as an int path param first (returning 422).
