@@ -107,3 +107,33 @@ def test_calendar_day_api_returns_events_en_locale(client):
     response = c.get("/api/events/calendar-day?date_str=2026-06-15")
     assert response.status_code == 200
     assert "No events on this date." in response.text
+
+
+# ── Export CSV ──
+
+
+def test_events_export_returns_csv(client):
+    response = client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
+    assert response.status_code == 200
+    assert "text/csv" in response.headers["content-type"]
+    assert "text/csv" in response.headers["content-type"]
+
+
+def test_events_export_invalid_date(client):
+    response = client.get("/events/export?date_from=not-a-date&date_to=2026-06-30")
+    assert response.status_code == 400
+
+
+def test_events_export_contains_events(admin_client, db, make_event):
+    ev = make_event(title="Export Test Event", event_date="2026-06-15", event_time="18:30")
+    response = admin_client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
+    assert response.status_code == 200
+    assert ev.title in response.text
+    assert "18:30" in response.text
+
+
+def test_events_export_filename(admin_client, db, make_event):
+    make_event(event_date="2026-06-15")
+    response = admin_client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
+    assert response.status_code == 200
+    assert 'filename="events_2026-06-01_to_2026-06-30.csv"' in response.headers.get("content-disposition", "")

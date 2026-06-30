@@ -38,6 +38,20 @@
   </label>
 </form>
 
+<div class="calendar-export-bar">
+  <form method="get" action="/events/export" class="export-form" target="_blank">
+    <input type="hidden" name="season_id" value="{{ selected_season_id or '' }}">
+    <input type="hidden" name="team_id" value="{{ selected_team_id or '' }}">
+    <label>{{ t('calendar.from') }}
+      <input type="date" name="date_from" value="{{ today.isoformat() }}" required>
+    </label>
+    <label>{{ t('calendar.to') }}
+      <input type="date" name="date_to" required>
+    </label>
+    <button type="submit" class="btn btn-primary">{{ t('calendar.export_csv') }}</button>
+  </form>
+</div>
+
 <div class="calendar-nav">
   <a href="/events/calendar?year={{ prev_year }}&month={{ prev_month }}&season_id={{ selected_season_id or '' }}&team_id={{ selected_team_id or '' }}" class="calendar-nav-btn" data-year="{{ prev_year }}" data-month="{{ prev_month }}">&lsaquo; {{ t('calendar.prev_month') }}</a>
   <span class="calendar-nav-title">{{ t('calendar.' + month_name) }} {{ year }}</span>

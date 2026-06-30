@@ -190,6 +190,40 @@ a.calendar-event-item.event-type-other {
   font-size: 0.85rem;
 }
 
+/* Export bar */
+.calendar-export-bar {
+  margin-bottom: 0.75rem;
+}
+
+.export-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.export-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.export-form input[type="date"] {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--muted-border-color, var(--tp-border));
+  border-radius: var(--tp-radius);
+  background: var(--card-background-color, #fff);
+  color: var(--color);
+}
+
+.export-form .btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.85rem;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .calendar-day-cell {

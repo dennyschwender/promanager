@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import calendar
+import csv
+import io
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, Request
@@ -207,3 +209,84 @@ async def calendar_day_detail(
     )
 
     return HTMLResponse("".join(lines))
+
+
+@router.get("/events/export", include_in_schema=False)
+async def events_export(
+    request: Request,
+    date_from: str = "",
+    date_to: str = "",
+    team_id: str | None = None,
+    season_id: str | None = None,
+    user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
+):
+    from fastapi.responses import StreamingResponse
+
+    try:
+        d_from = datetime.strptime(date_from, "%Y-%m-%d").date() if date_from else date.today()
+        d_to = datetime.strptime(date_to, "%Y-%m-%d").date() if date_to else d_from
+    except ValueError:
+        from fastapi.responses import HTMLResponse as _HR
+
+        return _HR("<p>Invalid date format. Use YYYY-MM-DD.</p>", status_code=400)
+
+    q = db.query(Event).filter(Event.event_date >= d_from, Event.event_date <= d_to)
+    season_id_val = int(season_id) if season_id and season_id.strip() else None
+    team_id_val = int(team_id) if team_id and team_id.strip() else None
+    if season_id_val is not None:
+        q = q.filter(Event.season_id == season_id_val)
+    if team_id_val is not None:
+        q = q.filter(Event.team_id == team_id_val)
+    q = _filter_events_query(q, user, db)
+    q = q.order_by(Event.event_date.asc(), Event.event_time.asc())
+    events = q.all()
+
+    # Preload team/season names
+    team_names = {t.id: t.name for t in db.query(Team).all()}
+    season_names = {s.id: s.name for s in db.query(Season).all()}
+
+    from app.i18n import DEFAULT_LOCALE
+    from app.i18n import t as _t
+
+    locale = getattr(request.state, "locale", DEFAULT_LOCALE)
+
+    def generate():
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(
+            [
+                _t("events.date", locale),
+                _t("events.time", locale),
+                _t("events.meeting_time", locale),
+                _t("events.title_col", locale),
+                _t("events.type", locale),
+                _t("events.location", locale),
+                _t("events.team", locale),
+                _t("events.season", locale),
+            ]
+        )
+        for ev in events:
+            ev_time = ev.event_time.strftime("%H:%M") if ev.event_time else ""
+            mt = ev.meeting_time.strftime("%H:%M") if ev.meeting_time else ""
+            etype = _t(f"enums.event_type.{ev.event_type}", locale) if ev.event_type else ev.event_type
+            w.writerow(
+                [
+                    ev.event_date.isoformat(),
+                    ev_time,
+                    mt,
+                    ev.title,
+                    etype,
+                    ev.location or "",
+                    team_names.get(ev.team_id, ""),
+                    season_names.get(ev.season_id, ""),
+                ]
+            )
+        yield buf.getvalue()
+
+    filename = f"events_{d_from.isoformat()}_to_{d_to.isoformat()}.csv"
+    return StreamingResponse(
+        generate(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

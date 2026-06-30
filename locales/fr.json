@@ -1069,6 +1069,9 @@
     "december": "Décembre",
     "events_on": "Événements le",
     "no_events": "Aucun événement à cette date.",
-    "view_all": "Voir tout"
+    "view_all": "Voir tout",
+    "from": "Du",
+    "to": "Au",
+    "export_csv": "Exporter CSV"
   }
 }
