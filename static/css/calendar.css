@@ -79,7 +79,7 @@
   gap: 0.15rem;
 }
 
-.calendar-event-item {
+a.calendar-event-item {
   display: block;
   font-size: 0.7rem;
   padding: 0.1rem 0.25rem;
