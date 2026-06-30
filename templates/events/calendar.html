@@ -43,10 +43,10 @@
   <div class="export-panel-section">
     <div class="export-form">
       <label>{{ t('calendar.from') }}
-        <input type="date" id="export-date-from" value="{{ today.isoformat() }}">
+        <input type="date" id="export-date-from" value="{{ month_start.isoformat() }}">
       </label>
       <label>{{ t('calendar.to') }}
-        <input type="date" id="export-date-to" value="{{ today.isoformat() }}">
+        <input type="date" id="export-date-to" value="{{ month_end.isoformat() }}">
       </label>
     </div>
   </div>

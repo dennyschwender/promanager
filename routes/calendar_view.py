@@ -91,6 +91,8 @@ async def calendar_view(
     month_dates = cal.monthdatescalendar(year, month)
     grid_start = month_dates[0][0]
     grid_end = month_dates[-1][-1]
+    month_start = date(year, month, 1)
+    month_end = date(year, month, calendar.monthrange(year, month)[1])
 
     if month == 1:
         prev_month, prev_year = 12, year - 1
@@ -152,6 +154,8 @@ async def calendar_view(
             "selected_season_id": season_id_val,
             "selected_team_id": team_id_val,
             "today": today,
+            "month_start": month_start,
+            "month_end": month_end,
         },
     )
 

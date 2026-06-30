@@ -141,10 +141,13 @@ def test_events_export_filename(admin_client, db, make_event):
 
 def test_events_export_text_returns_events(admin_client, db, make_event):
     from models.team import Team
+
     team = Team(name="Test Team")
     db.add(team)
     db.commit()
-    ev = make_event(title="Clipboard Event", event_date="2026-06-15", event_time="20:00", location="Test Gym", team_id=team.id)
+    ev = make_event(
+        title="Clipboard Event", event_date="2026-06-15", event_time="20:00", location="Test Gym", team_id=team.id
+    )
     # Without team filter — Team column present
     response = admin_client.get("/api/events/export-text?date_from=2026-06-01&date_to=2026-06-30")
     assert response.status_code == 200
