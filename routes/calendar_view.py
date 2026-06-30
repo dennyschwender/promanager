@@ -156,6 +156,7 @@ async def calendar_view(
             "today": today,
             "month_start": month_start,
             "month_end": month_end,
+            "MONTH_NAMES": MONTH_NAMES,
         },
     )
 

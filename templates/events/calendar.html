@@ -93,7 +93,29 @@
   {% endfor %}
 </div>
 
-<div id="calendar-day-detail" class="calendar-day-detail hidden"></div>
+<div id="calendar-agenda" class="calendar-agenda">
+  <h3 class="agenda-title">{{ t('calendar.agenda') }}</h3>
+  {% for week in weeks %}
+    {% for day in week %}
+      {% set day_events = day.events %}
+      {% if day_events %}
+      <div class="agenda-day-section" data-date="{{ day.date.isoformat() }}">
+        <h4 class="agenda-day-header"><span class="agenda-day-num">{{ day.date.day }}</span> {{ t('calendar.' + MONTH_NAMES[day.date.month]) }} {{ day.date.year }}</h4>
+        <div class="agenda-events">
+          {% for ev in day_events %}
+          {% set _time = ev.meeting_time or ev.event_time %}
+          <div class="agenda-event event-type-{{ ev.event_type }}">
+            <span class="agenda-event-time">{% if _time %}{{ _time.strftime('%H:%M') }}{% endif %}</span>
+            <a href="/events/{{ ev.id }}" class="agenda-event-title">{{ ev.title }}</a>
+            {% if ev.location %}<span class="agenda-event-location">{{ ev.location }}</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/calendar.js?v={{ static_v }}"></script>

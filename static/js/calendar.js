@@ -2,10 +2,12 @@
   'use strict';
 
   var grid = document.getElementById('calendar-grid');
-  var detailPanel = document.getElementById('calendar-day-detail');
+  var agenda = document.getElementById('calendar-agenda');
   var filtersForm = document.getElementById('calendar-filters');
 
   if (!grid) return;
+
+  var selectedDate = null;
 
   function attachDayClickHandlers() {
     document.querySelectorAll('.calendar-day-cell').forEach(function (cell) {
@@ -13,22 +15,33 @@
         if (e.target.closest('.calendar-event-item')) return;
         var date = cell.getAttribute('data-date');
         if (!date) return;
-        var params = new URLSearchParams();
-        if (filtersForm) {
-          var formData = new FormData(filtersForm);
-          formData.forEach(function (value, key) {
-            if (value) params.set(key, value);
+
+        if (selectedDate === date) {
+          // Toggle off — show all sections
+          selectedDate = null;
+          document.querySelectorAll('.calendar-day-cell.selected').forEach(function (c) {
+            c.classList.remove('selected');
           });
+          document.querySelectorAll('.agenda-day-section').forEach(function (s) {
+            s.classList.remove('agenda-hidden');
+          });
+        } else {
+          // Show only this day
+          selectedDate = date;
+          document.querySelectorAll('.calendar-day-cell.selected').forEach(function (c) {
+            c.classList.remove('selected');
+          });
+          cell.classList.add('selected');
+          document.querySelectorAll('.agenda-day-section').forEach(function (s) {
+            var isTarget = s.getAttribute('data-date') === date;
+            s.classList.toggle('agenda-hidden', !isTarget);
+          });
+          // Scroll agenda section into view
+          var target = document.querySelector('.agenda-day-section[data-date="' + date + '"]');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         }
-        fetch('/api/events/calendar-day?' + params.toString() + '&date_str=' + encodeURIComponent(date))
-          .then(function (r) { return r.text(); })
-          .then(function (html) {
-            if (detailPanel) {
-              detailPanel.innerHTML = html;
-              detailPanel.classList.remove('hidden');
-            }
-          })
-          .catch(function (err) { console.error('Day detail error:', err); });
       });
     });
   }
@@ -72,28 +85,22 @@
           var parser = new DOMParser();
           var doc = parser.parseFromString(html, 'text/html');
           var newGrid = doc.getElementById('calendar-grid');
-          var newDetail = doc.getElementById('calendar-day-detail');
+          var newAgenda = doc.getElementById('calendar-agenda');
           var newNav = doc.querySelector('.calendar-nav');
           if (newGrid) grid.innerHTML = newGrid.innerHTML;
-          if (newDetail && detailPanel) detailPanel.outerHTML = newDetail.outerHTML;
+          if (newAgenda && agenda) agenda.outerHTML = newAgenda.outerHTML;
+          agenda = document.getElementById('calendar-agenda');
           if (newNav) {
             var oldNav = document.querySelector('.calendar-nav');
             if (oldNav) oldNav.innerHTML = newNav.innerHTML;
           }
+          selectedDate = null;
           history.pushState({ year: year, month: month }, '', '/events/calendar?' + params.toString());
           attachDayClickHandlers();
           updateNavButtons();
         })
         .catch(function (err) { console.error('Calendar nav error:', err); });
     });
-  });
-
-  document.addEventListener('click', function (e) {
-    if (detailPanel && !detailPanel.classList.contains('hidden')) {
-      if (!detailPanel.contains(e.target) && !e.target.closest('.calendar-day-cell')) {
-        detailPanel.classList.add('hidden');
-      }
-    }
   });
 
   attachDayClickHandlers();
@@ -115,7 +122,6 @@
   var csvDateTo = document.getElementById('csv-date-to');
   var csvForm = document.getElementById('csv-export-form');
 
-  // Sync shared dates to CSV form on submit
   if (csvForm && exportDateFrom && exportDateTo && csvDateFrom && csvDateTo) {
     csvForm.addEventListener('submit', function () {
       csvDateFrom.value = exportDateFrom.value;

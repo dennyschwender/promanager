@@ -39,6 +39,14 @@
   cursor: pointer;
   position: relative;
   background: var(--card-background-color, #fff);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.15s;
+}
+
+.calendar-day-cell.selected {
+  outline-color: var(--tp-primary);
+  background: color-mix(in srgb, var(--tp-primary) 6%, var(--card-background-color, #fff));
 }
 
 .calendar-day-cell:last-child {
@@ -258,6 +266,72 @@ a.calendar-event-item.event-type-other {
   font-size: 0.85rem;
 }
 
+/* Agenda */
+.calendar-agenda {
+  margin-top: 0.75rem;
+}
+
+.agenda-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+  color: var(--tp-muted);
+}
+
+.agenda-day-section {
+  margin-bottom: 0.5rem;
+}
+
+.agenda-day-section.agenda-hidden {
+  display: none;
+}
+
+.agenda-day-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: var(--tp-muted);
+  border-bottom: 1px solid var(--muted-border-color, var(--tp-border));
+  padding-bottom: 0.15rem;
+}
+
+.agenda-day-num {
+  font-size: 1rem;
+}
+
+.agenda-event {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  border-left: 3px solid transparent;
+  margin-bottom: 0.15rem;
+}
+
+.agenda-event-time {
+  flex-shrink: 0;
+  font-weight: 600;
+  min-width: 3.2rem;
+  color: var(--color);
+}
+
+.agenda-event-title {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.agenda-event-title:hover {
+  text-decoration: underline;
+}
+
+.agenda-event-location {
+  color: var(--tp-muted);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .calendar-day-cell {
@@ -298,5 +372,13 @@ a.calendar-event-item.event-type-other {
 
   .calendar-day-detail {
     font-size: 0.85rem;
+  }
+
+  .agenda-event {
+    font-size: 0.78rem;
+  }
+
+  .agenda-event-location {
+    display: none;
   }
 }
