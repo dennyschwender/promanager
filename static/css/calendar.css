@@ -94,21 +94,21 @@ a.calendar-event-item {
   border-left-color: transparent;
 }
 
-.calendar-event-item:hover {
+a.calendar-event-item:hover {
   text-decoration: underline;
 }
 
-.event-type-match {
+a.calendar-event-item.event-type-match {
   border-left-color: var(--tp-danger);
   background: color-mix(in srgb, var(--tp-danger) 10%, transparent);
 }
 
-.event-type-training {
+a.calendar-event-item.event-type-training {
   border-left-color: var(--tp-primary);
   background: color-mix(in srgb, var(--tp-primary) 10%, transparent);
 }
 
-.event-type-other {
+a.calendar-event-item.event-type-other {
   border-left-color: var(--tp-muted);
   background: color-mix(in srgb, var(--tp-muted) 10%, transparent);
 }
