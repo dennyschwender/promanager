@@ -36,9 +36,10 @@
       {% endfor %}
     </select>
   </label>
+  <button type="button" class="btn btn-outline" id="export-toggle-btn">{{ t('calendar.export_btn') }}</button>
 </form>
 
-<details class="calendar-export-bar">
+<div class="export-panel hidden" id="export-panel">
   <summary>{{ t('calendar.export_btn') }}</summary>
   <div class="export-panel">
     <div class="export-panel-section">
@@ -68,7 +69,7 @@
       </div>
     </div>
   </div>
-</details>
+</div>
 
 <div class="calendar-nav">
   <a href="/events/calendar?year={{ prev_year }}&month={{ prev_month }}&season_id={{ selected_season_id or '' }}&team_id={{ selected_team_id or '' }}" class="calendar-nav-btn" data-year="{{ prev_year }}" data-month="{{ prev_month }}">&lsaquo; {{ t('calendar.prev_month') }}</a>

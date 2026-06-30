@@ -191,32 +191,23 @@ a.calendar-event-item.event-type-other {
 }
 
 /* Export */
-.calendar-export-bar {
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--muted-border-color, var(--tp-border));
-  border-radius: var(--tp-radius);
-  background: var(--card-background-color, #fff);
-}
-
-.calendar-export-bar summary {
-  padding: 0.4rem 0.65rem;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--tp-primary);
-  user-select: none;
-}
-
-.calendar-export-bar summary:hover {
-  background: var(--background-color, var(--tp-surface));
+#export-toggle-btn {
+  margin-left: auto;
 }
 
 .export-panel {
   display: flex;
   gap: 1.5rem;
   padding: 0.65rem;
-  border-top: 1px solid var(--muted-border-color, var(--tp-border));
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--muted-border-color, var(--tp-border));
+  border-radius: var(--tp-radius);
+  background: var(--card-background-color, #fff);
   flex-wrap: wrap;
+}
+
+.export-panel.hidden {
+  display: none;
 }
 
 .export-panel-section h4 {

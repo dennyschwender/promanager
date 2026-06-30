@@ -98,6 +98,15 @@
 
   attachDayClickHandlers();
 
+  // ── Export toggle ──
+  var exportBtn = document.getElementById('export-toggle-btn');
+  var exportPanel = document.getElementById('export-panel');
+  if (exportBtn && exportPanel) {
+    exportBtn.addEventListener('click', function () {
+      exportPanel.classList.toggle('hidden');
+    });
+  }
+
   // ── Clipboard copy ──
   var clipBtn = document.getElementById('clip-copy-btn');
   var clipFrom = document.getElementById('clip-date-from');
