@@ -216,12 +216,12 @@ def create_app() -> FastAPI:
     async def security_headers(request: Request, call_next):
         response = await call_next(request)
         ct = response.headers.get("content-type", "")
-        if "text/html" in ct or "application/json" in ct:
-            response.headers["X-Content-Type-Options"] = "nosniff"
-        if "application/json" in ct:
-            response.headers["Cache-Control"] = "private, max-age=0, no-store, no-cache, must-revalidate"
-        if "text/html" in ct:
-            response.headers["Cache-Control"] = "private, max-age=0, no-store, no-cache, must-revalidate"
+        path = request.url.path
+        # Security headers for all non-static responses
+        if not path.startswith("/static"):
+            response.headers.setdefault("X-Content-Type-Options", "nosniff")
+            if "text/html" in ct or "application/json" in ct:
+                response.headers.setdefault("Cache-Control", "private, max-age=0, no-store, no-cache, must-revalidate")
         return response
 
     # ── Routers ───────────────────────────────────────────────────────────
@@ -449,7 +449,7 @@ def create_app() -> FastAPI:
                 ],
                 "categories": ["sports", "productivity"],
             },
-            media_type="application/manifest+json",
+            media_type="application/manifest+json; charset=utf-8",
         )
 
     # ── Root redirect ─────────────────────────────────────────────────────
