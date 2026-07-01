@@ -108,7 +108,7 @@ def test_create_recurring_absence(member_client: TestClient, member_user, db):
     db.commit()
     db.refresh(player)
 
-    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 30))
+    season = Season(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 12, 31))
     db.add(season)
     db.commit()
     db.refresh(season)
