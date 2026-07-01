@@ -4,6 +4,8 @@ import uuid
 from datetime import date, timedelta
 from unittest.mock import patch
 
+import pytest
+
 from models.event import Event
 from models.team import Team
 
@@ -12,11 +14,13 @@ from models.team import Team
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_events_list(admin_client):
     resp = admin_client.get("/events", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.events
 def test_events_public(client):
     resp = client.get("/events", follow_redirects=False)
     assert resp.status_code == 200
@@ -27,6 +31,7 @@ def test_events_public(client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_create_event(admin_client, db):
     team = Team(name="Test Team")
     db.add(team)
@@ -54,6 +59,7 @@ def test_create_event(admin_client, db):
     assert event.event_type == "training"
 
 
+@pytest.mark.events
 def test_create_event_missing_title(admin_client):
     resp = admin_client.post(
         "/events/new",
@@ -77,6 +83,7 @@ def test_create_event_missing_title(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_event_detail(admin_client, db):
     event = Event(title="Test Event", event_type="match", event_date=date(2026, 4, 1))
     db.add(event)
@@ -93,6 +100,7 @@ def test_event_detail(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_edit_event(admin_client, db):
     event = Event(title="Old Title", event_type="training", event_date=date(2026, 4, 10))
     db.add(event)
@@ -123,6 +131,7 @@ def test_edit_event(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_delete_event(admin_client, db):
     event = Event(title="ToDelete", event_type="training", event_date=date(2026, 5, 1))
     db.add(event)
@@ -164,6 +173,7 @@ def _make_recurring_events(db, count=3, start_days_ago=7):
     return events
 
 
+@pytest.mark.events
 def test_event_delete_single_leaves_series_intact(admin_client, db):
     """scope=single deletes only the targeted event; other series events survive."""
     evs = _make_recurring_events(db, count=3, start_days_ago=14)
@@ -181,6 +191,7 @@ def test_event_delete_single_leaves_series_intact(admin_client, db):
     assert db.get(Event, sibling.id) is not None
 
 
+@pytest.mark.events
 def test_event_delete_future_removes_current_and_future(admin_client, db):
     """scope=future deletes the current event and all future events in the series,
     but leaves past events untouched."""
@@ -202,6 +213,7 @@ def test_event_delete_future_removes_current_and_future(admin_client, db):
     assert db.get(Event, future_ev.id) is None  # future — deleted
 
 
+@pytest.mark.events
 def test_event_delete_future_on_nonrecurring_falls_back_to_single(admin_client, db):
     """scope=future on a non-recurring event silently deletes only that event."""
     ev = Event(title="Solo", event_type="training", event_date=date.today())
@@ -218,6 +230,7 @@ def test_event_delete_future_on_nonrecurring_falls_back_to_single(admin_client, 
     assert db.get(Event, ev.id) is None
 
 
+@pytest.mark.events
 def test_event_detail_includes_att_by_player(admin_client, db):
     """GET /events/{id} returns 200 and the route now provides att_by_player context."""
     from models.attendance import Attendance
@@ -241,6 +254,7 @@ def test_event_detail_includes_att_by_player(admin_client, db):
     assert resp.status_code == 200
 
 
+@pytest.mark.events
 def test_member_can_edit_own_player_from_detail(client, db):
     """A member POSTing attendance for their own player redirects to /events/{id}."""
     from models.attendance import Attendance
@@ -280,6 +294,7 @@ def test_member_can_edit_own_player_from_detail(client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_attendance_text_returns_plain_text(admin_client, db):
     from datetime import date
     from datetime import time as dtime
@@ -322,6 +337,7 @@ def test_attendance_text_returns_plain_text(admin_client, db):
     assert "Forwards (1)" in body
 
 
+@pytest.mark.events
 def test_attendance_text_flat(admin_client, db):
     from datetime import date
 
@@ -360,11 +376,13 @@ def test_attendance_text_flat(admin_client, db):
     assert "Defenders" not in body  # no position headers in flat mode
 
 
+@pytest.mark.events
 def test_attendance_text_404(admin_client):
     resp = admin_client.get("/events/99999/attendance-text?grouped=1")
     assert resp.status_code == 404
 
 
+@pytest.mark.events
 def test_attendance_text_requires_login(client):
     resp = client.get("/events/1/attendance-text?grouped=1", follow_redirects=False)
     assert resp.status_code == 302

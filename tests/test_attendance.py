@@ -2,6 +2,8 @@
 
 from datetime import date
 
+import pytest
+
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
@@ -37,6 +39,7 @@ def _make_player(db, first="Player", last="One"):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_attendance_page_no_longer_exists(admin_client, db):
     """GET /attendance/{id} returns 404 after route deletion."""
     event = _make_event(db)
@@ -44,12 +47,14 @@ def test_attendance_page_no_longer_exists(admin_client, db):
     assert resp.status_code == 404
 
 
+@pytest.mark.events
 def test_attendance_missing_event_no_longer_exists(admin_client):
     """GET /attendance/99999 returns 404 after route deletion."""
     resp = admin_client.get("/attendance/99999", follow_redirects=False)
     assert resp.status_code == 404
 
 
+@pytest.mark.events
 def test_attendance_login_redirect_no_longer_exists(client, db):
     """GET /attendance/{id} returns 404 (route gone, not a login redirect)."""
     event = _make_event(db, title="Auth Test Event")
@@ -62,6 +67,7 @@ def test_attendance_login_redirect_no_longer_exists(client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_set_attendance_present(admin_client, db):
     event = _make_event(db, title="Present Event")
     player = _make_player(db, "Alice", "Present")
@@ -78,6 +84,7 @@ def test_set_attendance_present(admin_client, db):
     assert att.status == "present"
 
 
+@pytest.mark.events
 def test_set_attendance_absent(admin_client, db):
     event = _make_event(db, title="Absent Event")
     player = _make_player(db, "Bob", "Absent")
@@ -95,6 +102,7 @@ def test_set_attendance_absent(admin_client, db):
     assert att.note == "Sick leave"
 
 
+@pytest.mark.events
 def test_set_attendance_with_note(admin_client, db):
     event = _make_event(db, title="Note Event")
     player = _make_player(db, "Carol", "Note")
@@ -117,6 +125,7 @@ def test_set_attendance_with_note(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_attendance_summary(db):
     event = _make_event(db, title="Summary Event")
 
@@ -142,6 +151,7 @@ def test_attendance_summary(db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_member_cannot_update_another_members_player(client, db):
     """A member may only update attendance for their own players."""
     # Create two members
@@ -173,6 +183,7 @@ def test_member_cannot_update_another_members_player(client, db):
     assert att is None or att.status != "present"
 
 
+@pytest.mark.events
 def test_ensure_attendance_only_includes_season_players(db):
     """ensure_attendance_records only creates rows for players in event's (team, season)."""
     from datetime import date
@@ -214,6 +225,7 @@ def test_ensure_attendance_only_includes_season_players(db):
     assert p1.id not in att_player_ids  # in s1 — should NOT be included
 
 
+@pytest.mark.events
 def test_ensure_attendance_no_season_creates_no_records(db):
     """ensure_attendance_records with event.season_id=None creates no attendance rows."""
     from datetime import date
@@ -247,6 +259,7 @@ def test_ensure_attendance_no_season_creates_no_records(db):
     assert count == 0
 
 
+@pytest.mark.events
 def test_update_attendance_json_response(admin_client, db):
     """POST with Accept: application/json returns JSON success response."""
     event = _make_event(db, title="JSON Test Event")
@@ -265,6 +278,7 @@ def test_update_attendance_json_response(admin_client, db):
     assert body["note"] == "via ajax"
 
 
+@pytest.mark.events
 def test_update_attendance_json_invalid_status(admin_client, db):
     """POST with invalid status + Accept header returns ok=false."""
     event = _make_event(db, title="Invalid Status Event")
@@ -282,6 +296,7 @@ def test_update_attendance_json_invalid_status(admin_client, db):
     assert body["error"] == "invalid_status"
 
 
+@pytest.mark.events
 def test_update_attendance_form_redirect_unchanged(admin_client, db):
     """POST without Accept: application/json still redirects (regression guard)."""
     event = _make_event(db, title="Redirect Guard Event")
@@ -296,6 +311,7 @@ def test_update_attendance_form_redirect_unchanged(admin_client, db):
     assert f"/events/{event.id}" in resp.headers["location"]
 
 
+@pytest.mark.events
 def test_get_event_attendance_detail_includes_notes(db):
     """get_event_attendance_detail returns player + note per bucket."""
     from services.attendance_service import get_event_attendance_detail
@@ -338,6 +354,7 @@ def _setup_team_season(db):
     return team, season, player
 
 
+@pytest.mark.events
 def test_backfill_past_events_set_absent(db):
     """Past events (event_date < today) are always set to 'absent'."""
     from datetime import date, timedelta
@@ -363,6 +380,7 @@ def test_backfill_past_events_set_absent(db):
     assert att.status == "absent"
 
 
+@pytest.mark.events
 def test_backfill_future_events_use_default_status(db):
     """Future events use _default_status (presence_type='all' → present, else → unknown)."""
     from datetime import date, timedelta
@@ -402,6 +420,7 @@ def test_backfill_future_events_use_default_status(db):
     assert att_p.status == "present"
 
 
+@pytest.mark.events
 def test_backfill_does_not_overwrite_existing(db):
     """Existing Attendance rows are never overwritten."""
     from datetime import date, timedelta
@@ -429,6 +448,7 @@ def test_backfill_does_not_overwrite_existing(db):
     assert att.status == "maybe"
 
 
+@pytest.mark.events
 def test_backfill_skips_inactive_player(db):
     """Inactive players get no attendance records created."""
     from datetime import date, timedelta
@@ -480,6 +500,7 @@ def _make_team_season(db):
     return team, season
 
 
+@pytest.mark.events
 def test_borrow_creates_attendance_with_team(admin_client, db):
     """Borrowing an active player creates an Attendance row with borrowed_from_team_id set."""
     from models.player_team import PlayerTeam
@@ -519,6 +540,7 @@ def test_borrow_creates_attendance_with_team(admin_client, db):
     assert att.status == "unknown"
 
 
+@pytest.mark.events
 def test_borrow_duplicate_rejected(admin_client, db):
     """Borrowing a player already attending returns already_attending error."""
     event = _make_event(db, title="Dup Event")
@@ -537,6 +559,7 @@ def test_borrow_duplicate_rejected(admin_client, db):
     assert body["error"] == "already_attending"
 
 
+@pytest.mark.events
 def test_borrow_inactive_player_rejected(admin_client, db):
     """Borrowing an inactive player returns player_not_found error."""
     event = _make_event(db, title="Inactive Borrow Event")
@@ -555,6 +578,7 @@ def test_borrow_inactive_player_rejected(admin_client, db):
     assert body["error"] == "player_not_found"
 
 
+@pytest.mark.events
 def test_borrow_no_season_stores_null_team(admin_client, db):
     """Event with season_id=None: borrow succeeds with borrowed_from_team_id=None."""
     event = Event(title="No Season Borrow", event_type="training", event_date=date(2026, 7, 1), season_id=None)
@@ -577,6 +601,7 @@ def test_borrow_no_season_stores_null_team(admin_client, db):
     assert att.borrowed_from_team_id is None
 
 
+@pytest.mark.events
 def test_player_search_excludes_existing_attendees(admin_client, db):
     """GET /players/search?q=&exclude_event_id= excludes players already attending."""
     from models.season import Season

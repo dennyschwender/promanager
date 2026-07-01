@@ -1,5 +1,7 @@
 """Tests for /auth routes."""
 
+import pytest
+
 from services.auth_service import create_user
 
 # ---------------------------------------------------------------------------
@@ -7,11 +9,13 @@ from services.auth_service import create_user
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.core
 def test_login_page_renders(client):
     resp = client.get("/auth/login", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_login_success(client, member_user):
     resp = client.post(
         "/auth/login",
@@ -23,6 +27,7 @@ def test_login_success(client, member_user):
     assert "session_user_id" in resp.cookies
 
 
+@pytest.mark.core
 def test_login_wrong_password(client, member_user):
     resp = client.post(
         "/auth/login",
@@ -32,6 +37,7 @@ def test_login_wrong_password(client, member_user):
     assert resp.status_code == 401
 
 
+@pytest.mark.core
 def test_login_nonexistent_user(client):
     resp = client.post(
         "/auth/login",
@@ -46,6 +52,7 @@ def test_login_nonexistent_user(client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.core
 def test_logout(admin_client):
     resp = admin_client.get("/auth/logout", follow_redirects=False)
     assert resp.status_code == 302
@@ -59,6 +66,7 @@ def test_logout(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.core
 def test_register_requires_admin(member_client):
     """Non-admin users must not reach the register page."""
     resp = member_client.get("/auth/register", follow_redirects=False)
@@ -66,6 +74,7 @@ def test_register_requires_admin(member_client):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_register_requires_login(client):
     """Unauthenticated users are redirected to login."""
     resp = client.get("/auth/register", follow_redirects=False)
@@ -73,6 +82,7 @@ def test_register_requires_login(client):
     assert "/auth/login" in resp.headers["location"]
 
 
+@pytest.mark.core
 def test_register_creates_user(admin_client):
     resp = admin_client.post(
         "/auth/register",
@@ -89,6 +99,7 @@ def test_register_creates_user(admin_client):
     assert b"newuser" in resp.content
 
 
+@pytest.mark.core
 def test_duplicate_username_rejected(admin_client, db):
     # Pre-create the user with the same username
     create_user(db, "dupuser", "dup@test.com", "password123", role="member")
@@ -107,6 +118,7 @@ def test_duplicate_username_rejected(admin_client, db):
     assert b"dupuser" in resp.content
 
 
+@pytest.mark.core
 def test_password_too_short_rejected(admin_client):
     """7-character password must be rejected with 400."""
     resp = admin_client.post(
@@ -123,6 +135,7 @@ def test_password_too_short_rejected(admin_client):
     assert b"8 characters" in resp.content
 
 
+@pytest.mark.core
 def test_password_minimum_length_accepted(admin_client):
     """8-character password must be accepted."""
     resp = admin_client.post(
@@ -144,6 +157,7 @@ def test_password_minimum_length_accepted(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.core
 def test_login_post_without_csrf_token_rejected(csrf_client):
     """POST to /auth/login without a CSRF token must return 403."""
     resp = csrf_client.post(
@@ -154,6 +168,7 @@ def test_login_post_without_csrf_token_rejected(csrf_client):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_login_post_with_valid_csrf_token_proceeds(csrf_client, member_user):
     """POST to /auth/login with a correct CSRF token must not be blocked by CSRF."""
     from app.csrf import generate_csrf_token

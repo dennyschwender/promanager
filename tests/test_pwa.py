@@ -1,8 +1,11 @@
 """Tests for PWA endpoints: service worker, manifest."""
 
+import pytest
+
 from app.config import settings
 
 
+@pytest.mark.core
 def test_sw_js_served(client):
     resp = client.get("/sw.js")
     assert resp.status_code == 200
@@ -11,6 +14,7 @@ def test_sw_js_served(client):
     assert "addEventListener" in resp.text
 
 
+@pytest.mark.core
 def test_manifest_json(client):
     resp = client.get("/manifest.json")
     assert resp.status_code == 200
@@ -26,16 +30,19 @@ def test_manifest_json(client):
     assert "512x512" in sizes
 
 
+@pytest.mark.core
 def test_favicon_ico(client):
     resp = client.get("/static/img/favicon.ico")
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_icon_192(client):
     resp = client.get("/static/img/icon-192.png")
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_icon_512(client):
     resp = client.get("/static/img/icon-512.png")
     assert resp.status_code == 200

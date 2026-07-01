@@ -44,6 +44,7 @@ def other_team(db, season):
 # ── process_rows ──────────────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_valid_rows_imported(db, team, season):
     rows = [{"first_name": "Alice", "last_name": "Smith"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -61,6 +62,7 @@ def test_valid_rows_imported(db, team, season):
     assert membership.absent_by_default is False
 
 
+@pytest.mark.integration
 def test_missing_first_name_skipped(db, team, season):
     rows = [{"first_name": "", "last_name": "Smith"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -68,6 +70,7 @@ def test_missing_first_name_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "missing required field"
 
 
+@pytest.mark.integration
 def test_missing_last_name_skipped(db, team, season):
     rows = [{"first_name": "Alice", "last_name": "  "}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -75,6 +78,7 @@ def test_missing_last_name_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "missing required field"
 
 
+@pytest.mark.integration
 def test_duplicate_by_email_skipped(db, team, season):
     existing = Player(first_name="Bob", last_name="Old", email="bob@test.com", is_active=True)
     db.add(existing)
@@ -85,6 +89,7 @@ def test_duplicate_by_email_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "duplicate"
 
 
+@pytest.mark.integration
 def test_duplicate_by_name_skipped(db, team, season):
     existing = Player(first_name="Carol", last_name="Jones", is_active=True)
     db.add(existing)
@@ -95,6 +100,7 @@ def test_duplicate_by_name_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "duplicate"
 
 
+@pytest.mark.integration
 def test_duplicate_within_batch_skipped(db, team, season):
     rows = [
         {"first_name": "Dan", "last_name": "X", "email": "dan@test.com"},
@@ -105,6 +111,7 @@ def test_duplicate_within_batch_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "duplicate (in batch)"
 
 
+@pytest.mark.integration
 def test_unknown_team_falls_back_to_context(db, team, season):
     rows = [{"first_name": "Eve", "last_name": "X", "team": "Nonexistent"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -114,6 +121,7 @@ def test_unknown_team_falls_back_to_context(db, team, season):
     assert membership.team_id == team.id
 
 
+@pytest.mark.integration
 def test_blank_team_column_uses_context(db, team, season):
     rows = [{"first_name": "Frank", "last_name": "X", "team": ""}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -121,6 +129,7 @@ def test_blank_team_column_uses_context(db, team, season):
     assert len(result.skipped) == 0
 
 
+@pytest.mark.integration
 def test_named_team_column_resolved(db, team, other_team, season):
     rows = [{"first_name": "Grace", "last_name": "X", "team": "hawks"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -129,12 +138,14 @@ def test_named_team_column_resolved(db, team, other_team, season):
     assert membership.team_id == other_team.id
 
 
+@pytest.mark.integration
 def test_unknown_columns_ignored(db, team, season):
     rows = [{"first_name": "Hank", "last_name": "X", "favourite_colour": "blue"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
     assert len(result.imported) == 1
 
 
+@pytest.mark.integration
 def test_invalid_date_of_birth_skipped(db, team, season):
     rows = [{"first_name": "Iris", "last_name": "X", "date_of_birth": "not-a-date"}]
     result = process_rows(rows, context_team_id=team.id, db=db, context_season_id=season.id)
@@ -142,6 +153,7 @@ def test_invalid_date_of_birth_skipped(db, team, season):
     assert result.skipped[0]["reason"] == "invalid date_of_birth"
 
 
+@pytest.mark.integration
 def test_valid_date_formats_accepted(db, team, season):
     rows = [
         {"first_name": "J1", "last_name": "X", "date_of_birth": "2000-06-15"},
@@ -160,6 +172,7 @@ def test_valid_date_formats_accepted(db, team, season):
 # ── parse_csv ─────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_parse_csv_basic():
     content = b"first_name,last_name,email\nAlice,Smith,alice@test.com\n"
     rows = parse_csv(io.BytesIO(content))
@@ -168,12 +181,14 @@ def test_parse_csv_basic():
     assert rows[0]["email"] == "alice@test.com"
 
 
+@pytest.mark.integration
 def test_parse_csv_unknown_columns_passed_through():
     content = b"first_name,last_name,foo\nAlice,Smith,bar\n"
     rows = parse_csv(io.BytesIO(content))
     assert rows[0]["foo"] == "bar"
 
 
+@pytest.mark.integration
 def test_parse_csv_case_insensitive_headers():
     content = b"First_Name,Last_Name\nAlice,Smith\n"
     rows = parse_csv(io.BytesIO(content))
@@ -183,6 +198,7 @@ def test_parse_csv_case_insensitive_headers():
 # ── parse_xlsx ────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_parse_xlsx_basic():
     import openpyxl
 
@@ -199,6 +215,7 @@ def test_parse_xlsx_basic():
     assert rows[0]["email"] == "bob@test.com"
 
 
+@pytest.mark.integration
 def test_parse_xlsx_case_insensitive_headers():
     import openpyxl
 
@@ -213,6 +230,7 @@ def test_parse_xlsx_case_insensitive_headers():
     assert rows[0]["first_name"] == "Bob"
 
 
+@pytest.mark.integration
 def test_parse_xlsx_corrupt_file_raises_value_error():
     corrupt = io.BytesIO(b"not an xlsx file at all")
     with pytest.raises(ValueError, match="Cannot read XLSX file"):

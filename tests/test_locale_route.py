@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
 
+
+@pytest.mark.i18n
 def test_set_locale_sets_cookie(client):
     resp = client.post(
         "/set-locale",
@@ -14,6 +17,7 @@ def test_set_locale_sets_cookie(client):
     assert resp.cookies.get("locale") == "it"
 
 
+@pytest.mark.i18n
 def test_set_locale_invalid_locale_returns_400(client):
     resp = client.post(
         "/set-locale",
@@ -23,6 +27,7 @@ def test_set_locale_invalid_locale_returns_400(client):
     assert resp.status_code == 400
 
 
+@pytest.mark.i18n
 def test_set_locale_defaults_redirect_to_dashboard(client):
     resp = client.post(
         "/set-locale",
@@ -33,6 +38,7 @@ def test_set_locale_defaults_redirect_to_dashboard(client):
     assert resp.headers["location"] == "/dashboard"
 
 
+@pytest.mark.i18n
 def test_set_locale_rejects_external_next(client):
     resp = client.post(
         "/set-locale",
@@ -43,6 +49,7 @@ def test_set_locale_rejects_external_next(client):
     assert resp.headers["location"] == "/dashboard"
 
 
+@pytest.mark.i18n
 def test_set_locale_rejects_protocol_relative_next(client):
     resp = client.post(
         "/set-locale",
@@ -53,6 +60,7 @@ def test_set_locale_rejects_protocol_relative_next(client):
     assert resp.headers["location"] == "/dashboard"
 
 
+@pytest.mark.i18n
 def test_set_locale_updates_user_db(admin_client, admin_user, db):
     resp = admin_client.post(
         "/set-locale",

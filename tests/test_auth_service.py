@@ -43,12 +43,14 @@ def _restore_app_config(monkeypatch):
     importlib.reload(svc)
 
 
+@pytest.mark.core
 def test_create_magic_link_returns_none_for_localhost(monkeypatch):
     """When APP_URL is the default localhost value, return None."""
     svc = _reload_settings(monkeypatch, "http://localhost:7000")
     assert svc.create_magic_link(1, "/dashboard", "a@b.com") is None
 
 
+@pytest.mark.core
 def test_create_magic_link_returns_url(monkeypatch):
     """When APP_URL is a real URL, return a full /auth/magic URL."""
     svc = _reload_settings(monkeypatch, "https://example.com")
@@ -57,6 +59,7 @@ def test_create_magic_link_returns_url(monkeypatch):
     assert url.startswith("https://example.com/auth/magic?token=")
 
 
+@pytest.mark.core
 def test_verify_magic_link_round_trip(monkeypatch):
     """create then verify returns original user_id and path."""
     svc = _reload_settings(monkeypatch, "https://example.com")
@@ -69,6 +72,7 @@ def test_verify_magic_link_round_trip(monkeypatch):
     assert email == "test@example.com"
 
 
+@pytest.mark.core
 def test_verify_magic_link_invalid_raises():
     """A tampered token raises an exception."""
     from services.auth_service import verify_magic_link

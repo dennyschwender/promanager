@@ -17,17 +17,20 @@ def event(db):
     return e
 
 
+@pytest.mark.events
 def test_list_messages_requires_login(client, db, event):
     r = client.get(f"/events/{event.id}/messages")
     assert r.status_code in (302, 401)
 
 
+@pytest.mark.events
 def test_list_messages_empty(admin_client, db, event):
     r = admin_client.get(f"/events/{event.id}/messages")
     assert r.status_code == 200
     assert r.json() == []
 
 
+@pytest.mark.events
 def test_list_messages_returns_both_lanes(admin_client, db, event, admin_user):
     db.add(EventMessage(event_id=event.id, user_id=admin_user.id, lane="announcement", body="Ann 1"))
     db.add(EventMessage(event_id=event.id, user_id=admin_user.id, lane="discussion", body="Disc 1"))
@@ -40,6 +43,7 @@ def test_list_messages_returns_both_lanes(admin_client, db, event, admin_user):
     assert lanes == {"announcement", "discussion"}
 
 
+@pytest.mark.events
 def test_post_announcement_as_admin(admin_client, db, event):
     r = admin_client.post(
         f"/events/{event.id}/messages",
@@ -53,6 +57,7 @@ def test_post_announcement_as_admin(admin_client, db, event):
     assert data["created_at"] is not None
 
 
+@pytest.mark.events
 def test_post_discussion_as_member(member_client, db, event):
     r = member_client.post(
         f"/events/{event.id}/messages",
@@ -62,6 +67,7 @@ def test_post_discussion_as_member(member_client, db, event):
     assert r.json()["lane"] == "discussion"
 
 
+@pytest.mark.events
 def test_post_announcement_as_member_forbidden(member_client, db, event):
     r = member_client.post(
         f"/events/{event.id}/messages",
@@ -70,6 +76,7 @@ def test_post_announcement_as_member_forbidden(member_client, db, event):
     assert r.status_code == 403
 
 
+@pytest.mark.events
 def test_post_invalid_lane_rejected(admin_client, db, event):
     r = admin_client.post(
         f"/events/{event.id}/messages",
@@ -78,6 +85,7 @@ def test_post_invalid_lane_rejected(admin_client, db, event):
     assert r.status_code == 400
 
 
+@pytest.mark.events
 def test_post_empty_body_rejected(admin_client, db, event):
     r = admin_client.post(
         f"/events/{event.id}/messages",
@@ -86,6 +94,7 @@ def test_post_empty_body_rejected(admin_client, db, event):
     assert r.status_code == 400
 
 
+@pytest.mark.events
 def test_post_nonexistent_event(admin_client, db):
     r = admin_client.post(
         "/events/99999/messages",
@@ -94,6 +103,7 @@ def test_post_nonexistent_event(admin_client, db):
     assert r.status_code == 404
 
 
+@pytest.mark.events
 def test_delete_own_message_as_member(member_client, db, event, member_user):
     msg = EventMessage(event_id=event.id, user_id=member_user.id, lane="discussion", body="Mine")
     db.add(msg)
@@ -106,6 +116,7 @@ def test_delete_own_message_as_member(member_client, db, event, member_user):
     assert db.get(EventMessage, msg.id) is None
 
 
+@pytest.mark.events
 def test_delete_others_message_as_member_forbidden(member_client, db, event, admin_user):
     msg = EventMessage(event_id=event.id, user_id=admin_user.id, lane="discussion", body="Admin's")
     db.add(msg)
@@ -116,6 +127,7 @@ def test_delete_others_message_as_member_forbidden(member_client, db, event, adm
     assert r.status_code == 403
 
 
+@pytest.mark.events
 def test_delete_any_message_as_admin(admin_client, db, event, member_user):
     msg = EventMessage(event_id=event.id, user_id=member_user.id, lane="discussion", body="Member's")
     db.add(msg)
@@ -127,11 +139,13 @@ def test_delete_any_message_as_admin(admin_client, db, event, member_user):
     assert db.get(EventMessage, msg.id) is None
 
 
+@pytest.mark.events
 def test_delete_nonexistent_message(admin_client, db, event):
     r = admin_client.delete(f"/events/{event.id}/messages/99999")
     assert r.status_code == 404
 
 
+@pytest.mark.events
 def test_messages_ordered_by_created_at(admin_client, db, event, admin_user):
     db.add(EventMessage(event_id=event.id, user_id=admin_user.id, lane="discussion", body="First"))
     db.add(EventMessage(event_id=event.id, user_id=admin_user.id, lane="discussion", body="Second"))

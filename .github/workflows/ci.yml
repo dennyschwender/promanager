@@ -37,8 +37,8 @@ jobs:
         run: pip install -r requirements/dev.txt
       - run: mypy .
 
-  test:
-    name: Tests (pytest)
+  test-core:
+    name: Tests (core)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -50,13 +50,151 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements/dev.txt
-      - name: Run tests with coverage
-        run: pytest tests/ --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Run core tests
+        run: pytest -m core --cov=. --cov-report=term-missing --cov-report=xml -q
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
+          name: coverage-report-core
+          path: coverage.xml
+          retention-days: 7
+
+  test-events:
+    name: Tests (events)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run event tests
+        run: pytest -m events --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-events
+          path: coverage.xml
+          retention-days: 7
+
+  test-players:
+    name: Tests (players)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run player tests
+        run: pytest -m players --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-players
+          path: coverage.xml
+          retention-days: 7
+
+  test-notifications:
+    name: Tests (notifications)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run notification tests
+        run: pytest -m notifications --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-notifications
+          path: coverage.xml
+          retention-days: 7
+
+  test-integration:
+    name: Tests (integration)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run integration tests
+        run: pytest -m integration --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-integration
+          path: coverage.xml
+          retention-days: 7
+
+  test-telegram:
+    name: Tests (telegram)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run telegram tests
+        run: pytest -m telegram --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-telegram
+          path: coverage.xml
+          retention-days: 7
+
+  test-i18n:
+    name: Tests (i18n)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+      - name: Run i18n tests
+        run: pytest -m i18n --cov=. --cov-report=term-missing --cov-report=xml -q
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-i18n
           path: coverage.xml
           retention-days: 7
 

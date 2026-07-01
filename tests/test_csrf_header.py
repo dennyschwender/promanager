@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+import pytest
+
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from fastapi import Depends, FastAPI  # noqa: E402
@@ -27,6 +29,7 @@ def make_client():
     return TestClient(app_test, raise_server_exceptions=False)
 
 
+@pytest.mark.core
 def test_valid_header_passes():
     c = make_client()
     c.cookies.set("session_user_id", SESSION_COOKIE)
@@ -38,6 +41,7 @@ def test_valid_header_passes():
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_missing_header_returns_403():
     c = make_client()
     c.cookies.set("session_user_id", SESSION_COOKIE)
@@ -45,6 +49,7 @@ def test_missing_header_returns_403():
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_wrong_token_returns_403():
     c = make_client()
     c.cookies.set("session_user_id", SESSION_COOKIE)

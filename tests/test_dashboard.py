@@ -2,6 +2,8 @@
 
 from datetime import date, timedelta
 
+import pytest
+
 from models.attendance import Attendance
 from models.event import Event
 from models.player import Player
@@ -15,11 +17,13 @@ from services.auth_service import create_session_cookie, create_user
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_player_dashboard_renders(member_client):
     resp = member_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_player_dashboard_unlinked_member(client, db):
     user = create_user(db, "unlinked", "u@test.com", "pass", role="member", must_change_password=False)
     cookie_val = create_session_cookie(user.id)
@@ -29,6 +33,7 @@ def test_player_dashboard_unlinked_member(client, db):
     assert b"not linked to any player" in resp.content
 
 
+@pytest.mark.integration
 def test_player_dashboard_no_active_season(member_client, db):
     # Deactivate all seasons
     for s in db.query(Season).all():
@@ -38,6 +43,7 @@ def test_player_dashboard_no_active_season(member_client, db):
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_player_dashboard_shows_next_event(member_client, db, member_user):
     # Create a team, season, player linked to member_user, and an upcoming event
     season = Season(
@@ -69,6 +75,7 @@ def test_player_dashboard_shows_next_event(member_client, db, member_user):
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_player_dashboard_computes_attendance_rate(member_client, db, member_user):
     season = Season(
         name="Test Season",
@@ -107,11 +114,13 @@ def test_player_dashboard_computes_attendance_rate(member_client, db, member_use
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_coach_dashboard_renders(admin_client):
     resp = admin_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_coach_dashboard_renders_for_coach(client, db):
     user = create_user(db, "coach1", "coach@test.com", "coachpass", role="coach", must_change_password=False)
     cookie_val = create_session_cookie(user.id)
@@ -120,6 +129,7 @@ def test_coach_dashboard_renders_for_coach(client, db):
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_coach_dashboard_shows_stat_cards(admin_client, db):
     # Create a season and a past event with attendance to populate stat cards
     season = Season(
@@ -154,6 +164,7 @@ def test_coach_dashboard_shows_stat_cards(admin_client, db):
     assert b"team_attendance" in resp.content or b"100%" in resp.content
 
 
+@pytest.mark.integration
 def test_coach_dashboard_admin_quick_actions(admin_client):
     resp = admin_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
@@ -165,24 +176,28 @@ def test_coach_dashboard_admin_quick_actions(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_reports_link_hidden_for_member(member_client):
     resp = member_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
     assert b'/reports"' not in resp.content
 
 
+@pytest.mark.integration
 def test_reports_link_shown_for_admin(admin_client):
     resp = admin_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
     assert b'/reports"' in resp.content
 
 
+@pytest.mark.integration
 def test_dashboard_link_active(admin_client):
     resp = admin_client.get("/dashboard", follow_redirects=False)
     assert resp.status_code == 200
     assert b"nav-active" in resp.content
 
 
+@pytest.mark.integration
 def test_reports_link_hidden_in_footer_for_member(client, db):
     user = create_user(db, "member2", "m2@test.com", "pass", role="member", must_change_password=False)
     cookie_val = create_session_cookie(user.id)

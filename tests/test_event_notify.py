@@ -46,17 +46,20 @@ def setup(db):
     return {"season": season, "team": team, "player": player, "event": event}
 
 
+@pytest.mark.events
 def test_notify_get_requires_admin(client, setup):
     r = client.get(f"/events/{setup['event'].id}/notify")
     assert r.status_code in (302, 401, 403)
 
 
+@pytest.mark.events
 def test_notify_get_renders_form(admin_client, setup):
     r = admin_client.get(f"/events/{setup['event'].id}/notify")
     assert r.status_code == 200
     assert b"notify" in r.content.lower()
 
 
+@pytest.mark.events
 def test_notify_post_creates_notification(db, admin_client, setup):
     r = admin_client.post(
         f"/events/{setup['event'].id}/notify",
@@ -74,6 +77,7 @@ def test_notify_post_creates_notification(db, admin_client, setup):
     assert notifs[0].title == "Test Notification"
 
 
+@pytest.mark.events
 def test_notify_post_member_forbidden(member_client, setup):
     r = member_client.post(
         f"/events/{setup['event'].id}/notify",

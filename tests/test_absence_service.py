@@ -2,6 +2,7 @@
 
 from datetime import date
 
+import pytest
 from sqlalchemy.orm import Session
 
 from models.attendance import Attendance
@@ -14,6 +15,7 @@ from models.team import Team
 from services.absence_service import apply_absence_to_future_events, is_date_in_absence
 
 
+@pytest.mark.players
 def test_is_date_in_absence_period_within_range(db: Session):
     """Period absence should match dates within start_date to end_date (inclusive)."""
     # Create a player
@@ -42,6 +44,7 @@ def test_is_date_in_absence_period_within_range(db: Session):
     assert is_date_in_absence(player.id, date(2026, 4, 21), db) is False
 
 
+@pytest.mark.players
 def test_is_date_in_absence_period_no_match(db: Session):
     """Period absence should not match dates outside the range."""
     player = Player(first_name="Jane", last_name="Smith", is_active=True)
@@ -61,6 +64,7 @@ def test_is_date_in_absence_period_no_match(db: Session):
     assert is_date_in_absence(player.id, date(2026, 5, 1), db) is False
 
 
+@pytest.mark.players
 def test_is_date_in_absence_no_absences(db: Session):
     """Player with no absences should return False."""
     player = Player(first_name="Bob", last_name="Jones", is_active=True)
@@ -70,6 +74,7 @@ def test_is_date_in_absence_no_absences(db: Session):
     assert is_date_in_absence(player.id, date(2026, 4, 15), db) is False
 
 
+@pytest.mark.players
 def test_is_date_in_absence_recurring_weekly(db: Session):
     """Recurring absence with FREQ=WEEKLY;BYDAY=FR should match Fridays."""
     player = Player(first_name="Alice", last_name="Wonder", is_active=True)
@@ -101,6 +106,7 @@ def test_is_date_in_absence_recurring_weekly(db: Session):
     assert is_date_in_absence(player.id, date(2026, 4, 11), db) is False
 
 
+@pytest.mark.players
 def test_is_date_in_absence_recurring_expired(db: Session):
     """Recurring absence should not match dates after rrule_until."""
     player = Player(first_name="Charlie", last_name="Brown", is_active=True)
@@ -129,6 +135,7 @@ def test_is_date_in_absence_recurring_expired(db: Session):
     assert is_date_in_absence(player.id, date(2026, 4, 24), db) is True
 
 
+@pytest.mark.players
 def test_apply_absence_to_future_events_period(db: Session):
     """Creating a period absence should auto-set matching future events to absent."""
     from datetime import timedelta
@@ -199,6 +206,7 @@ def test_apply_absence_to_future_events_period(db: Session):
     assert att3.status == "unknown"
 
 
+@pytest.mark.players
 def test_apply_absence_respects_all_presence_type(db: Session):
     """Absence should override presence_type='all' (auto-present default)."""
     from datetime import timedelta
@@ -255,6 +263,7 @@ def test_apply_absence_respects_all_presence_type(db: Session):
     assert att_refreshed.status == "absent"
 
 
+@pytest.mark.players
 def test_apply_absence_preserves_explicit_present(db: Session):
     """Absence should NOT override explicit 'present' on non-'all' events."""
     player = Player(first_name="Frank", last_name="Test", is_active=True)

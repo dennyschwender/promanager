@@ -1,17 +1,21 @@
 # tests/test_calendar.py
 from datetime import date, time
 
+import pytest
+
 from models.event import Event
 from services.calendar_service import build_ical_feed, fold_line, generate_token
 
 # ── token ────────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.events
 def test_generate_token_length():
     token = generate_token()
     assert len(token) == 64
 
 
+@pytest.mark.events
 def test_generate_token_unique():
     assert generate_token() != generate_token()
 
@@ -19,10 +23,12 @@ def test_generate_token_unique():
 # ── fold_line ────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.events
 def test_fold_line_short():
     assert fold_line("SHORT:value") == "SHORT:value"
 
 
+@pytest.mark.events
 def test_fold_line_long():
     long_line = "SUMMARY:" + "A" * 80
     folded = fold_line(long_line)
@@ -34,6 +40,7 @@ def test_fold_line_long():
 # ── build_ical_feed ──────────────────────────────────────────────────────────
 
 
+@pytest.mark.events
 def test_ical_basic_event(db, admin_user):
     event = Event(
         title="Training",
@@ -58,6 +65,7 @@ def test_ical_basic_event(db, admin_user):
     assert "LOCATION:Sports Center" in result
 
 
+@pytest.mark.events
 def test_ical_all_day_event(db, admin_user):
     event = Event(
         title="Team Day",
@@ -75,6 +83,7 @@ def test_ical_all_day_event(db, admin_user):
     assert "DTEND;VALUE=DATE:20260705" in result
 
 
+@pytest.mark.events
 def test_ical_end_time_fallback(db, admin_user):
     """When event_end_time is None, DTEND = DTSTART + 1 hour."""
     event = Event(
@@ -94,6 +103,7 @@ def test_ical_end_time_fallback(db, admin_user):
     assert "DTEND:20260610T200000Z" in result
 
 
+@pytest.mark.events
 def test_ical_meeting_vevent(db, admin_user):
     """meeting_time generates a second VEVENT for the meeting point."""
     event = Event(
@@ -119,6 +129,7 @@ def test_ical_meeting_vevent(db, admin_user):
     assert "LOCATION:Main Parking" in result
 
 
+@pytest.mark.events
 def test_ical_meeting_falls_back_to_location(db, admin_user):
     """meeting_time with no meeting_location falls back to event location."""
     event = Event(
@@ -142,6 +153,7 @@ def test_ical_meeting_falls_back_to_location(db, admin_user):
     assert "LOCATION:Field B" in meet_block
 
 
+@pytest.mark.events
 def test_ical_window(db, admin_user):
     """Events older than 30 days are excluded."""
     from datetime import datetime, timedelta, timezone
@@ -168,11 +180,13 @@ def test_ical_window(db, admin_user):
 # ── endpoint tests ────────────────────────────────────────────────────────────
 
 
+@pytest.mark.events
 def test_feed_unknown_token(client):
     resp = client.get("/calendar/unknowntoken123/feed.ics", follow_redirects=False)
     assert resp.status_code == 404
 
 
+@pytest.mark.events
 def test_feed_returns_ical(db, admin_user, admin_client):
     from services.calendar_service import generate_token
 
@@ -186,6 +200,7 @@ def test_feed_returns_ical(db, admin_user, admin_client):
     assert "BEGIN:VCALENDAR" in resp.text
 
 
+@pytest.mark.events
 def test_feed_no_login_required(db, client, admin_user):
     """Feed accessible without session cookie."""
     from services.calendar_service import generate_token
@@ -198,12 +213,14 @@ def test_feed_no_login_required(db, client, admin_user):
     assert resp.status_code == 200
 
 
+@pytest.mark.events
 def test_regenerate_token_requires_login(client):
     resp = client.post("/calendar/regenerate-token", follow_redirects=False)
     assert resp.status_code == 302
     assert "/auth/login" in resp.headers["location"]
 
 
+@pytest.mark.events
 def test_regenerate_token_changes_token(db, admin_user, admin_client):
     from services.calendar_service import generate_token
 
@@ -219,6 +236,7 @@ def test_regenerate_token_changes_token(db, admin_user, admin_client):
     assert admin_user.calendar_token is not None
 
 
+@pytest.mark.events
 def test_old_token_returns_404_after_regenerate(db, admin_user, admin_client, client):
     from services.calendar_service import generate_token
 
@@ -232,6 +250,7 @@ def test_old_token_returns_404_after_regenerate(db, admin_user, admin_client, cl
     assert resp.status_code == 404
 
 
+@pytest.mark.events
 def test_ical_text_escaping(db, admin_user):
     """Commas and semicolons in title/location are escaped per RFC 5545."""
     event = Event(

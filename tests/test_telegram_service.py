@@ -1,5 +1,7 @@
 """tests/test_telegram_service.py"""
 
+import pytest
+
 from models.player import Player
 from models.player_phone import PlayerPhone
 from models.user import User
@@ -15,18 +17,22 @@ from services.telegram_service import (
 # ── normalize_phone ───────────────────────────────────────────────────────────
 
 
+@pytest.mark.telegram
 def test_normalize_strips_spaces_and_dashes():
     assert normalize_phone("+39 123-456-7890") == "391234567890"
 
 
+@pytest.mark.telegram
 def test_normalize_strips_plus():
     assert normalize_phone("+391234567890") == "391234567890"
 
 
+@pytest.mark.telegram
 def test_normalize_strips_parens():
     assert normalize_phone("(039) 123 4567") == "0391234567"
 
 
+@pytest.mark.telegram
 def test_normalize_digits_only_unchanged():
     assert normalize_phone("391234567890") == "391234567890"
 
@@ -34,6 +40,7 @@ def test_normalize_digits_only_unchanged():
 # ── find_user_by_phone ────────────────────────────────────────────────────────
 
 
+@pytest.mark.telegram
 def test_find_user_by_legacy_phone(db):
     user = User(username="u1", email="u1@x.com", hashed_password="x", role="member")
     db.add(user)
@@ -47,6 +54,7 @@ def test_find_user_by_legacy_phone(db):
     assert found.id == user.id
 
 
+@pytest.mark.telegram
 def test_find_user_by_player_phone_table(db):
     user = User(username="u2", email="u2@x.com", hashed_password="x", role="member")
     db.add(user)
@@ -63,10 +71,12 @@ def test_find_user_by_player_phone_table(db):
     assert found.id == user.id
 
 
+@pytest.mark.telegram
 def test_find_user_returns_none_when_no_match(db):
     assert find_user_by_phone(db, "0000000000") is None
 
 
+@pytest.mark.telegram
 def test_find_user_returns_none_when_player_has_no_user(db):
     player = Player(first_name="E", last_name="F", phone="111222333")
     db.add(player)
@@ -77,6 +87,7 @@ def test_find_user_returns_none_when_player_has_no_user(db):
 # ── link_telegram ─────────────────────────────────────────────────────────────
 
 
+@pytest.mark.telegram
 def test_link_telegram_success(db):
     user = User(username="u3", email="u3@x.com", hashed_password="x", role="member")
     db.add(user)
@@ -88,6 +99,7 @@ def test_link_telegram_success(db):
     assert user.telegram_chat_id == "111"
 
 
+@pytest.mark.telegram
 def test_link_telegram_already_this_chat(db):
     user = User(username="u4", email="u4@x.com", hashed_password="x", role="member", telegram_chat_id="222")
     db.add(user)
@@ -97,6 +109,7 @@ def test_link_telegram_already_this_chat(db):
     assert result == AuthResult.ALREADY_THIS
 
 
+@pytest.mark.telegram
 def test_link_telegram_conflict_chat_id(db):
     """chat_id already linked to a different user."""
     other = User(username="u5", email="u5@x.com", hashed_password="x", role="member", telegram_chat_id="333")
@@ -108,6 +121,7 @@ def test_link_telegram_conflict_chat_id(db):
     assert result == AuthResult.CONFLICT_CHAT
 
 
+@pytest.mark.telegram
 def test_link_telegram_conflict_user_already_linked(db):
     """The target user already has a different chat_id."""
     user = User(username="u7", email="u7@x.com", hashed_password="x", role="member", telegram_chat_id="444")
@@ -121,6 +135,7 @@ def test_link_telegram_conflict_user_already_linked(db):
 # ── unlink_telegram ───────────────────────────────────────────────────────────
 
 
+@pytest.mark.telegram
 def test_unlink_telegram(db):
     user = User(username="u8", email="u8@x.com", hashed_password="x", role="member", telegram_chat_id="666")
     db.add(user)
@@ -134,6 +149,7 @@ def test_unlink_telegram(db):
 # ── get_user_by_chat_id ───────────────────────────────────────────────────────
 
 
+@pytest.mark.telegram
 def test_get_user_by_chat_id_found(db):
     user = User(username="u9", email="u9@x.com", hashed_password="x", role="member", telegram_chat_id="777")
     db.add(user)
@@ -144,6 +160,7 @@ def test_get_user_by_chat_id_found(db):
     assert found.id == user.id
 
 
+@pytest.mark.telegram
 def test_get_user_by_chat_id_not_found(db):
     assert get_user_by_chat_id(db, "999") is None
 
@@ -151,6 +168,7 @@ def test_get_user_by_chat_id_not_found(db):
 # ── find_user_by_phone — direct user.phone match ──────────────────────────────
 
 
+@pytest.mark.telegram
 def test_find_user_by_direct_phone_on_user(db):
     """Admin/coach with phone set directly on User should be found without a player."""
     user = User(username="coach1", email="coach1@x.com", hashed_password="x", role="admin", phone="+39 111 222 3333")
@@ -162,6 +180,7 @@ def test_find_user_by_direct_phone_on_user(db):
     assert found.id == user.id
 
 
+@pytest.mark.telegram
 def test_user_phone_takes_priority_over_player_phone(db):
     """If both user.phone and a player phone match, user.phone wins."""
     user_a = User(username="ua", email="ua@x.com", hashed_password="x", role="admin", phone="+39 555 000 0000")
@@ -177,6 +196,7 @@ def test_user_phone_takes_priority_over_player_phone(db):
     assert found.id == user_a.id
 
 
+@pytest.mark.telegram
 def test_find_user_by_phone_no_match_on_user_falls_through(db):
     """user.phone set but different number — should still find via player."""
     user = User(username="uc", email="uc@x.com", hashed_password="x", role="member", phone="+39 999 999 9999")

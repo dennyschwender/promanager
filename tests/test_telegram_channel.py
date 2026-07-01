@@ -22,18 +22,21 @@ def _notif(event_id: int | None = 42, tag: str = "event_new"):
     return n
 
 
+@pytest.mark.telegram
 def test_returns_false_when_no_chat_id():
     from services.channels.telegram_channel import TelegramChannel
 
     assert TelegramChannel().send(_player(chat_id=None), _notif()) is False
 
 
+@pytest.mark.telegram
 def test_send_raw_returns_false_when_no_chat_id():
     from services.channels.telegram_channel import TelegramChannel
 
     assert TelegramChannel().send_raw(_player(chat_id=None), title="T", body="B") is False
 
 
+@pytest.mark.telegram
 def test_returns_false_when_no_user():
     from services.channels.telegram_channel import TelegramChannel
 
@@ -42,6 +45,7 @@ def test_returns_false_when_no_user():
     assert TelegramChannel().send(p, _notif()) is False
 
 
+@pytest.mark.telegram
 def test_send_raw_returns_false_when_no_user():
     from services.channels.telegram_channel import TelegramChannel
 
@@ -50,6 +54,7 @@ def test_send_raw_returns_false_when_no_user():
     assert TelegramChannel().send_raw(p, title="T", body="B") is False
 
 
+@pytest.mark.telegram
 def test_returns_false_when_no_token(monkeypatch):
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     from services.channels.telegram_channel import TelegramChannel
@@ -57,6 +62,7 @@ def test_returns_false_when_no_token(monkeypatch):
     assert TelegramChannel().send(_player(), _notif()) is False
 
 
+@pytest.mark.telegram
 def test_send_raw_returns_false_when_no_token(monkeypatch):
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     from services.channels.telegram_channel import TelegramChannel
@@ -64,6 +70,7 @@ def test_send_raw_returns_false_when_no_token(monkeypatch):
     assert TelegramChannel().send_raw(_player(), title="T", body="B") is False
 
 
+@pytest.mark.telegram
 def test_posts_to_telegram_api(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -82,6 +89,7 @@ def test_posts_to_telegram_api(monkeypatch):
     assert any(b["callback_data"] == "evts:0" for b in buttons)
 
 
+@pytest.mark.telegram
 def test_send_raw_posts_to_telegram_api(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -106,6 +114,7 @@ def test_send_raw_posts_to_telegram_api(monkeypatch):
     assert any(b["callback_data"] == "evts:0" for b in buttons)
 
 
+@pytest.mark.telegram
 def test_no_buttons_when_no_event_id(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -117,6 +126,7 @@ def test_no_buttons_when_no_event_id(monkeypatch):
     assert "reply_markup" not in mock_post.call_args.kwargs["json"]
 
 
+@pytest.mark.telegram
 def test_send_raw_no_buttons_when_no_event_id(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -128,6 +138,7 @@ def test_send_raw_no_buttons_when_no_event_id(monkeypatch):
     assert "reply_markup" not in mock_post.call_args.kwargs["json"]
 
 
+@pytest.mark.telegram
 def test_returns_false_on_api_error(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -140,6 +151,7 @@ def test_returns_false_on_api_error(monkeypatch):
         assert TelegramChannel().send(_player(), _notif()) is False
 
 
+@pytest.mark.telegram
 def test_send_raw_returns_false_on_api_error(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -152,6 +164,7 @@ def test_send_raw_returns_false_on_api_error(monkeypatch):
         assert TelegramChannel().send_raw(_player(), title="T", body="B") is False
 
 
+@pytest.mark.telegram
 def test_returns_false_on_request_exception(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     from services.channels.telegram_channel import TelegramChannel
@@ -160,6 +173,7 @@ def test_returns_false_on_request_exception(monkeypatch):
         assert TelegramChannel().send(_player(), _notif()) is False
 
 
+@pytest.mark.telegram
 def test_send_raw_returns_false_on_request_exception(monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     from services.channels.telegram_channel import TelegramChannel
@@ -179,6 +193,7 @@ def test_send_raw_returns_false_on_request_exception(monkeypatch):
         ("unknown_tag", "📬"),
     ],
 )
+@pytest.mark.telegram
 def test_emoji_mapping(monkeypatch, tag, emoji):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()
@@ -201,6 +216,7 @@ def test_emoji_mapping(monkeypatch, tag, emoji):
         ("unknown_tag", "📬"),
     ],
 )
+@pytest.mark.telegram
 def test_send_raw_emoji_mapping(monkeypatch, tag, emoji):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
     resp = MagicMock()

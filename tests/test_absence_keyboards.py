@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from bot.absence_keyboards import (
     absence_delete_confirm_keyboard,
     absence_list_keyboard,
@@ -20,6 +22,7 @@ def _cb_data(keyboard):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_other_menu_has_absences_and_back():
     kb = other_menu_keyboard(back_page=2, locale="en")
     data = _cb_data(kb)
@@ -37,6 +40,7 @@ def _make_player(id_, name):
     return p
 
 
+@pytest.mark.players
 def test_player_list_keyboard_buttons():
     players = [_make_player(1, "Alice"), _make_player(2, "Bob")]
     kb = absence_player_list_keyboard(players, page=0, total_pages=1, back_page=3, locale="en")
@@ -46,6 +50,7 @@ def test_player_list_keyboard_buttons():
     assert "other:0" in data
 
 
+@pytest.mark.players
 def test_player_list_keyboard_pagination():
     players = [_make_player(i, f"P{i}") for i in range(3)]
     kb = absence_player_list_keyboard(players, page=1, total_pages=3, back_page=0, locale="en")
@@ -54,6 +59,7 @@ def test_player_list_keyboard_pagination():
     assert any(d.startswith("absp:2:") for d in data)  # Next
 
 
+@pytest.mark.players
 def test_player_list_no_prev_on_first_page():
     players = [_make_player(1, "Alice")]
     kb = absence_player_list_keyboard(players, page=0, total_pages=2, back_page=0, locale="en")
@@ -71,6 +77,7 @@ def _make_absence(id_, start, end):
     return SimpleNamespace(id=id_, start_date=start, end_date=end)
 
 
+@pytest.mark.players
 def test_absence_list_has_delete_add_back_member():
     absences = [_make_absence(10, "2026-05-01", "2026-05-05")]
     kb = absence_list_keyboard(absences, player_id=7, page=0, total_pages=1, back_page=2, is_member=True, locale="en")
@@ -80,12 +87,14 @@ def test_absence_list_has_delete_add_back_member():
     assert "other:0" in data  # back → Other menu for member
 
 
+@pytest.mark.players
 def test_absence_list_back_goes_to_player_list_for_coach():
     kb = absence_list_keyboard([], player_id=5, page=0, total_pages=1, back_page=1, is_member=False, locale="en")
     data = _cb_data(kb)
     assert "absm:1" in data  # back → player list for coach
 
 
+@pytest.mark.players
 def test_absence_list_pagination():
     absences = [_make_absence(i, f"2026-05-{i:02d}", f"2026-05-{i + 1:02d}") for i in range(1, 4)]
     kb = absence_list_keyboard(absences, player_id=3, page=1, total_pages=3, back_page=0, is_member=False, locale="en")
@@ -99,6 +108,7 @@ def test_absence_list_pagination():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_delete_confirm_keyboard():
     kb = absence_delete_confirm_keyboard(absence_id=99, player_id=7, page=0, back_page=2, locale="en")
     data = _cb_data(kb)

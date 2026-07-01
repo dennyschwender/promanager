@@ -3,6 +3,8 @@
 from datetime import date, time, timedelta
 from unittest.mock import patch
 
+import pytest
+
 from models.attendance import Attendance
 from models.event import Event
 from models.notification_preference import NotificationPreference
@@ -34,6 +36,7 @@ def _make_event(db, days_ahead=1, has_time=True, reminder_sent=False, reminder_a
     return event
 
 
+@pytest.mark.slow
 def test_send_due_reminders_sends_to_unknown_players(db):
     """Reminder job sends email to players with unknown attendance within the window."""
     from services.notification_service import create_default_preferences
@@ -57,6 +60,7 @@ def test_send_due_reminders_sends_to_unknown_players(db):
     assert event.reminder_sent is False
 
 
+@pytest.mark.slow
 def test_send_due_reminders_skips_already_sent(db):
     """Reminder job skips events where reminder_sent is True."""
     from services.scheduler import send_due_reminders
@@ -74,6 +78,7 @@ def test_send_due_reminders_skips_already_sent(db):
     mock_send.assert_not_called()
 
 
+@pytest.mark.slow
 def test_send_due_reminders_skips_present_players(db):
     """Reminder job only emails players with unknown status, not present/absent."""
     from services.scheduler import send_due_reminders
@@ -91,6 +96,7 @@ def test_send_due_reminders_skips_present_players(db):
     mock_send.assert_not_called()
 
 
+@pytest.mark.slow
 def test_send_due_reminders_respects_email_preference(db):
     """Reminder job skips players who have disabled email notifications."""
     from services.scheduler import send_due_reminders
@@ -111,6 +117,7 @@ def test_send_due_reminders_respects_email_preference(db):
     mock_send.assert_not_called()
 
 
+@pytest.mark.slow
 def test_send_due_reminders_respects_team_auto_reminders_flag(db):
     """Reminder job skips events on teams that have auto_reminders=False."""
     from services.scheduler import send_due_reminders
@@ -137,6 +144,7 @@ def test_send_due_reminders_respects_team_auto_reminders_flag(db):
     mock_send.assert_not_called()
 
 
+@pytest.mark.slow
 def test_send_due_reminders_skips_far_future_events(db):
     """Reminder job does not email for events outside the reminder window."""
     from services.scheduler import send_due_reminders
@@ -155,6 +163,7 @@ def test_send_due_reminders_skips_far_future_events(db):
     mock_send.assert_not_called()
 
 
+@pytest.mark.slow
 def test_backup_database_creates_file(tmp_path, monkeypatch):
     """backup_database() creates a timestamped copy in data/backups/."""
     import os
@@ -175,6 +184,7 @@ def test_backup_database_creates_file(tmp_path, monkeypatch):
     assert "proManager_" in os.path.basename(result)
 
 
+@pytest.mark.slow
 def test_backup_database_skips_non_sqlite(monkeypatch):
     """backup_database() returns None and logs a debug message for non-SQLite URLs."""
     from services.scheduler import backup_database

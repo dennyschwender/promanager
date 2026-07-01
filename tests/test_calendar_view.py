@@ -43,16 +43,19 @@ def make_event(db):
 # ── Calendar page ──
 
 
+@pytest.mark.events
 def test_calendar_page_returns_200(client):
     response = client.get("/events/calendar")
     assert response.status_code == 200
 
 
+@pytest.mark.events
 def test_calendar_page_public(client):
     response = client.get("/events/calendar")
     assert response.status_code == 200
 
 
+@pytest.mark.events
 def test_calendar_page_with_events(admin_client, db, make_event):
     event = make_event(event_date="2026-06-15")
     response = admin_client.get("/events/calendar?year=2026&month=6")
@@ -60,16 +63,19 @@ def test_calendar_page_with_events(admin_client, db, make_event):
     assert event.title.encode() in response.content
 
 
+@pytest.mark.events
 def test_calendar_empty_month(client):
     response = client.get("/events/calendar?year=2026&month=1")
     assert response.status_code == 200
 
 
+@pytest.mark.events
 def test_calendar_month_navigation(client):
     response = client.get("/events/calendar?year=2026&month=7")
     assert response.status_code == 200
 
 
+@pytest.mark.events
 def test_calendar_invalid_month_clamps(client):
     response = client.get("/events/calendar?year=2026&month=13")
     assert response.status_code == 200
@@ -78,6 +84,7 @@ def test_calendar_invalid_month_clamps(client):
 # ── Day detail API ──
 
 
+@pytest.mark.events
 def test_calendar_day_api_returns_events(admin_client, db, make_event):
     ev = make_event(event_date="2026-06-15")
     response = admin_client.get("/api/events/calendar-day?date_str=2026-06-15")
@@ -85,17 +92,20 @@ def test_calendar_day_api_returns_events(admin_client, db, make_event):
     assert ev.title in response.text
 
 
+@pytest.mark.events
 def test_calendar_day_api_no_events(client):
     response = client.get("/api/events/calendar-day?date_str=2026-06-15")
     assert response.status_code == 200
     assert "Nessun evento in questa data." in response.text
 
 
+@pytest.mark.events
 def test_calendar_day_api_invalid_date(client):
     response = client.get("/api/events/calendar-day?date_str=not-a-date")
     assert response.status_code == 400
 
 
+@pytest.mark.events
 def test_calendar_day_api_returns_events_en_locale(client):
     """Override locale to English for explicit string check."""
     from starlette.testclient import TestClient as _TC
@@ -112,6 +122,7 @@ def test_calendar_day_api_returns_events_en_locale(client):
 # ── Export CSV ──
 
 
+@pytest.mark.events
 def test_events_export_returns_csv(client):
     response = client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
     assert response.status_code == 200
@@ -119,11 +130,13 @@ def test_events_export_returns_csv(client):
     assert "text/csv" in response.headers["content-type"]
 
 
+@pytest.mark.events
 def test_events_export_invalid_date(client):
     response = client.get("/events/export?date_from=not-a-date&date_to=2026-06-30")
     assert response.status_code == 400
 
 
+@pytest.mark.events
 def test_events_export_contains_events(admin_client, db, make_event):
     ev = make_event(title="Export Test Event", event_date="2026-06-15", event_time="18:30")
     response = admin_client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
@@ -132,6 +145,7 @@ def test_events_export_contains_events(admin_client, db, make_event):
     assert "18:30" in response.text
 
 
+@pytest.mark.events
 def test_events_export_filename(admin_client, db, make_event):
     make_event(event_date="2026-06-15")
     response = admin_client.get("/events/export?date_from=2026-06-01&date_to=2026-06-30")
@@ -139,6 +153,7 @@ def test_events_export_filename(admin_client, db, make_event):
     assert 'filename="events_2026-06-01_to_2026-06-30.csv"' in response.headers.get("content-disposition", "")
 
 
+@pytest.mark.events
 def test_events_export_text_returns_events(admin_client, db, make_event):
     from models.team import Team
 
@@ -162,6 +177,7 @@ def test_events_export_text_returns_events(admin_client, db, make_event):
     assert "Team" not in response2.text
 
 
+@pytest.mark.events
 def test_events_export_text_no_events(client):
     response = client.get("/api/events/export-text?date_from=2026-06-01&date_to=2026-06-30")
     assert response.status_code == 200

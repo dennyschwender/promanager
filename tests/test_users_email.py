@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
+import pytest
 
+
+@pytest.mark.integration
 def test_register_calls_send_welcome_email(admin_client, db):
     """POST /auth/users/register calls send_welcome_email, not raw send_email."""
     with patch("routes.users.send_welcome_email") as mock_welcome:
@@ -21,6 +24,7 @@ def test_register_calls_send_welcome_email(admin_client, db):
         mock_welcome.assert_called_once()
 
 
+@pytest.mark.integration
 def test_reset_calls_send_reset_email(admin_client, db, member_user):
     """POST /auth/users/{id}/reset-password calls send_reset_email, not raw send_email."""
     with patch("routes.users.send_reset_email") as mock_reset:

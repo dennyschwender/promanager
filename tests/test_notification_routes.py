@@ -36,11 +36,13 @@ def player_client(client, player_with_user):
     return client, player
 
 
+@pytest.mark.notifications
 def test_inbox_requires_login(client):
     r = client.get("/notifications")
     assert r.status_code in (302, 401)
 
 
+@pytest.mark.notifications
 def test_inbox_empty(player_client):
     c, player = player_client
     r = c.get("/notifications")
@@ -48,6 +50,7 @@ def test_inbox_empty(player_client):
     assert b"notifications" in r.content.lower()
 
 
+@pytest.mark.notifications
 def test_inbox_shows_notification(db, player_client):
     c, player = player_client
     notif = Notification(player_id=player.id, title="Hi", body="Body", tag="direct")
@@ -59,6 +62,7 @@ def test_inbox_shows_notification(db, player_client):
     assert b"Hi" in r.content
 
 
+@pytest.mark.notifications
 def test_mark_read(db, player_client):
     c, player = player_client
     notif = Notification(player_id=player.id, title="Hi", body="Body", tag="direct")
@@ -71,6 +75,7 @@ def test_mark_read(db, player_client):
     assert notif.is_read is True
 
 
+@pytest.mark.notifications
 def test_mark_read_all(db, player_client):
     c, player = player_client
     for i in range(3):
@@ -83,6 +88,7 @@ def test_mark_read_all(db, player_client):
     assert unread == 0
 
 
+@pytest.mark.notifications
 def test_cannot_mark_other_players_notification(db, player_client, admin_user):
     c, player = player_client
     other_player = Player(first_name="Other", last_name="P", is_active=True)
@@ -98,6 +104,7 @@ def test_cannot_mark_other_players_notification(db, player_client, admin_user):
     assert notif.is_read is False
 
 
+@pytest.mark.notifications
 def test_vapid_public_key_endpoint(client):
     r = client.get("/notifications/vapid-public-key")
     assert r.status_code == 200
@@ -105,6 +112,7 @@ def test_vapid_public_key_endpoint(client):
     assert "publicKey" in data
 
 
+@pytest.mark.notifications
 def test_notification_preferences_update(db, player_client):
     c, player = player_client
     r = c.post(

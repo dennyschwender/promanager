@@ -19,22 +19,27 @@ from services.schedule_service import (
 # ── advance_date ────────────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_advance_date_weekly():
     assert advance_date(date(2026, 3, 10), "weekly") == date(2026, 3, 17)
 
 
+@pytest.mark.integration
 def test_advance_date_biweekly():
     assert advance_date(date(2026, 3, 10), "biweekly") == date(2026, 3, 24)
 
 
+@pytest.mark.integration
 def test_advance_date_monthly_same_day():
     assert advance_date(date(2026, 3, 15), "monthly") == date(2026, 4, 15)
 
 
+@pytest.mark.integration
 def test_advance_date_monthly_caps_to_last_day():
     assert advance_date(date(2026, 1, 31), "monthly") == date(2026, 2, 28)
 
 
+@pytest.mark.integration
 def test_advance_date_monthly_december_to_january():
     assert advance_date(date(2026, 12, 15), "monthly") == date(2027, 1, 15)
 
@@ -42,6 +47,7 @@ def test_advance_date_monthly_december_to_january():
 # ── is_changed ──────────────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_is_changed_returns_false_when_identical(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
 
@@ -71,6 +77,7 @@ def test_is_changed_returns_false_when_identical(db):
     assert is_changed(sched, submitted) is False
 
 
+@pytest.mark.integration
 def test_is_changed_detects_time_change(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
 
@@ -99,6 +106,7 @@ def test_is_changed_detects_time_change(db):
     assert is_changed(sched, submitted) is True
 
 
+@pytest.mark.integration
 def test_is_changed_ignores_description(db):
     from models.team_recurring_schedule import TeamRecurringSchedule
 
@@ -131,6 +139,7 @@ def test_is_changed_ignores_description(db):
 # ── generate_events_for_schedule ────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_generate_events_weekly(db):
     from models.team import Team
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -162,6 +171,7 @@ def test_generate_events_weekly(db):
     assert all(e.recurrence_group_id == "gen-uuid-1" for e in events)
 
 
+@pytest.mark.integration
 def test_generate_events_uses_season_end_date(db):
     """Teams are no longer linked to seasons; schedule must have its own end_date."""
     from models.team import Team
@@ -191,6 +201,7 @@ def test_generate_events_uses_season_end_date(db):
     assert len(events) == 3  # Mar 3, 10, 17
 
 
+@pytest.mark.integration
 def test_generate_events_raises_without_end_date(db):
     from models.team import Team
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -217,6 +228,7 @@ def test_generate_events_raises_without_end_date(db):
         generate_events_for_schedule(db, sched, team)
 
 
+@pytest.mark.integration
 def test_generate_events_raises_start_after_end(db):
     from models.team import Team
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -246,6 +258,7 @@ def test_generate_events_raises_start_after_end(db):
 # ── delete_future_events ────────────────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_past_events_not_deleted(db):
     from models.event import Event
 
@@ -276,6 +289,7 @@ def test_past_events_not_deleted(db):
 # ── sign_payload / verify_payload ───────────────────────────────────────────
 
 
+@pytest.mark.integration
 def test_sign_and_verify_roundtrip():
     data = {"schedules": [{"id": 1, "title": "Training"}]}
     token = sign_payload(data)
@@ -283,6 +297,7 @@ def test_sign_and_verify_roundtrip():
     assert result["schedules"][0]["title"] == "Training"
 
 
+@pytest.mark.integration
 def test_verify_rejects_tampered_payload():
     token = sign_payload({"x": 1})
     tampered = token[:-4] + "0000"
@@ -290,6 +305,7 @@ def test_verify_rejects_tampered_payload():
         verify_payload(tampered)
 
 
+@pytest.mark.integration
 def test_verify_rejects_malformed_token():
     with pytest.raises(ValueError):
         verify_payload("notvalid")

@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from models.player import Player
@@ -12,6 +13,7 @@ from models.team import Team
 from models.user_team import UserTeam
 
 
+@pytest.mark.players
 def test_player_get_own_absences(member_client: TestClient, member_user, db):
     """Player should be able to view their own absences."""
     # Create a player linked to the member user
@@ -45,6 +47,7 @@ def test_player_get_own_absences(member_client: TestClient, member_user, db):
     assert data[0]["reason"] == "Vacation"
 
 
+@pytest.mark.players
 def test_player_cannot_view_other_absences(member_client: TestClient, db):
     """Player should NOT be able to view another player's absences."""
     other_player = Player(first_name="Other", last_name="Player", is_active=True)
@@ -67,6 +70,7 @@ def test_player_cannot_view_other_absences(member_client: TestClient, db):
     assert response.status_code == 403
 
 
+@pytest.mark.players
 def test_create_period_absence(member_client: TestClient, member_user, db):
     """Player should be able to create a period absence for themselves."""
     # Create a player linked to the member user
@@ -100,6 +104,7 @@ def test_create_period_absence(member_client: TestClient, member_user, db):
     assert absence.end_date == end
 
 
+@pytest.mark.players
 def test_create_recurring_absence(member_client: TestClient, member_user, db):
     """Player should be able to create a recurring absence."""
     # Create a player linked to the member user
@@ -135,6 +140,7 @@ def test_create_recurring_absence(member_client: TestClient, member_user, db):
     assert absence.rrule == "FREQ=WEEKLY;BYDAY=FR"
 
 
+@pytest.mark.players
 def test_cannot_create_absence_in_past(member_client: TestClient, member_user, db):
     """Should not allow creating absences in the past."""
     player = Player(first_name="Member", last_name="Player", is_active=True, user_id=member_user.id)
@@ -155,6 +161,7 @@ def test_cannot_create_absence_in_past(member_client: TestClient, member_user, d
     assert response.status_code == 400
 
 
+@pytest.mark.players
 def test_admin_can_create_absence_for_any_player(admin_client, db):
     """Admin should be able to create absences for any player."""
     player = Player(first_name="Any", last_name="Player", is_active=True)
@@ -175,6 +182,7 @@ def test_admin_can_create_absence_for_any_player(admin_client, db):
     assert response.status_code == 200
 
 
+@pytest.mark.players
 def test_coach_can_create_absence_for_team_player(client, db):
     """Coach should be able to create absences for their team's players."""
     from services.auth_service import create_session_cookie, create_user
@@ -225,6 +233,7 @@ def test_coach_can_create_absence_for_team_player(client, db):
     assert response.status_code == 200
 
 
+@pytest.mark.players
 def test_delete_absence(member_client: TestClient, member_user, db):
     """Player should be able to delete their own absence."""
     player = Player(first_name="Member", last_name="Player", is_active=True, user_id=member_user.id)
@@ -254,6 +263,7 @@ def test_delete_absence(member_client: TestClient, member_user, db):
     assert deleted_absence is None
 
 
+@pytest.mark.players
 def test_cannot_delete_other_player_absence(member_client: TestClient, member_user, db):
     """Player should not be able to delete another player's absence."""
     other_player = Player(first_name="Other", last_name="Player", is_active=True)
@@ -277,6 +287,7 @@ def test_cannot_delete_other_player_absence(member_client: TestClient, member_us
     assert response.status_code == 403
 
 
+@pytest.mark.players
 def test_create_absence_without_reason_fails(member_client: TestClient, member_user, db):
     """Creating an absence without a reason should return 400."""
     from datetime import timedelta
@@ -301,6 +312,7 @@ def test_create_absence_without_reason_fails(member_client: TestClient, member_u
     assert "reason" in response.json()["detail"].lower()
 
 
+@pytest.mark.players
 def test_unauthenticated_cannot_access_absences(client: TestClient, db):
     """Unauthenticated users should be redirected."""
     player = Player(first_name="Any", last_name="Player", is_active=True)

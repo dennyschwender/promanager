@@ -38,6 +38,7 @@ def _get(data: dict, dotted_key: str):
 
 @pytest.mark.parametrize("locale", LOCALES)
 @pytest.mark.parametrize("key", REQUIRED_KEYS)
+@pytest.mark.i18n
 def test_required_key_exists(locale, key):
     path = Path(f"locales/{locale}.json")
     data = json.loads(path.read_text())
@@ -46,6 +47,7 @@ def test_required_key_exists(locale, key):
 
 @pytest.mark.parametrize("locale", LOCALES)
 @pytest.mark.parametrize("key", RETIRED_KEYS)
+@pytest.mark.i18n
 def test_retired_key_removed(locale, key):
     path = Path(f"locales/{locale}.json")
     data = json.loads(path.read_text())

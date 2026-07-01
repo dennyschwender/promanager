@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import pytest
+
 from models.player import Player
 
 
+@pytest.mark.players
 def test_player_has_archived_at_field(db):
     """Player model has an archived_at column defaulting to None."""
     p = Player(first_name="Arch", last_name="Test", is_active=True)
@@ -16,6 +19,7 @@ def test_player_has_archived_at_field(db):
     assert p.archived_at is None
 
 
+@pytest.mark.players
 def test_archived_filter_hides_archived_by_default(admin_client, db):
     """Default /players view excludes archived players."""
     p = Player(first_name="Hidden", last_name="Archived", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -26,6 +30,7 @@ def test_archived_filter_hides_archived_by_default(admin_client, db):
     assert "Hidden" not in resp.text
 
 
+@pytest.mark.players
 def test_archived_filter_only(admin_client, db):
     """?archived=only shows only archived players."""
     active = Player(first_name="Visible", last_name="ActivePlayer", is_active=True)
@@ -38,6 +43,7 @@ def test_archived_filter_only(admin_client, db):
     assert "Visible" not in resp.text
 
 
+@pytest.mark.players
 def test_archived_filter_all(admin_client, db):
     """?archived=all shows both active and archived players."""
     active = Player(first_name="Active", last_name="P", is_active=True)
@@ -50,6 +56,7 @@ def test_archived_filter_all(admin_client, db):
     assert "Gone" in resp.text
 
 
+@pytest.mark.players
 def test_single_player_archive(admin_client, db):
     """POST /players/{id}/archive sets archived_at."""
     p = Player(first_name="Solo", last_name="Archive", is_active=True)
@@ -62,6 +69,7 @@ def test_single_player_archive(admin_client, db):
     assert p.archived_at is not None
 
 
+@pytest.mark.players
 def test_single_player_unarchive(admin_client, db):
     """POST /players/{id}/unarchive clears archived_at."""
     p = Player(first_name="Solo", last_name="Unarchive", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -74,6 +82,7 @@ def test_single_player_unarchive(admin_client, db):
     assert p.archived_at is None
 
 
+@pytest.mark.players
 def test_member_cannot_archive(member_client, db):
     """Non-admin gets 403 when trying to archive a player."""
     p = Player(first_name="Protected", last_name="Player", is_active=True)
@@ -84,6 +93,7 @@ def test_member_cannot_archive(member_client, db):
     assert resp.status_code == 403
 
 
+@pytest.mark.players
 def test_member_cannot_unarchive(member_client, db):
     """Non-admin gets 403 when trying to unarchive a player."""
     p = Player(first_name="Protected", last_name="Player", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -94,6 +104,7 @@ def test_member_cannot_unarchive(member_client, db):
     assert resp.status_code == 403
 
 
+@pytest.mark.players
 def test_bulk_archive_sets_archived_at(admin_client, db):
     """bulk-archive sets archived_at on multiple players."""
     p1 = Player(first_name="Bulk1", last_name="A", is_active=True)
@@ -116,6 +127,7 @@ def test_bulk_archive_sets_archived_at(admin_client, db):
     assert p2.archived_at is not None
 
 
+@pytest.mark.players
 def test_bulk_archive_skips_already_archived(admin_client, db):
     """bulk-archive skips players already archived."""
     p = Player(first_name="Already", last_name="Archived", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -129,6 +141,7 @@ def test_bulk_archive_skips_already_archived(admin_client, db):
     assert data["skipped"] == 1
 
 
+@pytest.mark.players
 def test_bulk_unarchive_clears_archived_at(admin_client, db):
     """bulk-unarchive clears archived_at."""
     p = Player(first_name="Restore", last_name="Me", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -142,6 +155,7 @@ def test_bulk_unarchive_clears_archived_at(admin_client, db):
     assert p.archived_at is None
 
 
+@pytest.mark.players
 def test_bulk_activate(admin_client, db):
     """bulk-activate sets is_active=True."""
     p = Player(first_name="Inactive", last_name="P", is_active=False)
@@ -155,6 +169,7 @@ def test_bulk_activate(admin_client, db):
     assert p.is_active is True
 
 
+@pytest.mark.players
 def test_bulk_deactivate(admin_client, db):
     """bulk-deactivate sets is_active=False."""
     p = Player(first_name="Active", last_name="P", is_active=True)
@@ -168,6 +183,7 @@ def test_bulk_deactivate(admin_client, db):
     assert p.is_active is False
 
 
+@pytest.mark.players
 def test_bulk_activate_skips_already_active(admin_client, db):
     """bulk-activate skips players that are already active."""
     p = Player(first_name="Already", last_name="Active", is_active=True)
@@ -180,6 +196,7 @@ def test_bulk_activate_skips_already_active(admin_client, db):
     assert resp.json()["activated"] == 0
 
 
+@pytest.mark.players
 def test_bulk_activate_skips_archived_players(admin_client, db):
     """bulk-activate skips archived players."""
     p = Player(first_name="Arch", last_name="Skip", is_active=False, archived_at=datetime.now(timezone.utc))
@@ -192,6 +209,7 @@ def test_bulk_activate_skips_archived_players(admin_client, db):
     assert resp.json()["activated"] == 0
 
 
+@pytest.mark.players
 def test_bulk_deactivate_skips_archived_players(admin_client, db):
     """bulk-deactivate skips archived players."""
     p = Player(first_name="Arch", last_name="Skip2", is_active=True, archived_at=datetime.now(timezone.utc))
@@ -204,12 +222,14 @@ def test_bulk_deactivate_skips_archived_players(admin_client, db):
     assert resp.json()["deactivated"] == 0
 
 
+@pytest.mark.players
 def test_member_cannot_bulk_archive(member_client, db):
     """Non-admin gets 403 on bulk-archive."""
     resp = member_client.post("/players/bulk-archive", json={"player_ids": []})
     assert resp.status_code == 403
 
 
+@pytest.mark.players
 def test_bulk_archive_empty_list(admin_client, db):
     """bulk-archive with empty player_ids returns zero counts."""
     resp = admin_client.post("/players/bulk-archive", json={"player_ids": []})
@@ -220,6 +240,7 @@ def test_bulk_archive_empty_list(admin_client, db):
     assert data["errors"] == []
 
 
+@pytest.mark.players
 def test_bulk_archive_not_found_player(admin_client, db):
     """bulk-archive with nonexistent player_id adds to errors."""
     resp = admin_client.post("/players/bulk-archive", json={"player_ids": [99999]})

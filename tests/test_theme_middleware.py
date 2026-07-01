@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
 
+
+@pytest.mark.core
 def test_theme_defaults_to_light(client):
     """No cookie → data-theme="light" in rendered HTML."""
     resp = client.get("/auth/login")
@@ -10,6 +13,7 @@ def test_theme_defaults_to_light(client):
     assert 'data-theme="light"' in resp.text
 
 
+@pytest.mark.core
 def test_theme_cookie_dark(client):
     """theme=dark cookie → data-theme="dark"."""
     client.cookies.set("theme", "dark")
@@ -17,6 +21,7 @@ def test_theme_cookie_dark(client):
     assert 'data-theme="dark"' in resp.text
 
 
+@pytest.mark.core
 def test_theme_cookie_invalid_defaults_to_light(client):
     """Invalid theme cookie value falls back to light."""
     client.cookies.set("theme", "purple")

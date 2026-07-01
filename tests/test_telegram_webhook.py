@@ -2,14 +2,17 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.telegram
 def test_webhook_rejects_missing_secret(client: TestClient):
     resp = client.post("/telegram/webhook", json={"update_id": 1})
     assert resp.status_code == 403
 
 
+@pytest.mark.telegram
 def test_webhook_rejects_wrong_secret(client: TestClient):
     resp = client.post(
         "/telegram/webhook",
@@ -19,6 +22,7 @@ def test_webhook_rejects_wrong_secret(client: TestClient):
     assert resp.status_code == 403
 
 
+@pytest.mark.telegram
 def test_webhook_returns_200_when_bot_disabled(client: TestClient):
     """When the bot app is None (not configured), the route still returns 200."""
     mock_settings = MagicMock()
@@ -34,6 +38,7 @@ def test_webhook_returns_200_when_bot_disabled(client: TestClient):
     assert resp.json() == {"ok": True}
 
 
+@pytest.mark.telegram
 def test_webhook_dispatches_update_when_bot_enabled(client: TestClient):
     """When the bot app is present, process_update is called and returns 200."""
     mock_settings = MagicMock()

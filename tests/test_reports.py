@@ -2,6 +2,8 @@
 
 from datetime import date
 
+import pytest
+
 from models.event import Event
 from models.player import Player
 from models.season import Season
@@ -46,17 +48,20 @@ def _make_player(db, first="Rep", last="Player"):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_season_report(admin_client, db):
     season = _make_season(db, name="Report Season")
     resp = admin_client.get(f"/reports/season/{season.id}", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_season_report_redirects_for_missing_season(admin_client):
     resp = admin_client.get("/reports/season/99999", follow_redirects=False)
     assert resp.status_code == 302
 
 
+@pytest.mark.integration
 def test_season_report_requires_login(client, db):
     season = _make_season(db, name="Auth Report Season")
     resp = client.get(f"/reports/season/{season.id}", follow_redirects=False)
@@ -69,12 +74,14 @@ def test_season_report_requires_login(client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_player_report(admin_client, db):
     player = _make_player(db, "Rep", "PlayerDetail")
     resp = admin_client.get(f"/reports/player/{player.id}", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_player_report_redirects_for_missing_player(admin_client):
     resp = admin_client.get("/reports/player/99999", follow_redirects=False)
     assert resp.status_code == 302
@@ -85,6 +92,7 @@ def test_player_report_redirects_for_missing_player(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_season_stats_counts(db):
     season = _make_season(db, name="Stats Season")
     e1 = _make_event(db, season.id, title="Event 1", event_date=date(2026, 3, 1))
@@ -105,6 +113,7 @@ def test_season_stats_counts(db):
     assert entry["total_events"] == 2
 
 
+@pytest.mark.integration
 def test_season_stats_empty_season(db):
     season = _make_season(db, name="Empty Season")
     stats = get_season_attendance_stats(db, season.id)

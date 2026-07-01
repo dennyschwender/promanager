@@ -23,6 +23,16 @@ exclude = ["scripts/"]
 testpaths = ["tests"]
 addopts = "-v"
 pythonpath = ["."]
+markers = [
+    "core: Auth, config, DB, basic infrastructure",
+    "events: Event CRUD, calendar, attendance",
+    "players: Player management, absences, teams",
+    "notifications: Notification system, email, telegram channels",
+    "i18n: Locale and translation tests",
+    "integration: Seasons, users, dashboard, full flows",
+    "telegram: Telegram bot webhook and service",
+    "slow: Tests that take longer (import, schedule)",
+]
 filterwarnings = [
     "ignore:.*iscoroutinefunction:DeprecationWarning:slowapi",
     "ignore:.*(get|set)_event_loop_policy:DeprecationWarning:pytest_asyncio",

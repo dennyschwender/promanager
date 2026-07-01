@@ -1,5 +1,7 @@
 """Tests for /seasons routes."""
 
+import pytest
+
 from models.season import Season
 
 # ---------------------------------------------------------------------------
@@ -7,11 +9,13 @@ from models.season import Season
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_seasons_list(admin_client):
     resp = admin_client.get("/seasons", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.players
 def test_seasons_requires_login(client):
     resp = client.get("/seasons", follow_redirects=False)
     assert resp.status_code == 302
@@ -23,6 +27,7 @@ def test_seasons_requires_login(client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_create_season(admin_client, db):
     resp = admin_client.post(
         "/seasons/new",
@@ -33,6 +38,7 @@ def test_create_season(admin_client, db):
     assert db.query(Season).filter(Season.name == "2025/26").first() is not None
 
 
+@pytest.mark.players
 def test_create_season_blank_name(admin_client):
     resp = admin_client.post(
         "/seasons/new",
@@ -47,6 +53,7 @@ def test_create_season_blank_name(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_edit_season(admin_client, db):
     season = Season(name="OldName")
     db.add(season)
@@ -68,6 +75,7 @@ def test_edit_season(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_activate_season(admin_client, db):
     s1 = Season(name="Season A", is_active=True)
     s2 = Season(name="Season B", is_active=False)
@@ -90,6 +98,7 @@ def test_activate_season(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_delete_season(admin_client, db):
     season = Season(name="ToDelete")
     db.add(season)
@@ -102,6 +111,7 @@ def test_delete_season(admin_client, db):
     assert db.get(Season, sid) is None
 
 
+@pytest.mark.players
 def test_copy_roster(admin_client, db):
     """Copy-roster duplicates PlayerTeam rows from source to target season."""
     from models.player import Player
@@ -151,6 +161,7 @@ def test_copy_roster(admin_client, db):
     assert copied.role == "player"
 
 
+@pytest.mark.players
 def test_copy_roster_resets_injury_fields(admin_client, db):
     """Copy-roster resets injured_until and absent_by_default on copied rows."""
     from datetime import date
@@ -192,6 +203,7 @@ def test_copy_roster_resets_injury_fields(admin_client, db):
     assert copied.absent_by_default is False
 
 
+@pytest.mark.players
 def test_copy_roster_skips_duplicates(admin_client, db):
     """Copy-roster is idempotent — running twice doesn't duplicate rows."""
     from models.player import Player
@@ -223,6 +235,7 @@ def test_copy_roster_skips_duplicates(admin_client, db):
     assert count == 1
 
 
+@pytest.mark.players
 def test_copy_roster_self_copy_returns_400(admin_client, db):
     """copy-roster with source == target returns 400."""
     season = Season(name="2025/26", is_active=True)
@@ -238,6 +251,7 @@ def test_copy_roster_self_copy_returns_400(admin_client, db):
     assert resp.status_code == 400
 
 
+@pytest.mark.players
 def test_copy_roster_empty_source_returns_zero(admin_client, db):
     """Copy-roster with an empty source season returns 302 and copies 0 rows."""
     s1 = Season(name="2024/25", is_active=False)
@@ -253,6 +267,7 @@ def test_copy_roster_empty_source_returns_zero(admin_client, db):
     assert resp.status_code == 302
 
 
+@pytest.mark.players
 def test_copy_roster_requires_admin(member_client, db):
     """copy-roster returns 403 for non-admin users."""
     season = Season(name="2025/26", is_active=True)

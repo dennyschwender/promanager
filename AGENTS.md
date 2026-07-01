@@ -11,9 +11,16 @@ cp .env.example .env                 # set SECRET_KEY
 alembic upgrade head                 # entrypoint.sh does this too
 uvicorn app.main:app --reload --host 0.0.0.0 --port 7000
 
-pytest -v
-pytest tests/test_auth.py::test_login_success  # single test
-pytest --cov
+# Test categories (pytest markers)
+pytest -m core            # Auth, config, infra
+pytest -m events          # Event CRUD, calendar, attendance
+pytest -m players         # Players, absences, teams
+pytest -m notifications   # Emails, telegram channels, inbox
+pytest -m integration     # Users, dashboard, seasons, full flows
+pytest -m telegram        # Telegram bot
+pytest -m i18n            # Locale/translation
+pytest -m "not slow"      # All except slow (scheduler, import)
+pytest --cov              # Full suite with coverage
 
 ruff check . && ruff format . && mypy .        # CI order: ruff → mypy → pytest
 ```

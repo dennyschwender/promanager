@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
 
+
+@pytest.mark.notifications
 def test_send_event_reminder_uses_locale(monkeypatch):
     """send_event_reminder should use the provided locale."""
     sent = {}
@@ -30,6 +33,7 @@ def test_send_event_reminder_uses_locale(monkeypatch):
     assert "Training" in sent["subject"]
 
 
+@pytest.mark.notifications
 def test_send_attendance_request_uses_locale(monkeypatch):
     sent = {}
 
@@ -54,6 +58,7 @@ def test_send_attendance_request_uses_locale(monkeypatch):
     assert "Match" in sent["subject"]
 
 
+@pytest.mark.notifications
 def test_send_event_reminder_defaults_locale_to_en(monkeypatch):
     """locale param must be optional with default 'en'."""
     called = {}

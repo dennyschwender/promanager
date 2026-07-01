@@ -2,11 +2,14 @@
 
 from datetime import date
 
+import pytest
+
 from models.event import Event
 from models.event_message import EventMessage
 from models.user import User
 
 
+@pytest.mark.events
 def test_event_message_saves_and_retrieves(db):
     user = User(username="u1", email="u@t.com", hashed_password="x", role="admin")
     db.add(user)
@@ -30,6 +33,7 @@ def test_event_message_saves_and_retrieves(db):
     assert retrieved.created_at is not None
 
 
+@pytest.mark.events
 def test_event_message_cascade_deletes_with_event(db):
     event = Event(title="ToDelete", event_type="training", event_date=date(2026, 4, 1))
     db.add(event)
@@ -47,6 +51,7 @@ def test_event_message_cascade_deletes_with_event(db):
     assert db.get(EventMessage, msg_id) is None
 
 
+@pytest.mark.events
 def test_event_message_user_id_nullable(db):
     event = Event(title="T", event_type="training", event_date=date(2026, 4, 1))
     db.add(event)

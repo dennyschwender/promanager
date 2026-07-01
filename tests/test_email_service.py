@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import datetime
 
+import pytest
 
+
+@pytest.mark.notifications
 def test_render_email_template_reminder_contains_name():
     """reminder.html renders with player name in output."""
     from services.email_service import render_email_template
@@ -24,6 +27,7 @@ def test_render_email_template_reminder_contains_name():
     assert "Gym" in html
 
 
+@pytest.mark.notifications
 def test_render_email_template_button_shown_with_magic_link():
     """base.html renders the login button only when magic_link is set."""
     from services.email_service import render_email_template
@@ -39,6 +43,7 @@ def test_render_email_template_button_shown_with_magic_link():
     assert "https://example.com/auth/magic?token=abc" in html
 
 
+@pytest.mark.notifications
 def test_render_email_template_no_button_when_no_magic_link():
     """base.html omits the login button when magic_link is None."""
     from services.email_service import render_email_template
@@ -54,6 +59,7 @@ def test_render_email_template_no_button_when_no_magic_link():
     assert "/auth/magic" not in html
 
 
+@pytest.mark.notifications
 def test_strip_html_removes_tags():
     from services.email_service import _strip_html
 
@@ -61,6 +67,7 @@ def test_strip_html_removes_tags():
     assert result == "Hello World"
 
 
+@pytest.mark.notifications
 def test_strip_html_br_becomes_newline():
     from services.email_service import _strip_html
 
@@ -70,6 +77,7 @@ def test_strip_html_br_becomes_newline():
     assert "\n" in result
 
 
+@pytest.mark.notifications
 def test_send_event_reminder_uses_template(monkeypatch):
     """send_event_reminder sends HTML from template, not from locale body string."""
     sent = {}
@@ -99,6 +107,7 @@ def test_send_event_reminder_uses_template(monkeypatch):
     assert "<" not in sent["text"]  # plain text has no HTML tags
 
 
+@pytest.mark.notifications
 def test_send_welcome_email_sends_credentials(monkeypatch):
     sent = {}
 
@@ -123,6 +132,7 @@ def test_send_welcome_email_sends_credentials(monkeypatch):
     assert "Abc123!" in sent["html"]
 
 
+@pytest.mark.notifications
 def test_send_reset_email_sends_credentials(monkeypatch):
     sent = {}
 
@@ -145,6 +155,7 @@ def test_send_reset_email_sends_credentials(monkeypatch):
     assert "NewPass99!" in sent["html"]
 
 
+@pytest.mark.notifications
 def test_send_notification_email_sends_content(monkeypatch):
     sent = {}
 

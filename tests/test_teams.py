@@ -3,6 +3,8 @@
 from datetime import date
 from unittest.mock import patch
 
+import pytest
+
 from models.team import Team
 
 # ---------------------------------------------------------------------------
@@ -10,11 +12,13 @@ from models.team import Team
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_teams_list(admin_client):
     resp = admin_client.get("/teams", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.players
 def test_teams_requires_login(client):
     resp = client.get("/teams", follow_redirects=False)
     assert resp.status_code == 302
@@ -26,6 +30,7 @@ def test_teams_requires_login(client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_create_team(admin_client, db):
     resp = admin_client.post(
         "/teams/new",
@@ -36,6 +41,7 @@ def test_create_team(admin_client, db):
     assert db.query(Team).filter(Team.name == "Falcons").first() is not None
 
 
+@pytest.mark.players
 def test_create_team_blank_name(admin_client):
     resp = admin_client.post(
         "/teams/new",
@@ -50,6 +56,7 @@ def test_create_team_blank_name(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_edit_team(admin_client, db):
     team = Team(name="OldTeam")
     db.add(team)
@@ -71,6 +78,7 @@ def test_edit_team(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_delete_team(admin_client, db):
     team = Team(name="ToDelete")
     db.add(team)
@@ -125,6 +133,7 @@ def _sched_form_data(
     }
 
 
+@pytest.mark.players
 def test_new_schedule_creates_events(admin_client, db):
     team = _make_team_for_sched(db)
     data = {"name": team.name, "description": "", "season_id": ""}
@@ -149,6 +158,7 @@ def test_new_schedule_creates_events(admin_client, db):
     assert all(e.recurrence_group_id == scheds[0].recurrence_group_id for e in events)
 
 
+@pytest.mark.players
 def test_changed_schedule_triggers_confirmation(admin_client, db):
     from models.team_recurring_schedule import TeamRecurringSchedule
     from services.schedule_service import new_group_id
@@ -180,6 +190,7 @@ def test_changed_schedule_triggers_confirmation(admin_client, db):
     assert b'name="_confirm_step" value="1"' in resp.content  # confirm mode active
 
 
+@pytest.mark.players
 def test_confirmed_schedule_regenerates_events(admin_client, db):
     from models.event import Event
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -258,6 +269,7 @@ def test_confirmed_schedule_regenerates_events(admin_client, db):
     assert events[0].recurrence_group_id != group_id
 
 
+@pytest.mark.players
 def test_removed_schedule_without_confirm_keeps_events(admin_client, db):
     from models.event import Event
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -308,6 +320,7 @@ def test_removed_schedule_without_confirm_keeps_events(admin_client, db):
     assert db.query(Event).filter_by(id=ev_id).first() is not None
 
 
+@pytest.mark.players
 def test_removed_schedule_with_confirm_deletes_events(admin_client, db):
     from models.event import Event
     from models.team_recurring_schedule import TeamRecurringSchedule
@@ -360,6 +373,7 @@ def test_removed_schedule_with_confirm_deletes_events(admin_client, db):
     assert db.query(Event).filter_by(id=ev_id).first() is None
 
 
+@pytest.mark.players
 def test_create_team_does_not_accept_season_id(admin_client, db):
     """After refactor, teams have no season_id field."""
     from models.team import Team
@@ -375,6 +389,7 @@ def test_create_team_does_not_accept_season_id(admin_client, db):
     assert not hasattr(team, "season_id")
 
 
+@pytest.mark.players
 def test_team_has_no_season_id(db):
     from models.team import Team
 
@@ -385,6 +400,7 @@ def test_team_has_no_season_id(db):
     assert not hasattr(team, "season_id") or team.__class__.__table__.columns.get("season_id") is None
 
 
+@pytest.mark.players
 def test_changed_schedule_unconfirmed_saves_fields_keeps_events(admin_client, db):
     """Changed schedule with checkbox unchecked: fields updated, events untouched."""
     from models.event import Event

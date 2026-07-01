@@ -77,6 +77,7 @@ def event(db, season, team):
 # ── create_default_preferences ────────────────────────────────────────────────
 
 
+@pytest.mark.notifications
 def test_create_default_preferences_creates_all_channels(db, player):
     create_default_preferences(player.id, db)
     prefs = db.query(NotificationPreference).filter(NotificationPreference.player_id == player.id).all()
@@ -84,6 +85,7 @@ def test_create_default_preferences_creates_all_channels(db, player):
     assert all(p.enabled for p in prefs)
 
 
+@pytest.mark.notifications
 def test_create_default_preferences_idempotent(db, player):
     create_default_preferences(player.id, db)
     create_default_preferences(player.id, db)  # second call must not raise
@@ -94,16 +96,19 @@ def test_create_default_preferences_idempotent(db, player):
 # ── get_preference ─────────────────────────────────────────────────────────────
 
 
+@pytest.mark.notifications
 def test_get_preference_returns_true_when_enabled(db, player):
     create_default_preferences(player.id, db)
     assert get_preference(player.id, ChannelType.EMAIL, db) is True
 
 
+@pytest.mark.notifications
 def test_get_preference_returns_false_when_missing(db, player):
     # No preferences created — defaults to False
     assert get_preference(player.id, ChannelType.EMAIL, db) is False
 
 
+@pytest.mark.notifications
 def test_get_preference_returns_false_when_disabled(db, player):
     create_default_preferences(player.id, db)
     pref = (
@@ -122,6 +127,7 @@ def test_get_preference_returns_false_when_disabled(db, player):
 # ── send_notifications ────────────────────────────────────────────────────────
 
 
+@pytest.mark.notifications
 def test_send_creates_notification_rows(db, player, event):
     create_default_preferences(player.id, db)
     result = send_notifications(
@@ -143,6 +149,7 @@ def test_send_creates_notification_rows(db, player, event):
     assert notifs[0].tag == "direct"
 
 
+@pytest.mark.notifications
 def test_send_skips_disabled_channel(db, player, event):
     create_default_preferences(player.id, db)
     # Disable inapp for player
@@ -174,6 +181,7 @@ def test_send_skips_disabled_channel(db, player, event):
     assert result["queued"] == 1
 
 
+@pytest.mark.notifications
 def test_send_filters_by_attendance_status(db, player, event):
     create_default_preferences(player.id, db)
     # Give player an "absent" attendance record
@@ -198,6 +206,7 @@ def test_send_filters_by_attendance_status(db, player, event):
     assert len(notifs) == 0
 
 
+@pytest.mark.notifications
 def test_send_event_without_team_targets_active_players(db, event, player):
     """When event has no team, all active players receive the notification."""
     event.team_id = None

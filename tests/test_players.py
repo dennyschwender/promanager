@@ -1,5 +1,7 @@
 """Tests for /players routes."""
 
+import pytest
+
 from models.player import Player
 from models.player_team import PlayerTeam
 from models.season import Season
@@ -10,11 +12,13 @@ from models.team import Team
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_players_list(admin_client):
     resp = admin_client.get("/players", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.players
 def test_players_requires_login(client):
     resp = client.get("/players", follow_redirects=False)
     assert resp.status_code == 302
@@ -26,6 +30,7 @@ def test_players_requires_login(client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_create_player(admin_client, db):
     resp = admin_client.post(
         "/players/new",
@@ -45,6 +50,7 @@ def test_create_player(admin_client, db):
     assert player.last_name == "Smith"
 
 
+@pytest.mark.players
 def test_create_player_missing_name(admin_client):
     resp = admin_client.post(
         "/players/new",
@@ -66,6 +72,7 @@ def test_create_player_missing_name(admin_client):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_player_detail(admin_client, db):
     player = Player(first_name="Bob", last_name="Jones", is_active=True)
     db.add(player)
@@ -82,6 +89,7 @@ def test_player_detail(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_edit_player(admin_client, db):
     player = Player(first_name="Carol", last_name="Old", is_active=True)
     db.add(player)
@@ -111,6 +119,7 @@ def test_edit_player(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_archive_player(admin_client, db):
     player = Player(first_name="Dave", last_name="Delete", is_active=True)
     db.add(player)
@@ -129,6 +138,7 @@ def test_archive_player(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_players_filter_by_team(admin_client, db):
     from models.season import Season
 
@@ -152,6 +162,7 @@ def test_players_filter_by_team(admin_client, db):
     assert b"Frank" not in resp.content
 
 
+@pytest.mark.players
 def test_players_list_filters_by_active_season(admin_client, db):
     """Player list defaults to active season — only shows players in that season."""
     from models.player import Player
@@ -180,6 +191,7 @@ def test_players_list_filters_by_active_season(admin_client, db):
     assert b"InActive" not in resp.content
 
 
+@pytest.mark.players
 def test_sync_memberships_only_touches_target_season(db):
     """Editing a player in season A must not delete their season B membership."""
     from models.player_team import PlayerTeam
@@ -209,6 +221,7 @@ def test_sync_memberships_only_touches_target_season(db):
     assert remaining[0].season_id == s1.id
 
 
+@pytest.mark.players
 def test_player_team_has_season_id(db):
     from models.player import Player
     from models.player_team import PlayerTeam
@@ -262,6 +275,7 @@ def _make_player(db, first="Alice", last="Smith"):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_bulk_assign_creates_player_teams(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)
@@ -283,6 +297,7 @@ def test_bulk_assign_creates_player_teams(admin_client, db):
     assert len(rows) == 2
 
 
+@pytest.mark.players
 def test_bulk_assign_skips_existing(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)
@@ -301,6 +316,7 @@ def test_bulk_assign_skips_existing(admin_client, db):
     assert data["skipped"] == 1
 
 
+@pytest.mark.players
 def test_bulk_assign_requires_admin(client, db):
     resp = client.post(
         "/players/bulk-assign",
@@ -315,6 +331,7 @@ def test_bulk_assign_requires_admin(client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.players
 def test_bulk_update_player_fields(admin_client, db):
     p = _make_player(db, "Alice", "Old")
     db.commit()
@@ -333,6 +350,7 @@ def test_bulk_update_player_fields(admin_client, db):
     assert p.is_active is False
 
 
+@pytest.mark.players
 def test_bulk_update_player_team_fields(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)
@@ -356,6 +374,7 @@ def test_bulk_update_player_team_fields(admin_client, db):
     assert pt.shirt_number == 7
 
 
+@pytest.mark.players
 def test_bulk_update_creates_player_team_if_missing(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)
@@ -377,6 +396,7 @@ def test_bulk_update_creates_player_team_if_missing(admin_client, db):
     assert pt.position == "goalie"
 
 
+@pytest.mark.players
 def test_bulk_update_shirt_number_conflict(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)
@@ -401,6 +421,7 @@ def test_bulk_update_shirt_number_conflict(admin_client, db):
     assert data["saved"] == []
 
 
+@pytest.mark.players
 def test_bulk_update_shirt_number_self_conflict_ok(admin_client, db):
     """Submitting the unchanged shirt number for its owner must not conflict."""
     season = _make_season(db)
@@ -423,6 +444,7 @@ def test_bulk_update_shirt_number_self_conflict_ok(admin_client, db):
     assert p.id in data["saved"]
 
 
+@pytest.mark.players
 def test_bulk_update_playerteam_fields_without_team_returns_400(admin_client, db):
     season = _make_season(db)
     p = _make_player(db, "Gail", "G")
@@ -440,6 +462,7 @@ def test_bulk_update_playerteam_fields_without_team_returns_400(admin_client, db
     assert resp.status_code == 400
 
 
+@pytest.mark.players
 def test_bulk_update_partial_success(admin_client, db):
     season = _make_season(db)
     team = _make_team(db)

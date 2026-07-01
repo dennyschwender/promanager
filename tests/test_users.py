@@ -1,5 +1,7 @@
 """Tests for /auth/users routes."""
 
+import pytest
+
 from models.user import User
 from services.auth_service import hash_password
 
@@ -16,16 +18,19 @@ def _make_user(db, username, email, role="member"):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_users_list_admin_200(admin_client):
     resp = admin_client.get("/auth/users/list", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_users_list_member_403(member_client):
     resp = member_client.get("/auth/users", follow_redirects=False)
     assert resp.status_code in (302, 403)
 
 
+@pytest.mark.integration
 def test_users_list_shows_users(admin_client, db):
     _make_user(db, "alice", "alice@test.com", role="member")
     db.commit()
@@ -38,6 +43,7 @@ def test_users_list_shows_users(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_toggle_active_deactivates_user(admin_client, db, admin_user):
     target = _make_user(db, "bob", "bob@test.com")
     db.commit()
@@ -51,6 +57,7 @@ def test_toggle_active_deactivates_user(admin_client, db, admin_user):
     assert target.is_active is False
 
 
+@pytest.mark.integration
 def test_toggle_active_reactivates_user(admin_client, db):
     target = _make_user(db, "carol", "carol@test.com")
     target.is_active = False
@@ -65,6 +72,7 @@ def test_toggle_active_reactivates_user(admin_client, db):
     assert target.is_active is True
 
 
+@pytest.mark.integration
 def test_cannot_deactivate_self(admin_client, db, admin_user):
     resp = admin_client.post(
         f"/auth/users/{admin_user.id}/toggle-active",
@@ -74,6 +82,7 @@ def test_cannot_deactivate_self(admin_client, db, admin_user):
     assert resp.status_code in (400, 403)
 
 
+@pytest.mark.integration
 def test_cannot_deactivate_last_admin(db):
     """Cannot deactivate a user who is the only remaining active admin."""
     from fastapi.testclient import TestClient
@@ -118,6 +127,7 @@ def test_cannot_deactivate_last_admin(db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_delete_user(admin_client, db):
     target = _make_user(db, "dave", "dave@test.com")
     db.commit()
@@ -131,6 +141,7 @@ def test_delete_user(admin_client, db):
     assert db.get(User, uid) is None
 
 
+@pytest.mark.integration
 def test_delete_user_unlinks_player(admin_client, db):
     from models.player import Player
 
@@ -145,6 +156,7 @@ def test_delete_user_unlinks_player(admin_client, db):
     assert p.user_id is None
 
 
+@pytest.mark.integration
 def test_cannot_delete_self(admin_client, db, admin_user):
     resp = admin_client.post(
         f"/auth/users/{admin_user.id}/delete",
@@ -154,6 +166,7 @@ def test_cannot_delete_self(admin_client, db, admin_user):
     assert resp.status_code in (400, 403)
 
 
+@pytest.mark.integration
 def test_cannot_delete_last_admin(db):
     """Cannot delete a user who is the only remaining active admin."""
     from fastapi.testclient import TestClient
@@ -196,16 +209,19 @@ def test_cannot_delete_last_admin(db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_bulk_create_get_admin_200(admin_client):
     resp = admin_client.get("/auth/users/bulk-create", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_bulk_create_get_member_403(member_client):
     resp = member_client.get("/auth/users/bulk-create", follow_redirects=False)
     assert resp.status_code in (302, 403)
 
 
+@pytest.mark.integration
 def test_bulk_create_shows_eligible_players(admin_client, db):
     from models.player import Player
 
@@ -219,6 +235,7 @@ def test_bulk_create_shows_eligible_players(admin_client, db):
     assert b"Grace" not in resp.content
 
 
+@pytest.mark.integration
 def test_bulk_create_excludes_linked_players(admin_client, db):
     from models.player import Player
 
@@ -235,6 +252,7 @@ def test_bulk_create_excludes_linked_players(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_bulk_create_post_creates_users(admin_client, db):
     from unittest.mock import patch
 
@@ -261,6 +279,7 @@ def test_bulk_create_post_creates_users(admin_client, db):
     assert u.role == "member"
 
 
+@pytest.mark.integration
 def test_bulk_create_post_skips_already_linked(admin_client, db):
     from unittest.mock import patch
 
@@ -282,6 +301,7 @@ def test_bulk_create_post_skips_already_linked(admin_client, db):
     assert db.query(User).count() == count_before
 
 
+@pytest.mark.integration
 def test_bulk_create_post_skips_existing_email(admin_client, db):
     from unittest.mock import patch
 
@@ -308,6 +328,7 @@ def test_bulk_create_post_skips_existing_email(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_admin_edit_user_get_200(admin_client, db):
     target = _make_user(db, "editme", "editme@test.com")
     db.commit()
@@ -315,11 +336,13 @@ def test_admin_edit_user_get_200(admin_client, db):
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_admin_edit_user_get_404_redirects(admin_client):
     resp = admin_client.get("/auth/users/99999/edit", follow_redirects=False)
     assert resp.status_code == 302
 
 
+@pytest.mark.integration
 def test_admin_edit_user_member_403(member_client, db):
     target = _make_user(db, "editme2", "editme2@test.com")
     db.commit()
@@ -327,6 +350,7 @@ def test_admin_edit_user_member_403(member_client, db):
     assert resp.status_code in (302, 403)
 
 
+@pytest.mark.integration
 def test_admin_edit_updates_username_email_role(admin_client, db):
     target = _make_user(db, "oldname", "old@test.com", role="member")
     db.commit()
@@ -348,6 +372,7 @@ def test_admin_edit_updates_username_email_role(admin_client, db):
     assert target.role == "admin"
 
 
+@pytest.mark.integration
 def test_admin_edit_sets_new_password(admin_client, db):
     from services.auth_service import verify_password
 
@@ -370,6 +395,7 @@ def test_admin_edit_sets_new_password(admin_client, db):
     assert verify_password("NewPass99!", target.hashed_password)
 
 
+@pytest.mark.integration
 def test_admin_edit_rejects_duplicate_username(admin_client, db):
     _make_user(db, "taken", "taken@test.com")
     target = _make_user(db, "other", "other@test.com")
@@ -388,6 +414,7 @@ def test_admin_edit_rejects_duplicate_username(admin_client, db):
     assert resp.status_code == 400
 
 
+@pytest.mark.integration
 def test_admin_edit_rejects_duplicate_email(admin_client, db):
     _make_user(db, "alpha", "taken@test.com")
     target = _make_user(db, "beta", "beta@test.com")
@@ -406,6 +433,7 @@ def test_admin_edit_rejects_duplicate_email(admin_client, db):
     assert resp.status_code == 400
 
 
+@pytest.mark.integration
 def test_admin_edit_short_password_rejected(admin_client, db):
     target = _make_user(db, "shortpw", "shortpw@test.com")
     db.commit()
@@ -429,16 +457,19 @@ def test_admin_edit_short_password_rejected(admin_client, db):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.integration
 def test_profile_edit_get_200(member_client):
     resp = member_client.get("/profile/edit", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.integration
 def test_profile_edit_get_unauthenticated_redirects(client):
     resp = client.get("/profile/edit", follow_redirects=False)
     assert resp.status_code == 302
 
 
+@pytest.mark.integration
 def test_profile_edit_updates_username_email_locale(member_client, db, member_user):
     resp = member_client.post(
         "/profile/edit",
@@ -457,6 +488,7 @@ def test_profile_edit_updates_username_email_locale(member_client, db, member_us
     assert member_user.locale == "it"
 
 
+@pytest.mark.integration
 def test_profile_edit_changes_password_with_correct_current(member_client, db, member_user):
     from services.auth_service import verify_password
 
@@ -477,6 +509,7 @@ def test_profile_edit_changes_password_with_correct_current(member_client, db, m
     assert verify_password("NewPass99!", member_user.hashed_password)
 
 
+@pytest.mark.integration
 def test_profile_edit_rejects_wrong_current_password(member_client, db, member_user):
     resp = member_client.post(
         "/profile/edit",
@@ -493,6 +526,7 @@ def test_profile_edit_rejects_wrong_current_password(member_client, db, member_u
     assert resp.status_code == 400
 
 
+@pytest.mark.integration
 def test_profile_edit_rejects_new_password_without_current(member_client, db, member_user):
     resp = member_client.post(
         "/profile/edit",
@@ -508,6 +542,7 @@ def test_profile_edit_rejects_new_password_without_current(member_client, db, me
     assert resp.status_code == 400
 
 
+@pytest.mark.integration
 def test_profile_edit_rejects_duplicate_username(member_client, db, member_user):
     _make_user(db, "takenuser", "takenuser@test.com")
     db.commit()

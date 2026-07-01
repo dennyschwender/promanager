@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 
+
+@pytest.mark.notifications
 def test_email_channel_calls_send_notification_email():
     """EmailChannel.send() calls send_notification_email, not raw send_email."""
     from services.channels.email_channel import EmailChannel

@@ -1,8 +1,11 @@
 """Tests for services/notification_templates.py."""
 
+import pytest
+
 from services.notification_templates import TEMPLATES, TEMPLATES_BY_KEY, render_template
 
 
+@pytest.mark.notifications
 def test_all_templates_have_required_keys():
     for t in TEMPLATES:
         assert "key" in t
@@ -13,10 +16,12 @@ def test_all_templates_have_required_keys():
         assert "body_tpl" in t
 
 
+@pytest.mark.notifications
 def test_templates_by_key_covers_all():
     assert len(TEMPLATES_BY_KEY) == len(TEMPLATES)
 
 
+@pytest.mark.notifications
 def test_render_event_reminder():
     title, body = render_template(
         "event_reminder",
@@ -29,17 +34,20 @@ def test_render_event_reminder():
     assert "Gym" in body
 
 
+@pytest.mark.notifications
 def test_render_unknown_key_returns_empty():
     title, body = render_template("nonexistent", {})
     assert title == ""
     assert body == ""
 
 
+@pytest.mark.notifications
 def test_render_missing_placeholder_left_in_place():
     title, body = render_template("event_reminder", {})
     assert "{event}" in title
 
 
+@pytest.mark.notifications
 def test_general_announcement_tag_not_locked():
     tpl = TEMPLATES_BY_KEY["general_announcement"]
     assert tpl["tag_locked"] is False

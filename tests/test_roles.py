@@ -8,6 +8,7 @@ from models.user_team import UserTeam
 from routes._auth_helpers import NotAuthorized, check_team_access, get_coach_teams
 
 
+@pytest.mark.core
 def test_user_team_importable():
     assert UserTeam.__tablename__ == "user_team"
 
@@ -21,12 +22,14 @@ def _make_coach(db: Session) -> User:
     return u
 
 
+@pytest.mark.core
 def test_get_coach_teams_returns_empty_for_unassigned(db):
     coach = _make_coach(db)
     result = get_coach_teams(coach, db)
     assert result == set()
 
 
+@pytest.mark.core
 def test_get_coach_teams_returns_assigned_team(db):
     from models.team import Team
 
@@ -41,17 +44,20 @@ def test_get_coach_teams_returns_assigned_team(db):
     assert team.id in result
 
 
+@pytest.mark.core
 def test_check_team_access_admin_always_passes(db, admin_user):
     # Should not raise for any team_id
     check_team_access(admin_user, 99999, db)
 
 
+@pytest.mark.core
 def test_check_team_access_coach_denied_unassigned(db):
     coach = _make_coach(db)
     with pytest.raises(NotAuthorized):
         check_team_access(coach, 99999, db)
 
 
+@pytest.mark.core
 def test_check_team_access_coach_passes_assigned(db):
     from models.team import Team
 
@@ -65,12 +71,14 @@ def test_check_team_access_coach_passes_assigned(db):
     check_team_access(coach, team.id, db)  # should not raise
 
 
+@pytest.mark.core
 def test_public_events_no_auth(client):
     """Public /events returns 200 without authentication."""
     resp = client.get("/events")
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_admin_can_assign_coach(admin_client, db):
     from models.team import Team
     from models.user import User
@@ -95,6 +103,7 @@ def test_admin_can_assign_coach(admin_client, db):
     assert ut is not None
 
 
+@pytest.mark.core
 def test_admin_can_remove_coach(admin_client, db):
     from models.team import Team
     from models.user import User
@@ -117,6 +126,7 @@ def test_admin_can_remove_coach(admin_client, db):
     assert db.get(UserTeam, ut.id) is None
 
 
+@pytest.mark.core
 def test_public_events_has_no_player_names(client, db):
     """Public events page does not expose player names."""
     from models.player import Player
@@ -175,6 +185,7 @@ def _coach_client(app, db_override, coach_user):
     return c
 
 
+@pytest.mark.core
 def test_coach_can_create_event_on_assigned_team(db):
     from app.main import app
 
@@ -195,6 +206,7 @@ def test_coach_can_create_event_on_assigned_team(db):
     assert resp.status_code == 302
 
 
+@pytest.mark.core
 def test_coach_cannot_create_event_on_unassigned_team(db):
     from app.main import app
     from models.team import Team
@@ -220,6 +232,7 @@ def test_coach_cannot_create_event_on_unassigned_team(db):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_coach_can_mark_attendance_on_their_team(db):
     from app.main import app
     from models.event import Event
@@ -243,6 +256,7 @@ def test_coach_can_mark_attendance_on_their_team(db):
     assert resp.status_code == 302
 
 
+@pytest.mark.core
 def test_coach_can_bulk_update_pt_fields(db):
     from app.main import app
     from models.player import Player
@@ -268,6 +282,7 @@ def test_coach_can_bulk_update_pt_fields(db):
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_coach_cannot_create_player(db):
     from app.main import app
 
@@ -279,6 +294,7 @@ def test_coach_cannot_create_player(db):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_coach_can_view_season_report(db):
     from app.main import app
 
@@ -290,6 +306,7 @@ def test_coach_can_view_season_report(db):
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_coach_cannot_view_other_player_report(db):
     from app.main import app
     from models.player import Player
@@ -305,6 +322,7 @@ def test_coach_cannot_view_other_player_report(db):
     assert resp.status_code in (302, 403)
 
 
+@pytest.mark.core
 def test_coach_cannot_mark_attendance_on_other_team(db):
     from app.main import app
     from models.event import Event
@@ -339,6 +357,7 @@ def test_coach_cannot_mark_attendance_on_other_team(db):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_coach_season_scoped_denied_other_season(db):
     """Coach assigned to team X for season A cannot manage events in season B."""
     from app.main import app
@@ -380,6 +399,7 @@ def test_coach_season_scoped_denied_other_season(db):
     assert resp.status_code == 403
 
 
+@pytest.mark.core
 def test_coach_null_season_can_access_all_seasons(db):
     """Coach assigned with season_id=NULL can manage events in any season."""
     from app.main import app
@@ -419,6 +439,7 @@ def test_coach_null_season_can_access_all_seasons(db):
     assert resp.status_code == 200
 
 
+@pytest.mark.core
 def test_coach_with_no_teams_behaves_like_member(db):
     """A coach with no UserTeam rows cannot edit events."""
     from app.main import app

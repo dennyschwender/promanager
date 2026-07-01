@@ -2,6 +2,8 @@
 
 from datetime import date, time
 
+import pytest
+
 from models.attendance import Attendance
 from models.event import Event
 from models.event_external import EventExternal
@@ -30,6 +32,7 @@ def _make_ext(id_, first, last, status, note=None):
     return EventExternal(id=id_, first_name=first, last_name=last, status=status, note=note)
 
 
+@pytest.mark.events
 def test_body_position_counts_grouped():
     players = [
         _make_player(1, "Alice", "A", "goalie"),
@@ -48,6 +51,7 @@ def test_body_position_counts_grouped():
     assert "Carl C" in result
 
 
+@pytest.mark.events
 def test_body_externals_integrated_by_status():
     players = [_make_player(1, "Dave", "D", "forward")]
     att = {1: _make_att(1, "present")}
@@ -67,6 +71,7 @@ def test_body_externals_integrated_by_status():
     assert absent_idx < frank_idx
 
 
+@pytest.mark.events
 def test_body_no_externals_block_header():
     """No separate 'Externals' heading should appear."""
     players = [_make_player(1, "Alice", "A", "goalie")]
@@ -76,6 +81,7 @@ def test_body_no_externals_block_header():
     assert "Externals" not in result
 
 
+@pytest.mark.events
 def test_body_flat_list_no_position_headers():
     players = [
         _make_player(1, "Alice", "A", "goalie"),
@@ -92,6 +98,7 @@ def test_body_flat_list_no_position_headers():
     assert "Bob B" in result
 
 
+@pytest.mark.events
 def test_body_markdown_bold_italic():
     players = [_make_player(1, "Alice", "A", "goalie")]
     att = {1: _make_att(1, "present")}
@@ -100,6 +107,7 @@ def test_body_markdown_bold_italic():
     assert "_Goalies" in result  # italic position label
 
 
+@pytest.mark.events
 def test_body_skips_empty_statuses():
     players = [_make_player(1, "Alice", "A")]
     att = {1: _make_att(1, "present")}
@@ -108,6 +116,7 @@ def test_body_skips_empty_statuses():
     assert "? Unknown" not in result
 
 
+@pytest.mark.events
 def test_body_player_note_included():
     players = [_make_player(1, "Alice", "A", "goalie")]
     att = {1: _make_att(1, "present", note="knee injury")}
@@ -120,6 +129,7 @@ def test_body_player_note_included():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.events
 def test_format_attendance_text_header(db):
     team = Team(name="T1")
     season = Season(name="S1", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
@@ -159,6 +169,7 @@ def test_format_attendance_text_header(db):
     assert "Goalies (1)" in result
 
 
+@pytest.mark.events
 def test_format_attendance_text_external_in_status(db):
     team = Team(name="T2")
     season = Season(name="S2", start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))

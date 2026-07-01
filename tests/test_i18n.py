@@ -33,11 +33,13 @@ def _make_t(debug: bool = False):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.i18n
 def test_t_returns_english_string():
     t = _make_t()
     assert t("nav.dashboard", "en") == "Dashboard"
 
 
+@pytest.mark.i18n
 def test_t_returns_italian_string():
     t = _make_t()
     result = t("common.save", "it")
@@ -45,12 +47,14 @@ def test_t_returns_italian_string():
     assert len(result) > 0
 
 
+@pytest.mark.i18n
 def test_t_returns_french_string():
     t = _make_t()
     result = t("common.save", "fr")
     assert isinstance(result, str)
 
 
+@pytest.mark.i18n
 def test_t_returns_german_string():
     t = _make_t()
     result = t("common.save", "de")
@@ -62,6 +66,7 @@ def test_t_returns_german_string():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.i18n
 def test_t_unsupported_locale_falls_back_to_default():
     from app.i18n import DEFAULT_LOCALE
 
@@ -69,12 +74,14 @@ def test_t_unsupported_locale_falls_back_to_default():
     assert t("nav.dashboard", "xx") == t("nav.dashboard", DEFAULT_LOCALE)
 
 
+@pytest.mark.i18n
 def test_t_missing_key_raises_in_debug():
     t = _make_t(debug=True)
     with pytest.raises(KeyError):
         t("nav.nonexistent_key_xyz", "en")
 
 
+@pytest.mark.i18n
 def test_t_missing_key_falls_back_to_en_in_production():
     """A key missing in a locale but present in 'en' should return the 'en' value."""
     import importlib
@@ -96,6 +103,7 @@ def test_t_missing_key_falls_back_to_en_in_production():
             _i18n._translations["it"].setdefault("nav", {})["dashboard"] = original
 
 
+@pytest.mark.i18n
 def test_t_missing_key_returns_bare_key_when_en_also_missing():
     """When key is absent from both locale and 'en', return the bare key."""
     import importlib
@@ -123,6 +131,7 @@ def test_t_missing_key_returns_bare_key_when_en_also_missing():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.i18n
 def test_t_interpolates_variables():
     t = _make_t()
     result = t("email.reminder_subject", "en", event_name="Training", date="2026-03-20")
@@ -135,6 +144,7 @@ def test_t_interpolates_variables():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.i18n
 def test_locale_cookie_sets_request_locale(client):
     """A locale cookie should cause templates to render in that locale."""
     client.cookies.set("locale", "it")
@@ -143,12 +153,14 @@ def test_locale_cookie_sets_request_locale(client):
     # page should render without error — locale plumbing works
 
 
+@pytest.mark.i18n
 def test_invalid_locale_cookie_falls_back_to_en(client):
     client.cookies.set("locale", "zz")
     resp = client.get("/auth/login", follow_redirects=False)
     assert resp.status_code == 200
 
 
+@pytest.mark.i18n
 def test_user_has_locale_field(db, admin_user):
     """User model must have a locale field defaulting to 'en'."""
     assert hasattr(admin_user, "locale")
